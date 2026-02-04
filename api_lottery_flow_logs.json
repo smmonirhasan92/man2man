@@ -1,0 +1,136 @@
+[
+  {
+    "step": "1. Initial Balances",
+    "data": {
+      "game": 850
+    }
+  },
+  {
+    "step": "2. Lottery Created",
+    "data": {
+      "name": "API Verify Lottery",
+      "price": 50,
+      "prizePool": 1000,
+      "drawDate": "2026-01-23T11:15:21.720Z",
+      "status": "active",
+      "_id": "697206c9accd6582f133ba5e",
+      "tickets": [],
+      "createdAt": "2026-01-22T11:15:21.729Z",
+      "updatedAt": "2026-01-22T11:15:21.729Z",
+      "__v": 0
+    }
+  },
+  {
+    "step": "3. Ticket Bought",
+    "data": {
+      "success": true,
+      "tickets": [
+        "LOT-632489"
+      ]
+    }
+  },
+  {
+    "step": "4. Post-Buy Balance",
+    "data": {
+      "pre": 850,
+      "post": 800
+    }
+  },
+  {
+    "step": "5. Draw Result",
+    "data": {
+      "winner": {
+        "userId": "6971f915bc2e19f2b1fe17e0",
+        "ticketNumber": "LOT-632489",
+        "amount": 840
+      },
+      "_id": "697206c9accd6582f133ba5e",
+      "name": "API Verify Lottery",
+      "price": 50,
+      "prizePool": 1050,
+      "drawDate": "2026-01-23T11:15:21.720Z",
+      "status": "completed",
+      "tickets": [
+        {
+          "userId": {
+            "wallet": {
+              "turnover": {
+                "required": 0,
+                "completed": 0
+              },
+              "income": 50,
+              "main": 900,
+              "game": 800,
+              "purchase": 0,
+              "agent": 0,
+              "pending_referral": 0
+            },
+            "referralSecurity": {
+              "history": []
+            },
+            "agentData": {
+              "due": 0
+            },
+            "taskData": {
+              "currentTask": {
+                "taskId": null,
+                "startTime": null
+              },
+              "targetStats": {
+                "targetUserCount": 10,
+                "achievedUserCount": 0,
+                "isTargetMet": false
+              },
+              "tasksCompletedToday": 1,
+              "accountTier": "Starter",
+              "promotionalStatus": "none",
+              "lastTaskDate": "2026-01-22T10:51:35.986Z"
+            },
+            "_id": "6971f915bc2e19f2b1fe17e0",
+            "fullName": "Test User",
+            "username": "test_user",
+            "phone": "41ba329baa5fae5030ef2e3d8edfe753:03e20b9070910edaa3116c24bef663f3",
+            "phoneHash": "d2b5e04b848d0bc783f723a497851b4922b940c910e79964f8a56a58529c90ef",
+            "password": "$2b$10$J6XVhrU71uuNV0q9AAqjru0JXMzI/RIp6MFtkcX43ZC9WZex400QO",
+            "role": "user",
+            "group": "Standard",
+            "country": "USA",
+            "badges": [],
+            "kycStatus": "none",
+            "referralCode": "TEST001",
+            "referredBy": "ADMIN001",
+            "referralCount": 0,
+            "referralIncome": 0,
+            "isReferralBonusPaid": false,
+            "commissionRate": 0,
+            "isActive": true,
+            "status": "active",
+            "isDeviceWhitelisted": false,
+            "dailyActivityHours": 0,
+            "loyaltyScore": 0,
+            "createdAt": "2026-01-22T10:16:53.075Z",
+            "updatedAt": "2026-01-22T11:15:21.745Z",
+            "__v": 0,
+            "ipAddress": "::1",
+            "lastLogin": "2026-01-22T11:15:21.697Z",
+            "id": "6971f915bc2e19f2b1fe17e0"
+          },
+          "ticketNumber": "LOT-632489",
+          "purchasedAt": "2026-01-22T11:15:21.746Z",
+          "_id": "697206c9accd6582f133ba64"
+        }
+      ],
+      "createdAt": "2026-01-22T11:15:21.729Z",
+      "updatedAt": "2026-01-22T11:15:21.777Z",
+      "__v": 1
+    }
+  },
+  {
+    "step": "6. Win Verification",
+    "data": {
+      "initialIncome": 50,
+      "finalIncome": 890,
+      "prize": 840
+    }
+  }
+]

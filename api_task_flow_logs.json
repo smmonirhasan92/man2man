@@ -1,0 +1,56 @@
+[
+  {
+    "step": "1. Initial Income",
+    "data": {
+      "income": 0
+    }
+  },
+  {
+    "step": "DEBUG",
+    "data": {
+      "msg": "Target User ID found: 6971f915bc2e19f2b1fe17e0"
+    }
+  },
+  {
+    "step": "DEBUG",
+    "data": {
+      "msg": "Plans found before update: 1",
+      "plans": [
+        {
+          "id": "6971f91618ef29a94a8a4531",
+          "status": "active",
+          "userId": "6971f915bc2e19f2b1fe17e0"
+        }
+      ]
+    }
+  },
+  {
+    "step": "DEBUG",
+    "data": {
+      "msg": "Update Result: matched=1, modified=1"
+    }
+  },
+  {
+    "step": "3. Task Started",
+    "data": {
+      "message": "Task Started",
+      "startTime": "2026-01-22T10:51:29.965Z",
+      "taskId": "6971fa06a2d11bbc1d37522a"
+    }
+  },
+  {
+    "step": "4. Task Submitted",
+    "data": {
+      "message": "Task Completed",
+      "newBalance": 50,
+      "tasksToday": 1,
+      "limit": 5
+    }
+  },
+  {
+    "step": "5. Final Income",
+    "data": {
+      "income": 50
+    }
+  }
+]

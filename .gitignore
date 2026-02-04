@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+**/node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Next.js Build
+.next/
+**/.next/
+frontend/.next/
+out/
+build/
+dist/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+
+# System Files
+.DS_Store
+*.log
+
+# Large Archives (BLOAT)
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+LOTTERY_PRO_VERSION_1_M.zip
+USA_Affiliate_Full_Package.zip
+USA_Affiliate_Lottery_Ready.zip
+
+# Backup/Large Folders
+mongodb_data_safe/
+uploads/
+LOTTERY_PRO_VERSION_1_M/
+USA_Affiliate_Full_Package/
+USA_Affiliate_Lottery_Ready/
+_SOFTWARE_MASTER_TEMPLATE/
+USA_Developer_Kit/
+

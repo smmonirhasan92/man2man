@@ -1,0 +1,44 @@
+﻿DEBUG: transactionRoutes.js Loaded
+Γ£à NotificationService: Socket.io Initialized
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+node : (node:4080) 
+[MONGOOSE] Warning: 
+Duplicate schema 
+index on 
+{"referredBy":1} 
+found. This is often 
+due to declaring an 
+index using both 
+"index: true" and 
+"schema.index()". 
+Please remove the 
+duplicate index 
+definition.
+At line:1 char:1
++ node server.js 
+2>&1 | Out-File 
+-FilePath 
+startup_log.txt 
+-Encoding UT ...
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ((node:4   
+ 080) [MO...dex d    
+efinition.:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+(Use `node 
+--trace-warnings 
+...` to show where 
+the warning was 
+created)
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+Failed to start 
+server:

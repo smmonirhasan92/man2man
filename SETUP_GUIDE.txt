@@ -1,0 +1,40 @@
+# USA Affiliate Project - Setup Guide
+
+## 1. Prerequisites
+- Node.js (v18 or higher)
+- MongoDB (v6.0 or higher)
+- Redis (Optional, for performance)
+
+## 2. Installation
+1. Unzip the project folder.
+2. Open a terminal in the project root.
+3. Install dependencies:
+   ```bash
+   npm install
+   cd frontend && npm install
+   cd ../backend && npm install
+   ```
+
+## 3. Database Restoration
+1. Ensure MongoDB is running.
+2. The `DB_BACKUP` folder contains JSON files for each collection.
+3. You can import them using `mongoimport` or a reliable GUI like MongoDB Compass (Import File).
+   Example `mongoimport`:
+   ```bash
+   mongoimport --db usa-affiliate --collection users --file DB_BACKUP/users.json --jsonArray
+   ```
+   *Repeat for all .json files.*
+
+## 4. Configuration
+1. Rename `.env.example` to `.env`.
+2. Update the values in `.env` if necessary (e.g., if your MongoDB URL is different).
+
+## 5. Running the Project
+- **Windows:** Double-click `start_dev.bat`.
+- **Manual:**
+  - Backend: `cd backend && npm run dev`
+  - Frontend: `cd frontend && npm run dev`
+
+## 6. Access
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5050

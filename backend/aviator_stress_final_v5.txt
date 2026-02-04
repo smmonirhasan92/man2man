@@ -1,0 +1,18 @@
+[36m==================================================
+       AVIATOR ENGINE STRESS TEST (100 ROUNDS)       
+==================================================[0m
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+Connecting to DB... Connected.
+[SETUP] Test User: pilot_akwzqq_1769493408190 | Balance: 10000
+
+[33m[TEST 1] Commission & Normal Flow[0m
+[TX_TRACE] Starting Session...
+[TX_TRACE] Session Started & Transaction Begin. ID: [object Object]
+{"context":"AVIATOR_COMMISSION","bet":1000,"tier_rate":0.15,"split":{"tech":45,"replay":45,"partner":60},"poolIn":850}
+[TX_TRACE] Ending Session [object Object]...
+[TX_TRACE] Session [object Object] Ended.
+✅ Bet Placed: 1000
+✅ Commission Distributed (Partner Wallet > 0)

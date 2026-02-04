@@ -1,0 +1,254 @@
+[36m==================================================
+       AVIATOR ENGINE STRESS TEST (100 ROUNDS)       
+==================================================[0m
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+Connecting to DB... Connected.
+[SETUP] Test User: pilot_e09t1t_1769496114980 | Balance: 10000
+
+[33m[TEST 1] Commission & Normal Flow[0m
+{"context":"AVIATOR_COMMISSION","bet":1000,"tier_rate":0.15,"split":{"tech":45,"replay":45,"partner":60},"poolIn":850}
+✅ Bet Placed: 1000
+✅ Commission Distributed (Partner Wallet > 0)
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a019","multiplier":2,"payout":2000,"vault_lock":0,"pool_deduction":2000}
+✅ Cashout Success: Win 2000 | New Balance: 11000
+
+[33m[TEST 2] Vault Lock Logic (>10x Balance)[0m
+{"context":"AVIATOR_COMMISSION","bet":100,"tier_rate":0.15,"split":{"tech":4,"replay":4,"partner":6},"poolIn":85}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a024","multiplier":50,"payout":1500,"vault_lock":3500,"pool_deduction":1500}
+[32m✅ VAULT LOCKED! Win: 1500 | Locked: 3500 (70%) [0m
+   Detailed Vault: User Locked Balance = 3500
+
+[33m[TEST 3] Liquidity Calculation[0m
+   Pool: 1,000,000 | Bets: 50,000 | Calc Max Safe: ~19.4x
+   Generated Crash Point: 1x
+[32m✅ CRASH POINT SAFE (<= 19.4)[0m
+
+[33m[STRESS] Running 100 Rounds...[0m
+[AVIATOR_UNLOCK] Released 174 (Wager: 349)
+{"context":"AVIATOR_COMMISSION","bet":349,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":297}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a02e","multiplier":"4.55","payout":1587,"vault_lock":0,"pool_deduction":1587}
+.[AVIATOR_UNLOCK] Released 162 (Wager: 324)
+{"context":"AVIATOR_COMMISSION","bet":324,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":19},"poolIn":276}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a035","multiplier":"2.16","payout":699,"vault_lock":0,"pool_deduction":699}
+[AVIATOR_UNLOCK] Released 197 (Wager: 395)
+{"context":"AVIATOR_COMMISSION","bet":395,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":23},"poolIn":336}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a03c","multiplier":"4.46","payout":1761,"vault_lock":0,"pool_deduction":1761}
+[AVIATOR_UNLOCK] Released 206 (Wager: 412)
+{"context":"AVIATOR_COMMISSION","bet":412,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":24},"poolIn":351}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a043","multiplier":"2.25","payout":927,"vault_lock":0,"pool_deduction":927}
+[AVIATOR_UNLOCK] Released 64 (Wager: 128)
+{"context":"AVIATOR_COMMISSION","bet":128,"tier_rate":0.15,"split":{"tech":5,"replay":5,"partner":7},"poolIn":109}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a04a","multiplier":"4.71","payout":602,"vault_lock":0,"pool_deduction":602}
+[AVIATOR_UNLOCK] Released 211 (Wager: 423)
+{"context":"AVIATOR_COMMISSION","bet":423,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":25},"poolIn":360}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a051","multiplier":"2.06","payout":871,"vault_lock":0,"pool_deduction":871}
+[AVIATOR_UNLOCK] Released 129 (Wager: 259)
+{"context":"AVIATOR_COMMISSION","bet":259,"tier_rate":0.15,"split":{"tech":11,"replay":11,"partner":15},"poolIn":221}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a058","multiplier":"4.43","payout":1147,"vault_lock":0,"pool_deduction":1147}
+[AVIATOR_UNLOCK] Released 92 (Wager: 184)
+{"context":"AVIATOR_COMMISSION","bet":184,"tier_rate":0.15,"split":{"tech":8,"replay":8,"partner":10},"poolIn":157}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a05f","multiplier":"3.05","payout":561,"vault_lock":0,"pool_deduction":561}
+[AVIATOR_UNLOCK] Released 221 (Wager: 443)
+{"context":"AVIATOR_COMMISSION","bet":443,"tier_rate":0.15,"split":{"tech":19,"replay":19,"partner":26},"poolIn":377}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a066","multiplier":"2.97","payout":1315,"vault_lock":0,"pool_deduction":1315}
+[AVIATOR_UNLOCK] Released 176 (Wager: 353)
+{"context":"AVIATOR_COMMISSION","bet":353,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":301}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a06d","multiplier":"2.44","payout":861,"vault_lock":0,"pool_deduction":861}
+[AVIATOR_UNLOCK] Released 236 (Wager: 473)
+{"context":"AVIATOR_COMMISSION","bet":473,"tier_rate":0.15,"split":{"tech":21,"replay":21,"partner":28},"poolIn":403}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a074","multiplier":"4.77","payout":2256,"vault_lock":0,"pool_deduction":2256}
+.[AVIATOR_UNLOCK] Released 76 (Wager: 152)
+{"context":"AVIATOR_COMMISSION","bet":152,"tier_rate":0.15,"split":{"tech":6,"replay":6,"partner":8},"poolIn":130}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a07b","multiplier":"3.41","payout":518,"vault_lock":0,"pool_deduction":518}
+[AVIATOR_UNLOCK] Released 167 (Wager: 335)
+{"context":"AVIATOR_COMMISSION","bet":335,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":285}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a082","multiplier":"2.18","payout":730,"vault_lock":0,"pool_deduction":730}
+[AVIATOR_UNLOCK] Released 97 (Wager: 194)
+{"context":"AVIATOR_COMMISSION","bet":194,"tier_rate":0.15,"split":{"tech":8,"replay":8,"partner":11},"poolIn":165}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a089","multiplier":"4.02","payout":779,"vault_lock":0,"pool_deduction":779}
+[AVIATOR_UNLOCK] Released 217 (Wager: 435)
+{"context":"AVIATOR_COMMISSION","bet":435,"tier_rate":0.15,"split":{"tech":19,"replay":19,"partner":26},"poolIn":370}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a090","multiplier":"3.86","payout":1679,"vault_lock":0,"pool_deduction":1679}
+[AVIATOR_UNLOCK] Released 195 (Wager: 391)
+{"context":"AVIATOR_COMMISSION","bet":391,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":23},"poolIn":333}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a097","multiplier":"1.25","payout":488,"vault_lock":0,"pool_deduction":488}
+[AVIATOR_UNLOCK] Released 86 (Wager: 173)
+{"context":"AVIATOR_COMMISSION","bet":173,"tier_rate":0.15,"split":{"tech":7,"replay":7,"partner":10},"poolIn":148}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a09e","multiplier":"1.85","payout":320,"vault_lock":0,"pool_deduction":320}
+[AVIATOR_UNLOCK] Released 72 (Wager: 145)
+{"context":"AVIATOR_COMMISSION","bet":145,"tier_rate":0.15,"split":{"tech":6,"replay":6,"partner":8},"poolIn":124}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0a5","multiplier":"1.58","payout":229,"vault_lock":0,"pool_deduction":229}
+[AVIATOR_UNLOCK] Released 203 (Wager: 406)
+{"context":"AVIATOR_COMMISSION","bet":406,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":24},"poolIn":346}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0ac","multiplier":"1.26","payout":511,"vault_lock":0,"pool_deduction":511}
+[AVIATOR_UNLOCK] Released 54 (Wager: 109)
+{"context":"AVIATOR_COMMISSION","bet":109,"tier_rate":0.15,"split":{"tech":4,"replay":4,"partner":6},"poolIn":93}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0b3","multiplier":"2.78","payout":303,"vault_lock":0,"pool_deduction":303}
+[AVIATOR_UNLOCK] Released 230 (Wager: 460)
+{"context":"AVIATOR_COMMISSION","bet":460,"tier_rate":0.15,"split":{"tech":20,"replay":20,"partner":27},"poolIn":391}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0ba","multiplier":"4.26","payout":1959,"vault_lock":0,"pool_deduction":1959}
+.[AVIATOR_UNLOCK] Released 111 (Wager: 223)
+{"context":"AVIATOR_COMMISSION","bet":223,"tier_rate":0.15,"split":{"tech":9,"replay":9,"partner":13},"poolIn":190}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0c1","multiplier":"4.50","payout":1003,"vault_lock":0,"pool_deduction":1003}
+[AVIATOR_UNLOCK] Released 124 (Wager: 435)
+{"context":"AVIATOR_COMMISSION","bet":435,"tier_rate":0.15,"split":{"tech":19,"replay":19,"partner":26},"poolIn":370}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0c8","multiplier":"1.64","payout":713,"vault_lock":0,"pool_deduction":713}
+{"context":"AVIATOR_COMMISSION","bet":480,"tier_rate":0.15,"split":{"tech":21,"replay":21,"partner":28},"poolIn":408}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0ce","multiplier":"3.34","payout":1603,"vault_lock":0,"pool_deduction":1603}
+{"context":"AVIATOR_COMMISSION","bet":243,"tier_rate":0.15,"split":{"tech":10,"replay":10,"partner":14},"poolIn":207}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0d4","multiplier":"3.42","payout":831,"vault_lock":0,"pool_deduction":831}
+{"context":"AVIATOR_COMMISSION","bet":374,"tier_rate":0.15,"split":{"tech":16,"replay":16,"partner":22},"poolIn":318}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0da","multiplier":"2.19","payout":819,"vault_lock":0,"pool_deduction":819}
+{"context":"AVIATOR_COMMISSION","bet":321,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":19},"poolIn":273}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0e0","multiplier":"4.36","payout":1399,"vault_lock":0,"pool_deduction":1399}
+{"context":"AVIATOR_COMMISSION","bet":466,"tier_rate":0.15,"split":{"tech":20,"replay":20,"partner":27},"poolIn":397}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0e6","multiplier":"3.90","payout":1817,"vault_lock":0,"pool_deduction":1817}
+{"context":"AVIATOR_COMMISSION","bet":237,"tier_rate":0.15,"split":{"tech":10,"replay":10,"partner":14},"poolIn":202}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0ec","multiplier":"4.21","payout":997,"vault_lock":0,"pool_deduction":997}
+{"context":"AVIATOR_COMMISSION","bet":389,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":23},"poolIn":331}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0f2","multiplier":"4.62","payout":1797,"vault_lock":0,"pool_deduction":1797}
+{"context":"AVIATOR_COMMISSION","bet":212,"tier_rate":0.15,"split":{"tech":9,"replay":9,"partner":12},"poolIn":181}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0f8","multiplier":"4.87","payout":1032,"vault_lock":0,"pool_deduction":1032}
+.{"context":"AVIATOR_COMMISSION","bet":347,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":295}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a0fe","multiplier":"2.70","payout":936,"vault_lock":0,"pool_deduction":936}
+{"context":"AVIATOR_COMMISSION","bet":399,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":23},"poolIn":340}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a104","multiplier":"4.87","payout":1943,"vault_lock":0,"pool_deduction":1943}
+{"context":"AVIATOR_COMMISSION","bet":204,"tier_rate":0.15,"split":{"tech":9,"replay":9,"partner":12},"poolIn":174}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a10a","multiplier":"3.53","payout":720,"vault_lock":0,"pool_deduction":720}
+{"context":"AVIATOR_COMMISSION","bet":191,"tier_rate":0.15,"split":{"tech":8,"replay":8,"partner":11},"poolIn":163}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a110","multiplier":"4.46","payout":851,"vault_lock":0,"pool_deduction":851}
+{"context":"AVIATOR_COMMISSION","bet":204,"tier_rate":0.15,"split":{"tech":9,"replay":9,"partner":12},"poolIn":174}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a116","multiplier":"4.63","payout":944,"vault_lock":0,"pool_deduction":944}
+{"context":"AVIATOR_COMMISSION","bet":138,"tier_rate":0.15,"split":{"tech":6,"replay":6,"partner":8},"poolIn":118}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a11c","multiplier":"4.40","payout":607,"vault_lock":0,"pool_deduction":607}
+{"context":"AVIATOR_COMMISSION","bet":354,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":21},"poolIn":301}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a122","multiplier":"4.28","payout":1515,"vault_lock":0,"pool_deduction":1515}
+{"context":"AVIATOR_COMMISSION","bet":489,"tier_rate":0.15,"split":{"tech":21,"replay":21,"partner":29},"poolIn":416}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a128","multiplier":"1.62","payout":792,"vault_lock":0,"pool_deduction":792}
+{"context":"AVIATOR_COMMISSION","bet":166,"tier_rate":0.15,"split":{"tech":7,"replay":7,"partner":9},"poolIn":142}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a12e","multiplier":"4.50","payout":747,"vault_lock":0,"pool_deduction":747}
+{"context":"AVIATOR_COMMISSION","bet":242,"tier_rate":0.15,"split":{"tech":10,"replay":10,"partner":14},"poolIn":206}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a134","multiplier":"1.75","payout":423,"vault_lock":0,"pool_deduction":423}
+.{"context":"AVIATOR_COMMISSION","bet":233,"tier_rate":0.15,"split":{"tech":10,"replay":10,"partner":13},"poolIn":199}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a13a","multiplier":"3.65","payout":850,"vault_lock":0,"pool_deduction":850}
+{"context":"AVIATOR_COMMISSION","bet":319,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":18},"poolIn":272}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a140","multiplier":"4.97","payout":1585,"vault_lock":0,"pool_deduction":1585}
+{"context":"AVIATOR_COMMISSION","bet":331,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":19},"poolIn":282}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a146","multiplier":"3.17","payout":1049,"vault_lock":0,"pool_deduction":1049}
+{"context":"AVIATOR_COMMISSION","bet":299,"tier_rate":0.15,"split":{"tech":13,"replay":13,"partner":17},"poolIn":255}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a14c","multiplier":"1.54","payout":460,"vault_lock":0,"pool_deduction":460}
+{"context":"AVIATOR_COMMISSION","bet":449,"tier_rate":0.15,"split":{"tech":20,"replay":20,"partner":26},"poolIn":382}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a152","multiplier":"1.32","payout":592,"vault_lock":0,"pool_deduction":592}
+{"context":"AVIATOR_COMMISSION","bet":476,"tier_rate":0.15,"split":{"tech":21,"replay":21,"partner":28},"poolIn":405}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a158","multiplier":"1.36","payout":647,"vault_lock":0,"pool_deduction":647}
+{"context":"AVIATOR_COMMISSION","bet":265,"tier_rate":0.15,"split":{"tech":11,"replay":11,"partner":15},"poolIn":226}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a15e","multiplier":"4.73","payout":1253,"vault_lock":0,"pool_deduction":1253}
+{"context":"AVIATOR_COMMISSION","bet":342,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":291}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a164","multiplier":"2.59","payout":885,"vault_lock":0,"pool_deduction":885}
+{"context":"AVIATOR_COMMISSION","bet":294,"tier_rate":0.15,"split":{"tech":13,"replay":13,"partner":17},"poolIn":250}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a16a","multiplier":"2.18","payout":640,"vault_lock":0,"pool_deduction":640}
+{"context":"AVIATOR_COMMISSION","bet":403,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":24},"poolIn":343}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a170","multiplier":"2.27","payout":914,"vault_lock":0,"pool_deduction":914}
+.{"context":"AVIATOR_COMMISSION","bet":123,"tier_rate":0.15,"split":{"tech":5,"replay":5,"partner":7},"poolIn":105}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a176","multiplier":"3.13","payout":384,"vault_lock":0,"pool_deduction":384}
+{"context":"AVIATOR_COMMISSION","bet":314,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":18},"poolIn":267}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a17c","multiplier":"4.52","payout":1419,"vault_lock":0,"pool_deduction":1419}
+{"context":"AVIATOR_COMMISSION","bet":268,"tier_rate":0.15,"split":{"tech":12,"replay":12,"partner":16},"poolIn":228}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a182","multiplier":"2.16","payout":578,"vault_lock":0,"pool_deduction":578}
+{"context":"AVIATOR_COMMISSION","bet":353,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":301}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a188","multiplier":"4.10","payout":1447,"vault_lock":0,"pool_deduction":1447}
+{"context":"AVIATOR_COMMISSION","bet":402,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":24},"poolIn":342}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a18e","multiplier":"2.13","payout":856,"vault_lock":0,"pool_deduction":856}
+{"context":"AVIATOR_COMMISSION","bet":227,"tier_rate":0.15,"split":{"tech":10,"replay":10,"partner":13},"poolIn":193}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a194","multiplier":"3.99","payout":905,"vault_lock":0,"pool_deduction":905}
+{"context":"AVIATOR_COMMISSION","bet":282,"tier_rate":0.15,"split":{"tech":12,"replay":12,"partner":16},"poolIn":240}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a19a","multiplier":"3.06","payout":862,"vault_lock":0,"pool_deduction":862}
+{"context":"AVIATOR_COMMISSION","bet":380,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":22},"poolIn":323}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1a0","multiplier":"4.99","payout":1896,"vault_lock":0,"pool_deduction":1896}
+{"context":"AVIATOR_COMMISSION","bet":335,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":285}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1a6","multiplier":"1.83","payout":613,"vault_lock":0,"pool_deduction":613}
+{"context":"AVIATOR_COMMISSION","bet":351,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":299}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1ac","multiplier":"4.25","payout":1491,"vault_lock":0,"pool_deduction":1491}
+.{"context":"AVIATOR_COMMISSION","bet":112,"tier_rate":0.15,"split":{"tech":4,"replay":4,"partner":6},"poolIn":96}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1b2","multiplier":"4.75","payout":532,"vault_lock":0,"pool_deduction":532}
+{"context":"AVIATOR_COMMISSION","bet":395,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":23},"poolIn":336}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1b8","multiplier":"4.74","payout":1872,"vault_lock":0,"pool_deduction":1872}
+{"context":"AVIATOR_COMMISSION","bet":202,"tier_rate":0.15,"split":{"tech":9,"replay":9,"partner":12},"poolIn":172}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1be","multiplier":"3.94","payout":795,"vault_lock":0,"pool_deduction":795}
+{"context":"AVIATOR_COMMISSION","bet":484,"tier_rate":0.15,"split":{"tech":21,"replay":21,"partner":28},"poolIn":412}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1c4","multiplier":"1.31","payout":634,"vault_lock":0,"pool_deduction":634}
+{"context":"AVIATOR_COMMISSION","bet":268,"tier_rate":0.15,"split":{"tech":12,"replay":12,"partner":16},"poolIn":228}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1ca","multiplier":"3.93","payout":1053,"vault_lock":0,"pool_deduction":1053}
+{"context":"AVIATOR_COMMISSION","bet":365,"tier_rate":0.15,"split":{"tech":16,"replay":16,"partner":21},"poolIn":311}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1d0","multiplier":"3.46","payout":1262,"vault_lock":0,"pool_deduction":1262}
+{"context":"AVIATOR_COMMISSION","bet":271,"tier_rate":0.15,"split":{"tech":12,"replay":12,"partner":16},"poolIn":231}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1d6","multiplier":"4.47","payout":1211,"vault_lock":0,"pool_deduction":1211}
+{"context":"AVIATOR_COMMISSION","bet":330,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":19},"poolIn":281}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1dc","multiplier":"2.77","payout":914,"vault_lock":0,"pool_deduction":914}
+{"context":"AVIATOR_COMMISSION","bet":389,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":23},"poolIn":331}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1e2","multiplier":"3.23","payout":1256,"vault_lock":0,"pool_deduction":1256}
+{"context":"AVIATOR_COMMISSION","bet":136,"tier_rate":0.15,"split":{"tech":6,"replay":6,"partner":8},"poolIn":116}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1e8","multiplier":"3.32","payout":451,"vault_lock":0,"pool_deduction":451}
+.{"context":"AVIATOR_COMMISSION","bet":316,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":18},"poolIn":269}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1ee","multiplier":"4.22","payout":1333,"vault_lock":0,"pool_deduction":1333}
+{"context":"AVIATOR_COMMISSION","bet":431,"tier_rate":0.15,"split":{"tech":19,"replay":19,"partner":25},"poolIn":367}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1f4","multiplier":"1.25","payout":538,"vault_lock":0,"pool_deduction":538}
+{"context":"AVIATOR_COMMISSION","bet":106,"tier_rate":0.15,"split":{"tech":4,"replay":4,"partner":6},"poolIn":91}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a1fa","multiplier":"4.34","payout":460,"vault_lock":0,"pool_deduction":460}
+{"context":"AVIATOR_COMMISSION","bet":269,"tier_rate":0.15,"split":{"tech":12,"replay":12,"partner":16},"poolIn":229}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a200","multiplier":"1.97","payout":529,"vault_lock":0,"pool_deduction":529}
+{"context":"AVIATOR_COMMISSION","bet":267,"tier_rate":0.15,"split":{"tech":12,"replay":12,"partner":16},"poolIn":227}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a206","multiplier":"2.34","payout":624,"vault_lock":0,"pool_deduction":624}
+{"context":"AVIATOR_COMMISSION","bet":122,"tier_rate":0.15,"split":{"tech":5,"replay":5,"partner":7},"poolIn":104}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a20c","multiplier":"1.04","payout":126,"vault_lock":0,"pool_deduction":126}
+{"context":"AVIATOR_COMMISSION","bet":138,"tier_rate":0.15,"split":{"tech":6,"replay":6,"partner":8},"poolIn":118}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a212","multiplier":"2.92","payout":402,"vault_lock":0,"pool_deduction":402}
+{"context":"AVIATOR_COMMISSION","bet":163,"tier_rate":0.15,"split":{"tech":7,"replay":7,"partner":9},"poolIn":139}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a218","multiplier":"2.40","payout":391,"vault_lock":0,"pool_deduction":391}
+{"context":"AVIATOR_COMMISSION","bet":183,"tier_rate":0.15,"split":{"tech":8,"replay":8,"partner":10},"poolIn":156}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a21e","multiplier":"2.97","payout":543,"vault_lock":0,"pool_deduction":543}
+{"context":"AVIATOR_COMMISSION","bet":302,"tier_rate":0.15,"split":{"tech":13,"replay":13,"partner":18},"poolIn":257}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a224","multiplier":"1.88","payout":567,"vault_lock":0,"pool_deduction":567}
+.{"context":"AVIATOR_COMMISSION","bet":424,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":25},"poolIn":361}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a22a","multiplier":"4.38","payout":1857,"vault_lock":0,"pool_deduction":1857}
+{"context":"AVIATOR_COMMISSION","bet":456,"tier_rate":0.15,"split":{"tech":20,"replay":20,"partner":27},"poolIn":388}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a230","multiplier":"2.83","payout":1290,"vault_lock":0,"pool_deduction":1290}
+{"context":"AVIATOR_COMMISSION","bet":328,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":19},"poolIn":279}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a236","multiplier":"1.92","payout":629,"vault_lock":0,"pool_deduction":629}
+{"context":"AVIATOR_COMMISSION","bet":236,"tier_rate":0.15,"split":{"tech":10,"replay":10,"partner":14},"poolIn":201}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a23c","multiplier":"3.37","payout":795,"vault_lock":0,"pool_deduction":795}
+{"context":"AVIATOR_COMMISSION","bet":424,"tier_rate":0.15,"split":{"tech":18,"replay":18,"partner":25},"poolIn":361}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a242","multiplier":"2.58","payout":1093,"vault_lock":0,"pool_deduction":1093}
+{"context":"AVIATOR_COMMISSION","bet":194,"tier_rate":0.15,"split":{"tech":8,"replay":8,"partner":11},"poolIn":165}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a248","multiplier":"4.98","payout":966,"vault_lock":0,"pool_deduction":966}
+{"context":"AVIATOR_COMMISSION","bet":462,"tier_rate":0.15,"split":{"tech":20,"replay":20,"partner":27},"poolIn":393}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a24e","multiplier":"4.56","payout":2106,"vault_lock":0,"pool_deduction":2106}
+{"context":"AVIATOR_COMMISSION","bet":265,"tier_rate":0.15,"split":{"tech":11,"replay":11,"partner":15},"poolIn":226}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a254","multiplier":"3.33","payout":882,"vault_lock":0,"pool_deduction":882}
+{"context":"AVIATOR_COMMISSION","bet":304,"tier_rate":0.15,"split":{"tech":13,"replay":13,"partner":18},"poolIn":259}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a25a","multiplier":"4.06","payout":1234,"vault_lock":0,"pool_deduction":1234}
+{"context":"AVIATOR_COMMISSION","bet":336,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":20},"poolIn":286}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a260","multiplier":"1.94","payout":651,"vault_lock":0,"pool_deduction":651}
+.{"context":"AVIATOR_COMMISSION","bet":383,"tier_rate":0.15,"split":{"tech":17,"replay":17,"partner":22},"poolIn":326}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a266","multiplier":"1.03","payout":394,"vault_lock":0,"pool_deduction":394}
+{"context":"AVIATOR_COMMISSION","bet":377,"tier_rate":0.15,"split":{"tech":16,"replay":16,"partner":22},"poolIn":321}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a26c","multiplier":"4.46","payout":1681,"vault_lock":0,"pool_deduction":1681}
+{"context":"AVIATOR_COMMISSION","bet":299,"tier_rate":0.15,"split":{"tech":13,"replay":13,"partner":17},"poolIn":255}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a272","multiplier":"3.25","payout":971,"vault_lock":0,"pool_deduction":971}
+{"context":"AVIATOR_COMMISSION","bet":357,"tier_rate":0.15,"split":{"tech":15,"replay":15,"partner":21},"poolIn":304}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a278","multiplier":"1.59","payout":567,"vault_lock":0,"pool_deduction":567}
+{"context":"AVIATOR_COMMISSION","bet":249,"tier_rate":0.15,"split":{"tech":11,"replay":11,"partner":14},"poolIn":212}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a27e","multiplier":"4.56","payout":1135,"vault_lock":0,"pool_deduction":1135}
+{"context":"AVIATOR_COMMISSION","bet":319,"tier_rate":0.15,"split":{"tech":14,"replay":14,"partner":18},"poolIn":272}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a284","multiplier":"2.12","payout":676,"vault_lock":0,"pool_deduction":676}
+{"context":"AVIATOR_COMMISSION","bet":442,"tier_rate":0.15,"split":{"tech":19,"replay":19,"partner":26},"poolIn":376}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a28a","multiplier":"3.40","payout":1502,"vault_lock":0,"pool_deduction":1502}
+{"context":"AVIATOR_COMMISSION","bet":436,"tier_rate":0.15,"split":{"tech":19,"replay":19,"partner":26},"poolIn":371}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a290","multiplier":"3.61","payout":1573,"vault_lock":0,"pool_deduction":1573}
+{"context":"AVIATOR_COMMISSION","bet":138,"tier_rate":0.15,"split":{"tech":6,"replay":6,"partner":8},"poolIn":118}
+{"type":"AVIATOR_CASHOUT","userId":"69785e32b540d34975a1a012","betId":"69785e33b540d34975a1a296","multiplier":"4.66","payout":643,"vault_lock":0,"pool_deduction":643}
+
+[32m✅ 100 Rounds Completed Successfully.[0m

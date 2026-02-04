@@ -1,0 +1,84 @@
+[
+  {
+    "step": "1. Admin Initial Balance",
+    "data": {
+      "income_balance": 0,
+      "purchase_balance": 0,
+      "wallet_balance": 10000,
+      "game_balance": 10000,
+      "w_dat": {
+        "m_v": 10000,
+        "g_v": 10000,
+        "i_v": 0,
+        "p_v": 0
+      }
+    }
+  },
+  {
+    "step": "2. User Initial Balance",
+    "data": {
+      "income_balance": 0,
+      "purchase_balance": 0,
+      "wallet_balance": 1000,
+      "game_balance": 1000,
+      "w_dat": {
+        "m_v": 1000,
+        "g_v": 1000,
+        "i_v": 0,
+        "p_v": 0
+      }
+    }
+  },
+  {
+    "step": "3. Plan Purchase Response",
+    "data": {
+      "message": "Plan purchased successfully",
+      "plan": {
+        "userId": "6971f915bc2e19f2b1fe17e0",
+        "planId": "6971f91620a6cadcba1ca97b",
+        "planName": "API Test Plan",
+        "dailyLimit": 5,
+        "status": "provisioning",
+        "expiryDate": "2026-01-29T10:16:54.963Z",
+        "provisioningUntil": "2026-01-22T10:31:54.963Z",
+        "serverIp": "104.28.184.48",
+        "tasksCompletedToday": 0,
+        "_id": "6971f91618ef29a94a8a4531",
+        "startDate": "2026-01-22T10:16:54.963Z",
+        "createdAt": "2026-01-22T10:16:54.963Z",
+        "updatedAt": "2026-01-22T10:16:54.963Z",
+        "__v": 0
+      }
+    }
+  },
+  {
+    "step": "4. User Post-Purchase Balance",
+    "data": {
+      "income_balance": 0,
+      "purchase_balance": 0,
+      "wallet_balance": 900,
+      "game_balance": 1000,
+      "w_dat": {
+        "m_v": 900,
+        "g_v": 1000,
+        "i_v": 0,
+        "p_v": 0
+      }
+    }
+  },
+  {
+    "step": "5. Admin Post-Commission Balance",
+    "data": {
+      "income_balance": 10,
+      "purchase_balance": 0,
+      "wallet_balance": 10000,
+      "game_balance": 10000,
+      "w_dat": {
+        "m_v": 10000,
+        "g_v": 10000,
+        "i_v": 10,
+        "p_v": 0
+      }
+    }
+  }
+]

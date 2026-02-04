@@ -1,0 +1,333 @@
+[36m==================================================
+       AVIATOR ENGINE STRESS TEST (100 ROUNDS)       
+==================================================[0m
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+Connecting to DB... Connected.
+[SETUP] Test User: pilot_tt2rbo_1769497694379 | Balance: 10000
+
+[33m[TEST 1] Commission & Normal Flow[0m
+[COMMISSION_TRACE] Bet:1000 | Rate:15% | Tech:45 | Replay:45 | Partner:60
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 1000 | Unlocked: 0
+✅ Bet Placed: 1000
+✅ Commission Distributed (Partner Wallet > 0)
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":2,"win":2000,"payout":2000,"vault_lock":0}
+✅ Cashout Success: Win 2000 | New Balance: 11000
+
+[33m[TEST 2] Vault Lock Logic (>10x Balance)[0m
+[COMMISSION_TRACE] Bet:100 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 100 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":50,"win":5000,"payout":1500,"vault_lock":3500}
+[32m✅ VAULT LOCKED! Win: 1500 | Locked: 3500 (70%) [0m
+   Detailed Vault: User Locked Balance = 3500
+
+[33m[TEST 3] Liquidity Calculation[0m
+   Pool: 1,000,000 | Bets: 50,000 | Calc Max Safe: ~19.4x
+   Generated Crash Point: 1x
+[32m✅ CRASH POINT SAFE (<= 19.4)[0m
+
+[33m[STRESS] Running 100 Rounds...[0m
+[COMMISSION_TRACE] Bet:434 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 434 | Unlocked: 217
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.53","win":664,"payout":664,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:341 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 341 | Unlocked: 170
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.98","win":1698,"payout":1698,"vault_lock":0}
+[COMMISSION_TRACE] Bet:442 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 442 | Unlocked: 221
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.86","win":1264,"payout":1264,"vault_lock":0}
+[COMMISSION_TRACE] Bet:111 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 111 | Unlocked: 55
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.46","win":162,"payout":162,"vault_lock":0}
+[COMMISSION_TRACE] Bet:475 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 475 | Unlocked: 237
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.47","win":1648,"payout":1648,"vault_lock":0}
+[COMMISSION_TRACE] Bet:102 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 102 | Unlocked: 51
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.96","win":301,"payout":301,"vault_lock":0}
+[COMMISSION_TRACE] Bet:393 | Rate:15% | Tech:17 | Replay:17 | Partner:23
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 393 | Unlocked: 196
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.13","win":837,"payout":837,"vault_lock":0}
+[COMMISSION_TRACE] Bet:450 | Rate:15% | Tech:20 | Replay:20 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 450 | Unlocked: 225
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.90","win":1305,"payout":1305,"vault_lock":0}
+[COMMISSION_TRACE] Bet:337 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 337 | Unlocked: 168
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.49","win":839,"payout":839,"vault_lock":0}
+[COMMISSION_TRACE] Bet:218 | Rate:15% | Tech:9 | Replay:9 | Partner:12
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 218 | Unlocked: 109
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.14","win":248,"payout":248,"vault_lock":0}
+[COMMISSION_TRACE] Bet:269 | Rate:15% | Tech:12 | Replay:12 | Partner:16
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 269 | Unlocked: 134
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.76","win":473,"payout":473,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:470 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 470 | Unlocked: 235
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.38","win":1588,"payout":1588,"vault_lock":0}
+[COMMISSION_TRACE] Bet:171 | Rate:15% | Tech:7 | Replay:7 | Partner:10
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 171 | Unlocked: 85
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.48","win":595,"payout":595,"vault_lock":0}
+[COMMISSION_TRACE] Bet:421 | Rate:15% | Tech:18 | Replay:18 | Partner:25
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 421 | Unlocked: 210
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.44","win":1448,"payout":1448,"vault_lock":0}
+[COMMISSION_TRACE] Bet:472 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 472 | Unlocked: 236
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.16","win":1491,"payout":1491,"vault_lock":0}
+[COMMISSION_TRACE] Bet:321 | Rate:15% | Tech:14 | Replay:14 | Partner:19
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 321 | Unlocked: 160
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.55","win":1139,"payout":1139,"vault_lock":0}
+[COMMISSION_TRACE] Bet:338 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 338 | Unlocked: 169
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.11","win":1389,"payout":1389,"vault_lock":0}
+[COMMISSION_TRACE] Bet:116 | Rate:15% | Tech:5 | Replay:5 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 116 | Unlocked: 58
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.61","win":186,"payout":186,"vault_lock":0}
+[COMMISSION_TRACE] Bet:249 | Rate:15% | Tech:11 | Replay:11 | Partner:14
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 249 | Unlocked: 124
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.25","win":1058,"payout":1058,"vault_lock":0}
+[COMMISSION_TRACE] Bet:201 | Rate:15% | Tech:9 | Replay:9 | Partner:12
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 201 | Unlocked: 100
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.32","win":667,"payout":667,"vault_lock":0}
+[COMMISSION_TRACE] Bet:178 | Rate:15% | Tech:7 | Replay:7 | Partner:10
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 178 | Unlocked: 89
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.95","win":525,"payout":525,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:189 | Rate:15% | Tech:8 | Replay:8 | Partner:11
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 189 | Unlocked: 94
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.08","win":582,"payout":582,"vault_lock":0}
+[COMMISSION_TRACE] Bet:236 | Rate:15% | Tech:10 | Replay:10 | Partner:14
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 236 | Unlocked: 118
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.47","win":346,"payout":346,"vault_lock":0}
+[COMMISSION_TRACE] Bet:401 | Rate:15% | Tech:18 | Replay:18 | Partner:24
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 401 | Unlocked: 39
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.99","win":1599,"payout":1599,"vault_lock":0}
+[COMMISSION_TRACE] Bet:341 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 341 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.57","win":535,"payout":535,"vault_lock":0}
+[COMMISSION_TRACE] Bet:109 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 109 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.59","win":282,"payout":282,"vault_lock":0}
+[COMMISSION_TRACE] Bet:301 | Rate:15% | Tech:13 | Replay:13 | Partner:18
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 301 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.87","win":562,"payout":562,"vault_lock":0}
+[COMMISSION_TRACE] Bet:146 | Rate:15% | Tech:6 | Replay:6 | Partner:8
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 146 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.18","win":318,"payout":318,"vault_lock":0}
+[COMMISSION_TRACE] Bet:432 | Rate:15% | Tech:19 | Replay:19 | Partner:25
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 432 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.72","win":1175,"payout":1175,"vault_lock":0}
+[COMMISSION_TRACE] Bet:363 | Rate:15% | Tech:16 | Replay:16 | Partner:21
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 363 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.46","win":529,"payout":529,"vault_lock":0}
+[COMMISSION_TRACE] Bet:412 | Rate:15% | Tech:18 | Replay:18 | Partner:24
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 412 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.98","win":815,"payout":815,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:444 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 444 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.02","win":452,"payout":452,"vault_lock":0}
+[COMMISSION_TRACE] Bet:215 | Rate:15% | Tech:9 | Replay:9 | Partner:12
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 215 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.00","win":430,"payout":430,"vault_lock":0}
+[COMMISSION_TRACE] Bet:357 | Rate:15% | Tech:15 | Replay:15 | Partner:21
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 357 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.87","win":667,"payout":667,"vault_lock":0}
+[COMMISSION_TRACE] Bet:468 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 468 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.32","win":1553,"payout":1553,"vault_lock":0}
+[COMMISSION_TRACE] Bet:348 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 348 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.10","win":382,"payout":382,"vault_lock":0}
+[COMMISSION_TRACE] Bet:427 | Rate:15% | Tech:19 | Replay:19 | Partner:25
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 427 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.88","win":802,"payout":802,"vault_lock":0}
+[COMMISSION_TRACE] Bet:175 | Rate:15% | Tech:7 | Replay:7 | Partner:10
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 175 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.54","win":619,"payout":619,"vault_lock":0}
+[COMMISSION_TRACE] Bet:348 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 348 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.19","win":1458,"payout":1458,"vault_lock":0}
+[COMMISSION_TRACE] Bet:136 | Rate:15% | Tech:6 | Replay:6 | Partner:8
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 136 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.26","win":579,"payout":579,"vault_lock":0}
+[COMMISSION_TRACE] Bet:358 | Rate:15% | Tech:15 | Replay:15 | Partner:21
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 358 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.50","win":1253,"payout":1253,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:331 | Rate:15% | Tech:14 | Replay:14 | Partner:19
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 331 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.43","win":473,"payout":473,"vault_lock":0}
+[COMMISSION_TRACE] Bet:217 | Rate:15% | Tech:9 | Replay:9 | Partner:12
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 217 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.54","win":985,"payout":985,"vault_lock":0}
+[COMMISSION_TRACE] Bet:111 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 111 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.82","win":202,"payout":202,"vault_lock":0}
+[COMMISSION_TRACE] Bet:301 | Rate:15% | Tech:13 | Replay:13 | Partner:18
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 301 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.18","win":656,"payout":656,"vault_lock":0}
+[COMMISSION_TRACE] Bet:489 | Rate:15% | Tech:21 | Replay:21 | Partner:29
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 489 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.63","win":1775,"payout":1775,"vault_lock":0}
+[COMMISSION_TRACE] Bet:276 | Rate:15% | Tech:12 | Replay:12 | Partner:16
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 276 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.20","win":331,"payout":331,"vault_lock":0}
+[COMMISSION_TRACE] Bet:315 | Rate:15% | Tech:14 | Replay:14 | Partner:18
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 315 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.28","win":718,"payout":718,"vault_lock":0}
+[COMMISSION_TRACE] Bet:468 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 468 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.60","win":748,"payout":748,"vault_lock":0}
+[COMMISSION_TRACE] Bet:470 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 470 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.22","win":1983,"payout":1983,"vault_lock":0}
+[COMMISSION_TRACE] Bet:363 | Rate:15% | Tech:16 | Replay:16 | Partner:21
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 363 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.96","win":1800,"payout":1800,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:291 | Rate:15% | Tech:12 | Replay:12 | Partner:17
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 291 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.55","win":451,"payout":451,"vault_lock":0}
+[COMMISSION_TRACE] Bet:412 | Rate:15% | Tech:18 | Replay:18 | Partner:24
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 412 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.75","win":1133,"payout":1133,"vault_lock":0}
+[COMMISSION_TRACE] Bet:190 | Rate:15% | Tech:8 | Replay:8 | Partner:11
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 190 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.73","win":708,"payout":708,"vault_lock":0}
+[COMMISSION_TRACE] Bet:303 | Rate:15% | Tech:13 | Replay:13 | Partner:18
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 303 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.94","win":587,"payout":587,"vault_lock":0}
+[COMMISSION_TRACE] Bet:455 | Rate:15% | Tech:20 | Replay:20 | Partner:27
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 455 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.34","win":1974,"payout":1974,"vault_lock":0}
+[COMMISSION_TRACE] Bet:444 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 444 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.97","win":1762,"payout":1762,"vault_lock":0}
+[COMMISSION_TRACE] Bet:442 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 442 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.19","win":967,"payout":967,"vault_lock":0}
+[COMMISSION_TRACE] Bet:438 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 438 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.74","win":762,"payout":762,"vault_lock":0}
+[COMMISSION_TRACE] Bet:193 | Rate:15% | Tech:8 | Replay:8 | Partner:11
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 193 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.72","win":717,"payout":717,"vault_lock":0}
+[COMMISSION_TRACE] Bet:331 | Rate:15% | Tech:14 | Replay:14 | Partner:19
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 331 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.01","win":665,"payout":665,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:151 | Rate:15% | Tech:6 | Replay:6 | Partner:8
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 151 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.61","win":696,"payout":696,"vault_lock":0}
+[COMMISSION_TRACE] Bet:404 | Rate:15% | Tech:18 | Replay:18 | Partner:24
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 404 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.13","win":860,"payout":860,"vault_lock":0}
+[COMMISSION_TRACE] Bet:493 | Rate:15% | Tech:21 | Replay:21 | Partner:29
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 493 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.72","win":847,"payout":847,"vault_lock":0}
+[COMMISSION_TRACE] Bet:260 | Rate:15% | Tech:11 | Replay:11 | Partner:15
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 260 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.89","win":491,"payout":491,"vault_lock":0}
+[COMMISSION_TRACE] Bet:220 | Rate:15% | Tech:9 | Replay:9 | Partner:13
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 220 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.24","win":712,"payout":712,"vault_lock":0}
+[COMMISSION_TRACE] Bet:395 | Rate:15% | Tech:17 | Replay:17 | Partner:23
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 395 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.89","win":746,"payout":746,"vault_lock":0}
+[COMMISSION_TRACE] Bet:485 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 485 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.63","win":790,"payout":790,"vault_lock":0}
+[COMMISSION_TRACE] Bet:267 | Rate:15% | Tech:12 | Replay:12 | Partner:16
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 267 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.51","win":403,"payout":403,"vault_lock":0}
+[COMMISSION_TRACE] Bet:499 | Rate:15% | Tech:22 | Replay:22 | Partner:29
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 499 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.49","win":1741,"payout":1741,"vault_lock":0}
+[COMMISSION_TRACE] Bet:305 | Rate:15% | Tech:13 | Replay:13 | Partner:18
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 305 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.69","win":1125,"payout":1125,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:220 | Rate:15% | Tech:9 | Replay:9 | Partner:13
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 220 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.43","win":314,"payout":314,"vault_lock":0}
+[COMMISSION_TRACE] Bet:156 | Rate:15% | Tech:6 | Replay:6 | Partner:9
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 156 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.99","win":778,"payout":778,"vault_lock":0}
+[COMMISSION_TRACE] Bet:377 | Rate:15% | Tech:16 | Replay:16 | Partner:22
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 377 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.67","win":1760,"payout":1760,"vault_lock":0}
+[COMMISSION_TRACE] Bet:377 | Rate:15% | Tech:16 | Replay:16 | Partner:22
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 377 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.90","win":716,"payout":716,"vault_lock":0}
+[COMMISSION_TRACE] Bet:481 | Rate:15% | Tech:21 | Replay:21 | Partner:28
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 481 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.39","win":2111,"payout":2111,"vault_lock":0}
+[COMMISSION_TRACE] Bet:211 | Rate:15% | Tech:9 | Replay:9 | Partner:12
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 211 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.41","win":508,"payout":508,"vault_lock":0}
+[COMMISSION_TRACE] Bet:282 | Rate:15% | Tech:12 | Replay:12 | Partner:16
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 282 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.40","win":1240,"payout":1240,"vault_lock":0}
+[COMMISSION_TRACE] Bet:449 | Rate:15% | Tech:20 | Replay:20 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 449 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.91","win":2204,"payout":2204,"vault_lock":0}
+[COMMISSION_TRACE] Bet:252 | Rate:15% | Tech:11 | Replay:11 | Partner:14
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 252 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.48","win":372,"payout":372,"vault_lock":0}
+[COMMISSION_TRACE] Bet:114 | Rate:15% | Tech:5 | Replay:5 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 114 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.95","win":564,"payout":564,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:141 | Rate:15% | Tech:6 | Replay:6 | Partner:8
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 141 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.96","win":276,"payout":276,"vault_lock":0}
+[COMMISSION_TRACE] Bet:346 | Rate:15% | Tech:15 | Replay:15 | Partner:20
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 346 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.94","win":671,"payout":671,"vault_lock":0}
+[COMMISSION_TRACE] Bet:284 | Rate:15% | Tech:12 | Replay:12 | Partner:16
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 284 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.72","win":1056,"payout":1056,"vault_lock":0}
+[COMMISSION_TRACE] Bet:461 | Rate:15% | Tech:20 | Replay:20 | Partner:27
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 461 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.18","win":1004,"payout":1004,"vault_lock":0}
+[COMMISSION_TRACE] Bet:238 | Rate:15% | Tech:10 | Replay:10 | Partner:14
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 238 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.76","win":1132,"payout":1132,"vault_lock":0}
+[COMMISSION_TRACE] Bet:111 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 111 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.64","win":515,"payout":515,"vault_lock":0}
+[COMMISSION_TRACE] Bet:226 | Rate:15% | Tech:9 | Replay:9 | Partner:13
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 226 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.09","win":246,"payout":246,"vault_lock":0}
+[COMMISSION_TRACE] Bet:369 | Rate:15% | Tech:16 | Replay:16 | Partner:22
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 369 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.22","win":819,"payout":819,"vault_lock":0}
+[COMMISSION_TRACE] Bet:104 | Rate:15% | Tech:4 | Replay:4 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 104 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.97","win":308,"payout":308,"vault_lock":0}
+[COMMISSION_TRACE] Bet:206 | Rate:15% | Tech:9 | Replay:9 | Partner:12
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 206 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"4.81","win":990,"payout":990,"vault_lock":0}
+.[COMMISSION_TRACE] Bet:412 | Rate:15% | Tech:18 | Replay:18 | Partner:24
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 412 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.04","win":428,"payout":428,"vault_lock":0}
+[COMMISSION_TRACE] Bet:436 | Rate:15% | Tech:19 | Replay:19 | Partner:26
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 436 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.54","win":1543,"payout":1543,"vault_lock":0}
+[COMMISSION_TRACE] Bet:153 | Rate:15% | Tech:6 | Replay:6 | Partner:8
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 153 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.83","win":432,"payout":432,"vault_lock":0}
+[COMMISSION_TRACE] Bet:327 | Rate:15% | Tech:14 | Replay:14 | Partner:19
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 327 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.29","win":1075,"payout":1075,"vault_lock":0}
+[COMMISSION_TRACE] Bet:119 | Rate:15% | Tech:5 | Replay:5 | Partner:6
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 119 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.37","win":401,"payout":401,"vault_lock":0}
+[COMMISSION_TRACE] Bet:250 | Rate:15% | Tech:11 | Replay:11 | Partner:14
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 250 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.21","win":802,"payout":802,"vault_lock":0}
+[COMMISSION_TRACE] Bet:157 | Rate:15% | Tech:6 | Replay:6 | Partner:9
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 157 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"1.39","win":218,"payout":218,"vault_lock":0}
+[COMMISSION_TRACE] Bet:355 | Rate:15% | Tech:15 | Replay:15 | Partner:21
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 355 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"3.86","win":1370,"payout":1370,"vault_lock":0}
+[COMMISSION_TRACE] Bet:363 | Rate:15% | Tech:16 | Replay:16 | Partner:21
+[AVIATOR_BET] User: 6978645e6b40a203b1384061 | Amount: 363 | Unlocked: 0
+{"type":"AVIATOR_CASHOUT","userId":"6978645e6b40a203b1384061","multiplier":"2.36","win":856,"payout":856,"vault_lock":0}
+
+[32m✅ 100 Rounds Completed Successfully.[0m

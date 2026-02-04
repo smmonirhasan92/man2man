@@ -1,0 +1,8 @@
+[36m==================================================
+       AVIATOR ENGINE STRESS TEST (100 ROUNDS)       
+==================================================[0m
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+Connecting to DB... Connected.

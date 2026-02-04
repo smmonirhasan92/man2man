@@ -1,0 +1,140 @@
+[
+    {
+        "keywords": [
+            "deposit",
+            "add money",
+            "recharge",
+            "taka dhukabo",
+            "dp",
+            "invest",
+            "balance add",
+            "dposit",
+            "diposit",
+            "kivabe taka dhukabo",
+            "bkash",
+            "nagad"
+        ],
+        "responses": [
+            "To activate your Cloud Server, go to Wallet > Recharge. Rent your Virtual US Connection (VXC) via Bkash/Nagad securely.",
+            "VXC সার্ভার এক্টিভ করতে Wallet > Recharge এ যান। বিকাশ বা নগদ এর মাধ্যমে আপনি সহজেই সার্ভার রেন্ট নিতে পারবেন।",
+            "You can start by renting a Cloud Server via Bkash/Nagad in the Wallet section. It's instant and verified."
+        ]
+    },
+    {
+        "keywords": [
+            "withdraw",
+            "cash out",
+            "taka tulbo",
+            "payment",
+            "payout",
+            "wd",
+            "withdro",
+            "kivabe taka pabo",
+            "pay",
+            "money out",
+            "cashout"
+        ],
+        "responses": [
+            "Your Revenue Share is paid in USD and converted to BDT! Go to Wallet > Withdraw. We settle to Bkash/Nagad.",
+            "আপনার ইনকাম (Revenue Share) সরাসরি বিকাশ বা নগদে নিতে পারবেন। Wallet > Withdraw অপশনটি ব্যবহার করুন।",
+            "Earnings are sent directly to your Bkash/Nagad. Just submit a request from the Wallet page!"
+        ]
+    },
+    {
+        "keywords": [
+            "plan",
+            "package",
+            "upgrade",
+            "vip",
+            "price",
+            "cost",
+            "roi",
+            "profit",
+            "standard",
+            "premium",
+            "platinum",
+            "server",
+            "node",
+            "rent",
+            "buy server"
+        ],
+        "responses": [
+            "Select a 'Cloud Server Tier' to scale your partnership! Our 'Platinum Server' grants maximum bandwidth for high-value reviews.",
+            "আমাদের Platinum Server ব্যবহার করলে আপনি বড় ইউএস ব্র্যান্ডের কাজ পাবেন, যা আপনার রেভিনিউ অনেক বাড়িয়ে দেবে।",
+            "Rent a Digital Workspace (Server). Higher tiers = Global Access = More Revenue Share for you."
+        ]
+    },
+    {
+        "keywords": [
+            "task",
+            "ad",
+            "income",
+            "work",
+            "kaj",
+            "kaj ki",
+            "how work",
+            "ki korbo",
+            "how to earn",
+            "daily task",
+            "review",
+            "product review"
+        ],
+        "responses": [
+            "As a partner, you provide 'Social Proof' for US brands. Connect via Cloud Server and submit 5-star reviews to earn.",
+            "আপনার কাজ হলো 'Cloud Server' দিয় ইউএস ব্র্যান্ডের পজিটিভ রিভিউ দেওয়া। প্রতিটি ভেরিফাইড রিভিউ এর জন্য আপনি রেভিনিউ শেয়ার পাবেন।",
+            "Connect to the VXC Network and review products. Brands pay for this social proof, and we share that profit with you."
+        ]
+    },
+    {
+        "keywords": [
+            "scam",
+            "fake",
+            "real",
+            "trust",
+            "verified",
+            "proof",
+            "office",
+            "license",
+            "guarantee",
+            "safe",
+            "secure"
+        ],
+        "responses": [
+            "We operate a verified 'Digital Partnership Model'. You are renting real Cloud infrastructure (VXC) for legitimate brand validation.",
+            "এটি ১০০% ভেরিফাইড ইউএস প্ল্যাটফর্ম। হাজার হাজার পার্টনার আমাদের সাথে কাজ করে প্রতিদিন রেভিনিউ নিচ্ছেন।",
+            "Safety is our priority. We are a secure B2B platform connecting you to the global advertising market."
+        ]
+    },
+    {
+        "keywords": [
+            "login",
+            "password",
+            "sign in",
+            "cant login",
+            "forgot",
+            "pass"
+        ],
+        "responses": [
+            "Access denied? Verify your Cloud Server credentials. If you need a reset, please contact Admin support.",
+            "লগিন সমস্যা? আপনার পাসওয়ার্ড চেক করুন অথবা এডমিনের সাথে যোগাযোগ করে রিসেট করে নিন।",
+            "Lost access? Don't worry. Contact Support to regain entry to your Digital Workspace."
+        ]
+    },
+    {
+        "keywords": [
+            "hello",
+            "hi",
+            "salam",
+            "hey",
+            "boss",
+            "bro",
+            "sir",
+            "assalam"
+        ],
+        "responses": [
+            "Welcome, Partner! I am your Revenue Success Manager. Ready to connect your Cloud Server and start generating income?",
+            "স্বাগতম পার্টনার! আমি আপনার রেভিনিউ ম্যানেজার। ক্লাউড সার্ভার কানেক্ট করে ইনকাম শুরু করতে চান?",
+            "Hello! Ready to verify your US identity and start earning?"
+        ]
+    }
+]

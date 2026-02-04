@@ -1,0 +1,73 @@
+﻿DEBUG: transactionRoutes.js Loaded
+Γ£à NotificationService: Socket.io Initialized
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+node : SERVER CRASH 
+STACK: Error: Cannot 
+find module '../bonus
+/JackpotService'
+At line:1 char:1
++ node server.js 
+2>&1 | Out-File 
+-FilePath startup_deb
+ug_stack.txt -Enc ...
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (SERVER    
+ CRASH ST...Jackp    
+otService':Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Require stack:
+- D:\man2man\backend\
+modules\cron\Pulse.js
+- D:\man2man\backend\
+server.js
+    at Module._resolv
+eFilename (node:inter
+nal/modules/cjs/loade
+r:1421:15)
+    at 
+defaultResolveImpl (n
+ode:internal/modules/
+cjs/loader:1059:19)
+    at resolveForCJSW
+ithHooks (node:intern
+al/modules/cjs/loader
+:1064:22)
+    at Module._load (
+node:internal/modules
+/cjs/loader:1227:37)
+    at TracingChannel
+.traceSync (node:diag
+nostics_channel:328:1
+4)
+    at 
+wrapModuleLoad (node:
+internal/modules/cjs/
+loader:245:24)
+    at 
+Module.require (node:
+internal/modules/cjs/
+loader:1504:12)
+    at require (node:
+internal/modules/help
+ers:152:16)
+    at 
+Object.<anonymous> (D
+:\man2man\backend\mod
+ules\cron\Pulse.js:6:
+24)
+    at 
+Module._compile (node
+:internal/modules/cjs
+/loader:1761:14)
+Failed to start 
+server:

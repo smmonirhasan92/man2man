@@ -1,0 +1,26 @@
+Connecting to DB...
+✅ DB Connected
+
+--- Active Lottery Slots ---
+Slot ID: 697e4df931be8f74efc89f01 | Tier: SILVER | Price: 40 | Prize: 2000
+Slot ID: 697e4df931be8f74efc89f05 | Tier: GOLD | Price: 50 | Prize: 2500
+Slot ID: 697e4df931be8f74efc89f09 | Tier: PLATINUM | Price: 80 | Prize: 4000
+Slot ID: 697e4df931be8f74efc89f0d | Tier: DIAMOND | Price: 120 | Prize: 6000
+Slot ID: 697ebd933e3f859230b68ac2 | Tier: TIER_10 | Price: 10 | Prize: 500
+Slot ID: 697ebd933e3f859230b68acd | Tier: TIER_20 | Price: 20 | Prize: 1000
+Slot ID: 697ebd933e3f859230b68ad5 | Tier: TIER_60 | Price: 60 | Prize: 3000
+Slot ID: 697ebd933e3f859230b68ada | Tier: TIER_70 | Price: 70 | Prize: 3500
+Slot ID: 697ebd933e3f859230b68adf | Tier: TIER_90 | Price: 90 | Prize: 4500
+Slot ID: 697ebd933e3f859230b68ae4 | Tier: TIER_100 | Price: 100 | Prize: 5000
+Slot ID: 697ebd933e3f859230b68ae9 | Tier: TIER_110 | Price: 110 | Prize: 5500
+⚠️ Missing active slots for prices: 30
+
+--- Simulating Draw Cycle ---
+Testing Draw on Slot: SILVER (ID: 697e4df931be8f74efc89f01)
+User Balance: 9940. Buying 1 ticket for 40...
+✅ Ticket Bought. New Balance: 9900
+Forcing Draw...
+Waiting for draw finalization (8s)...
+Slot Status: COMPLETED
+✅ Draw Cycle Completed Successfully.
+No winners (expected if only 1 ticket and likely loss).

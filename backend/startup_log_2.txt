@@ -1,0 +1,25 @@
+﻿DEBUG: transactionRoutes.js Loaded
+Γ£à NotificationService: Socket.io Initialized
+[DEBUG] Connecting to DB with URI: mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true
+MongoDB Connected: 127.0.0.1
+Database Name: universal_game_core_v1
+Replica Set: None
+node : Failed to 
+start server:
+At line:1 char:1
++ node server.js 
+2>&1 | Out-File 
+-FilePath 
+startup_log_2.txt 
+-Encoding  ...
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Failed    
+ to start server:    
+:String) [], Rem    
+oteException
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
