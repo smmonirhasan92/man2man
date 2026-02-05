@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "cd backend && npm install && npm start",
+    "postinstall": "cd backend && npm install",
+    "start": "node backend/server.js",
     "build": "echo 'No build step for root' && exit 0"
   },
   "dependencies": {
