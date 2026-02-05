@@ -111,6 +111,10 @@ function RegisterForm() {
                 router.push(res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
             } else { router.push('/'); }
         } catch (err) {
+            // [MOBILE DEBUGGING] - FORCE ALERT TO SEE RAW ERROR
+            const debugMsg = `MOBILE ERROR:\nStatus: ${err.response?.status}\nMsg: ${err.response?.data?.message}\nRaw: ${err.message}`;
+            alert(debugMsg);
+
             setError(err.response?.data?.message || 'Registration failed');
             playError();
             setLoading(false);
