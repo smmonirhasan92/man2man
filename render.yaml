@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: man2man-api
+    env: node
+    plan: free
+    rootCommand: cd backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+    autoDeploy: true
