@@ -17,7 +17,7 @@ const getSocket = (namespace = '/system') => {
 
         sockets[namespace] = io(SOCKET_URL, {
             path: '/socket.io',
-            transports: ['websocket'], // [FIX] Force WebSocket to avoid polling errors
+            transports: ['polling', 'websocket'], // [FIX] Allow Polling fallback for better mobile compatibility
             withCredentials: true,
             auth: {
                 token: typeof window !== 'undefined' ? localStorage.getItem('token') : null
