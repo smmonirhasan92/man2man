@@ -49,7 +49,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
     credentials: true
 }));
-app.options('*', cors()); // Enable Preflight for all routes
+app.options('(.*)', cors()); // [FIX] Express 5.x compatible wildcard
 
 // Manual OPTIONS handler to ensure Preflight works 100%
 // Manual OPTIONS handler REMOVED in favor of dynamic 'cors' middleware
