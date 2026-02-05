@@ -18,7 +18,7 @@ export async function middleware(request) {
         // Build API URL. Middleware runs on Edge, so localhost might be tricky if not defined.
         // Assuming NEXT_PUBLIC_API_URL is set in environment. 
         // Fallback to localhost:5050 if not set (Dev).
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com';
 
         // Timeout to prevent blocking
         const controller = new AbortController();

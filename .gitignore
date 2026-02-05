@@ -21,6 +21,13 @@ dist/
 .DS_Store
 *.log
 
+# AI Models (LARGE)
+*.gguf
+*.bin
+*.pth
+*.pt
+*.onnx
+
 # Large Archives (BLOAT)
 *.zip
 *.rar
