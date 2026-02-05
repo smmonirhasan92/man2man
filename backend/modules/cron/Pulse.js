@@ -24,7 +24,8 @@ const initPulse = () => {
             }
 
             // 2. Active: ProfitGuard Audit
-            await ProfitGuard.audit();
+            // [OPTIMIZATION] Moved to Hourly to prevent Render Memory Spike
+            // await ProfitGuard.audit();
 
             // 3. Hourly Tasks (Check minute 0)
             const now = new Date();
@@ -35,6 +36,9 @@ const initPulse = () => {
             await LotteryService.checkDraw();
 
             if (now.getMinutes() === 0) {
+                // [MOVED HERE] Run Heavy Audits Hourly
+                await ProfitGuard.audit();
+
                 // await JackpotService.drawHourlyJackpot();
 
                 // Dailys (Midnight Check)

@@ -42,9 +42,18 @@ app.use((req, res, next) => {
 
 // Core Middleware
 // HARDCODED CORS FOR LOCALHOST STABILITY
-// DYNAMIC CORS origin for local development
+// DYNAMIC CORS origin for local development + Production Vercel
+// [FIX] Accept CLIENT_URL from Env or fallback to known domains
+const ALLOWED_ORIGINS = [
+    "https://man2man.vercel.app",
+    "https://usa-affiliate.vercel.app",
+    "http://localhost:3000",
+    process.env.CLIENT_URL, // Dynamic from Render Env
+    /\.vercel\.app$/        // [FIX] Allow all Vercel Preview Deployments
+].filter(Boolean); // Remove undefined
+
 app.use(cors({
-    origin: ["https://man2man.vercel.app", "http://localhost:3000"],
+    origin: ALLOWED_ORIGINS,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
     credentials: true
@@ -131,7 +140,12 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ["https://man2man.vercel.app", "http://localhost:3000"],
+        origin: [
+            "https://man2man.vercel.app",
+            "https://usa-affiliate.vercel.app",
+            "http://localhost:3000",
+            process.env.CLIENT_URL
+        ].filter(Boolean),
         methods: ["GET", "POST"],
         credentials: true
     }

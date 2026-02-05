@@ -2,15 +2,15 @@ import axios from 'axios';
 
 const api = axios.create({
     // Dynamic Base URL for Vercel/Local
-    // [FORCE FIX] Hardcoded Production URL for Mobile Stability
-    baseURL: 'https://man2man-api.onrender.com/api',
+    // [FIX] Use Environment Variable with Fallback to Localhost
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
 // [DEBUG] Prove to user which URL is being used
-console.log('🚀 API CLIENT INITIALIZED. Target:', 'https://man2man-api.onrender.com/api');
+console.log('🚀 API CLIENT INITIALIZED. Target:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api');
 
 
 // Add a request interceptor to attach the token

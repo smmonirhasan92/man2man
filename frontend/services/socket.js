@@ -9,15 +9,17 @@ const getSocket = (namespace = '/system') => {
     if (typeof window === 'undefined') return null; // [FIX] Prevent SSR Crash
 
     if (!sockets[namespace]) {
-        // [FORCE FIX] Hardcoded Production URL
-        const BASE_URL = 'https://man2man-api.onrender.com';
+        // [FIX] Use Dynamic URL from Environment
+        // Strip '/api' if present because Socket.io needs the root URL
+        const RAW_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000';
+        const BASE_URL = RAW_URL.replace('/api', '');
         const SOCKET_URL = BASE_URL + namespace;
 
         console.log(`[SOCKET_SERVICE] 🔌 Connecting to: ${SOCKET_URL}`);
 
         sockets[namespace] = io(SOCKET_URL, {
             path: '/socket.io',
-            transports: ['polling', 'websocket'], // [FIX] Restore polling for compatibility
+            transports: ['websocket'], // [CRITICAL] Force WebSocket to bypass Vercel/Proxy handshake failures
             withCredentials: true,
             auth: {
                 token: typeof window !== 'undefined' ? localStorage.getItem('token') : null
