@@ -1,6 +1,6 @@
 
 const io = require('socket.io-client');
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com';
 const socket = io(BASE_URL + '/system', { transports: ['websocket'] });
 
 console.log('Attempting Connection...');
