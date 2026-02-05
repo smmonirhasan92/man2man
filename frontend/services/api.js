@@ -2,7 +2,8 @@ import axios from 'axios';
 
 const api = axios.create({
     // Dynamic Base URL for Vercel/Local
-    baseURL: (process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com') + '/api',
+    // [FORCE FIX] Hardcoded Production URL for Mobile Stability
+    baseURL: 'https://man2man-api.onrender.com/api',
     headers: {
         'Content-Type': 'application/json'
     }

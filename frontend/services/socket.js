@@ -9,7 +9,8 @@ const getSocket = (namespace = '/system') => {
     if (typeof window === 'undefined') return null; // [FIX] Prevent SSR Crash
 
     if (!sockets[namespace]) {
-        const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com';
+        // [FORCE FIX] Hardcoded Production URL
+        const BASE_URL = 'https://man2man-api.onrender.com';
         const SOCKET_URL = BASE_URL + namespace;
 
         console.log(`[SOCKET_SERVICE] 🔌 Connecting to: ${SOCKET_URL}`);
