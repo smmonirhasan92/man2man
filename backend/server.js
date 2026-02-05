@@ -12,11 +12,20 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 app.disable('x-powered-by'); // Hide Tech Stack
-const PORT = process.env.PORT || 5050;
+
+// [DEBUG] Request Tracer - Log EVERYTHING
+app.use((req, res, next) => {
+    console.log(`[TRACER] ${req.method} ${req.originalUrl}`);
+    console.log(`[TRACER] Host: ${req.headers.host}`);
+    next();
+});
+
+const PORT = process.env.PORT || 10000; // Render default matches 10000 often, but better to trust env
+console.log(`[BOOT] Server starting... PORT=${PORT}`);
 
 app.use((req, res, next) => {
+    // Existing Shield Logic...
     process.stdout.write(`[RAW_REQ] ${req.method} ${req.url}\n`);
-    console.log(`[REQUEST] ${req.method} ${req.url}`);
 
     // --- CLOUDFLARE SHIELD (Stealth Mode) ---
     // In production, only accept requests proxied by Cloudflare
