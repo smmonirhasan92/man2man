@@ -58,7 +58,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
     credentials: true
 }));
-app.options('*', cors()); // [FIX] Express 5.x Standard Wildcard
+// app.options('*', cors()); // [REMOVED] Causing PathError in Express 5.x. Global middleware handles it.
 
 // Manual OPTIONS handler to ensure Preflight works 100%
 // Manual OPTIONS handler REMOVED in favor of dynamic 'cors' middleware
