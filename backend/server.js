@@ -35,17 +35,12 @@ app.use((req, res, next) => {
 // HARDCODED CORS FOR LOCALHOST STABILITY
 // DYNAMIC CORS origin for local development
 app.use(cors({
-    origin: (origin, callback) => {
-        const allowed = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5050'];
-        if (!origin || allowed.includes(origin) || origin.endsWith('.vercel.app') || origin === process.env.FRONTEND_URL) {
-            callback(null, true);
-        } else {
-            console.warn(`[CORS] Blocked Origin: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: ['https://man2man.vercel.app', 'http://localhost:3000', 'https://man2man-api.onrender.com'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
     credentials: true
 }));
+app.options('*', cors()); // Enable Preflight for all routes
 
 // Manual OPTIONS handler to ensure Preflight works 100%
 // Manual OPTIONS handler REMOVED in favor of dynamic 'cors' middleware
@@ -122,19 +117,8 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: (origin, callback) => {
-            // Allow requests with no origin (like mobile apps or curl requests)
-            if (!origin) return callback(null, true);
-
-            const allowed = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"];
-            if (allowed.includes(origin) || origin.endsWith('.vercel.app') || origin === process.env.FRONTEND_URL) {
-                callback(null, true);
-            } else {
-                console.warn(`[SOCKET] Blocked Origin: ${origin}`);
-                callback(new Error('Not allowed by CORS'));
-            }
-        },
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        origin: ['https://man2man.vercel.app', 'http://localhost:3000'],
+        methods: ["GET", "POST"],
         credentials: true
     }
 });
