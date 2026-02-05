@@ -20,7 +20,11 @@ app.use((req, res, next) => {
     next();
 });
 
-const PORT = process.env.PORT || 10000; // Render default matches 10000 often, but better to trust env
+const PORT = process.env.PORT; // [FIX] Strict Render Port Usage - No Fallbacks
+if (!PORT) {
+    console.error('[BOOT] FATAL: process.env.PORT is not set. Render deployment requires this.');
+    process.exit(1);
+}
 console.log(`[BOOT] Server starting... PORT=${PORT}`);
 
 app.use((req, res, next) => {
@@ -81,6 +85,11 @@ app.use('/uploads', express.static('uploads'));
 // Test Route
 app.get('/', (req, res) => {
     res.send('USA Afiliat marking Backend is running!');
+});
+
+// [NEW] Health Check for Deployment Verification
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
 });
 
 app.get('/api', (req, res) => {

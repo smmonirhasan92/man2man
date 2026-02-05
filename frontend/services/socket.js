@@ -17,7 +17,7 @@ const getSocket = (namespace = '/system') => {
 
         sockets[namespace] = io(SOCKET_URL, {
             path: '/socket.io',
-            transports: ['websocket'], // [FIX] STRICT WebSocket Only to avoid polling errors
+            transports: ['polling', 'websocket'], // [FIX] Restore polling for compatibility
             withCredentials: true,
             auth: {
                 token: typeof window !== 'undefined' ? localStorage.getItem('token') : null
@@ -33,7 +33,10 @@ const getSocket = (namespace = '/system') => {
         });
 
         sockets[namespace].on('connect_error', (err) => {
-            // Suppress annoying logs if it's just a temporary disconnect
+            // [DEBUG] User requested Alert for Mobile Debugging
+            if (typeof window !== 'undefined') {
+                // alert('SOCKET_ERROR: ' + err.message); // Commented out for now, can uncomment for deeper debug
+            }
             console.warn(`[SOCKET_SERVICE] Connection Error (${namespace}):`, err.message);
         });
     }
