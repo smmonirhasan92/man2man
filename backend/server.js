@@ -44,8 +44,8 @@ app.use((req, res, next) => {
 // HARDCODED CORS FOR LOCALHOST STABILITY
 // DYNAMIC CORS origin for local development
 app.use(cors({
-    origin: ['https://man2man.vercel.app', 'http://localhost:3000', 'https://man2man-api.onrender.com'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: ["https://man2man.vercel.app", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
     credentials: true
 }));
@@ -126,7 +126,7 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ['https://man2man.vercel.app', 'http://localhost:3000'],
+        origin: ["https://man2man.vercel.app", "http://localhost:3000"],
         methods: ["GET", "POST"],
         credentials: true
     }
