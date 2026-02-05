@@ -45,7 +45,7 @@ export default function ImageSlider() {
     useEffect(() => {
         const fetchBanners = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/banners');
+                const res = await fetch('https://man2man-api.onrender.com/api/banners');
                 if (res.ok) {
                     const data = await res.json();
                     if (data.length > 0) setBanners(data);

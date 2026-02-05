@@ -9,6 +9,10 @@ const api = axios.create({
     }
 });
 
+// [DEBUG] Prove to user which URL is being used
+console.log('🚀 API CLIENT INITIALIZED. Target:', 'https://man2man-api.onrender.com/api');
+
+
 // Add a request interceptor to attach the token
 api.interceptors.request.use(
     (config) => {
