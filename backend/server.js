@@ -47,13 +47,15 @@ app.use((req, res, next) => {
 const ALLOWED_ORIGINS = [
     "https://man2man.vercel.app",
     "https://usa-affiliate.vercel.app",
+    "https://man2man-fvzfximrq-boos-projects-a58a40d0.vercel.app", // [NEW] Specific Preview URL
     "http://localhost:3000",
     process.env.CLIENT_URL, // Dynamic from Render Env
     /\.vercel\.app$/        // [FIX] Allow all Vercel Preview Deployments
 ].filter(Boolean); // Remove undefined
 
 app.use(cors({
-    origin: ALLOWED_ORIGINS,
+    origin: true, // [TEMPORARY CHECK] Reflects the request origin (Effectively allows ALL), while keeping credentials working.
+    // origin: ALLOWED_ORIGINS, // We will revert to this strict list after testing
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
     credentials: true
