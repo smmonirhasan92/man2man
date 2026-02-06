@@ -27,39 +27,7 @@ router.post('/super-ace/spin', protect, async (req, res) => {
 
 
 // --- AVIATOR (CRASH) ROUTES ---
-const AviatorService = require('../modules/game/AviatorService');
-
-router.post('/aviator/bet', protect, async (req, res) => {
-    try {
-        const { betAmount } = req.body;
-        const result = await AviatorService.placeBet(req.user.user.id, parseFloat(betAmount));
-        res.json(result);
-    } catch (err) {
-        console.error("[Aviator Bet Error]", err.message);
-        res.status(400).json({ message: err.message });
-    }
-});
-
-router.post('/aviator/cashout', protect, async (req, res) => {
-    try {
-        const { betId, multiplier } = req.body;
-        const result = await AviatorService.cashOut(req.user.user.id, betId, parseFloat(multiplier));
-        res.json(result);
-    } catch (err) {
-        console.error("[Aviator Cashout Error]", err.message);
-        res.status(400).json({ message: err.message });
-    }
-});
-
-router.get('/aviator/state', async (req, res) => {
-    try {
-        const state = await AviatorService.getState();
-        res.json(state);
-    } catch (err) {
-        console.error("[Aviator State Error]", err.message);
-        res.status(500).json({ message: err.message });
-    }
-});
+// --- AVIATOR ROUTES REMOVED ---
 
 // --- LOTTERY ROUTES ---
 const LotteryService = require('../modules/game/LotteryService');

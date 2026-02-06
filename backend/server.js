@@ -266,8 +266,6 @@ const startServer = async () => {
 };
 
 // --- Game Loops ---
-try {
-    require('./modules/game/AviatorGameLoop').start();
-} catch (e) { console.error("Failed to start Aviator Loop:", e.message); }
+// Aviator Game Loop Removed per user request
 
 startServer();

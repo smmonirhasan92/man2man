@@ -27,16 +27,7 @@ export default function GameCenter() {
 
     // 15 Games Data (2 Real, 13 Mock)
     const games = [
-        {
-            id: 'aviator',
-            name: 'Aviator',
-            desc: 'Fly High & Win',
-            icon: <Rocket className="w-8 h-8 text-rose-500" />,
-            link: '/game/aviator',
-            real: true,
-            color: 'from-rose-500/20 to-orange-500/20',
-            accent: 'text-rose-400'
-        },
+        // Aviator Removed
         {
             id: 'super-ace',
             name: 'Super Ace',
