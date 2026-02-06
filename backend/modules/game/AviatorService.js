@@ -264,7 +264,16 @@ class AviatorService {
         if (naturalCrash < 1.00) naturalCrash = 1.00;
 
         // B. Apply P2P Liquidity Constraint
-        const betsRaw = await client.hVals(this.BETS_KEY); // [UPDATED] Use HVALS
+        let betsRaw = [];
+        if (client.isOpen && typeof client.hVals === 'function') {
+            try {
+                betsRaw = await client.hVals(this.BETS_KEY);
+            } catch (e) { console.error("Redis hVals Error:", e.message); }
+        } else {
+            // [FALLBACK] If Redis is down, we assume 0 bets for calculation safety or Fetch from DB if configured
+            // console.warn("Redis Unavailable for P2P Calculation - Running safely.");
+        }
+
         const bets = betsRaw.map(b => JSON.parse(b));
 
         let potentialPayout = 0;
