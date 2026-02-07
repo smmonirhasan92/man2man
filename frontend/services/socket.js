@@ -19,7 +19,7 @@ const getSocket = (namespace = '/system') => {
 
         sockets[namespace] = io(SOCKET_URL, {
             path: '/socket.io',
-            transports: ['websocket'], // [CRITICAL] Force WebSocket to bypass Vercel/Proxy handshake failures
+            transports: ['polling', 'websocket'], // [FIX] Restore polling to allow Proxy handling first
             withCredentials: true,
             auth: {
                 token: typeof window !== 'undefined' ? localStorage.getItem('token') : null

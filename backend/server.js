@@ -96,7 +96,13 @@ app.get('/', (req, res) => {
 
 // [NEW] Health Check for Deployment Verification
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+    const mongoose = require('mongoose');
+    const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+    res.status(200).json({
+        status: 'ok',
+        uptime: process.uptime(),
+        database: dbStatus
+    });
 });
 
 app.get('/api', (req, res) => {
