@@ -213,7 +213,8 @@ exports.getMe = async (req, res) => {
         res.json(userData);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('GetMe Error:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message, stack: err.stack });
     }
 };
 
