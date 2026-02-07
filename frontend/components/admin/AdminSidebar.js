@@ -12,7 +12,7 @@ export default function AdminSidebar() {
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
         { name: 'Lottery', href: '/admin/lottery', icon: Ticket },
         { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Wallet', href: '/admin/finance', icon: Wallet },
+        { name: 'Wallet', href: '/admin/audit', icon: Wallet },
         { name: 'Logs', href: '/admin/logs', icon: ScrollText },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
     ];
