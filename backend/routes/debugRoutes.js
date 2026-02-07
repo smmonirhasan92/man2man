@@ -34,4 +34,42 @@ router.get('/config-check', async (req, res) => {
     }
 });
 
+// [NEW] Fix Task Visibility (Align Server IDs)
+router.post('/fix-tasks', async (req, res) => {
+    try {
+        const TaskAd = require('../modules/task/TaskAdModel');
+        const Plan = require('../modules/admin/PlanModel');
+
+        // 1. Find a valid plan to sync with (Starter/Basic)
+        const plans = await Plan.find({ is_active: true });
+        let targetId = 'SERVER_01'; // Default Fallback
+
+        // Prefer 'Basic' or 'Starter' first, else take the first active one
+        const starter = plans.find(p => /Starter|Basic|Free/i.test(p.name));
+        if (starter && starter.server_id) {
+            targetId = starter.server_id;
+        } else if (plans.length > 0 && plans[0].server_id) {
+            targetId = plans[0].server_id;
+        }
+
+        console.log(`[DEBUG] Fixing Tasks. Target Server ID: ${targetId}`);
+
+        // 2. Update all tasks to this Server ID
+        const result = await TaskAd.updateMany(
+            {},
+            { $set: { server_id: targetId, is_active: true } }
+        );
+
+        res.json({
+            message: 'Task Visibility Fixed',
+            targetServer: targetId,
+            updatedCount: result.modifiedCount
+        });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 module.exports = router;
