@@ -66,7 +66,11 @@ api.interceptors.response.use(
                 // [DEBUG] Do NOT logout on 404 for now, just log it.
                 console.error("[AUTH] User not found (404) but keeping session for debug.");
             } else {
-                console.error(`[API_ERROR] ${error.response.status} from ${error.config.url}`, error.response.data);
+                // [DEBUG PROBE] Log FULL details for User Screenshot
+                console.error(`❌ [API_CRASH] ${error.config.url}`);
+                console.error("👇 ERROR DETAILS (Show this to Developer) 👇");
+                console.error(JSON.stringify(error.response.data, null, 2));
+                console.error("👆 -------------------------------------- 👆");
             }
         }
         return Promise.reject(error);
