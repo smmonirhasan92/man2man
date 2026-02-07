@@ -123,7 +123,8 @@ exports.getAllUsers = async (req, res) => {
                     { fullName: searchRegex },
                     { username: searchRegex },
                     { email: searchRegex },
-                    { phone: searchRegex }
+                    { primary_phone: searchRegex }, // [FIX] Updated to match Schema
+                    { synthetic_phone: searchRegex } // [FIX] Allow searching by US Phone
                 ]
             };
         }
@@ -145,8 +146,8 @@ exports.getAllUsers = async (req, res) => {
             }
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server Error' });
+        console.error("GetAllUsers Error:", err);
+        res.status(500).json({ message: 'Server Error', error: err.message, stack: err.stack });
     }
 };
 
