@@ -55,8 +55,20 @@ class ProfitGuard {
             return false;
         }
 
-        if (potentialWinAmount > safetyMargin) {
-            logger.warn(`🚫 [ProfitGuard] Blocked Win of ${potentialWinAmount}. Exceeds Safety Margin (${safetyMargin}).`);
+        // [RELAXED GUARD V2.0]
+        // Allow the system to invest in users initially.
+        // We only block if we are depleting reserves dangerously.
+        // Investment Buffer: 10,000 BDT (System willing to lose this much to acquire users)
+        const INVESTMENT_BUFFER = 10000;
+
+        if (safetyMargin + INVESTMENT_BUFFER < 0) {
+            logger.warn(`🚫 [ProfitGuard] Blocked Win of ${potentialWinAmount}. System DEEP RED (${safetyMargin}).`);
+            return false;
+        }
+
+        // Additional: If huge win, strict check
+        if (potentialWinAmount > 5000 && safetyMargin < potentialWinAmount) {
+            logger.warn(`🚫 [ProfitGuard] Blocked HUGE Win of ${potentialWinAmount}. Not enough margin.`);
             return false;
         }
 
