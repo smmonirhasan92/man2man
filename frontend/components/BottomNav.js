@@ -42,13 +42,9 @@ export default function BottomNav() {
                         <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-amber-500/50 shadow-lg group-hover:shadow-amber-500/10 transition-all"><Ticket className="w-6 h-6" /></div>
                         <span className="text-[10px] font-bold tracking-widest uppercase">History</span>
                     </Link>
-                    <Link href="/referral" className="flex flex-col items-center gap-3 text-zinc-400 hover:text-amber-400 transition-colors group">
+                    <Link href="/invite" className="flex flex-col items-center gap-3 text-zinc-400 hover:text-amber-400 transition-colors group">
                         <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-amber-500/50 shadow-lg group-hover:shadow-amber-500/10 transition-all"><Zap className="w-6 h-6" /></div>
-                        <span className="text-[10px] font-bold tracking-widest uppercase">Rewards</span>
-                    </Link>
-                    <Link href="/settings" className="flex flex-col items-center gap-3 text-zinc-400 hover:text-amber-400 transition-colors group">
-                        <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800 group-hover:border-amber-500/50 shadow-lg group-hover:shadow-amber-500/10 transition-all"><Settings className="w-6 h-6" /></div>
-                        <span className="text-[10px] font-bold tracking-widest uppercase">Settings</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase">Invite</span>
                     </Link>
                 </div>
             </div>
