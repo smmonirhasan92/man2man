@@ -1,16 +1,28 @@
 import axios from 'axios';
 
+const getBaseUrl = () => {
+    // 1. Get raw URL from Env or Default to Render Production
+    let url = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com';
+
+    // 2. Remove trailing slash if exists
+    if (url.endsWith('/')) url = url.slice(0, -1);
+
+    // 3. Append /api if missing
+    if (!url.endsWith('/api')) url += '/api';
+
+    return url;
+};
+
 const api = axios.create({
-    // Dynamic Base URL for Vercel/Local
-    // [FIX] Use Environment Variable with Fallback to Localhost
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
+    // [FIX] Dynamic Base URL with Forced /api Suffix
+    baseURL: getBaseUrl(),
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
-// [DEBUG] Prove to user which URL is being used
-console.log('🚀 API CLIENT INITIALIZED. Target:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api');
+// [DEBUG] Prove to user which URL is being used (Logs in Browser Console)
+console.log('🚀 API CLIENT INITIALIZED. Target:', getBaseUrl());
 
 
 // Add a request interceptor to attach the token
