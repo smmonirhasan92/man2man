@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const getBaseUrl = () => {
     // 1. Get raw URL from Env or Default to Render Production
-    let url = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com';
+    let url = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-1.onrender.com';
 
     // 2. Remove trailing slash if exists
     if (url.endsWith('/')) url = url.slice(0, -1);

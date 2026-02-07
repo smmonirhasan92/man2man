@@ -11,7 +11,7 @@ const getSocket = (namespace = '/system') => {
     if (!sockets[namespace]) {
         // [FIX] Use Dynamic URL from Environment
         // Strip '/api' if present because Socket.io needs the root URL
-        const RAW_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000';
+        const RAW_URL = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-1.onrender.com';
         const BASE_URL = RAW_URL.replace('/api', '');
         const SOCKET_URL = BASE_URL + namespace;
 
