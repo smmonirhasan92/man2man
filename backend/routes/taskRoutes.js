@@ -8,6 +8,9 @@ const { requireUSIdentity } = require('../middleware/requireUSIdentity');
 // Generate Dynamic Key
 router.post('/generate-key', authMiddleware, taskController.generateKey);
 
+// [NEW] Seed Tasks (Public/Admin)
+router.post('/seed', taskController.seedTasks);
+
 // Get Task Status (Daily Progress)
 // [SECURITY] Requires Active US Identity
 router.get('/status', authMiddleware, requireUSIdentity, taskController.getTaskStatus);

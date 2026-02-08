@@ -260,3 +260,38 @@ exports.submitTask = async (req, res) => {
         res.status(400).json({ message: err.message || 'Task Submission Failed' });
     }
 };
+
+// [NEW] Seed Default Tasks (One-time use)
+exports.seedTasks = async (req, res) => {
+    try {
+        const tasks = [
+            // Standard Ad Views (5-10 seconds)
+            { title: 'Watch Premium Ad', url: 'https://youtube.com', duration: 10, reward_amount: 2.0, type: 'ad_view', server_id: 'SERVER_01' },
+            { title: 'Visit Sponsor Site', url: 'https://google.com', duration: 5, reward_amount: 1.5, type: 'ad_view', server_id: 'SERVER_01' },
+            { title: 'Check New Offer', url: 'https://amazon.com', duration: 8, reward_amount: 1.8, type: 'ad_view', server_id: 'SERVER_01' },
+
+            // High Value Tasks
+            { title: 'Complete Survey', url: 'https://surveymonkey.com', duration: 30, reward_amount: 5.0, type: 'ad_view', server_id: 'SERVER_01' },
+            { title: 'Install App (Demo)', url: 'https://play.google.com', duration: 15, reward_amount: 3.5, type: 'ad_view', server_id: 'SERVER_01' },
+
+            // Interactive
+            { title: 'Rate Us 5 Stars', url: 'https://facebook.com', duration: 12, reward_amount: 2.5, type: 'review', server_id: 'SERVER_01' },
+            { title: 'Share on Twitter', url: 'https://twitter.com', duration: 10, reward_amount: 2.0, type: 'social', server_id: 'SERVER_01' },
+
+            // Filler Tasks
+            { title: 'Daily Check-in', url: 'https://man2man.vercel.app', duration: 5, reward_amount: 1.0, type: 'ad_view', server_id: 'SERVER_01' },
+            { title: 'View Promotion', url: 'https://netflix.com', duration: 8, reward_amount: 1.5, type: 'ad_view', server_id: 'SERVER_01' },
+            { title: 'Browse Catalog', url: 'https://ebay.com', duration: 15, reward_amount: 2.2, type: 'ad_view', server_id: 'SERVER_01' }
+        ];
+
+        for (const t of tasks) {
+            // Create if not exists (using Title as unique key for seeding)
+            await TaskAd.findOneAndUpdate({ title: t.title }, t, { upsert: true, new: true, setDefaultsOnInsert: true });
+        }
+
+        res.json({ message: 'Tasks Seeded Successfully', count: tasks.length });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: err.message });
+    }
+};
