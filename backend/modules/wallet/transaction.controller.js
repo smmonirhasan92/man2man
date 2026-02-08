@@ -197,11 +197,6 @@ exports.completeTransaction = async (req, res) => {
             // 3. Commission Logic (Legacy Removed - Replaced by Engine if needed)
             // If this transaction represents a "Task", the Controller for Task should call ReferralService.
             // For simple transfers, we might not want the legacy commission Logic.
-            // commenting out legacy 1-level commission to avoid double pay if Engine is used.
-            /*
-            const activeAgentId = transaction.receivedByAgentId || transaction.assignedAgentId;
-            if (activeAgentId) { ... } 
-            */
         }
 
         // --- HANDLING REJECTION (Refunds) ---
@@ -263,24 +258,12 @@ exports.getHistory = async (req, res) => {
 };
 
 // Get Payment Settings for Frontend
-// Get Payment Settings for Frontend
 exports.getPaymentSettings = async (req, res) => {
     try {
-        console.log('[DEBUG] getPaymentSettings Called');
-
-        console.log('[DEBUG] Requiring SystemSettingModel...');
         const SystemSetting = require('../settings/SystemSettingModel');
-        console.log('[DEBUG] SystemSetting Model:', SystemSetting);
-
-        console.log('[DEBUG] Querying bkash_number...');
         const bkashSetting = await SystemSetting.findOne({ key: 'bkash_number' });
-        console.log('[DEBUG] bkashSetting:', bkashSetting);
-
-        console.log('[DEBUG] Querying bank_details...');
         const bankSetting = await SystemSetting.findOne({ key: 'bank_details' });
-        console.log('[DEBUG] bankSetting:', bankSetting);
 
-        console.log('[DEBUG] Finding Agents...');
         const agents = await User.find({ role: 'agent' }, 'fullName phone _id');
 
         const deposit_agents = agents.map(a => ({
@@ -295,7 +278,7 @@ exports.getPaymentSettings = async (req, res) => {
             deposit_agents
         });
     } catch (err) {
-        console.error('[CRITICAL ERROR] getPaymentSettings Failed:', err);
-        res.status(500).json({ message: 'Server Error', error: err.toString() });
+        console.error('getPaymentSettings Failed:', err);
+        res.status(500).json({ message: 'Server Error' });
     }
 };

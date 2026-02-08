@@ -10,10 +10,9 @@ export default function AdminSidebar() {
 
     const links = [
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-        { name: 'Lottery', href: '/admin/lottery', icon: Ticket },
+        { name: 'Transactions', href: '/admin/transactions', icon: Wallet },
         { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Wallet', href: '/admin/audit', icon: Wallet },
-        { name: 'Logs', href: '/admin/logs', icon: ScrollText },
+        { name: 'Lottery', href: '/admin/lottery', icon: Ticket },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
     ];
 

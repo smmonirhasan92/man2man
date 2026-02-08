@@ -6,16 +6,12 @@ import { usePathname } from 'next/navigation';
 export default function AdminBottomNav() {
     const pathname = usePathname();
 
-    const navItems = [
-        { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
-        { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Requests', href: '/admin/requests', icon: ListChecks }, // For Recharges & Withdrawals
-        { name: 'Transactions', href: '/admin/transactions', icon: DollarSign },
-        { name: 'Games', href: '/admin/games', icon: Gamepad2 },
-        { name: 'War Room', href: '/admin/war-room', icon: ShieldAlert },
-        { name: 'Lottery', href: '/admin/lottery', icon: Ticket },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
-    ];
+    { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
+    { name: 'Transactions', href: '/admin/transactions', icon: DollarSign },
+    { name: 'Requests', href: '/admin/requests', icon: ListChecks },
+    { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Lottery', href: '/admin/lottery', icon: Ticket },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 px-6 py-4 flex justify-between items-center shadow-[0_-5px_20px_rgba(0,0,0,0.2)] text-white z-50">
