@@ -3,17 +3,16 @@ const router = express.Router();
 const protect = require('../middleware/authMiddleware');
 
 // Services
-const SuperAceServiceV2 = require('../modules/game/SuperAceServiceV2');
+const SuperAceService = require('../modules/game/SuperAceService');
 
-// --- SUPER ACE (V2 REBORN) ---
+// --- SUPER ACE (STANDARD) ---
 router.post('/super-ace/spin', protect, async (req, res) => {
     try {
         const { betAmount } = req.body;
         const userId = req.user.user.id;
 
-        // [V2] Call Strict Service
-        // Note: No 'systemIo' passed. Sockets are banned from this logic.
-        const result = await SuperAceServiceV2.spin(userId, parseFloat(betAmount));
+        // Call Standard Service
+        const result = await SuperAceService.spin(userId, parseFloat(betAmount));
         res.json(result);
 
     } catch (err) {
