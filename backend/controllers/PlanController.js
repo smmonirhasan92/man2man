@@ -31,20 +31,58 @@ exports.purchasePlan = async (req, res) => {
 exports.seedDefaultPlans = async (req, res) => {
     try {
         const plans = [
-            // VIP Plans
-            { name: 'Starter', type: 'vip', unlock_price: 0, daily_limit: 5, task_reward: 2.0, validity_days: 365, is_active: true },
-            { name: 'Gold VIP', type: 'vip', unlock_price: 1300, daily_limit: 15, task_reward: 5.0, validity_days: 60, is_active: true },
-            { name: 'Diamond VIP', type: 'vip', unlock_price: 5000, daily_limit: 30, task_reward: 10.0, validity_days: 90, is_active: true },
+            // VIP Plans (Starter / Basic)
+            {
+                name: 'Starter Node US',
+                type: 'vip',
+                unlock_price: 1500, // Reduced from 2500 for entry level
+                daily_limit: 5,
+                task_reward: 2.0,
+                validity_days: 365,
+                is_active: true,
+                server_id: 'SERVER_01', // [CRITICAL] Matches Task Fix
+                features: ['Basic Access', 'US Node', 'Daily payout']
+            },
+            {
+                name: 'Gold VIP Node',
+                type: 'vip',
+                unlock_price: 5000,
+                daily_limit: 15,
+                task_reward: 12.0, // Higher yield
+                validity_days: 60,
+                is_active: true,
+                server_id: 'SERVER_01',
+                features: ['Priority Access', 'Gold Badge', 'Higher Limits']
+            },
+            {
+                name: 'Diamond VIP Node',
+                type: 'vip',
+                unlock_price: 12000,
+                daily_limit: 30,
+                task_reward: 35.0,
+                validity_days: 90,
+                is_active: true,
+                server_id: 'SERVER_01',
+                features: ['Max Speed', 'Diamond Badge', 'Dedicated Support']
+            },
 
-            // Server Plans
-            { name: 'USA Server', type: 'server', unlock_price: 2500, daily_limit: 50, task_reward: 15.0, validity_days: 30, is_active: true, features: ['Dedicated IP', 'US Location'] },
-
-            // Number Plans
-            { name: 'US Virtual Number', type: 'number', unlock_price: 500, daily_limit: 0, task_reward: 0, validity_days: 30, is_active: true, features: ['SMS Verification', 'US +1 Code'] }
+            // High Yield Server Plans
+            {
+                name: 'Virginia Dedicated Server',
+                type: 'server',
+                unlock_price: 25000,
+                daily_limit: 50,
+                task_reward: 80.0,
+                validity_days: 45,
+                is_active: true,
+                server_id: 'SERVER_02', // Premium Pool
+                features: ['Dedicated IP', 'Virginia Location', 'Zero Latency']
+            }
         ];
 
         for (const p of plans) {
-            await Plan.findOneAndUpdate({ name: p.name }, p, { upsert: true, new: true });
+            // Upsert based on Name to avoid duplicates but update fields
+            await Plan.findOneAndUpdate({ name: p.name }, p, { upsert: true, new: true, setDefaultsOnInsert: true });
         }
 
         res.json({ message: 'Plans Seeded Successfully' });
