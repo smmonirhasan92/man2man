@@ -166,19 +166,6 @@ class TaskService {
 
         if (!planDetails) throw new Error('Active Plan details not found.');
 
-        // [CONTROLLED FAILURE LOGIC] 1:10 Chance
-        // Simulate "Node Proxy Timeout (Error 0xCC1)"
-        // Only trigger if we are NOT the last task (to avoid blocking completion of daily goal)
-        const currentUsage = await PlanService.getUserDailyLimit(userId, activePlan._id);
-        const limitForPlan = activePlan.dailyLimit;
-
-        // Random failure (10%) but protect the final task
-        if (Math.random() < 0.10 && (activePlan.tasksCompletedToday < limitForPlan - 1)) {
-            // Log for debugging
-            console.warn(`[TaskService] Simulating 0xCC1 Error for User ${userId}`);
-            throw new Error("Protocol Handshake Failed: Node Proxy Timeout (Error 0xCC1)");
-        }
-
         // [ADMIN SYNC] Use Exact Reward from Admin Panel
         let rewardAmount = planDetails.task_reward;
 
@@ -370,7 +357,7 @@ class TaskService {
                 // But `IncomeDisplay` uses `user.wallet.income`.
                 // Let's emit both or full wallet object.
                 SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, userUpd.wallet.income); // For Income Display
-                SocketService.io.to(`user_${userId}`).emit(`main_balance_update_${userId}`, userUpd.wallet.main_balance); // For Main
+                SocketService.io.to(`user_${userId}`).emit(`main_balance_update_${userId}`, userUpd.wallet.main); // For Main
             }
 
             // [REDIS] Invalidate Cache to update Dashboard immediately
