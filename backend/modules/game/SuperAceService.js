@@ -28,12 +28,13 @@ class SuperAceService {
 
                 // 1. Validation & Deduction
                 if (betAmount <= 0) throw new Error("Invalid Bet");
-                if ((user.wallet.game || 0) < betAmount) {
-                    // Auto-transfer from Main if Game is empty? No, strict separation requested.
-                    throw new Error("Insufficient Game Balance. Please Deposit.");
+                if ((user.wallet.main || 0) < betAmount) {
+                    throw new Error("Insufficient Balance. Please Deposit.");
                 }
 
-                await User.findByIdAndUpdate(userId, { $inc: { 'wallet.game': -betAmount } }, { session });
+                // DEDUCT FROM MAIN WALLET
+                user.wallet.main -= betAmount;
+                await user.save({ session });
 
                 // [SIMPLIFIED LOGIC - CLEAN & FUN]
                 // 1. Determine Win/Loss based on probabilistic RTP (Return to Player)
@@ -69,23 +70,30 @@ class SuperAceService {
 
                 // 4. Payout
                 if (totalWin > 0) {
-                    await User.findByIdAndUpdate(userId, { $inc: { 'wallet.game': totalWin } }, { session });
+                    // CREDIT TO MAIN WALLET
+                    user.wallet.main += totalWin;
+                    await user.save({ session });
                     console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount})`);
                 }
 
-                // Get updated balance for return
-                const finalUser = await User.findById(userId).session(session);
+                // Get updated balance for return (user object is already updated in memory/session, but fetch to be safe/consistent if needed, 
+                // actually user.wallet.main is already updated on the instance, but let's just return what we have)
 
                 // [SOCKET] Real-time Balance Update
                 const SocketService = require('../../modules/common/SocketService');
-                SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, finalUser.wallet.game);
-                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, finalUser.wallet.main);
-                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, finalUser.wallet.income);
+                // Broadcast MAIN wallet update
+                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, user.wallet.main);
+
+                // Also broadcast game balance if we want to keep listeners happy, but logic is main now.
+                // SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, user.wallet.game); 
+
+                // Standard balance update
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, user.wallet.main);
 
                 return {
                     status: 'success',
-                    balance: finalUser.wallet.game, // Updated Game Balance
-                    wallet_balance: finalUser.wallet.main, // Main Balance (unchanged)
+                    balance: user.wallet.game, // Keep for frontend compatibility if it checks this
+                    wallet_balance: user.wallet.main, // Main Balance (The real one)
                     grid: grid,
                     win: totalWin,
                     bet: betAmount,
