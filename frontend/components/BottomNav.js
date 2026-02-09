@@ -21,7 +21,8 @@ export default function BottomNav() {
 
     const navItems = [
         { name: 'Home', href: '/dashboard', icon: Home },
-        { name: 'Games', href: '/game-center', icon: Gamepad2 },
+        // { name: 'Games', href: '/game-center', icon: Gamepad2 }, // [REMOVED]
+
         { name: 'Lottery', href: '/lottery', icon: Ticket },
         { name: 'Marketplace', href: '/marketplace', icon: Globe, isFab: true },
         { name: 'Wallet', href: '/wallet/recharge', icon: Wallet },

@@ -90,9 +90,10 @@ export default function GlobalMarketplace() {
 
             if (res.data.success || res.status === 200) {
                 // Success
-                localStorage.setItem('active_server_id', plan._id || plan.id);
+                const purchasedPlan = res.data.plan;
+                localStorage.setItem('active_server_id', purchasedPlan._id || purchasedPlan.id);
                 localStorage.setItem('active_server_name', plan.name);
-                localStorage.setItem('active_server_phone', 'Verifying +1 Identity...');
+                localStorage.setItem('active_server_phone', purchasedPlan.syntheticPhone || 'Verifying +1 Identity...');
 
                 await authService.refreshUser();
 
@@ -127,7 +128,7 @@ export default function GlobalMarketplace() {
         </div>
     );
 
-    const validPlans = plans.filter(p => p.type === 'server' || p.type === 'number');
+    const validPlans = plans.filter(p => p.type === 'server' || p.type === 'number' || p.type === 'vip');
 
     return (
         <div className="min-h-screen bg-[#0a192f] text-white font-sans pb-32 relative overflow-hidden flex justify-center">
@@ -183,7 +184,7 @@ export default function GlobalMarketplace() {
                             const usdPrice = plan.price_usd || (monthlyCostBDT / 120).toFixed(2);
 
                             // [35-DAY CYCLE LOGIC]
-                            const cycleDays = 35;
+                            const cycleDays = plan.validity_days || 35;
                             const roiLow = 1.5;
                             const roiHigh = 1.8;
 
@@ -193,6 +194,7 @@ export default function GlobalMarketplace() {
 
                             // Tier Logic for Tasks
                             const taskCount = plan.daily_limit || (monthlyCostBDT >= 10000 ? 7 : monthlyCostBDT >= 5000 ? 10 : 15);
+                            const planTypeLabel = plan.type === 'vip' ? 'VIP NODE' : (isIreland ? 'PREMIUM' : isUK ? 'ENTERPRISE' : 'STANDARD');
 
                             return (
                                 <div key={plan.id} className={`relative bg-[#112240] rounded-xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02] border ${borderColor}`}>
@@ -201,7 +203,7 @@ export default function GlobalMarketplace() {
                                     <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-${accentColor}-500 to-transparent`}></div>
                                     <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
                                         <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider text-white bg-${accentColor}-600/80 backdrop-blur`}>
-                                            {isIreland ? 'PREMIUM' : isUK ? 'ENTERPRISE' : 'STANDARD'}
+                                            {planTypeLabel}
                                         </div>
                                         <div className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-900/50 border border-emerald-500/30">
                                             PROFIT SHARE: 70%

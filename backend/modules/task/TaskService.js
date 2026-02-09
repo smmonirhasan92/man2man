@@ -179,34 +179,42 @@ class TaskService {
             throw new Error("Protocol Handshake Failed: Node Proxy Timeout (Error 0xCC1)");
         }
 
-        // [SMART WEIGHTED REWARD SYSTEM: v3 - FLAT DAILY]
-        // 1. Calculate Daily Goal using LINEAR DISTRIBUTION
+        // [ADMIN SYNC] Use Exact Reward from Admin Panel
+        let rewardAmount = planDetails.task_reward;
 
-        // [CURRENCY NORMALIZATION]
-        // If Price > 100, assume BDT and convert to USD for standardized math.
-        let unlockPrice = planDetails.unlock_price || 0;
-        if (unlockPrice > 100) {
-            unlockPrice = unlockPrice / 120.65; // Convert BDT to USD
+        // Fallback or Dynamic Logic only if Admin set 0
+        if (!rewardAmount || rewardAmount <= 0) {
+            // [ORIGINAL LOGIC - KEPT AS FALLBACK]
+            // [CURRENCY NORMALIZATION]
+            // If Price > 100, assume BDT and convert to USD for standardized math.
+            let unlockPrice = planDetails.unlock_price || 0;
+            if (unlockPrice > 100) {
+                unlockPrice = unlockPrice / 120.65; // Convert BDT to USD
+            }
+            const roiPercent = planDetails.roi_percentage || 150;
+            const validityDays = planDetails.validity_days || 35;
+            const totalRevenueTarget = unlockPrice * (roiPercent / 100);
+            const averageDaily = totalRevenueTarget / validityDays;
+            const dailyGoal = averageDaily; // Forced flat daily
+
+            const baseRate = 0.0152;
+            if (unlockPrice < 5) {
+                rewardAmount = baseRate;
+            } else {
+                rewardAmount = dailyGoal / limitForPlan;
+            }
         }
-        const roiPercent = planDetails.roi_percentage || 150;
-        const validityDays = planDetails.validity_days || 35;
-        const totalRevenueTarget = unlockPrice * (roiPercent / 100);
 
-        // Calculate Lifecycle Day
+        // Ensure 4 decimals
+        rewardAmount = parseFloat(rewardAmount.toFixed(4));
+
+        // Calculate Lifecycle Day (needed for logging)
         const planStart = new Date(activePlan.startDate || activePlan.createdAt);
+        const validityDays = planDetails.validity_days || 35;
         const dayDiff = Math.floor((new Date() - planStart) / (1000 * 60 * 60 * 24)) + 1;
         const currentDay = Math.min(Math.max(1, dayDiff), validityDays); // Clamp 1-35
 
-        let dailyGoal = 0;
-        const averageDaily = totalRevenueTarget / validityDays;
-
-        if (true) {
-            // [FORCED FLAT DAILY] - Always use average daily
-            dailyGoal = averageDaily;
-        }
-
-        // 2. Retrieve Progress
-        // Reset if new day (handled partly by PlanService, but we double check local state)
+        // Retrieve Progress (needed for logging and activePlan update)
         const today = new Date();
         const lastEarnDate = activePlan.last_earning_date ? new Date(activePlan.last_earning_date) : new Date(0);
         const sameDay = today.getDate() === lastEarnDate.getDate() && today.getMonth() === lastEarnDate.getMonth();
@@ -221,57 +229,7 @@ class TaskService {
             activePlan.earnings_today = 0;
         }
 
-        // 3. Calculate Reward
-        // Rule: Tasks 1 to (N-1) get standard rate. Task N gets remainder.
-        const remainingTasks = Math.max(1, limitForPlan - tasksDone);
-
-        let rewardAmount = 0;
-        const baseRate = dailyGoal / limitForPlan; // e.g. 0.2285 / 15 = 0.0152
-
-        if (remainingTasks === 1) {
-            // FINAL TASK: Close the gap logic
-            // But ensure it's not negative. If negative, give base rate.
-            const gap = dailyGoal - earningsSoFar;
-            rewardAmount = gap > 0 ? gap : baseRate;
-        } else {
-            // STANDARD RATE (with tiny variance for organic feel)
-            // Starter Node: STRICT $0.0152 +/- 0.0001
-            if (unlockPrice < 5) {
-                // Tier 1 ($0 - $5): Fixed Low Reward
-                // Check if it's the $4.17 tier (Range 3-5)
-                if (unlockPrice > 3) {
-                    rewardAmount = 0.0152; // [USER REQ] Exact Lock for 976/Starter
-                } else {
-                    rewardAmount = 0.0152; // Default base for free/cheap
-                }
-            } else {
-                const variance = (Math.random() * 0.10) - 0.05; // +/- 5%
-                rewardAmount = baseRate * (1 + variance);
-            }
-        }
-
-        // [HARD CAP SECURITY]
-        // Starter Nodes ($8.00 plans) must NEVER exceed $0.02/task.
-        if (unlockPrice < 20 && rewardAmount > 0.02) {
-            console.warn(`[TaskService] Capped Reward at $0.02 (Calc was $${rewardAmount.toFixed(4)})`);
-            rewardAmount = 0.0200;
-        }
-
-        // [MINIMUM FLOOR SECURITY] - NEVER RETURN ZERO
-        // If logic fails or gap is tiny, fallback to safe minimum.
-        if (rewardAmount < 0.01) {
-            rewardAmount = 0.0152; // Fallback to base
-            // But for higher tiers this might be low?
-            // For now, prioritizes Starter Node fix.
-            if (unlockPrice > 50) rewardAmount = 0.1000; // Safe floor for big plans
-        }
-
-        // Round to 4 decimals
-        rewardAmount = parseFloat(rewardAmount.toFixed(4));
-
-
-
-        console.log(`[TaskService] ROI Curve (Day ${currentDay}): Goal=${dailyGoal.toFixed(4)} Earned=${earningsSoFar.toFixed(4)} Task=${rewardAmount}`);
+        console.log(`[TaskService] ROI Curve (Day ${currentDay}): Goal=${(earningsSoFar + rewardAmount).toFixed(4)} Earned=${earningsSoFar.toFixed(4)} Task=${rewardAmount}`);
 
         // Update UserPlan State Immediately
         activePlan.earnings_today = (earningsSoFar + rewardAmount);
@@ -399,6 +357,21 @@ class TaskService {
 
             // Notify User
             await NotificationService.send(userId, `✅ Task Reward: +$${rewardAmount.toFixed(4)}`, 'success');
+
+            // [SOCKET] Real-time Balance Update
+            const SocketService = require('../common/SocketService');
+            // Emit to specific user room: 'user_{userId}'
+            // Event name matches frontend: 'balance_update_{userId}' or general 'balance_update'
+            // Frontend listens to: `balance_update_${user._id}`
+            if (SocketService.io) {
+                SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, userUpd.wallet.income); // Legacy header uses income/balance mix? 
+                // Wait, User properties: wallet_balance (Main), purchase_balance, income (Earnings)
+                // Dashboard HeaderBalance generic uses `user.wallet_balance`. 
+                // But `IncomeDisplay` uses `user.wallet.income`.
+                // Let's emit both or full wallet object.
+                SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, userUpd.wallet.income); // For Income Display
+                SocketService.io.to(`user_${userId}`).emit(`main_balance_update_${userId}`, userUpd.wallet.main_balance); // For Main
+            }
 
             // [REDIS] Invalidate Cache to update Dashboard immediately
             try {

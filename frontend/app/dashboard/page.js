@@ -226,30 +226,16 @@ function DashboardContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                        {/* 1. Super Ace Classic (Master UI) */}
-                        <GameCard
-                            title="Super Ace Classic"
-                            desc="Card Engine"
-                            href="/game/navy"
-                            icon="👑"
-                            colors="from-blue-900 to-slate-950 border-blue-500/50"
-                        />
-                        {/* 2. Super Ace Fruits */}
-                        <GameCard
-                            title="Super Ace Fruits"
-                            desc="Fruits Engine"
-                            href="/game/fruits"
-                            icon="🍎"
-                            colors="from-green-900 to-lime-950 border-lime-500/50"
-                        />
                         {/* 3. Aviator */}
-                        <GameCard
-                            title="Aviator"
-                            desc="Crash Game"
-                            href="/game/aviator"
-                            icon="✈️"
-                            colors="from-red-900 to-rose-950 border-white/20"
-                        />
+                        <div className="col-span-2">
+                            <GameCard
+                                title="Aviator"
+                                desc="Crash Game"
+                                href="/game/aviator"
+                                icon="✈️"
+                                colors="from-red-900 to-rose-950 border-white/20"
+                            />
+                        </div>
                         {/* 4. Coming Soon (Placeholder for Expansion) */}
                         <div className="h-32 rounded-2xl overflow-hidden border border-white/5 bg-white/5 flex flex-col items-center justify-center opacity-50">
                             <span className="text-2xl">🔒</span>

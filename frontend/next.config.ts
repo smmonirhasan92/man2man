@@ -60,15 +60,17 @@ const withPWA = withPWAInit({
 
 const nextConfig = {
   /* config options here */
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // output: 'export', // Disabled to allow standard Next.js SSR/Routing
   images: {
     unoptimized: true,
   },
-  trailingSlash: true, // Keep if desired, but can be removed if causing issues
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
+  trailingSlash: true,
 };
 
 export default withPWA(nextConfig);

@@ -25,34 +25,33 @@ exports.requireUSIdentity = async (req, res, next) => {
             // return res.status(403).json({ ... }); // DISABLED
         }
 
-        // 2. [OPTIONAL] Identity Verification (Gateway)
+        // 2. Identity Verification (Gateway)
         const identityHeader = req.headers['x-usa-identity'];
         console.log(`[IdentityCheck] User: ${user._id} | Header: ${identityHeader} | Profile: ${user.synthetic_phone}`);
 
-        if (identityHeader) {
-            if (identityHeader !== user.synthetic_phone) {
-                console.log(`[IdentityCheck] Mismatch detected. Checking active plans...`);
-                // Relaxed check: Does the user hav ANY plan with this phone?
-                const UserPlan = require('../modules/plan/UserPlanModel');
-                const validPlan = await UserPlan.findOne({ userId, syntheticPhone: identityHeader, status: 'active' });
+        let targetIdentity = identityHeader || user.synthetic_phone;
 
-                console.log(`[IdentityCheck] Plan Search Result:`, validPlan ? 'FOUND' : 'NOT FOUND');
-
-                if (validPlan) {
-                    // [AUTO-HEAL] User has valid plan but profile mismatch. Update profile.
-                    console.log(`[Identity Middleware] Auto-healing user ${userId} synthetic_phone to ${identityHeader}`);
-                    user.synthetic_phone = identityHeader;
-                    await user.save();
-                } else {
-                    console.warn(`[IdentityCheck] Warning: Header ${identityHeader} not found in active plans. Falling back to profile.`);
-                    // [FIX] Do NOT block. Just ignore the invalid header and use the user's profile phone.
-                }
-            }
-        } else {
-            console.log(`[IdentityCheck] No Header Provided. Using profile default.`);
+        if (!targetIdentity) {
+            return res.status(403).json({ message: 'Secure Connection Required. Please Connect to a Server Node.' });
         }
 
-        req.user.identity = identityHeader || user.synthetic_phone;
+        // [STRICT] Verify Active Plan Existence for this Identity
+        const UserPlan = require('../modules/plan/UserPlanModel');
+        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: targetIdentity, status: 'active' });
+
+        if (!activePlan) {
+            // [GRACE PERIOD] If user has NO active plans at all, deny.
+            // If user has active plans but headers mismatch, maybe suggest reconnect?
+            // For now: BLOCK.
+            if (user.role !== 'admin') {
+                console.warn(`[IdentityCheck] Blocked request from ${user._id}. Identity ${targetIdentity} not active.`);
+                return res.status(403).json({ message: 'Connection Expired or Invalid. Please Reconnect Server.' });
+            }
+        }
+
+        // 3. Attach Verified Identity to Request
+        req.user.identity = targetIdentity;
+        req.user.activePlanId = activePlan ? activePlan._id : null;
         next();
 
     } catch (err) {

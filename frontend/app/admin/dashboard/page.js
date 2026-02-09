@@ -205,10 +205,10 @@ export default function AdminDashboard() {
                     <DashboardCard href="/admin/tasks" title="Manage 20 Tasks" description="Edit Video Ads" icon={ClipboardList} colorClass="cyan" />
                     <DashboardCard href="/admin/settings" title="System Settings" description="Global Config" icon={Settings} colorClass="gray" />
                     <DashboardCard href="/admin/audit" title="Financial Audit" description="Profit/Loss Reports" icon={Shield} colorClass="red" />
-                    <DashboardCard href="/admin/game-history" title="Game Wagers" description="Bet Logs" icon={Trophy} colorClass="purple" />
+
                     <DashboardCard href="/admin/lottery" title="Lottery Control" description="Draws & Tickets" icon={Ticket} colorClass="pink" />
                     <DashboardCard href="/admin/support" title="User Support" description="Help & Tickets" icon={MessageSquare} colorClass="cyan" />
-                    <DashboardCard href="/admin/logs" title="System Logs" description="Server Activity" icon={FileText} colorClass="slate" />
+
                 </div>
 
             </main>

@@ -135,3 +135,57 @@ exports.getMyActivePlans = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// [ADMIN] Create New Plan
+exports.createPlan = async (req, res) => {
+    try {
+        const { name, daily_limit, task_reward, unlock_price, validity_days, features, type, reward_multiplier } = req.body;
+
+        const newPlan = new Plan({
+            name,
+            daily_limit,
+            task_reward,
+            unlock_price,
+            validity_days,
+            features: features || [],
+            type: type || 'vip',
+            reward_multiplier: reward_multiplier || 1.0,
+            is_active: true,
+            server_id: `SERVER_${Date.now()}` // Unique ID for tracking
+        });
+
+        await newPlan.save();
+        res.status(201).json(newPlan);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to create plan' });
+    }
+};
+
+// [ADMIN] Update Plan
+exports.updatePlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const plan = await Plan.findByIdAndUpdate(id, updates, { new: true });
+        if (!plan) return res.status(404).json({ message: 'Plan not found' });
+
+        res.json(plan);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to update plan' });
+    }
+};
+
+// [ADMIN] Delete Plan (Soft Delete or Hard Delete)
+exports.deletePlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Plan.findByIdAndDelete(id); // Hard Delete for now as per user request to clean up
+        res.json({ message: 'Plan deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to delete plan' });
+    }
+};

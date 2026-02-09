@@ -27,7 +27,7 @@ export default function AdminPlansPage() {
 
     const fetchPlans = async () => {
         try {
-            const res = await api.get('/admin/tiers');
+            const res = await api.get('/plan'); // Use standard Plan endpoint
             setPlans(res.data);
             setLoading(false);
         } catch (err) {
@@ -39,7 +39,6 @@ export default function AdminPlansPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Ensure types
             const payload = {
                 ...formData,
                 daily_limit: parseInt(formData.daily_limit),
@@ -49,14 +48,22 @@ export default function AdminPlansPage() {
                 reward_multiplier: parseFloat(formData.reward_multiplier)
             };
 
-            await api.post('/admin/tiers', payload);
+            if (formData.id) {
+                // UPDATE
+                await api.put(`/plan/${formData.id}`, payload);
+                toast.success('Plan updated successfully');
+            } else {
+                // CREATE
+                await api.post('/plan', payload);
+                toast.success('Plan created successfully');
+            }
+
             fetchPlans();
             setShowForm(false);
             setFormData({ id: null, name: '', daily_limit: 5, task_reward: 2, unlock_price: 0, validity_days: 365, reward_multiplier: 1.00 });
-            toast.success('Plan saved successfully');
         } catch (err) {
             console.error(err);
-            toast.error('Failed to save plan');
+            toast.error(err.response?.data?.message || 'Failed to save plan');
         }
     };
 
@@ -73,7 +80,7 @@ export default function AdminPlansPage() {
             confirmText: 'Delete',
             onConfirm: async () => {
                 try {
-                    await api.delete(`/admin/tiers/${id}`);
+                    await api.delete(`/plan/${id}`);
                     fetchPlans();
                     toast.success('Plan deleted');
                     setConfirmModal({ isOpen: false });
