@@ -78,12 +78,9 @@ class SuperAceService {
 
                 // [SOCKET] Real-time Balance Update
                 const SocketService = require('../../modules/common/SocketService');
-                if (SocketService.io) {
-                    SocketService.io.to(`user_${userId}`).emit(`game_balance_update_${userId}`, finalUser.wallet.game);
-                    SocketService.io.to(`user_${userId}`).emit(`main_balance_update_${userId}`, finalUser.wallet.main);
-                    // Legacy fallbacks if needed
-                    SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, finalUser.wallet.income);
-                }
+                SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, finalUser.wallet.game);
+                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, finalUser.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, finalUser.wallet.income);
 
                 return {
                     status: 'success',

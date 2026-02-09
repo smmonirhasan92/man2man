@@ -347,18 +347,14 @@ class TaskService {
 
             // [SOCKET] Real-time Balance Update
             const SocketService = require('../common/SocketService');
-            // Emit to specific user room: 'user_{userId}'
-            // Event name matches frontend: 'balance_update_{userId}' or general 'balance_update'
-            // Frontend listens to: `balance_update_${user._id}`
-            if (SocketService.io) {
-                SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, userUpd.wallet.income); // Legacy header uses income/balance mix? 
-                // Wait, User properties: wallet_balance (Main), purchase_balance, income (Earnings)
-                // Dashboard HeaderBalance generic uses `user.wallet_balance`. 
-                // But `IncomeDisplay` uses `user.wallet.income`.
-                // Let's emit both or full wallet object.
-                SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, userUpd.wallet.income); // For Income Display
-                SocketService.io.to(`user_${userId}`).emit(`main_balance_update_${userId}`, userUpd.wallet.main); // For Main
-            }
+            // Use broadcast helper
+            SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, userUpd.wallet.income);
+            SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, userUpd.wallet.main);
+            // Dashboard HeaderBalance generic uses `user.wallet_balance`. 
+            // But `IncomeDisplay` uses `user.wallet.income`.
+            // Let's emit both or full wallet object.
+            // SocketService.io.to(`user_${userId}`).emit(`balance_update_${userId}`, userUpd.wallet.income); // For Income Display
+            // SocketService.io.to(`user_${userId}`).emit(`main_balance_update_${userId}`, userUpd.wallet.main); // For Main
 
             // [REDIS] Invalidate Cache to update Dashboard immediately
             try {
