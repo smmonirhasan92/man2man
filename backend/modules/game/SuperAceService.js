@@ -14,10 +14,12 @@ class SuperAceService {
         let lockKey = `lock:spin:${userId}`;
         const { client } = require('../../config/redis');
 
-        if (client.isOpen) {
+        if (client && client.isOpen) {
             const isLocked = await client.set(lockKey, '1', { NX: true, EX: 3 });
             if (!isLocked) throw new Error("Spin in progress. Please wait.");
         }
+
+        const self = this; // Capture context
 
         try {
             return await TransactionHelper.runTransaction(async (session) => {
@@ -26,7 +28,10 @@ class SuperAceService {
 
                 // 1. Validation & Deduction
                 if (betAmount <= 0) throw new Error("Invalid Bet");
-                if (user.wallet.game < betAmount) throw new Error("Insufficient Balance");
+                if ((user.wallet.game || 0) < betAmount) {
+                    // Auto-transfer from Main if Game is empty? No, strict separation requested.
+                    throw new Error("Insufficient Game Balance. Please Deposit.");
+                }
 
                 await User.findByIdAndUpdate(userId, { $inc: { 'wallet.game': -betAmount } }, { session });
 
@@ -37,8 +42,9 @@ class SuperAceService {
                 const isWin = Math.random() < 0.45; // 45% Hit Frequency (Very Fun/Active)
 
                 let multiplier = 0;
-                let grid;
+                let grid = [];
                 let matches = [];
+                let totalWin = 0;
 
                 // 2. Safety Check (ProfitGuard)
                 // Only block HUGE wins if system is bleeding. Small/Medium wins always allowed for fun.
@@ -47,33 +53,18 @@ class SuperAceService {
                 if (isWin && isSafe) {
                     // GENERATE WIN
                     const rand = Math.random();
-                    if (rand < 0.60) multiplier = 1.2 + (Math.random() * 1.8);
-                    else if (rand < 0.90) multiplier = 3.0 + (Math.random() * 7.0);
-                    else if (rand < 0.99) multiplier = 10.0 + (Math.random() * 40.0);
-                    else multiplier = 50.0 + (Math.random() * 50.0);
+                    // Win Tiers
+                    if (rand < 0.60) multiplier = 1.2 + (Math.random() * 0.8); // 1.2x - 2.0x
+                    else if (rand < 0.90) multiplier = 2.0 + (Math.random() * 3.0); // 2x - 5x
+                    else if (rand < 0.99) multiplier = 5.0 + (Math.random() * 10.0); // 5x - 15x
+                    else multiplier = 20.0 + (Math.random() * 30.0); // 20x - 50x (Jackpot)
 
-                    grid = this.generateWinningGrid(multiplier, betAmount);
+                    totalWin = parseFloat((betAmount * multiplier).toFixed(2));
+                    grid = self.generateWinningGrid(multiplier);
                 } else {
-                    // FORCE LOSS (or un-safe)
-                    grid = this.generateLosingGrid();
-                    // 20% Chance of Near Miss to keep engagement
-                    if (Math.random() < 0.20) {
-                        grid[0][0] = 'SCATTER';
-                        grid[1][0] = 'SCATTER';
-                    }
-                }
-
-                // 3. Calculate Results
-                matches = this.calculateMatches(grid);
-                let totalWin = this.calculateWinAmount(matches, betAmount);
-
-                // Adjustment: If our grid generator missed the exact multiplier target, 
-                // we fallback to ensuring at least some win if isWin was true but grid failed.
-                if (isWin && totalWin === 0) {
-                    // Fallback: Inject a guaranteed simple match
-                    grid[1][1] = 'J'; grid[1][2] = 'J'; grid[1][3] = 'J';
-                    matches = this.calculateMatches(grid);
-                    totalWin = this.calculateWinAmount(matches, betAmount);
+                    // FORCE LOSS
+                    grid = self.generateLosingGrid();
+                    totalWin = 0;
                 }
 
                 // 4. Payout
@@ -82,19 +73,21 @@ class SuperAceService {
                     console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount})`);
                 }
 
+                // Get updated balance for return
+                const finalUser = await User.findById(userId).session(session);
+
                 return {
                     status: 'success',
-                    balance: user.wallet.game + (totalWin > 0 ? totalWin : (-betAmount)),
-                    wallet_balance: user.wallet.main,
+                    balance: finalUser.wallet.game, // Updated Game Balance
+                    wallet_balance: finalUser.wallet.main, // Main Balance (unchanged)
                     grid: grid,
                     win: totalWin,
-                    matches: matches,
                     bet: betAmount,
                     streak: totalWin > 0 ? "WIN" : "LOSS",
                 };
             });
         } finally {
-            if (client.isOpen) await client.del(lockKey);
+            if (client && client.isOpen) await client.del(lockKey);
         }
     }
 

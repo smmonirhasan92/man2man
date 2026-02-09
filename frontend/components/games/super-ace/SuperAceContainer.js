@@ -44,23 +44,31 @@ export default function SuperAceContainer() {
         setWinInfo({ total: 0, lastWin: 0 });
 
         try {
-            // 1. Simulate API or Real Call
-            // const { data } = await api.post('/game/super-ace/spin', { betAmount: bet });
-            // Using logic stub for now to demonstrate Animation
+            // 1. Real API Call
+            const { data } = await api.post('/game/super-ace/spin', { betAmount: bet });
 
-            // Phase 1: New Grid enters
-            const newGrid = Array(5).fill(0).map((_, col) =>
-                Array(4).fill(0).map((_, row) => generateRandomCard(col, row))
+            // Phase 1: New Grid enters from Backend
+            const backendGrid = data.grid.map((col, colIdx) =>
+                col.map((sym, rowIdx) => ({
+                    id: `card-${colIdx}-${rowIdx}-${Date.now()}`,
+                    symbol: sym,
+                    col: colIdx,
+                    row: rowIdx
+                }))
             );
 
-            setGrid(newGrid);
+            setGrid(backendGrid);
+            setWinInfo({ total: data.win, lastWin: data.win });
 
-            // Phase 2: Wait for Drop (handled by layout animation variants)
-            await new Promise(r => setTimeout(r, 1000));
+            if (data.win > 0) {
+                // Trigger celebrations based on win amount
+                if (data.win > bet * 5) {
+                    // Big Win Effect todo
+                }
+            }
 
-            // Phase 3: Check Wins & Cascade (Simulation)
-            // If API not ready, we skip cascade or simulate one step
-            // simulateCascade(newGrid); 
+            // Sync User Balance
+            if (typeof refreshUser === 'function') refreshUser();
 
         } catch (e) {
             console.error("Spin failed", e);
