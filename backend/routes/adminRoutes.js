@@ -62,6 +62,10 @@ router.get('/audit/financial', authMiddleware, adminCheck, adminController.getFi
 router.get('/settings/public', (req, res) => res.json({ message: "Settings Public Placeholder" }));
 // adminController.getPublicSettings
 
+// System Health & Logs
+router.get('/health', authMiddleware, adminController.getSystemHealth);
+router.get('/logs', authMiddleware, adminCheck, adminController.getSystemLogs); // [NEW] Log Viewer
+
 // Migrated Routes
 router.post('/agent', authMiddleware, adminCheck, agentController.createAgent);
 router.get('/agents', authMiddleware, adminCheck, agentController.getAgents);

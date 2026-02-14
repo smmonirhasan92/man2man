@@ -1,0 +1,293 @@
+/* Universal Animation Library */
+/* Usage: class="anim-pulse" or id="my-element" class="anim-slide-up" */
+
+/* 1. Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.anim-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* 2. Slide Up */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.anim-slide-up {
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3. Slide Down */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.anim-slide-down {
+    animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 4. Scale Up (Pop) */
+@keyframes scaleUp {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.anim-pop {
+    animation: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 5. Pulse (Attention) */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.anim-pulse {
+    animation: pulse 2s infinite ease-in-out;
+}
+
+/* 6. Shake (Error/Action) */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-4px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+.anim-shake {
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+/* 7. Spin (Loading) */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.anim-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* 8. Float (Hover effect) */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.anim-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* 9. Glow (Neon) */
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--brand-primary, #3b82f6);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--brand-accent, #ef4444);
+    }
+}
+
+.anim-glow {
+    animation: glow 2s infinite alternate;
+}
+
+/* 10. Bounce */
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.anim-bounce {
+    animation: bounce 1s ease;
+}
+
+/* 11. Flip In */
+@keyframes flipIn {
+    from {
+        transform: rotateX(90deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: rotateX(0deg);
+        opacity: 1;
+    }
+}
+
+.anim-flip-in {
+    animation: flipIn 0.6s ease-out forwards;
+    backface-visibility: visible;
+}
+
+/* 12. Zoom In (Dramatic) */
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.anim-zoom-in {
+    animation: zoomIn 0.5s ease-out forwards;
+}
+
+/* 13. Slide Right (Sidebar) */
+@keyframes slideRight {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.anim-slide-right {
+    animation: slideRight 0.4s ease-out forwards;
+}
+
+/* 14. Heartbeat (Stronger Pulse) */
+@keyframes heartbeat {
+    from {
+        transform: scale(1);
+        transform-origin: center center;
+        animation-timing-function: ease-out;
+    }
+
+    10% {
+        transform: scale(0.91);
+        animation-timing-function: ease-in;
+    }
+
+    17% {
+        transform: scale(0.98);
+        animation-timing-function: ease-out;
+    }
+
+    33% {
+        transform: scale(0.87);
+        animation-timing-function: ease-in;
+    }
+
+    45% {
+        transform: scale(1);
+        animation-timing-function: ease-out;
+    }
+}
+
+.anim-heartbeat {
+    animation: heartbeat 1.5s ease-in-out infinite both;
+}
+
+/* 15. Glitch (Tech Vibe) */
+@keyframes glitch {
+
+    2%,
+    64% {
+        transform: translate(2px, 0) skew(0deg);
+    }
+
+    4%,
+    60% {
+        transform: translate(-2px, 0) skew(0deg);
+    }
+
+    62% {
+        transform: translate(0, 0) skew(5deg);
+    }
+}
+
+.anim-glitch {
+    animation: glitch 1s linear infinite;
+}

@@ -18,7 +18,28 @@ export async function middleware(request) {
         // Build API URL. Middleware runs on Edge, so localhost might be tricky if not defined.
         // Assuming NEXT_PUBLIC_API_URL is set in environment. 
         // [FORCE FIX] Hardcoded Production URL (New Deployment)
-        const apiUrl = 'https://man2man-1.onrender.com';
+        // [FIX] Use Environment Variable for Dynamic Backend URL
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        console.log(`[Middleware] Checking API Health: ${apiUrl}`);
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s timeout
+
+            const apiRes = await fetch(`${apiUrl}/health`, {
+                method: 'GET',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (apiRes.ok) {
+                return true;
+            }
+            return false;
+        } catch (e) {
+            // console.error(`[Middleware] API Check Failed: ${e.message}`);
+            return false;
+        }
 
         // Timeout to prevent blocking
         const controller = new AbortController();

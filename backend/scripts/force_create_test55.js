@@ -10,8 +10,10 @@ async function fixUser() {
         await mongoose.connect(MONGO_URI);
         console.log('Connected to DB');
 
-        const phone = '01755555555';
-        let user = await User.findOne({ primary_phone: phone });
+        const phone = 'test55';
+        let user = await User.findOne({
+            $or: [{ username: 'test55' }, { primary_phone: 'test55' }]
+        });
 
         if (!user) {
             console.log('User not found. Creating...');
@@ -36,6 +38,7 @@ async function fixUser() {
             console.log('User found. Updating password...');
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash('123456', salt);
+            user.primary_phone = phone;
         }
 
         await user.save();

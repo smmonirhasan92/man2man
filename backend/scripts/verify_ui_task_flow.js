@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 dotenv.config({ path: '../.env' }); // Adjust path if running from scripts/
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:5050/api';
 const LOCAL_MONGO = 'mongodb://127.0.0.1:27017/universal_game_core_v1?directConnection=true';
 
 async function run() {
@@ -37,6 +37,12 @@ async function run() {
         user.taskData.lastTaskDate = new Date(0);
         await user.save();
 
+        // Ensure user has a synthetic phone
+        if (!user.synthetic_phone) {
+            user.synthetic_phone = `+1 (555) 000-${Math.floor(1000 + Math.random() * 9000)}`;
+            await user.save();
+        }
+
         // Correct Way: Create UserPlan Document
         await UserPlan.deleteMany({ userId: user._id }); // Clear old
         await UserPlan.create({
@@ -46,7 +52,8 @@ async function run() {
             dailyLimit: plan.daily_limit,
             expiryDate: new Date(Date.now() + 86400000),
             status: 'active',
-            serverIp: '127.0.0.1'
+            serverIp: '127.0.0.1',
+            syntheticPhone: user.synthetic_phone // [FIX] Required by Middleware
         });
 
         console.log(`[DB] User 'test55' reset (Created UserPlan with Limit: 20)`);
@@ -66,6 +73,14 @@ async function run() {
         });
         const token = loginRes.data.token;
         let usaKey = loginRes.data.user.synthetic_phone;
+
+        if (!usaKey) {
+            // Try getting from /auth/me
+            try {
+                const meRes = await axios.get(`${BASE_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+                usaKey = meRes.data.synthetic_phone || meRes.data.user?.synthetic_phone;
+            } catch (e) { console.error("Me Fetch Failed", e.response?.data); }
+        }
 
         if (!usaKey) {
             console.log("Key missing, generating...");

@@ -51,19 +51,19 @@ const UserSchema = new mongoose.Schema({
 
     // --- Wallet ---
     wallet: {
-        income: { type: Number, default: 0.00 },
-        purchase: { type: Number, default: 0.00 },
-        main: { type: Number, default: 0.00 }, // Renamed from main_balance
-        game: { type: Number, default: 0.00 },
-        game_locked: { type: Number, default: 0.00 }, // [TURNOVER TRAP] Locked Winnings
-        escrow_locked: { type: Number, default: 0.00 }, // [P2P SAFE] Held funds during trade
-        agent: { type: Number, default: 0.00 },
-        commission: { type: Number, default: 0.00 }, // [ADMIN/AGENT] Fee Earnings
-        pending_referral: { type: Number, default: 0.00 },
+        income: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
+        purchase: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
+        main: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // Renamed from main_balance
+        game: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
+        game_locked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [TURNOVER TRAP] Locked Winnings
+        escrow_locked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [P2P SAFE] Held funds during trade
+        agent: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
+        commission: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [ADMIN/AGENT] Fee Earnings
+        pending_referral: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
 
         turnover: {
-            required: { type: Number, default: 0.00 },
-            completed: { type: Number, default: 0.00 }
+            required: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
+            completed: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }
         }
     },
 

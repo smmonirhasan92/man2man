@@ -5,20 +5,36 @@ import { Gamepad2, ArrowLeft } from 'lucide-react';
 export default function GamingZone() {
     const games = [
         {
-            title: "Super Ace Pro",
-            desc: "The Original • Master UI",
-            href: "/game/super-ace", // Fixed path to match folder check
+            title: "Super Ace Premium",
+            desc: "The Flagship Experience",
+            href: "/game/super-ace",
             icon: "👑",
-            colors: "from-blue-900 to-slate-950",
+            colors: "from-yellow-600 to-yellow-800",
             featured: true
         },
         {
-            title: "Aviator",
-            desc: "Crash Game • Fly High",
-            href: "/game/aviator",
-            icon: "✈️",
-            colors: "from-red-800 to-red-900",
-            featured: true
+            title: "Super Ace Classic",
+            desc: "Original Retro Style",
+            href: "/game/super-ace-classic",
+            icon: "🎰",
+            colors: "from-green-800 to-green-900 border-yellow-500/30",
+            featured: false
+        },
+        {
+            title: "Super Ace Reborn",
+            desc: "Modern Fast-Paced UI",
+            href: "/game/super-ace-reborn",
+            icon: "⚡",
+            colors: "from-blue-900 to-slate-900 border-blue-500/30",
+            featured: false
+        },
+        {
+            title: "Super Ace Pro",
+            desc: "High Stakes & Dark Mode",
+            href: "/game/super-ace-pro",
+            icon: "💎",
+            colors: "from-slate-900 to-black border-slate-700",
+            featured: false
         }
     ];
 

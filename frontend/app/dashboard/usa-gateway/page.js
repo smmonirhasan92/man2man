@@ -71,6 +71,12 @@ export default function USAGateway() {
             setStatus('success');
             localStorage.setItem('usa_connected', 'true');
             localStorage.setItem('usa_connect_time', Date.now());
+
+            // [FIX] Store Identity for API Headers (Critical for backend requireUSIdentity)
+            localStorage.setItem('active_server_phone', actualKey);
+            // Default Fallbacks for UI
+            if (!localStorage.getItem('active_server_name')) localStorage.setItem('active_server_name', 'USA GATEWAY');
+
             addLog('IDENTITY VERIFIED. ACCESS GRANTED.');
 
             setTimeout(() => {

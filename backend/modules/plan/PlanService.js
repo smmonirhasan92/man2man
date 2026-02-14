@@ -58,15 +58,25 @@ class PlanService {
             if (!plan) throw new Error('Plan not found.');
             if (!plan.is_active) throw new Error('Plan is deprecated.');
 
-            // [MODIFIED] Single Purchase Rule: One Active Plan per Type
-            // User cannot buy the same server twice while it is active.
-            const existingPlan = await UserPlan.findOne({
-                userId,
-                planId: planId, // Check specific plan/server ID
-                status: { $in: ['active', 'provisioning'] }
-            }).session(session);
+            // [MODIFIED] Single Active Server Enforcement
+            // Terminate ALL other sessions/servers immediately.
+            // User can only have ONE active "Connection".
+            const existingActive = await UserPlan.updateMany(
+                { userId, status: { $in: ['active', 'provisioning'] } },
+                {
+                    $set: {
+                        status: 'terminated',
+                        terminatedAt: new Date(),
+                        remarks: 'Auto-Terminated by New Connection'
+                    }
+                }
+            ).session(session);
 
-            if (existingPlan) throw new Error('You already have an active subscription for this server.');
+            if (existingActive.modifiedCount > 0) {
+                console.log(`[PlanService] Auto-Terminated ${existingActive.modifiedCount} previous sessions for User ${userId}`);
+            }
+
+            // proceed to create new one...
 
             if (user.wallet.main_balance < plan.unlock_price) {
                 throw new Error('Insufficient Main Wallet Balance.');

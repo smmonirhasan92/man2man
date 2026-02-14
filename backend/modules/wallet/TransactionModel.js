@@ -36,7 +36,7 @@ const TransactionSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['pending', 'completed', 'rejected', 'pending_admin_approval', 'pending_agent_action'],
+        enum: ['pending', 'completed', 'rejected', 'pending_admin_approval', 'pending_agent_action', 'pending_admin_review'],
         default: 'pending'
     },
 

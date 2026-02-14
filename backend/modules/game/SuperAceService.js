@@ -28,15 +28,19 @@ class SuperAceService {
 
                 // 1. Validation & Deduction
                 if (betAmount <= 0) throw new Error("Invalid Bet");
-                if ((user.wallet.main || 0) < betAmount) {
-                    throw new Error("Insufficient Balance. Please Deposit.");
-                }
+                // [REFACTOR] Use WalletService for integrity
+                // user.wallet.main -= betAmount;
+                const WalletService = require('../wallet/WalletService');
+                await WalletService.deductBalance(userId, betAmount, 'super_ace_bet', 'Super Ace Bet', session);
 
-                // DEDUCT FROM MAIN WALLET
-                user.wallet.main -= betAmount;
-                await user.save({ session });
+                // Reload user after deduction to get fresh state if needed, or rely on WalletService check
+                // user.save() is handled by WalletService.
+                // But we need the user object for the rest of logic? 
+                // WalletService doesn't return user, but we can refetch or just continue leveraging session.
+                const userRefreshed = await User.findById(userId).session(session);
 
-                // [SIMPLIFIED LOGIC - CLEAN & FUN]
+                // 3. RNG Logic
+                // ... (rest of logic)            // [SIMPLIFIED LOGIC - CLEAN & FUN]
                 // 1. Determine Win/Loss based on probabilistic RTP (Return to Player)
                 // We target 94-96% RTP for a "Fun" experience.
 
@@ -79,21 +83,24 @@ class SuperAceService {
                 // Get updated balance for return (user object is already updated in memory/session, but fetch to be safe/consistent if needed, 
                 // actually user.wallet.main is already updated on the instance, but let's just return what we have)
 
+                // Refetch for final state to return
+                const userFinal = await User.findById(userId).session(session);
+
                 // [SOCKET] Real-time Balance Update
                 const SocketService = require('../../modules/common/SocketService');
                 // Broadcast MAIN wallet update
-                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, user.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, userFinal.wallet.main);
 
                 // Also broadcast game balance if we want to keep listeners happy, but logic is main now.
                 // SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, user.wallet.game); 
 
                 // Standard balance update
-                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, user.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, userFinal.wallet.main);
 
                 return {
                     status: 'success',
-                    balance: user.wallet.game, // Keep for frontend compatibility if it checks this
-                    wallet_balance: user.wallet.main, // Main Balance (The real one)
+                    balance: userFinal.wallet.game, // Keep for frontend compatibility if it checks this
+                    wallet_balance: userFinal.wallet.main, // Main Balance (The real one)
                     grid: grid,
                     win: totalWin,
                     bet: betAmount,

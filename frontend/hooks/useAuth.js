@@ -33,19 +33,44 @@ export const useAuth = () => {
         // [PERFORMANCE FIX] Disabled Global Balance Listener in Hook
         // Prevents duplicate listeners from Sidebar/Header/Game causing render spam.
         // Game components update balance via API response mainly.
-        /* 
+        // [ENABLED] Real-time Balance Sync
         const handleBalanceUpdate = (data) => {
             console.log('[SOCKET] Balance Update:', data);
-            setUser(prev => ({
-                ...prev, 
-                wallet: { ...prev.wallet, ...data },
-                game_balance: data.game,
-                wallet_balance: data.main
-            }));
+
+            // Handle both simple number (legacy) and object formats
+            let newIncome = 0;
+            let newMain = 0;
+
+            if (typeof data === 'number') {
+                newIncome = data; // Assume income if single number
+            } else if (typeof data === 'object') {
+                newIncome = data.income || data.wallet?.income || 0;
+                newMain = data.main || data.wallet?.main || 0;
+            }
+
+            setUser(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    wallet: {
+                        ...prev.wallet,
+                        income: newIncome || prev.wallet?.income, // Update if present
+                        main: newMain || prev.wallet?.main        // Update if present
+                    },
+                    // Update legacy/aliased fields if they exist
+                    wallet_balance: (newMain || prev.wallet?.main) || prev.wallet_balance
+                };
+            });
         };
+
+        // Listen for both event types for robustness
         socket.on('balance_update', handleBalanceUpdate);
-        return () => socket.off('balance_update', handleBalanceUpdate);
-        */
+        socket.on(`balance_update_${user.id}`, handleBalanceUpdate);
+
+        return () => {
+            socket.off('balance_update', handleBalanceUpdate);
+            socket.off(`balance_update_${user.id}`, handleBalanceUpdate);
+        };
 
     }, [socket, user?.id]);
 

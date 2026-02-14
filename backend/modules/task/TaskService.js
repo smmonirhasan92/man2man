@@ -169,27 +169,31 @@ class TaskService {
         // [ADMIN SYNC] Use Exact Reward from Admin Panel
         let rewardAmount = planDetails.task_reward;
 
-        // Fallback or Dynamic Logic only if Admin set 0
+        // [DYNAMIC ROI LOGIC]
+        // Formula: (Total_Revenue_Target / Validity_Days) / Daily_Limit
+        // This ensures EXACT mathematical adherence to the promised ROI.
         if (!rewardAmount || rewardAmount <= 0) {
-            // [ORIGINAL LOGIC - KEPT AS FALLBACK]
-            // [CURRENCY NORMALIZATION]
-            // If Price > 100, assume BDT and convert to USD for standardized math.
-            let unlockPrice = planDetails.unlock_price || 0;
-            if (unlockPrice > 100) {
-                unlockPrice = unlockPrice / 120.65; // Convert BDT to USD
-            }
-            const roiPercent = planDetails.roi_percentage || 150;
-            const validityDays = planDetails.validity_days || 35;
-            const totalRevenueTarget = unlockPrice * (roiPercent / 100);
-            const averageDaily = totalRevenueTarget / validityDays;
-            const dailyGoal = averageDaily; // Forced flat daily
+            const unlockPrice = planDetails.unlock_price || 0;
+            // If plan price > 100, treat as BDT convert to USD if needed, or keep base.
+            // Usually `planDetails` has `price_usd` or we calculate. 
+            // Let's rely on `planDetails.total_return` if pre-calculated, or calculate live.
 
-            const baseRate = 0.0152;
-            if (unlockPrice < 5) {
-                rewardAmount = baseRate;
-            } else {
-                rewardAmount = dailyGoal / limitForPlan;
-            }
+            let investment = unlockPrice;
+            // Normalize to USD if huge number (BDT)
+            if (investment > 500) investment = investment / 120;
+
+            const roiPercentage = planDetails.roi_percentage || 150; // Default 150%
+            const totalReturn = investment * (roiPercentage / 100);
+            const validity = planDetails.validity_days || 35;
+            const limit = planDetails.daily_limit || 10;
+
+            // Daily Goal for the USER (Total Return / Days)
+            const dailyRevenueGoal = totalReturn / validity;
+
+            // Per Task Reward (Daily Goal / Limit)
+            rewardAmount = dailyRevenueGoal / limit;
+
+            console.log(`[TaskService] Dynamic ROI Calc: Inv=${investment} ROI=${roiPercentage}% Return=${totalReturn} Days=${validity} Limit=${limit} -> Task=${rewardAmount}`);
         }
 
         // Ensure 4 decimals

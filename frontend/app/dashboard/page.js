@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { authService } from '../../services/authService';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -95,7 +95,7 @@ function DashboardContent() {
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">
 
                 {/* 1. Header (Re-Engineered) */}
-                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between">
+                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between relative z-50">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsDrawerOpen(true)} // [NEW] Open Drawer
@@ -225,21 +225,21 @@ function DashboardContent() {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        {/* 3. Aviator */}
-                        <div className="col-span-2">
-                            <GameCard
-                                title="Aviator"
-                                desc="Crash Game"
-                                href="/game/aviator"
-                                icon="✈️"
-                                colors="from-red-900 to-rose-950 border-white/20"
-                            />
-                        </div>
-                        {/* 4. Coming Soon (Placeholder for Expansion) */}
-                        <div className="h-32 rounded-2xl overflow-hidden border border-white/5 bg-white/5 flex flex-col items-center justify-center opacity-50">
-                            <span className="text-2xl">🔒</span>
-                            <span className="text-[10px] font-bold uppercase mt-2">Coming Soon</span>
+                    <div className="grid grid-cols-2 gap-3 relative z-10">
+                        {/* 3. Aviator - NOW SIDE BY SIDE */}
+                        <GameCard
+                            title="Aviator"
+                            desc="Maintenance"
+                            href="#"
+                            icon="🚧"
+                            colors="from-slate-800 to-slate-900 border-white/10 opacity-50 grayscale"
+                        />
+                        {/* 4. Coming Soon (Placeholder) */}
+                        <div className="h-32 rounded-2xl overflow-hidden border border-white/5 bg-white/5 flex flex-col items-center justify-center opacity-50 relative group hover:opacity-80 transition">
+                            <span className="text-2xl group-hover:scale-110 transition">🔒</span>
+                            <span className="text-[10px] font-bold uppercase mt-2 text-slate-400">Coming Soon</span>
+                            {/* Texture */}
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
                         </div>
                     </div>
                 </div>
@@ -298,7 +298,7 @@ function DashboardContent() {
 }
 
 // Optimized Game Card
-function GameCard({ title, desc, href, icon, colors }) {
+const GameCard = React.memo(function GameCard({ title, desc, href, icon, colors }) {
     return (
         <Link href={href} className={`group relative h-32 rounded-2xl overflow-hidden border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]`}>
             {/* Background */}
@@ -316,7 +316,7 @@ function GameCard({ title, desc, href, icon, colors }) {
             </div>
         </Link>
     );
-}
+});
 
 // [NEW] Server Connectivity Center with Manual Control
 function USAGatewayCard({ user }) {
@@ -522,7 +522,7 @@ function USAGatewayCard({ user }) {
     // SCENARIO 2: NOT CONNECTED BUT HAS SERVERS
     if (servers.length > 0) {
         return (
-            <div className="w-full px-6 mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="w-full px-6 mb-2 animate-in fade-in slide-in-from-top-4 duration-700 relative z-20">
                 <div className="bg-gradient-to-r from-indigo-900 to-blue-900 rounded-xl p-4 border border-indigo-500/50 shadow-lg relative overflow-hidden group">
                     <div className="flex justify-between items-center">
                         <div>

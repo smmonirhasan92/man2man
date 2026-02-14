@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:5050/api';
 
 async function run() {
     console.log('VERIFYING DYNAMIC KEY GENERATION (API-DRIVEN)');
@@ -80,7 +80,9 @@ async function run() {
         console.error('❌ VERIFICATION FAILED:', err.message);
         if (err.response) {
             console.error('   Status:', err.response.status);
-            console.error('   Data:', JSON.stringify(err.response.data));
+            const fs = require('fs');
+            fs.writeFileSync('debug_error.log', JSON.stringify(err.response.data, null, 2));
+            console.error('   Data written to debug_error.log');
         }
         process.exit(1);
     }

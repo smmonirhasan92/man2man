@@ -4,6 +4,20 @@ const protect = require('../middleware/authMiddleware');
 
 // Services
 const SuperAceService = require('../modules/game/SuperAceService');
+const CoinFlipService = require('../modules/game/CoinFlipService'); // [NEW]
+
+// --- COIN FLIP (STANDARD) ---
+router.post('/play', protect, async (req, res) => {
+    try {
+        const { betAmount, choice } = req.body;
+        const result = await CoinFlipService.play(req.user.user.id, parseFloat(betAmount), choice);
+        res.json(result);
+    } catch (err) {
+        console.error("[CoinFlip Error]", err.message);
+        const status = err.message.includes("Insufficient") ? 400 : 500;
+        res.status(status).json({ message: err.message });
+    }
+});
 
 // --- SUPER ACE (STANDARD) ---
 router.post('/super-ace/spin', protect, async (req, res) => {

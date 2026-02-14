@@ -134,97 +134,42 @@ exports.requestRecharge = async (req, res) => {
 exports.transferToMain = async (req, res) => {
     try {
         const { amount } = req.body;
+        const userId = req.user.user.id; // Corrected ID access
         const amountFloat = parseFloat(amount);
+
         if (isNaN(amountFloat) || amountFloat <= 0) {
             return res.status(400).json({ message: "Invalid Amount" });
         }
 
-        // [LOGIC] Apply Tax & Fees for Cross-Border (Income USD -> Main BDT)
-        // USA Tax: 10%, Exchange Fee: 3%
-        const TAX_RATE = 0.10;
-        const EXCH_FEE = 0.03;
-        const EXCHANGE_RATE = 120.65; // USD to BDT
-
-        const taxAmount = amountFloat * TAX_RATE;
-        const feeAmount = amountFloat * EXCH_FEE;
-        // Net USD after fees
-        const netUsd = amountFloat - taxAmount - feeAmount;
-
-        // Convert Net USD to BDT
-        const netBdt = Math.round((netUsd * EXCHANGE_RATE) * 100) / 100;
-
-        // Perform Transfer
-        // Use top-level imports or correct relative paths
-        // Since we are in /modules/wallet/wallet.controller.js:
-        const TransactionHelper = require('../common/TransactionHelper');
-        const User = require('../user/UserModel');
-        const Transaction = require('./TransactionModel');
-
-        const result = await TransactionHelper.runTransaction(async (session) => {
-            const user = await User.findById(req.user.user.id).session(session);
-            if (!user) throw new Error("User not found");
-
-            if ((user.wallet.income || 0) < amountFloat) {
-                throw new Error("Insufficient Income Balance");
+        // [COOLDOWN] Redis Lock (5 Seconds)
+        const { client } = require('../../config/redis');
+        if (client.isOpen) {
+            const lockKey = `lock:swap:${userId}`;
+            const isLocked = await client.get(lockKey);
+            if (isLocked) {
+                return res.status(429).json({ message: "Please wait 5 seconds between swaps." });
             }
+            await client.setEx(lockKey, 5, 'LOCKED');
+        }
 
-            // Deduct GROSS from Income (USD)
-            user.wallet.income -= amountFloat;
-
-            // Add NET to Main (BDT)
-            user.wallet.main = (user.wallet.main || 0) + netBdt;
-
-            await user.save({ session });
-
-            // [LOG 1] Debit from Income (Gross) - USD
-            await Transaction.create([{
-                userId: user._id,
-                type: 'wallet_transfer',
-                amount: -amountFloat,
-                status: 'completed',
-                description: 'Transfer from Income Wallet',
-                metadata: {
-                    currency: 'USD',
-                    target: 'main'
-                }
-            }], { session });
-
-            // [LOG 2] Credit to Main (Net) - BDT
-            await Transaction.create([{
-                userId: user._id,
-                type: 'wallet_transfer',
-                amount: netBdt,
-                status: 'completed',
-                description: 'Income to Main Wallet (Net)',
-                metadata: {
-                    grossAmount: amountFloat,
-                    tax: taxAmount,
-                    fee: feeAmount,
-                    exchangeRate: EXCHANGE_RATE,
-                    netUsd: netUsd
-                }
-            }], { session });
-
-            return {
-                newIncome: user.wallet.income,
-                newMain: user.wallet.main,
-                receipt: {
-                    amount: amountFloat,
-                    tax: taxAmount,
-                    fee: feeAmount,
-                    finalAmount: netBdt,
-                    currency: 'BDT',
-                    rate: EXCHANGE_RATE
-                }
-            };
-        });
+        // [LOGIC] Delegate to WalletService (Unified Ledger)
+        // WalletService.transferFunds handles the 3% Fee automatically for Income->Main
+        const WalletService = require('./WalletService');
+        const result = await WalletService.transferFunds(
+            userId,
+            amountFloat,
+            'income',
+            'main',
+            'Swap Income to Main'
+        );
 
         res.json({
             success: true,
             message: 'Transferred to Main Wallet',
-            newIncomeBalance: result.newIncome,
-            newMainBalance: result.newMain,
-            receipt: result.receipt
+            newIncomeBalance: result.newBalances.income,
+            newMainBalance: result.newBalances.main,
+            fee: result.fee,
+            creditAmount: result.creditAmount
         });
 
     } catch (err) {

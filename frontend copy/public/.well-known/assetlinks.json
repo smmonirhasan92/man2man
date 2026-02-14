@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.usa.affiliate.lottery",
+            "sha256_cert_fingerprints": [
+                "FA:C6:17:45:35:09:98:20:30:19:15:2D:3D:28:90:3F:85:6A:3E:54:9F:50:88:81:49:1C:E0:4F:92:47:89:D1"
+            ]
+        }
+    }
+]

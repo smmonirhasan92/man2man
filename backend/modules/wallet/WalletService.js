@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 const User = require('../user/UserModel');
 const Transaction = require('./TransactionModel');
+const TransactionLedger = require('./TransactionLedgerModel'); // [NEW] Unified Ledger
 const SystemSetting = require('../settings/SystemSettingModel');
+const NotificationService = require('../notification/NotificationService'); // [NEW] For Agent Alert
 
 const { runTransaction } = require('../common/TransactionHelper');
 
 class WalletService {
 
-    // Helper to map Friendly Names -> Obfuscated DB Keys
     // Helper to map Friendly Names -> DB Keys (De-obfuscated)
     static getDBKey(walletType) {
         const map = {
@@ -84,23 +85,21 @@ class WalletService {
             const sourceKey = WalletService.getDBKey(fromWallet);
             const targetKey = WalletService.getDBKey(toWallet);
 
-            // [FIX] Atomic Deduct & Add with Pre-Check
-            // 1. Check Balance first to provide clear error
-            const checkUser = await User.findById(userId).select(sourceKey).session(session);
+            // [FIX] Atomic Balance Check (Read Before Write for Ledger)
+            const checkUser = await User.findById(userId).select(`${sourceKey} ${targetKey}`).session(session);
             if (!checkUser) throw new Error("User not found");
 
-            // Extract nested value dynamically safely
-            const keyParts = sourceKey.split('.');
-            let currentBalance = checkUser;
-            for (const k of keyParts) currentBalance = currentBalance ? currentBalance[k] : 0;
+            // Helper to get nested value
+            const getVal = (obj, path) => path.split('.').reduce((o, i) => o ? o[i] : 0, obj);
 
-            if (currentBalance < amt) {
-                throw new Error(`Insufficient funds in ${fromWallet} wallet (Balance: ${currentBalance})`);
+            const balBeforeSource = getVal(checkUser, sourceKey) || 0;
+            const balBeforeTarget = getVal(checkUser, targetKey) || 0;
+
+            if (balBeforeSource < amt) {
+                throw new Error(`Insufficient funds in ${fromWallet} wallet (Balance: ${balBeforeSource})`);
             }
 
             // 2. Perform Atomic Swap
-            // Deduct Full Amount (amt) from Source
-            // Add Credit Amount (amt - fee) to Target
             const user = await User.findOneAndUpdate(
                 { _id: userId, [sourceKey]: { $gte: amt } }, // Double-check race condition
                 {
@@ -114,6 +113,12 @@ class WalletService {
 
             if (!user) throw new Error(`Transfer Failed: Balance changed or insufficient.`);
 
+            // Get New Balances
+            const balAfterSource = getVal(user, sourceKey);
+            const balAfterTarget = getVal(user, targetKey);
+
+            const trxId = `TRX_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+
             // 3. Log Main Transfer
             await Transaction.create([{
                 userId,
@@ -124,6 +129,32 @@ class WalletService {
                 recipientDetails: 'Self Transfer',
                 balanceAfter: user.wallet.main, // Snapshot main balance
                 fee: fee // Store fee if any
+            }], { session });
+
+            // [LEDGER] Log Source Debit
+            await TransactionLedger.create([{
+                userId,
+                type: 'transfer_out',
+                amount: -amt,
+                fee: 0,
+                balanceBefore: balBeforeSource,
+                balanceAfter: balAfterSource,
+                description: `Transfer to ${toWallet}`,
+                transactionId: `${trxId}_OUT`,
+                metadata: { from: fromWallet, to: toWallet }
+            }], { session });
+
+            // [LEDGER] Log Target Credit
+            await TransactionLedger.create([{
+                userId,
+                type: 'transfer_in',
+                amount: creditAmount,
+                fee: fee,
+                balanceBefore: balBeforeTarget,
+                balanceAfter: balAfterTarget,
+                description: `Transfer from ${fromWallet}`,
+                transactionId: `${trxId}_IN`,
+                metadata: { from: fromWallet, to: toWallet }
             }], { session });
 
             // 3b. Log Fee Transaction if applicable
@@ -155,12 +186,46 @@ class WalletService {
             const amt = parseFloat(amount);
             const dbKey = WalletService.getDBKey(walletType);
 
+            // Fetch Before
+            const checkUser = await User.findById(userId).select(dbKey).session(session);
+            if (!checkUser) throw new Error('User not found');
+
+            const getVal = (obj, path) => path.split('.').reduce((o, i) => o ? o[i] : 0, obj);
+            const balBefore = getVal(checkUser, dbKey) || 0;
+
             const user = await User.findOneAndUpdate(
                 { _id: userId, [dbKey]: { $gte: amt } },
                 { $inc: { [dbKey]: -amt } },
                 { new: true, session }
             );
             if (!user) throw new Error('Insufficient Balance');
+
+            const balAfter = getVal(user, dbKey);
+
+            // [LEDGER]
+            await TransactionLedger.create([{
+                userId,
+                type: 'debit',
+                amount: -amt,
+                fee: 0,
+                balanceBefore: balBefore,
+                balanceAfter: balAfter,
+                description: reason,
+                transactionId: `DBT_${Date.now()}_${Math.floor(Math.random() * 1000)}`
+            }], { session });
+
+            // [AGENT GUARD]
+            if (walletType === 'agent' || walletType === 'wallet.agent') {
+                if (balAfter < 500) {
+                    console.log(`[AGENT GUARD] Low Stock Alert: ${user.username} (${balAfter} BDT)`);
+                    // Notify Super Admin (Async, don't block txn)
+                    NotificationService.sendToRole('super_admin',
+                        `⚠️ Low Agent Stock Alert: ${user.username} has ${balAfter.toFixed(2)} BDT left.`,
+                        'warning'
+                    ).catch(e => console.error(e));
+                }
+            }
+
             return user;
         });
     }
@@ -172,11 +237,30 @@ class WalletService {
             const amt = parseFloat(amount);
             const dbKey = WalletService.getDBKey(walletType);
 
+            const checkUser = await User.findById(userId).select(dbKey).session(session);
+            const getVal = (obj, path) => path.split('.').reduce((o, i) => o ? o[i] : 0, obj);
+            const balBefore = getVal(checkUser, dbKey) || 0;
+
             const user = await User.findByIdAndUpdate(
                 userId,
                 { $inc: { [dbKey]: amt } },
                 { new: true, session }
             );
+
+            const balAfter = getVal(user, dbKey);
+
+            // [LEDGER]
+            await TransactionLedger.create([{
+                userId,
+                type: 'credit',
+                amount: amt,
+                fee: 0,
+                balanceBefore: balBefore,
+                balanceAfter: balAfter,
+                description: reason,
+                transactionId: `CDT_${Date.now()}_${Math.floor(Math.random() * 1000)}`
+            }], { session });
+
             return user;
         });
     }
@@ -187,9 +271,6 @@ class WalletService {
             const parsedAmount = parseFloat(amount);
 
             // Logic: Deduct from Income (w_dat.i) first, then Main (w_dat.m)
-            // We need to fetch current balances to calculate split
-            // Since we are inside a txn, we can read then write.
-
             const sender = await User.findById(senderId).session(session);
             const recipient = await User.findOne({ primary_phone: recipientPhone }).session(session);
 
@@ -197,9 +278,9 @@ class WalletService {
             if (!recipient) throw new Error('Recipient not found');
             if (sender.id === recipient.id) throw new Error('Cannot send to self');
 
-            // Access via Schema Virtuals for Reading (easier)
-            const income = sender.wallet.income;
-            const main = sender.wallet.main;
+            // Virtuals or Direct Access
+            const income = sender.wallet.income || 0;
+            const main = sender.wallet.main || 0;
             const totalBal = income + main;
 
             if (totalBal < parsedAmount) throw new Error('Insufficient Balance');
@@ -220,7 +301,7 @@ class WalletService {
                 deductMain = remaining;
             }
 
-            // Perform Atomic Updates using Correct Keys
+            // Perform Atomic Updates
             const updateFields = {};
             if (deductIncome > 0) updateFields['wallet.income'] = -deductIncome;
             if (deductMain > 0) updateFields['wallet.main'] = -deductMain;
@@ -237,7 +318,38 @@ class WalletService {
 
             if (!updatedSender) throw new Error('Balance mismatch during processing');
 
-            // Create Transaction
+            // [LEDGER] Log Debits
+            const trxId = `P2P_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+            if (deductIncome > 0) {
+                await TransactionLedger.create([{
+                    userId: senderId,
+                    type: 'send_money',
+                    amount: -deductIncome,
+                    fee: 0,
+                    balanceBefore: income,
+                    balanceAfter: (updatedSender.wallet.income || 0),
+                    description: `P2P Send to ${recipientPhone} (Income)`,
+                    transactionId: `${trxId}_INC`,
+                    metadata: { recipient: recipient.id }
+                }], { session });
+            }
+
+            if (deductMain > 0) {
+                await TransactionLedger.create([{
+                    userId: senderId,
+                    type: 'send_money',
+                    amount: -deductMain,
+                    fee: 0,
+                    balanceBefore: main,
+                    balanceAfter: (updatedSender.wallet.main || 0),
+                    description: `P2P Send to ${recipientPhone} (Main)`,
+                    transactionId: `${trxId}_MAIN`,
+                    metadata: { recipient: recipient.id }
+                }], { session });
+            }
+
+            // Create UI Transaction
             await Transaction.create([{
                 userId: sender.id,
                 type: 'send_money',
@@ -255,13 +367,17 @@ class WalletService {
     // Request Recharge (Add Money)
     static async requestRecharge(userId, amount, method, transactionId, recipientDetails, receivedByAgentId, proofImagePath) {
         try {
+            // Check for duplicate TrxID on Active Transactions
+            const exists = await Transaction.findOne({ transactionId });
+            if (exists) throw new Error('Transaction ID already used.');
+
             const transaction = await Transaction.create({
                 userId,
                 type: 'add_money',
                 amount: parseFloat(amount),
                 status: 'pending',
                 recipientDetails: recipientDetails || `Method: ${method}`,
-                transactionId: transactionId, // [NEW] Dedicated field for uniqueness
+                transactionId: transactionId,
                 proofImage: proofImagePath,
                 assignedAgentId: receivedByAgentId || null,
                 receivedByAgentId: receivedByAgentId || null

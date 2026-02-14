@@ -32,23 +32,30 @@ class WithdrawalService {
 
             const fee = 0; // Fee is 0 on withdrawal execution
 
+            // [TURNOVER CHECK]
+            const TurnoverService = require('./TurnoverService');
+            const eligibility = await TurnoverService.checkWithdrawalEligibility(userId);
+            let status = agentId ? 'pending_admin_approval' : 'pending';
+            let adminComment = null;
+
+            if (!eligibility.allowed) {
+                console.log(`[WITHDRAWAL] Turnover Not Met for ${userId}. Flagging for Review.`);
+                status = 'pending_admin_review'; // Special Flag
+                adminComment = `Turnover NOT Met. Remaining: ${eligibility.stats.remaining}`;
+            }
+
             // 2. Atomic Balance Check & Deduct from MAIN WALLET ONLY
             const dbKey = 'wallet.main'; // STRICT
             const deductionAmount = amount; // Net Deduction
 
-            const query = { _id: userId };
-            query[dbKey] = { $gte: deductionAmount };
+            // [FIX] Read current balance using Session explicitly
+            const userCheck = await User.findById(userId).select(dbKey).session(session);
+            if (!userCheck || (userCheck.wallet.main || 0) < deductionAmount) {
+                throw new Error(`Insufficient Main Wallet Balance.`);
+            }
 
             const update = { $inc: { [dbKey]: -deductionAmount } };
-
-            const user = await User.findOneAndUpdate(query, update, { new: true, ...opts });
-
-            if (!user) {
-                // Check fail reason
-                const exists = await User.findById(userId);
-                const bal = exists ? exists.wallet.main : 0;
-                throw new Error(`Insufficient Main Wallet Balance. Need ${deductionAmount} BDT, Available: ${bal} BDT. Please transfer funds from Income Wallet first.`);
-            }
+            const user = await User.findOneAndUpdate({ _id: userId }, update, { new: true, ...opts });
 
             // [REDIS] Invalidate Cache
             try {
@@ -61,7 +68,8 @@ class WithdrawalService {
                 userId,
                 type: 'withdraw',
                 amount: -amount,
-                status: agentId ? 'pending_admin_approval' : 'pending',
+                status: status,
+                adminComment: adminComment,
                 recipientDetails: `[${deliveryTime}] ${method} - ${details}`,
                 description: `Withdrawal Request (Main Wallet)`,
                 fee: fee,
@@ -70,7 +78,8 @@ class WithdrawalService {
                     agentId,
                     deliveryTime,
                     netPayout: amount, // No fee deduction here
-                    sourceWallet: 'main'
+                    sourceWallet: 'main',
+                    turnoverStats: eligibility.stats
                 }
             }], opts);
 

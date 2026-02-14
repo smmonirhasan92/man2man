@@ -21,6 +21,11 @@ exports.getTaskStatus = async (req, res) => {
         // [NEW] Get Reward Rate & Limit for frontend display
         // DYNAMIC RATE GUARD: Determine rate based on the ACTIVE SESSION (x-usa-identity)
         const identityHeader = req.headers['x-usa-identity'];
+        console.log(`[TaskController.getTaskStatus] Headers:`, {
+            identity: identityHeader,
+            key: req.headers['x-usa-key']
+        });
+
         let rewardPerTask = 0;
         let sessionLimit = 0; // [NEW] Session Specific Limit
 

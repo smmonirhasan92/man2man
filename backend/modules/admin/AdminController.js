@@ -49,6 +49,25 @@ class AdminController {
         // ... (existing logic or new)
         return res.json({ status: 'active', socket: !!req.io });
     }
+
+    /**
+     * Get Debug Logs
+     */
+    async getSystemLogs(req, res) {
+        try {
+            const SystemLog = require('../../modules/common/SystemLogModel');
+            const { limit = 100, level } = req.query;
+            const query = level ? { level } : {};
+
+            const logs = await SystemLog.find(query)
+                .sort({ timestamp: -1 })
+                .limit(parseInt(limit));
+
+            return res.json({ success: true, logs });
+        } catch (e) {
+            return res.status(500).json({ message: e.message });
+        }
+    }
 }
 
 module.exports = new AdminController();
