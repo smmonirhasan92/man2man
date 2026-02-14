@@ -15,6 +15,7 @@ const Card = React.memo(({ symbol, isGold, isWild }) => {
     // 1. Normalize Symbol
     let type = 'rank';
     let value = symbol;
+    if (!value) return <div className="w-full h-full bg-slate-800/50 rounded-lg animate-pulse"></div>; // Placeholder for null
 
     if (value.startsWith('GOLD_')) {
         isGold = true;
