@@ -240,13 +240,28 @@ const Logger = require('./modules/common/Logger');
 // Global Error Handlers
 process.on('uncaughtException', (err) => {
     console.error("CRASH DEBUG:", err);
-    Logger.error('UNCAUGHT EXCEPTION! Shutting down...', err.stack);
+    Logger.error('UNCAUGHT EXCEPTION! (Critical)', err.stack);
+    // [RECOVERY] In a containerized env (Render), exiting allows orchestrator to restart cleanly.
     process.exit(1);
 });
 
-process.on('unhandledRejection', (err) => {
-    Logger.error('UNHANDLED REJECTION! 💥', err.stack);
+process.on('unhandledRejection', (reason, promise) => {
+    console.error("UNHANDLED REJECTION:", reason);
+    Logger.error('UNHANDLED REJECTION! 💥', reason instanceof Error ? reason.stack : reason);
 });
+
+// Graceful Shutdown for Render Zero Downtime Deployment
+const gracefulShutdown = () => {
+    console.log('SIGTERM/SIGINT received. Shutting down gracefully...');
+    server.close(() => {
+        console.log('HTTP Server closed.');
+        // close DB connection if needed
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 const startServer = async () => {
     try {
