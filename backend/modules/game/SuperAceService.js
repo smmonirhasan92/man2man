@@ -51,6 +51,7 @@ class SuperAceService {
                         userId, type: 'debit', amount: -betAmount,
                         balanceBefore: balBefore, balanceAfter: user.wallet.game,
                         description: 'Super Ace Bet',
+                        transactionId: `BET_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
                         metadata: { game: 'super-ace', wallet: 'game' }
                     }], { session });
 
@@ -156,6 +157,7 @@ class SuperAceService {
                         userId, type: 'credit', amount: totalWin,
                         balanceBefore: balBefore, balanceAfter: user.wallet.game,
                         description: isFreeGame ? 'Super Ace Win (Free Spin)' : 'Super Ace Win',
+                        transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
                         metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game', isPity: isPityWin }
                     }], { session });
 
