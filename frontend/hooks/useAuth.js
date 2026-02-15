@@ -40,12 +40,14 @@ export const useAuth = () => {
             // Handle both simple number (legacy) and object formats
             let newIncome = 0;
             let newMain = 0;
+            let newGame = 0;
 
             if (typeof data === 'number') {
                 newIncome = data; // Assume income if single number
             } else if (typeof data === 'object') {
                 newIncome = data.income || data.wallet?.income || 0;
                 newMain = data.main || data.wallet?.main || 0;
+                newGame = data.game || data.wallet?.game || 0;
             }
 
             setUser(prev => {
@@ -55,10 +57,12 @@ export const useAuth = () => {
                     wallet: {
                         ...prev.wallet,
                         income: newIncome || prev.wallet?.income, // Update if present
-                        main: newMain || prev.wallet?.main        // Update if present
+                        main: newMain || prev.wallet?.main,       // Update if present
+                        game: newGame || prev.wallet?.game        // [FIX] Update Game Wallet
                     },
                     // Update legacy/aliased fields if they exist
-                    wallet_balance: (newMain || prev.wallet?.main) || prev.wallet_balance
+                    wallet_balance: (newMain || prev.wallet?.main) || prev.wallet_balance,
+                    game_balance: (newGame || prev.wallet?.game) || prev.game_balance // [FIX] Update Legacy Game Balance
                 };
             });
         };
