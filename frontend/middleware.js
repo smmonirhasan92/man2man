@@ -22,24 +22,8 @@ export async function middleware(request) {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         console.log(`[Middleware] Checking API Health: ${apiUrl}`);
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s timeout
+        // Proceed to maintenance check directly
 
-            const apiRes = await fetch(`${apiUrl}/health`, {
-                method: 'GET',
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (apiRes.ok) {
-                return true;
-            }
-            return false;
-        } catch (e) {
-            // console.error(`[Middleware] API Check Failed: ${e.message}`);
-            return false;
-        }
 
         // Timeout to prevent blocking
         const controller = new AbortController();

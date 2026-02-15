@@ -1,6 +1,6 @@
-const User = require('../../user/UserModel');
-const Transaction = require('../../modules/wallet/TransactionModel');
-const GameLog = require('../../modules/game/GameLogModel');
+const User = require('../user/UserModel');
+const Transaction = require('../wallet/TransactionModel');
+const GameLog = require('../game/GameLogModel');
 
 class AdminStatsService {
 
