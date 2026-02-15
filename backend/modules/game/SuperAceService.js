@@ -52,32 +52,75 @@ class SuperAceService {
                     metadata: { game: 'super-ace', wallet: 'game' }
                 }], { session });
 
-                // 2. RNG Logic
-                // [SIMPLIFIED LOGIC - CLEAN & FUN]
-                // 1. Determine Win/Loss based on probabilistic RTP
-                const isWin = Math.random() < 0.45; // 45% Hit Frequency
+                // 2. RNG Logic & Excitement Engine 🎰
+                const { client } = require('../../config/redis');
+                const streakKey = `streak:loss:${userId}`;
+                let lossStreak = 0;
+
+                if (client && client.isOpen) {
+                    lossStreak = parseInt(await client.get(streakKey) || '0');
+                }
+
+                // [EXCITEMENT PARAMETERS]
+                const PITY_THRESHOLD = 4; // After 4 losses, force a win
+                const BASE_HIT_RATE = 0.48; // 48% Chance to hit something (increased from 45%)
+
+                let isWin = Math.random() < BASE_HIT_RATE;
+                let isPityWin = false;
+
+                // [STREAK BREAKER] Force a small win if player is suffering
+                if (lossStreak >= PITY_THRESHOLD) {
+                    isWin = true;
+                    isPityWin = true; // Flag to keep win small/safe
+                    console.log(`[ACE_GAME] Pity Win Triggered for ${userId} (Streak: ${lossStreak})`);
+                }
 
                 let multiplier = 0;
                 let grid = [];
                 let totalWin = 0;
 
-                // Safety Check (ProfitGuard)
-                const isSafe = await ProfitGuard.enforceSafety(betAmount * 10);
-
-                if (isWin && isSafe) {
-                    // GENERATE WIN
+                // Determine Multiplier
+                if (isWin) {
                     const rand = Math.random();
-                    if (rand < 0.60) multiplier = 1.2 + (Math.random() * 0.8);
-                    else if (rand < 0.90) multiplier = 2.0 + (Math.random() * 3.0);
-                    else if (rand < 0.99) multiplier = 5.0 + (Math.random() * 10.0);
-                    else multiplier = 20.0 + (Math.random() * 30.0);
 
+                    if (isPityWin) {
+                        // Pity Win: 0.5x to 2.0x (Just to keep them happy)
+                        multiplier = 0.5 + (Math.random() * 1.5);
+                    } else {
+                        // Normal Win Distribution
+                        if (rand < 0.50) multiplier = 0.2 + (Math.random() * 0.7); // "Fake Win" (0.2x - 0.9x) - Feeds addiction safely
+                        else if (rand < 0.80) multiplier = 1.1 + (Math.random() * 1.9); // Small Profit (1.1x - 3.0x)
+                        else if (rand < 0.96) multiplier = 3.0 + (Math.random() * 7.0); // Big Win (3x - 10x)
+                        else multiplier = 15.0 + (Math.random() * 35.0); // Mega Win
+                    }
+
+                    // Calculate Win
                     totalWin = parseFloat((betAmount * multiplier).toFixed(2));
-                    grid = self.generateWinningGrid(multiplier);
+
+                    // [SAFETY CHECK]
+                    // If Pity Win or Small Win (< 3x), bypass strict ProfitGuard checks (Use Buffer)
+                    // If Big Win, strictly enforce ProfitGuard
+                    let isSafe = true;
+                    if (multiplier > 3.0) {
+                        isSafe = await ProfitGuard.enforceSafety(totalWin);
+                    }
+                    // Note: We skip ProfitGuard for small wins to ensure "Excitement" even in recovery mode.
+
+                    if (isSafe) {
+                        grid = self.generateWinningGrid(multiplier);
+                        // Reset Loss Streak
+                        if (client && client.isOpen) await client.set(streakKey, '0');
+                    } else {
+                        // Forced Loss due to Safety
+                        totalWin = 0;
+                        grid = self.generateLosingGrid();
+                        if (client && client.isOpen) await client.incr(streakKey);
+                    }
                 } else {
-                    // FORCE LOSS
-                    grid = self.generateLosingGrid();
+                    // LOSS
                     totalWin = 0;
+                    grid = self.generateLosingGrid();
+                    if (client && client.isOpen) await client.incr(streakKey);
                 }
 
                 // 3. Payout
@@ -96,13 +139,13 @@ class SuperAceService {
                         balanceAfter: balAfterWin,
                         description: 'Super Ace Win',
                         transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                        metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game' }
+                        metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game', isPity: isPityWin }
                     }], { session });
 
-                    console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount})`);
+                    console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount, multiplier})`);
                 }
 
-                // Sync Legacy Field (Optional but good for safety)
+                // Sync Legacy Field
                 user.game_balance = user.wallet.game;
 
                 // Save Updated User State
@@ -110,7 +153,6 @@ class SuperAceService {
 
                 // [SOCKET] Real-time Balance Update
                 const SocketService = require('../../modules/common/SocketService');
-                // Broadcast updated GAME wallet
                 SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, user.wallet.game);
                 SocketService.broadcast(`user_${userId}`, `balance_update`, user.wallet); // Send full wallet object
 
