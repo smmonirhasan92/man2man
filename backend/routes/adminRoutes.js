@@ -63,8 +63,8 @@ router.get('/settings/public', (req, res) => res.json({ message: "Settings Publi
 // adminController.getPublicSettings
 
 // System Health & Logs
-router.get('/health', authMiddleware, adminController.getSystemHealth);
 const adminModuleController = require('../modules/admin/AdminController');
+router.get('/health', authMiddleware, adminModuleController.getSystemHealth);
 router.get('/logs', authMiddleware, adminCheck, adminModuleController.getSystemLogs); // [NEW] Log Viewer
 
 // Migrated Routes
