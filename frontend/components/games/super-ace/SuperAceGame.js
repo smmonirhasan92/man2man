@@ -16,8 +16,9 @@ export default function SuperAceGame() {
     const [spinning, setSpinning] = useState(false);
     const [multiplier, setMultiplier] = useState(1);
     const [winInfo, setWinInfo] = useState({ total: 0, lastWin: 0 });
-    const [cascading, setCascading] = useState(false);
     const [gameLog, setGameLog] = useState({ message: 'Ready to Spin', type: 'info' });
+    const [showWinPopup, setShowWinPopup] = useState(false); // [NEW] Popup State
+    const [isFreeSpinMode, setIsFreeSpinMode] = useState(false); // [NEW] FS State
 
     const SYMBOLS = ['J', 'Q', 'K', 'A'];
 
@@ -36,6 +37,7 @@ export default function SuperAceGame() {
         setWinInfo({ total: 0, lastWin: 0 });
         setCascading(false);
         setMultiplier(1);
+        setShowWinPopup(false); // Reset Popup
         setGameLog({ message: 'Spinning...', type: 'info' });
 
         const controller = new AbortController();
@@ -56,25 +58,24 @@ export default function SuperAceGame() {
             }
 
             // Processing
-            if (data.cascades && data.cascades.length > 0) {
-                for (let i = 0; i < data.cascades.length; i++) {
-                    const step = data.cascades[i];
-                    setCascading(true);
-                    setGrid(step.gridSnapshot);
-                    setMultiplier(step.multiplier);
-                    await new Promise(r => setTimeout(r, 400));
-                    if (step.win > 0) {
-                        setWinInfo(prev => ({ ...prev, total: prev.total + step.win }));
-                    }
-                }
-                setGrid(data.grid);
-            } else {
-                setGrid(data.grid);
-            }
+            // [COMPATIBILITY] Backend now returns 'grid' directly for Excitement Engine
+            setGrid(data.grid);
+
+            // Check for Free Spins logic
+            if (data.isFreeGame) setIsFreeSpinMode(true);
+            if (data.freeSpinsLeft === 0) setIsFreeSpinMode(false);
 
             if (data.totalWin > 0 || data.isFreeSpin) {
                 setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
                 setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
+
+                // [WIN POPUP TRIGGER]
+                if (data.totalWin >= (bet * 5) || data.isScatter) {
+                    setTimeout(() => setShowWinPopup(true), 500);
+                    // Hide after 3s
+                    setTimeout(() => setShowWinPopup(false), 3500);
+                }
+
             } else {
                 setGameLog({ message: "Try Again", type: 'loss' });
             }
@@ -162,6 +163,22 @@ export default function SuperAceGame() {
                         )}
                     </button>
                 </div>
+
+                {/* WIN POPUP */}
+                {showWinPopup && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+                        <div className="bg-black/90 p-8 rounded-2xl border-2 border-[#d4af37] animate-bounce shadow-[0_0_80px_rgba(212,175,55,0.6)] text-center scale-125 backdrop-blur-sm">
+                            <div className="text-3xl font-black text-[#d4af37] uppercase tracking-widest mb-2 animate-pulse">
+                                {winInfo.lastWin >= (bet * 5) ? "🌟 SUPER WIN 🌟" : "💎 FREE GAMES 💎"}
+                            </div>
+                            {winInfo.lastWin > 0 && (
+                                <div className="text-5xl font-black text-white font-mono drop-shadow-md">
+                                    ৳{winInfo.lastWin.toFixed(2)}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

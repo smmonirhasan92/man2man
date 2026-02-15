@@ -68,12 +68,13 @@ export default function SuperAceReborn() {
                 payload: {
                     grid: data.grid,
                     win: data.win,
-                    matches: data.matches
+                    matches: data.matches, // Backend might calculate this, or we mock it
+                    freeSpinRemaining: data.freeSpinsLeft,
+                    isScatter: data.isScatter
                 }
             });
 
             // 4. Update Balance (Delayed for visual sync)
-            // Prevent spoiler by waiting for drop animation (~1s)
             setTimeout(() => {
                 setUser(prev => ({
                     ...prev,
@@ -83,7 +84,10 @@ export default function SuperAceReborn() {
             }, 1200);
 
             // 5. Sync Win Popup (1.8s mark)
-            if (data.win > 0) {
+            // [UX IMPROVEMENT] Only show popup for BIG WINS (>5x) or FEATURES
+            const isBigWin = data.win >= (bet * 5);
+
+            if (isBigWin || data.isScatter) {
                 setTimeout(() => {
                     setShowWinPopup(true);
                     // Play Win Sound here if needed
@@ -96,10 +100,8 @@ export default function SuperAceReborn() {
 
             setTimeout(() => {
                 setIsCooling(false);
-                setShowWinPopup(false); // Hide popup for next spin (or keep it longer? User said 2s cycle. We'll hide on next click or timeout)
-                // Actually, let's keep popup until next spin starts or 3s.
-                // But for "Reloading", button enables at 2s.
-            }, remaining);
+                setShowWinPopup(false);
+            }, isBigWin ? 4000 : remaining); // Keep Big Win popup longer (4s)
 
         } catch (e) {
             console.error(e);
@@ -158,13 +160,26 @@ export default function SuperAceReborn() {
             {/* Main Stage */}
             <div className="flex-1 flex flex-col items-center justify-center p-2 relative z-10 overflow-hidden w-full max-w-lg mx-auto">
                 {/* Win Overlay */}
-                {showWinPopup && state.lastWin > 0 && (
+                {showWinPopup && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-                        <div className="bg-black/80 backdrop-blur-xl p-8 rounded-2xl border border-yellow-500/50 animate-bounce shadow-[0_0_100px_rgba(234,179,8,0.3)] text-center scale-150 transform">
-                            <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-widest">Victory</h2>
-                            <div className="text-5xl font-black text-white mt-2 font-mono drop-shadow-xl">
-                                ৳{state.lastWin.toFixed(2)}
-                            </div>
+                        <div className="bg-black/90 backdrop-blur-xl p-8 rounded-2xl border border-yellow-500/50 animate-bounce shadow-[0_0_100px_rgba(234,179,8,0.5)] text-center scale-110 transform">
+
+                            {/* DYNAMIC TEXT BASED ON STATE */}
+                            {state.lastWin >= (bet * 5) ? (
+                                <>
+                                    <h2 className="text-4xl font-black text-yellow-400 uppercase tracking-widest animate-pulse">🌟 BIG WIN 🌟</h2>
+                                    <div className="text-6xl font-black text-white mt-4 font-mono drop-shadow-[0_4px_0_#ca8a04]">
+                                        ৳{state.lastWin.toFixed(2)}
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="text-3xl font-black text-purple-400 uppercase tracking-widest animate-pulse">💎 FREE GAMES 💎</h2>
+                                    <div className="text-xl font-bold text-white mt-2">
+                                        10 FREE SPINS AWARDED!
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

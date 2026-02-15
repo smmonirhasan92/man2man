@@ -27,143 +27,160 @@ class SuperAceService {
                 const user = await User.findById(userId).session(session);
                 if (!user) throw new Error("User not found");
 
+                // --- FREE SPIN STATE ---
+                const fsKey = `gamestate:freespins:${userId}`;
+                let freeSpinsLeft = 0;
+                if (client && client.isOpen) {
+                    freeSpinsLeft = parseInt(await client.get(fsKey) || '0');
+                }
+                const isFreeGame = freeSpinsLeft > 0;
+
                 // 1. Validation & Deduction
                 if (betAmount <= 0) throw new Error("Invalid Bet");
 
-                // [FIX] Use GAME wallet for betting (Isolation)
-                if ((user.wallet.game || 0) < betAmount) {
-                    throw new Error("Insufficient Game Balance. Please Transfer Funds to Game Wallet.");
+                if (!isFreeGame) {
+                    // Normal Spend
+                    if ((user.wallet.game || 0) < betAmount) {
+                        throw new Error("Insufficient Game Balance. Please Transfer Funds to Game Wallet.");
+                    }
+                    const balBefore = user.wallet.game;
+                    user.wallet.game -= betAmount;
+
+                    // [LEDGER] Log Bet
+                    await TransactionLedger.create([{
+                        userId, type: 'debit', amount: -betAmount,
+                        balanceBefore: balBefore, balanceAfter: user.wallet.game,
+                        description: 'Super Ace Bet',
+                        metadata: { game: 'super-ace', wallet: 'game' }
+                    }], { session });
+
+                    // Increment Completed Turnover
+                    if (!user.wallet.turnover) user.wallet.turnover = { required: 0, completed: 0 };
+                    user.wallet.turnover.completed += betAmount;
+
+                } else {
+                    // Free Spin (No Deduction)
+                    // Decrement Free Spin Counter
+                    freeSpinsLeft--;
+                    if (client && client.isOpen) await client.set(fsKey, freeSpinsLeft.toString());
+                    console.log(`[ACE_GAME] User ${userId} used Free Spin. Remaining: ${freeSpinsLeft}`);
                 }
-
-                const balBeforeDeduct = user.wallet.game;
-                user.wallet.game -= betAmount;
-                const balAfterDeduct = user.wallet.game;
-
-                // [LEDGER] Log Bet Deduction
-                await TransactionLedger.create([{
-                    userId,
-                    type: 'debit',
-                    amount: -betAmount,
-                    fee: 0,
-                    balanceBefore: balBeforeDeduct,
-                    balanceAfter: balAfterDeduct,
-                    description: 'Super Ace Bet',
-                    transactionId: `BET_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                    metadata: { game: 'super-ace', wallet: 'game' }
-                }], { session });
 
                 // 2. RNG Logic & Excitement Engine 🎰
-                const { client } = require('../../config/redis');
                 const streakKey = `streak:loss:${userId}`;
                 let lossStreak = 0;
-
-                if (client && client.isOpen) {
-                    lossStreak = parseInt(await client.get(streakKey) || '0');
-                }
+                if (client && client.isOpen) lossStreak = parseInt(await client.get(streakKey) || '0');
 
                 // [EXCITEMENT PARAMETERS]
-                const PITY_THRESHOLD = 4; // After 4 losses, force a win
-                const BASE_HIT_RATE = 0.48; // 48% Chance to hit something (increased from 45%)
+                const PITY_THRESHOLD = 4;
+                const BASE_HIT_RATE = 0.48;
+                const SCATTER_CHANCE = 0.02; // 2% Chance for 3 Scatters (Free Spins)
 
                 let isWin = Math.random() < BASE_HIT_RATE;
+                let isScatter = Math.random() < SCATTER_CHANCE;
                 let isPityWin = false;
 
-                // [STREAK BREAKER] Force a small win if player is suffering
-                if (lossStreak >= PITY_THRESHOLD) {
+                // [STREAK BREAKER]
+                if (!isFreeGame && lossStreak >= PITY_THRESHOLD) {
                     isWin = true;
-                    isPityWin = true; // Flag to keep win small/safe
-                    console.log(`[ACE_GAME] Pity Win Triggered for ${userId} (Streak: ${lossStreak})`);
+                    isPityWin = true;
                 }
 
                 let multiplier = 0;
                 let grid = [];
                 let totalWin = 0;
+                let awardedFreeSpins = 0;
 
-                // Determine Multiplier
-                if (isWin) {
+                if (isScatter) {
+                    // --- SCATTER WIN ---
+                    awardedFreeSpins = 10;
+                    grid = self.generateScatterGrid();
+                    // Scatters usually pay a small amount too or just trigger features. 
+                    // Let's assume they don't pay direct cash unless matched, but for simplicity, we focus on the FEATURE.
+                    if (client && client.isOpen) {
+                        await client.set(fsKey, (freeSpinsLeft + 10).toString());
+                        // Also reset streak on feature trigger
+                        await client.set(streakKey, '0');
+                    }
+                    console.log(`[ACE_GAME] 🌟 SCATTER TRIGGERED for ${userId}`);
+                }
+                else if (isWin) {
                     const rand = Math.random();
-
                     if (isPityWin) {
-                        // Pity Win: 0.5x to 2.0x (Just to keep them happy)
                         multiplier = 0.5 + (Math.random() * 1.5);
                     } else {
-                        // Normal Win Distribution
-                        if (rand < 0.50) multiplier = 0.2 + (Math.random() * 0.7); // "Fake Win" (0.2x - 0.9x) - Feeds addiction safely
-                        else if (rand < 0.80) multiplier = 1.1 + (Math.random() * 1.9); // Small Profit (1.1x - 3.0x)
-                        else if (rand < 0.96) multiplier = 3.0 + (Math.random() * 7.0); // Big Win (3x - 10x)
-                        else multiplier = 15.0 + (Math.random() * 35.0); // Mega Win
+                        if (rand < 0.50) multiplier = 0.2 + (Math.random() * 0.7);
+                        else if (rand < 0.80) multiplier = 1.1 + (Math.random() * 1.9);
+                        else if (rand < 0.96) multiplier = 3.0 + (Math.random() * 7.0);
+                        else multiplier = 15.0 + (Math.random() * 35.0);
                     }
 
-                    // Calculate Win
                     totalWin = parseFloat((betAmount * multiplier).toFixed(2));
 
                     // [SAFETY CHECK]
-                    // If Pity Win or Small Win (< 3x), bypass strict ProfitGuard checks (Use Buffer)
-                    // If Big Win, strictly enforce ProfitGuard
                     let isSafe = true;
-                    if (multiplier > 3.0) {
-                        isSafe = await ProfitGuard.enforceSafety(totalWin);
-                    }
-                    // Note: We skip ProfitGuard for small wins to ensure "Excitement" even in recovery mode.
+                    if (multiplier > 3.0) isSafe = await ProfitGuard.enforceSafety(totalWin);
 
                     if (isSafe) {
                         grid = self.generateWinningGrid(multiplier);
-                        // Reset Loss Streak
                         if (client && client.isOpen) await client.set(streakKey, '0');
+
+                        // [TURNOVER TRAP] 🪤
+                        // If Big Win (>5x), lock it by adding to Turnover Requirement
+                        if (multiplier >= 5.0) {
+                            if (!user.wallet.turnover) user.wallet.turnover = { required: 0, completed: 0 };
+                            // Add 1x turnover requirement on the winning amount
+                            user.wallet.turnover.required += totalWin;
+                            console.log(`[ACE_GAME] 🪤 TRAP SET: Added ${totalWin} to Turnover Req for ${userId}`);
+                        }
+
                     } else {
-                        // Forced Loss due to Safety
+                        // Force Loss
                         totalWin = 0;
                         grid = self.generateLosingGrid();
-                        if (client && client.isOpen) await client.incr(streakKey);
+                        if (!isFreeGame && client && client.isOpen) await client.incr(streakKey);
                     }
                 } else {
                     // LOSS
                     totalWin = 0;
                     grid = self.generateLosingGrid();
-                    if (client && client.isOpen) await client.incr(streakKey);
+                    if (!isFreeGame && client && client.isOpen) await client.incr(streakKey);
                 }
 
                 // 3. Payout
                 if (totalWin > 0) {
-                    const balBeforeWin = user.wallet.game;
+                    const balBefore = user.wallet.game;
                     user.wallet.game += totalWin;
-                    const balAfterWin = user.wallet.game;
 
-                    // [LEDGER] Log Win Credit
                     await TransactionLedger.create([{
-                        userId,
-                        type: 'credit',
-                        amount: totalWin,
-                        fee: 0,
-                        balanceBefore: balBeforeWin,
-                        balanceAfter: balAfterWin,
-                        description: 'Super Ace Win',
-                        transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                        userId, type: 'credit', amount: totalWin,
+                        balanceBefore: balBefore, balanceAfter: user.wallet.game,
+                        description: isFreeGame ? 'Super Ace Win (Free Spin)' : 'Super Ace Win',
                         metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game', isPity: isPityWin }
                     }], { session });
 
-                    console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount, multiplier})`);
+                    console.log(`[ACE_GAME] User ${userId} Won ${totalWin}`);
                 }
 
-                // Sync Legacy Field
                 user.game_balance = user.wallet.game;
-
-                // Save Updated User State
                 await user.save({ session });
 
-                // [SOCKET] Real-time Balance Update
+                // Socket
                 const SocketService = require('../../modules/common/SocketService');
                 SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, user.wallet.game);
-                SocketService.broadcast(`user_${userId}`, `balance_update`, user.wallet); // Send full wallet object
+                SocketService.broadcast(`user_${userId}`, `balance_update`, user.wallet);
 
                 return {
                     status: 'success',
-                    balance: user.wallet.game, // The important one
+                    balance: user.wallet.game,
                     wallet_balance: user.wallet.main,
                     grid: grid,
                     win: totalWin,
                     bet: betAmount,
                     streak: totalWin > 0 ? "WIN" : "LOSS",
+                    isFreeGame: isFreeGame,
+                    freeSpinsLeft: isScatter ? (freeSpinsLeft + 10) : freeSpinsLeft,
+                    isScatter: isScatter // Signal frontend to show animation
                 };
             });
         } finally {
@@ -172,6 +189,15 @@ class SuperAceService {
     }
 
     // --- LOGIC HELPERS ---
+
+    generateScatterGrid() {
+        const grid = this.generateLosingGrid();
+        // Place 3 Scatters (Trigger)
+        grid[1][1] = 'SCATTER';
+        grid[2][2] = 'SCATTER';
+        grid[3][3] = 'SCATTER';
+        return grid;
+    }
 
     generateWinningGrid(targetMultiplier, bet) {
         // Create a grid with at least one match based on multiplier
