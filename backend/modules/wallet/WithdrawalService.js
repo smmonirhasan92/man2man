@@ -39,9 +39,8 @@ class WithdrawalService {
             let adminComment = null;
 
             if (!eligibility.allowed) {
-                console.log(`[WITHDRAWAL] Turnover Not Met for ${userId}. Flagging for Review.`);
-                status = 'pending_admin_review'; // Special Flag
-                adminComment = `Turnover NOT Met. Remaining: ${eligibility.stats.remaining}`;
+                console.log(`[WITHDRAWAL] Turnover Not Met for ${userId}. BLOCKED.`);
+                throw new Error(`Turnover Requirement Not Met! You must wager ৳${eligibility.stats.remaining.toLocaleString()} more to withdraw.`);
             }
 
             // 2. Atomic Balance Check & Deduct from MAIN WALLET ONLY
