@@ -1,5 +1,5 @@
 const AgentService = require('./AgentService');
-const Logger = require('../../common/Logger');
+const Logger = require('../common/Logger');
 
 class AgentController {
 

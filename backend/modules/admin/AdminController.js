@@ -1,6 +1,7 @@
 const SystemSetting = require('../settings/SystemSettingModel');
 const AdminStatsService = require('./AdminStatsService'); // Reuse if needed
-const Logger = require('../../common/Logger');
+const Logger = require('../common/Logger');
+const NotificationService = require('../notification/NotificationService');
 
 class AdminController {
 
