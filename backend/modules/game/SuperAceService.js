@@ -30,14 +30,14 @@ class SuperAceService {
                 // 1. Validation & Deduction
                 if (betAmount <= 0) throw new Error("Invalid Bet");
 
-                // Use MAIN wallet for betting
-                if (user.wallet.main < betAmount) {
-                    throw new Error("Insufficient Balance in Main Wallet");
+                // [FIX] Use GAME wallet for betting (Isolation)
+                if ((user.wallet.game || 0) < betAmount) {
+                    throw new Error("Insufficient Game Balance. Please Transfer Funds to Game Wallet.");
                 }
 
-                const balBeforeDeduct = user.wallet.main;
-                user.wallet.main -= betAmount;
-                const balAfterDeduct = user.wallet.main;
+                const balBeforeDeduct = user.wallet.game;
+                user.wallet.game -= betAmount;
+                const balAfterDeduct = user.wallet.game;
 
                 // [LEDGER] Log Bet Deduction
                 await TransactionLedger.create([{
@@ -49,7 +49,7 @@ class SuperAceService {
                     balanceAfter: balAfterDeduct,
                     description: 'Super Ace Bet',
                     transactionId: `BET_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                    metadata: { game: 'super-ace' }
+                    metadata: { game: 'super-ace', wallet: 'game' }
                 }], { session });
 
                 // 2. RNG Logic
@@ -82,9 +82,9 @@ class SuperAceService {
 
                 // 3. Payout
                 if (totalWin > 0) {
-                    const balBeforeWin = user.wallet.main;
-                    user.wallet.main += totalWin;
-                    const balAfterWin = user.wallet.main;
+                    const balBeforeWin = user.wallet.game;
+                    user.wallet.game += totalWin;
+                    const balAfterWin = user.wallet.game;
 
                     // [LEDGER] Log Win Credit
                     await TransactionLedger.create([{
@@ -96,23 +96,27 @@ class SuperAceService {
                         balanceAfter: balAfterWin,
                         description: 'Super Ace Win',
                         transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                        metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2) }
+                        metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game' }
                     }], { session });
 
                     console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount})`);
                 }
+
+                // Sync Legacy Field (Optional but good for safety)
+                user.game_balance = user.wallet.game;
 
                 // Save Updated User State
                 await user.save({ session });
 
                 // [SOCKET] Real-time Balance Update
                 const SocketService = require('../../modules/common/SocketService');
-                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, user.wallet.main); // Legacy
-                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, user.wallet.main);
+                // Broadcast updated GAME wallet
+                SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, user.wallet.game);
+                SocketService.broadcast(`user_${userId}`, `balance_update`, user.wallet); // Send full wallet object
 
                 return {
                     status: 'success',
-                    balance: user.wallet.game, // Legacy support
+                    balance: user.wallet.game, // The important one
                     wallet_balance: user.wallet.main,
                     grid: grid,
                     win: totalWin,
