@@ -20,6 +20,7 @@ class SuperAceService {
         }
 
         const self = this; // Capture context
+        const TransactionLedger = require('../wallet/TransactionLedgerModel');
 
         try {
             return await TransactionHelper.runTransaction(async (session) => {
@@ -28,41 +29,48 @@ class SuperAceService {
 
                 // 1. Validation & Deduction
                 if (betAmount <= 0) throw new Error("Invalid Bet");
-                // [REFACTOR] Use WalletService for integrity
-                // user.wallet.main -= betAmount;
-                const WalletService = require('../wallet/WalletService');
-                await WalletService.deductBalance(userId, betAmount, 'super_ace_bet', 'Super Ace Bet', session);
 
-                // Reload user after deduction to get fresh state if needed, or rely on WalletService check
-                // user.save() is handled by WalletService.
-                // But we need the user object for the rest of logic? 
-                // WalletService doesn't return user, but we can refetch or just continue leveraging session.
-                const userRefreshed = await User.findById(userId).session(session);
+                // Use MAIN wallet for betting
+                if (user.wallet.main < betAmount) {
+                    throw new Error("Insufficient Balance in Main Wallet");
+                }
 
-                // 3. RNG Logic
-                // ... (rest of logic)            // [SIMPLIFIED LOGIC - CLEAN & FUN]
-                // 1. Determine Win/Loss based on probabilistic RTP (Return to Player)
-                // We target 94-96% RTP for a "Fun" experience.
+                const balBeforeDeduct = user.wallet.main;
+                user.wallet.main -= betAmount;
+                const balAfterDeduct = user.wallet.main;
 
-                const isWin = Math.random() < 0.45; // 45% Hit Frequency (Very Fun/Active)
+                // [LEDGER] Log Bet Deduction
+                await TransactionLedger.create([{
+                    userId,
+                    type: 'debit',
+                    amount: -betAmount,
+                    fee: 0,
+                    balanceBefore: balBeforeDeduct,
+                    balanceAfter: balAfterDeduct,
+                    description: 'Super Ace Bet',
+                    transactionId: `BET_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                    metadata: { game: 'super-ace' }
+                }], { session });
+
+                // 2. RNG Logic
+                // [SIMPLIFIED LOGIC - CLEAN & FUN]
+                // 1. Determine Win/Loss based on probabilistic RTP
+                const isWin = Math.random() < 0.45; // 45% Hit Frequency
 
                 let multiplier = 0;
                 let grid = [];
-                let matches = [];
                 let totalWin = 0;
 
-                // 2. Safety Check (ProfitGuard)
-                // Only block HUGE wins if system is bleeding. Small/Medium wins always allowed for fun.
-                const isSafe = await ProfitGuard.enforceSafety(betAmount * 10); // Check if a 10x win is safe
+                // Safety Check (ProfitGuard)
+                const isSafe = await ProfitGuard.enforceSafety(betAmount * 10);
 
                 if (isWin && isSafe) {
                     // GENERATE WIN
                     const rand = Math.random();
-                    // Win Tiers
-                    if (rand < 0.60) multiplier = 1.2 + (Math.random() * 0.8); // 1.2x - 2.0x
-                    else if (rand < 0.90) multiplier = 2.0 + (Math.random() * 3.0); // 2x - 5x
-                    else if (rand < 0.99) multiplier = 5.0 + (Math.random() * 10.0); // 5x - 15x
-                    else multiplier = 20.0 + (Math.random() * 30.0); // 20x - 50x (Jackpot)
+                    if (rand < 0.60) multiplier = 1.2 + (Math.random() * 0.8);
+                    else if (rand < 0.90) multiplier = 2.0 + (Math.random() * 3.0);
+                    else if (rand < 0.99) multiplier = 5.0 + (Math.random() * 10.0);
+                    else multiplier = 20.0 + (Math.random() * 30.0);
 
                     totalWin = parseFloat((betAmount * multiplier).toFixed(2));
                     grid = self.generateWinningGrid(multiplier);
@@ -72,35 +80,40 @@ class SuperAceService {
                     totalWin = 0;
                 }
 
-                // 4. Payout
+                // 3. Payout
                 if (totalWin > 0) {
-                    // CREDIT TO MAIN WALLET
+                    const balBeforeWin = user.wallet.main;
                     user.wallet.main += totalWin;
-                    await user.save({ session });
+                    const balAfterWin = user.wallet.main;
+
+                    // [LEDGER] Log Win Credit
+                    await TransactionLedger.create([{
+                        userId,
+                        type: 'credit',
+                        amount: totalWin,
+                        fee: 0,
+                        balanceBefore: balBeforeWin,
+                        balanceAfter: balAfterWin,
+                        description: 'Super Ace Win',
+                        transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                        metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2) }
+                    }], { session });
+
                     console.log(`[ACE_GAME] User ${userId} Won ${totalWin} (Bet: ${betAmount})`);
                 }
 
-                // Get updated balance for return (user object is already updated in memory/session, but fetch to be safe/consistent if needed, 
-                // actually user.wallet.main is already updated on the instance, but let's just return what we have)
-
-                // Refetch for final state to return
-                const userFinal = await User.findById(userId).session(session);
+                // Save Updated User State
+                await user.save({ session });
 
                 // [SOCKET] Real-time Balance Update
                 const SocketService = require('../../modules/common/SocketService');
-                // Broadcast MAIN wallet update
-                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, userFinal.wallet.main);
-
-                // Also broadcast game balance if we want to keep listeners happy, but logic is main now.
-                // SocketService.broadcast(`user_${userId}`, `game_balance_update_${userId}`, user.wallet.game); 
-
-                // Standard balance update
-                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, userFinal.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, user.wallet.main); // Legacy
+                SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, user.wallet.main);
 
                 return {
                     status: 'success',
-                    balance: userFinal.wallet.game, // Keep for frontend compatibility if it checks this
-                    wallet_balance: userFinal.wallet.main, // Main Balance (The real one)
+                    balance: user.wallet.game, // Legacy support
+                    wallet_balance: user.wallet.main,
                     grid: grid,
                     win: totalWin,
                     bet: betAmount,
