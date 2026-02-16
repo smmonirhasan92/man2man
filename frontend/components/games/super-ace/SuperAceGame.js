@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Repeat, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '../../../services/api';
@@ -20,6 +20,10 @@ export default function SuperAceGame() {
     const [showWinPopup, setShowWinPopup] = useState(false); // [NEW] Popup State
     const [isFreeSpinMode, setIsFreeSpinMode] = useState(false); // [NEW] FS State
 
+    // [MADNESS]
+    const [shake, setShake] = useState(false);
+    const [floatElements, setFloatElements] = useState([]);
+
     const SYMBOLS = ['J', 'Q', 'K', 'A'];
 
     useEffect(() => {
@@ -30,15 +34,24 @@ export default function SuperAceGame() {
         return Array(5).fill(0).map(() => Array(4).fill(0).map(() => SYMBOLS[Math.floor(Math.random() * 4)]));
     };
 
+    // Spawning Floating Text
+    const spawnFloat = (text, type) => {
+        const id = Date.now();
+        const x = 40 + Math.random() * 20;
+        const y = 40 + Math.random() * 10;
+        setFloatElements(prev => [...prev, { id, text, type, x, y }]);
+        setTimeout(() => setFloatElements(prev => prev.filter(e => e.id !== id)), 1500);
+    };
+
     const spin = async () => {
         if (spinning) return;
         const startTime = Date.now();
         setSpinning(true);
         setWinInfo({ total: 0, lastWin: 0 });
-        setCascading(false);
         setMultiplier(1);
-        setShowWinPopup(false); // Reset Popup
+        setShowWinPopup(false);
         setGameLog({ message: 'Spinning...', type: 'info' });
+        setShake(false);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -57,8 +70,11 @@ export default function SuperAceGame() {
                 clearTimeout(timeoutId);
             }
 
+            // [VISUAL IMPACT]
+            setShake(true);
+            setTimeout(() => setShake(false), 300);
+
             // Processing
-            // [COMPATIBILITY] Backend now returns 'grid' directly for Excitement Engine
             setGrid(data.grid);
 
             // Check for Free Spins logic
@@ -68,11 +84,11 @@ export default function SuperAceGame() {
             if (data.totalWin > 0 || data.isFreeSpin) {
                 setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
                 setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
+                spawnFloat(`+৳${data.totalWin.toFixed(0)}`, 'win');
 
                 // [WIN POPUP TRIGGER]
                 if (data.totalWin >= (bet * 5) || data.isScatter) {
                     setTimeout(() => setShowWinPopup(true), 500);
-                    // Hide after 3s
                     setTimeout(() => setShowWinPopup(false), 3500);
                 }
 
@@ -83,18 +99,32 @@ export default function SuperAceGame() {
         } catch (e) {
             console.error("Spin Error", e);
             setGameLog({ message: e.message || "Network Error", type: 'error' });
+            spawnFloat("ERROR", 'damage');
         } finally {
             clearTimeout(timeoutId);
             const elapsed = Date.now() - startTime;
             if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed));
             setSpinning(false);
-            setCascading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-[var(--bg-dark-primary)] text-white font-sans overflow-hidden flex flex-col relative">
+        <div className={`
+            min-h-screen bg-[var(--bg-dark-primary)] text-white font-sans overflow-hidden flex flex-col relative
+            ${shake ? 'animate-shake' : ''}
+        `}>
             <LiveWinMarquee />
+
+            {/* Floating Elements */}
+            {floatElements.map(el => (
+                <div
+                    key={el.id}
+                    className={`absolute z-50 text-4xl ${el.type === 'damage' ? 'animate-float-damage' : 'animate-float-win'}`}
+                    style={{ left: `${el.x}%`, top: `${el.y}%` }}
+                >
+                    {el.text}
+                </div>
+            ))}
 
             <header className="p-4 flex justify-between items-center bg-[#03180f]/90 backdrop-blur-md border-b border-[#d4af37]/30 shadow-lg z-20">
                 <div className="flex items-center gap-2">
@@ -111,24 +141,27 @@ export default function SuperAceGame() {
             <div className="flex-1 flex flex-col items-center justify-center p-2 relative z-10">
                 <GameLog message={gameLog.message} type={gameLog.type} />
 
+                {/* Multipliers - Fixed Layout */}
                 <div className="flex gap-4 mb-6">
                     {[1, 2, 3, 5].map(m => (
                         <div key={m} className={`
                             w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl border-2 transition-all duration-300
-                            ${multiplier === m ? 'bg-[#d4af37] border-white text-[#3d1c10] scale-125' : 'bg-[#062c1d]/60 border-[#d4af37]/30 text-[#d4af37]/50'}
+                            ${multiplier === m ? 'bg-[#d4af37] border-white text-[#3d1c10] scale-125 shadow-[0_0_15px_#d4af37]' : 'bg-[#062c1d]/60 border-[#d4af37]/30 text-[#d4af37]/50'}
                         `}>
                             x{m}
                         </div>
                     ))}
                 </div>
 
-                <div className="relative bg-[#03180f]/80 p-3 rounded-[1.5rem] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.15)]">
-                    <div className="grid grid-cols-5 gap-2 w-[96vw] max-w-lg h-[80vw] max-h-[400px]">
+                {/* Main Grid - Removed Double Border & Fixed Gap */}
+                <div className="relative bg-[#03180f]/90 p-2 rounded-xl border border-[#d4af37] shadow-2xl">
+                    <div className="grid grid-cols-5 gap-1.5 w-[94vw] max-w-lg aspect-[5/4] max-h-[50vh]">
                         {grid.map((col, colIdx) => (
-                            <div key={colIdx} className="flex flex-col gap-2">
+                            <div key={colIdx} className="flex flex-col gap-1.5 h-full">
                                 {col.map((symbol, rowIdx) => (
-                                    <div key={`${colIdx}-${rowIdx}`} className="flex-1">
-                                        <div className={`${cascading ? 'animate-glow-gold' : ''} rounded-xl h-full w-full`}>
+                                    <div key={`${colIdx}-${rowIdx}`} className="flex-1 rounded-lg overflow-hidden relative">
+                                        <div className="absolute inset-0 bg-slate-900/50 z-0"></div>
+                                        <div className="relative z-10 h-full w-full">
                                             <Card symbol={symbol} />
                                         </div>
                                     </div>
@@ -138,7 +171,8 @@ export default function SuperAceGame() {
                     </div>
                 </div>
 
-                <div className="w-full max-w-md mt-8 grid grid-cols-[1fr_auto] gap-4 bg-[#062c1d] p-4 rounded-3xl border border-[#d4af37]/20 shadow-2xl z-20">
+                {/* Controls - Premium Look */}
+                <div className="w-full max-w-md mt-6 grid grid-cols-[1fr_auto] gap-4 bg-[#062c1d] p-4 rounded-3xl border border-[#d4af37]/20 shadow-2xl z-20">
                     <div className="flex flex-col justify-center">
                         <span className="text-[10px] text-[#d4af37]/70 font-bold uppercase mb-2 tracking-wider ml-1">Bet Amount</span>
                         <div className="flex items-center gap-2 bg-[#03180f] rounded-2xl p-1.5 border border-white/5">
@@ -153,7 +187,7 @@ export default function SuperAceGame() {
                         disabled={spinning}
                         className={`
                             h-20 w-20 rounded-[1.5rem] flex items-center justify-center shadow-lg transition-all active:scale-95 border-2 border-[#d4af37]/50
-                            ${spinning ? 'bg-slate-800 cursor-not-allowed opacity-50' : 'bg-gradient-to-br from-[#d4af37] to-[#8a6d1f]'}
+                            ${spinning ? 'bg-slate-800 cursor-not-allowed opacity-50' : 'bg-gradient-to-br from-[#d4af37] to-[#8a6d1f] hover:brightness-110'}
                         `}
                     >
                         {spinning ? (

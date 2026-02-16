@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/animations.css";
+@import "../styles/GameAnimations.css";
 
 * {
   touch-action: manipulation;

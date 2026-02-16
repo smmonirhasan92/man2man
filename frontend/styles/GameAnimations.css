@@ -1,0 +1,152 @@
+/* 
+  GameAnimations.css 
+  Shared "Madness" Animations for Super Ace Games
+*/
+
+/* 1. SCREEN SHAKE (Impact) */
+@keyframes shake-impact {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(-5px, -5px);
+    }
+
+    20% {
+        transform: translate(5px, 5px);
+    }
+
+    30% {
+        transform: translate(-5px, 5px);
+    }
+
+    40% {
+        transform: translate(5px, -5px);
+    }
+
+    50% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+.animate-shake {
+    animation: shake-impact 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+/* 2. RED FLASH (Fast Loss) */
+@keyframes flash-red {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+        background-color: rgba(220, 38, 38, 0.4);
+    }
+
+    /* Red-600 */
+    100% {
+        opacity: 0;
+    }
+}
+
+.animate-flash-red {
+    animation: flash-red 0.5s ease-out forwards;
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+}
+
+/* 3. GOLD PULSE (Win) */
+@keyframes pulse-gold {
+    0% {
+        box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 20px rgba(234, 179, 8, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
+    }
+}
+
+.animate-pulse-gold {
+    animation: pulse-gold 1.5s infinite;
+}
+
+/* 4. FLOATING NUMBERS */
+@keyframes float-up-fade {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-40px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+.animate-float-damage {
+    animation: float-up-fade 1s ease-out forwards;
+    color: #ef4444;
+    /* Red-500 */
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    z-index: 60;
+    pointer-events: none;
+}
+
+.animate-float-win {
+    animation: float-up-fade 1.5s ease-out forwards;
+    color: #fbbf24;
+    /* Amber-400 */
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+    position: absolute;
+    z-index: 60;
+    pointer-events: none;
+}
+
+/* 5. SPEED LINES (Pro Background) */
+@keyframes speed-lines {
+    0% {
+        background-position: 0% 0%;
+    }
+
+    100% {
+        background-position: 0% 100%;
+    }
+}
+
+.bg-speed-lines {
+    background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.02) 50%);
+    background-size: 100% 4px;
+    animation: speed-lines 0.2s linear infinite;
+}
+
+/* 6. GLOW PULSE (Reel Spin) */
+@keyframes glow-spin {
+
+    0%,
+    100% {
+        filter: brightness(1) blur(0px);
+    }
+
+    50% {
+        filter: brightness(1.3) blur(1px);
+    }
+}
+
+.animate-glow-spin {
+    animation: glow-spin 0.5s linear infinite;
+}
