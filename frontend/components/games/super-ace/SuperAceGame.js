@@ -109,7 +109,7 @@ export default function SuperAceGame() {
                 }
 
             } else {
-                setGameLog({ message: "Try Again", type: 'loss' });
+                setGameLog({ message: " ", type: 'info' });
             }
 
             // Check Release
