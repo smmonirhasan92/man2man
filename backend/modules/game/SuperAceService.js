@@ -261,6 +261,18 @@ class SuperAceService {
 
     // --- LOGIC HELPERS ---
 
+    // Define standard reel strips (simplified for "realistic" feel)
+    // Coherent sequences allow for natural "near misses" and "stacks"
+    get REEL_STRIPS() {
+        return [
+            ['J', 'J', 'Q', 'A', 'S1', 'S2', 'K', 'K', 'J', 'S3', 'A', 'A', 'S1', 'Q', 'Q', 'S2', 'J', 'K', 'S3', 'S3'],
+            ['Q', 'Q', 'K', 'S1', 'J', 'J', 'S2', 'A', 'K', 'Q', 'S3', 'S3', 'J', 'A', 'A', 'S1', 'S2', 'K', 'Q', 'J'],
+            ['K', 'K', 'A', 'S2', 'Q', 'Q', 'S3', 'J', 'K', 'A', 'S1', 'S1', 'Q', 'J', 'J', 'S2', 'A', 'K', 'S3', 'Q'],
+            ['A', 'A', 'S1', 'S3', 'K', 'K', 'J', 'Q', 'A', 'S2', 'S2', 'S1', 'K', 'J', 'J', 'Q', 'A', 'S3', 'K', 'A'],
+            ['S1', 'S2', 'S3', 'J', 'Q', 'K', 'A', 'S1', 'S2', 'J', 'Q', 'K', 'A', 'S3', 'S3', 'S2', 'S1', 'A', 'K', 'Q']
+        ];
+    }
+
     generateScatterGrid() {
         const grid = this.generateLosingGrid();
         // Place 3 Scatters (Trigger)
@@ -272,9 +284,10 @@ class SuperAceService {
 
     generateWinningGrid(targetMultiplier, bet) {
         // Create a grid with at least one match based on multiplier
+        // Start with a realistic losing grid so the background looks natural
         const grid = this.generateLosingGrid();
 
-        // Basic 3-match
+        // Basic 3-match override
         grid[1][1] = 'K';
         grid[1][2] = 'K';
         grid[1][3] = 'K';
@@ -291,26 +304,44 @@ class SuperAceService {
     }
 
     generateLosingGrid() {
-        const syms = ['J', 'Q', 'K', 'A', 'S1', 'S2', 'S3'];
         const grid = [];
+        const strips = this.REEL_STRIPS;
 
         // [NEAR MISS LOGIC]
-        // 30% chance to generate a "Near Miss" grid (2 matching highs, 1 miss)
-        const isNearMiss = Math.random() < 0.30;
+        // 35% chance to create a "Tease" (almost a win)
+        const isNearMiss = Math.random() < 0.35;
 
         for (let c = 0; c < 5; c++) {
+            const strip = strips[c];
+            // Pick a random start position on the strip
+            // Virtual Strip length is longer to simulate endless scrolling
+            const startIdx = Math.floor(Math.random() * strip.length);
+
             const col = [];
             for (let r = 0; r < 4; r++) {
-                col.push(syms[Math.floor(Math.random() * syms.length)]);
+                // Wrap around index
+                const symIndex = (startIdx + r) % strip.length;
+                col.push(strip[symIndex]);
             }
             grid.push(col);
         }
 
         if (isNearMiss) {
-            // Plant 2 Aces in the first column, but no 3rd
-            grid[0][1] = 'A';
-            grid[0][2] = 'A';
-            grid[0][3] = 'S1'; // Junk
+            // Overwrite to create a "Near Miss" tension
+            // Example: Two Aces in first column, one in second, but missing the third
+            // Or Stacks that don't quite align
+
+            // Stacked Wild Tease
+            if (Math.random() < 0.5) {
+                grid[2][0] = 'GOLD_K';
+                grid[2][1] = 'GOLD_K';
+                grid[2][2] = 'S1'; // Blocked
+            } else {
+                // Scatter Tease
+                grid[1][Math.floor(Math.random() * 4)] = 'SCATTER';
+                grid[3][Math.floor(Math.random() * 4)] = 'SCATTER';
+                // No 3rd scatter
+            }
         }
 
         return grid;
