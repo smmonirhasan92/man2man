@@ -74,7 +74,7 @@ class SuperAceService {
 
                 // [EXCITEMENT PARAMETERS]
                 const PITY_THRESHOLD = 4;
-                const BASE_HIT_RATE = 0.48;
+                const BASE_HIT_RATE = 0.40; // Reduced from 0.48 (Quality over Quantity)
                 const SCATTER_CHANCE = 0.02; // 2% Chance for 3 Scatters (Free Spins)
 
                 let isWin = Math.random() < BASE_HIT_RATE;
@@ -108,19 +108,26 @@ class SuperAceService {
                 else if (isWin) {
                     const rand = Math.random();
                     if (isPityWin) {
-                        multiplier = 0.5 + (Math.random() * 1.5);
+                        // Pity win shouldn't be huge, just enough to keep them going
+                        multiplier = 1.2 + (Math.random() * 1.5);
                     } else {
-                        if (rand < 0.50) multiplier = 0.2 + (Math.random() * 0.7);
-                        else if (rand < 0.80) multiplier = 1.1 + (Math.random() * 1.9);
-                        else if (rand < 0.96) multiplier = 3.0 + (Math.random() * 7.0);
-                        else multiplier = 15.0 + (Math.random() * 35.0);
+                        // [NEW MATH MODEL]
+                        // 00-50%: Sustain Win (0.8x - 1.5x) - No more 0.2x insult wins
+                        if (rand < 0.50) multiplier = 0.8 + (Math.random() * 0.7);
+                        // 50-80%: Profit Win (1.5x - 3.5x)
+                        else if (rand < 0.80) multiplier = 1.5 + (Math.random() * 2.0);
+                        // 80-96%: Big Win (3.5x - 8.0x) - Likely Trapped
+                        else if (rand < 0.96) multiplier = 3.5 + (Math.random() * 4.5);
+                        // 96-100%: Super Win (10x+) - Definitely Trapped
+                        else multiplier = 10.0 + (Math.random() * 20.0);
                     }
 
                     totalWin = parseFloat((betAmount * multiplier).toFixed(2));
 
                     // [SAFETY CHECK]
                     let isSafe = true;
-                    if (multiplier > 3.0) isSafe = await ProfitGuard.enforceSafety(totalWin);
+                    // Relaxed safety for trapped wins since they don't leave the eco immediately
+                    if (multiplier > 8.0) isSafe = await ProfitGuard.enforceSafety(totalWin);
 
                     if (isSafe) {
                         grid = self.generateWinningGrid(multiplier);
@@ -176,24 +183,31 @@ class SuperAceService {
                 if (totalWin > 0) {
                     const currentBal = user.wallet.game;
 
-                    // Rule: Win > 5x (and not pity) -> TRAP
-                    if (multiplier > 5.0 && !isPityWin) {
+                    // Rule: Win > 4.0x (and not pity) -> TRAP
+                    const TRAP_THRESHOLD = 4.0;
+
+                    if (multiplier > TRAP_THRESHOLD && !isPityWin) {
                         trappedAmount = totalWin;
                         user.wallet.game_locked += trappedAmount;
 
-                        // Add to Turnover Req
+                        // Add to Turnover Req (3x multiplier logic)
                         if (!user.wallet.turnover) user.wallet.turnover = { required: 0, completed: 0 };
-                        user.wallet.turnover.required += trappedAmount;
+
+                        // [ENGAGEMENT MECHANIC]
+                        // Requirement is 3x the trapped amount. 
+                        // Example: Win 100 -> Must bet 300 to release.
+                        const turnoverMultiplier = 3;
+                        user.wallet.turnover.required += (trappedAmount * turnoverMultiplier);
 
                         await TransactionLedger.create([{
                             userId, type: 'win_locked', amount: trappedAmount,
                             balanceBefore: currentBal, balanceAfter: currentBal,
                             description: 'Super Ace Big Win (Trapped)',
                             transactionId: `TRAP_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                            metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game_locked' }
+                            metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game_locked', turnoverReq: trappedAmount * turnoverMultiplier }
                         }], { session });
 
-                        console.log(`[ACE_GAME] 🪤 TRAP! ${trappedAmount} locked.`);
+                        console.log(`[ACE_GAME] 🪤 TRAP! ${trappedAmount} locked. Req Turnover: ${trappedAmount * turnoverMultiplier}`);
 
                     } else {
                         // CASH PAYOUT
@@ -279,6 +293,11 @@ class SuperAceService {
     generateLosingGrid() {
         const syms = ['J', 'Q', 'K', 'A', 'S1', 'S2', 'S3'];
         const grid = [];
+
+        // [NEAR MISS LOGIC]
+        // 30% chance to generate a "Near Miss" grid (2 matching highs, 1 miss)
+        const isNearMiss = Math.random() < 0.30;
+
         for (let c = 0; c < 5; c++) {
             const col = [];
             for (let r = 0; r < 4; r++) {
@@ -286,6 +305,14 @@ class SuperAceService {
             }
             grid.push(col);
         }
+
+        if (isNearMiss) {
+            // Plant 2 Aces in the first column, but no 3rd
+            grid[0][1] = 'A';
+            grid[0][2] = 'A';
+            grid[0][3] = 'S1'; // Junk
+        }
+
         return grid;
     }
 
