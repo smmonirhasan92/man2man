@@ -7,6 +7,7 @@ import Card from './Card';
 import GameBalanceDisplay from '../../game/GameBalanceDisplay';
 import LiveWinMarquee from '../../game/LiveWinMarquee';
 import GameLog from '../../game/GameLog';
+import toast from 'react-hot-toast';
 
 // [ROLLBACK] Stable Classic Version
 export default function SuperAceGame() {
@@ -145,33 +146,32 @@ export default function SuperAceGame() {
                 <div className="flex gap-4 mb-6">
                     {[1, 2, 3, 5].map(m => (
                         <div key={m} className={`
-                            w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl border-2 transition-all duration-300
-                            ${multiplier === m ? 'bg-[#d4af37] border-white text-[#3d1c10] scale-125 shadow-[0_0_15px_#d4af37]' : 'bg-[#062c1d]/60 border-[#d4af37]/30 text-[#d4af37]/50'}
+                            w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl border-2            {/* GAME GRID */}
+            <div className={`
+                w-full max-w-lg aspect-[5 / 4] bg - [#1a0f0a] p - 2 rounded - lg border - 4 border - [#8B4513] shadow - [inset_0_0_20px_#000] relative grid grid - cols - 5 gap - 1.5
+                ${ winInfo.lastWin > 0 ? 'border-yellow-600' : '' }
                         `}>
-                            x{m}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Main Grid - Removed Double Border & Fixed Gap */}
-                <div className="relative bg-[#03180f]/90 p-2 rounded-xl border border-[#d4af37] shadow-2xl">
-                    <div className="grid grid-cols-5 gap-1.5 w-[94vw] max-w-lg aspect-[5/4] max-h-[50vh]">
-                        {grid.map((col, colIdx) => (
-                            <div key={colIdx} className="flex flex-col gap-1.5 h-full">
-                                {col.map((symbol, rowIdx) => (
-                                    <div key={`${colIdx}-${rowIdx}`} className="flex-1 rounded-lg overflow-hidden relative">
-                                        <div className="absolute inset-0 bg-slate-900/50 z-0"></div>
-                                        <div className="relative z-10 h-full w-full">
-                                            <Card symbol={symbol} />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
+                {grid.map((col, cIdx) => (
+                    <div key={cIdx} className="flex flex-col gap-1.5 h-full">
+                        {col.map((sym, rIdx) => {
+                            // Assuming 'matches' logic is not directly available in this component's state
+                            // If it were, it would look like: const isMatch = state.matches?.some(m => m.c === cIdx && m.r === rIdx);
+                            const isMatch = false; // Placeholder, replace with actual match logic if available
+                            return (
+                                <div
+                                    key={`${ cIdx } - ${ rIdx }`}
+                                    className={`
+                                        flex - 1 relative transition - transform duration - 200
+                                        ${ isMatch? 'scale-105 z-10': '' }
+                        `}
+                                >
+                                    <Card symbol={sym} className="rounded-sm" />
+                                </div>
+                            );
+                        })}
                     </div>
-                </div>
-
-                {/* Controls - Premium Look */}
+                ))}
+            </div>* Controls - Premium Look */}
                 <div className="w-full max-w-md mt-6 grid grid-cols-[1fr_auto] gap-4 bg-[#062c1d] p-4 rounded-3xl border border-[#d4af37]/20 shadow-2xl z-20">
                     <div className="flex flex-col justify-center">
                         <span className="text-[10px] text-[#d4af37]/70 font-bold uppercase mb-2 tracking-wider ml-1">Bet Amount</span>
@@ -186,34 +186,34 @@ export default function SuperAceGame() {
                         onClick={spin}
                         disabled={spinning}
                         className={`
-                            h-20 w-20 rounded-[1.5rem] flex items-center justify-center shadow-lg transition-all active:scale-95 border-2 border-[#d4af37]/50
-                            ${spinning ? 'bg-slate-800 cursor-not-allowed opacity-50' : 'bg-gradient-to-br from-[#d4af37] to-[#8a6d1f] hover:brightness-110'}
+                            h - 20 w - 20 rounded - [1.5rem] flex items - center justify - center shadow - lg transition - all active:scale-95 border-2 border-[#d4af37]/50
+                    ${spinning ? 'bg-slate-800 cursor-not-allowed opacity-50' : 'bg-gradient-to-br from-[#d4af37] to-[#8a6d1f] hover:brightness-110'}
                         `}
                     >
-                        {spinning ? (
-                            <Repeat className="w-8 h-8 text-white/50 animate-spin" />
-                        ) : (
-                            <Zap className="w-10 h-10 text-[#3d1c10] fill-current" />
-                        )}
-                    </button>
-                </div>
-
-                {/* WIN POPUP */}
-                {showWinPopup && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-                        <div className="bg-black/90 p-8 rounded-2xl border-2 border-[#d4af37] animate-bounce shadow-[0_0_80px_rgba(212,175,55,0.6)] text-center scale-125 backdrop-blur-sm">
-                            <div className="text-3xl font-black text-[#d4af37] uppercase tracking-widest mb-2 animate-pulse">
-                                {winInfo.lastWin >= (bet * 5) ? "🌟 SUPER WIN 🌟" : "💎 FREE GAMES 💎"}
-                            </div>
-                            {winInfo.lastWin > 0 && (
-                                <div className="text-5xl font-black text-white font-mono drop-shadow-md">
-                                    ৳{winInfo.lastWin.toFixed(2)}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                    {spinning ? (
+                        <Repeat className="w-8 h-8 text-white/50 animate-spin" />
+                    ) : (
+                        <Zap className="w-10 h-10 text-[#3d1c10] fill-current" />
+                    )}
+                </button>
             </div>
+
+            {/* WIN POPUP */}
+            {showWinPopup && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+                    <div className="bg-black/90 p-8 rounded-2xl border-2 border-[#d4af37] animate-bounce shadow-[0_0_80px_rgba(212,175,55,0.6)] text-center scale-125 backdrop-blur-sm">
+                        <div className="text-3xl font-black text-[#d4af37] uppercase tracking-widest mb-2 animate-pulse">
+                            {winInfo.lastWin >= (bet * 5) ? "🌟 SUPER WIN 🌟" : "💎 FREE GAMES 💎"}
+                        </div>
+                        {winInfo.lastWin > 0 && (
+                            <div className="text-5xl font-black text-white font-mono drop-shadow-md">
+                                ৳{winInfo.lastWin.toFixed(2)}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
+        </div >
     );
 }

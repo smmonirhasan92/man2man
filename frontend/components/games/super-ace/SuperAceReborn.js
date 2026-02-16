@@ -4,7 +4,9 @@ import api from '../../../services/api';
 import { useAuth } from '../../../hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import RollingCounter from './RollingCounter';
+import Card from './Card'; // [NEW] Premium Card Component
 import toast from 'react-hot-toast';
 
 // Initial State
@@ -225,34 +227,31 @@ export default function SuperAceReborn() {
 
                 {/* GRID */}
                 <div className={`
-                    w-full aspect-[5/4] max-h-[60vh] bg-slate-900/50 p-2 rounded-xl border border-slate-700 shadow-2xl relative grid grid-cols-5 gap-1.5 sm:gap-2
-                    ${state.lastWin > 0 ? 'animate-pulse-gold border-yellow-500/50' : ''}
+                    w-full aspect-[5/4] max-h-[60vh] bg-slate-950/80 p-2 sm:p-3 rounded-2xl border border-slate-800 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] relative grid grid-cols-5 gap-1.5 sm:gap-2
+                    ${state.lastWin > 0 ? 'animate-pulse-gold ring-1 ring-yellow-500/30' : ''}
                 `}>
+                    {/* Felt / Grid Texture */}
+                    <div className="absolute inset-0 z-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
+
                     {state.grid.map((col, cIdx) => (
-                        <div key={cIdx} className="flex flex-col gap-1.5 sm:gap-2 h-full">
+                        <div key={cIdx} className="flex flex-col gap-1.5 sm:gap-2 h-full z-10">
                             {col.map((sym, rIdx) => {
                                 const isMatch = state.matches?.some(m => m.c === cIdx && m.r === rIdx);
-                                const isGold = sym.startsWith('GOLD');
-                                const displaySym = sym.replace('GOLD_', '').replace('SCATTER', '💎').replace('WILD', '🃏');
-
+                                // Card component handles parsing "GOLD_" etc.
                                 return (
                                     <div
                                         key={`${cIdx}-${rIdx}`}
                                         className={`
-                                            flex-1 bg-gradient-to-b from-blue-900 to-slate-900 rounded-md flex items-center justify-center border
-                                            ${isGold ? 'border-yellow-500/80 from-amber-900 to-yellow-900' : 'border-blue-700/30'}
-                                            ${state.spinning ? 'opacity-50 blur-[1px]' : ''}
-                                            ${isMatch ? 'ring-2 ring-yellow-400 z-10 scale-110 bg-yellow-600 shadow-[0_0_15px_rgba(250,204,21,0.6)] transition-transform duration-100' : ''}
-                                            relative overflow-hidden shadow-inner
+                                            flex-1 relative transition-all duration-300
+                                            ${state.spinning ? 'translate-y-[-100px] opacity-0' : 'translate-y-0 opacity-100'} 
+                                            ${isMatch ? 'scale-105 z-20 brightness-110 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]' : ''}
                                         `}
+                                        style={{ transitionDelay: `${cIdx * 50 + rIdx * 30}ms` }}
                                     >
-                                        <span className={`
-                                            text-3xl sm:text-4xl lg:text-5xl font-bold font-serif drop-shadow-lg
-                                            ${isGold ? 'text-yellow-200' : 'text-slate-100'}
-                                            ${isMatch ? 'animate-bounce' : ''}
-                                        `}>
-                                            {displaySym}
-                                        </span>
+                                        <Card
+                                            symbol={sym}
+                                            className={state.spinning ? 'blur-[2px]' : ''}
+                                        />
                                     </div>
                                 );
                             })}
