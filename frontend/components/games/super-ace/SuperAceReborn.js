@@ -4,7 +4,6 @@ import api from '../../../services/api';
 import { useAuth } from '../../../hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 import RollingCounter from './RollingCounter';
 import Card from './Card'; // [NEW] Premium Card Component
 import VaultWidget from './VaultWidget'; // [NEW] Vault Component
@@ -53,6 +52,18 @@ export default function SuperAceReborn() {
     const [shake, setShake] = useState(false);
     const [flashRed, setFlashRed] = useState(false);
     const [floatElements, setFloatElements] = useState([]); // { id, text, type, x, y }
+    const [vaultData, setVaultData] = useState(null); // [NEW] Local vault state
+
+    // Sync vaultData from user state on load
+    useEffect(() => {
+        if (user?.wallet) {
+            setVaultData({
+                locked: user.wallet.game_locked || 0,
+                required: user.wallet.turnover?.required || 0,
+                completed: user.wallet.turnover?.completed || 0
+            });
+        }
+    }, [user]);
 
     // Sound Refs (Placeholder for future audio)
     const audioContextRef = useRef(null);
@@ -113,6 +124,15 @@ export default function SuperAceReborn() {
                         }
                     }
                 }));
+
+                // Sync Local Vault Data for Widget
+                if (data.vault) {
+                    setVaultData({
+                        locked: data.vault.locked,
+                        required: data.vault.required,
+                        completed: data.vault.completed
+                    });
+                }
 
                 // [MADNESS LOGIC]
                 if (data.win === 0) {
@@ -220,80 +240,6 @@ export default function SuperAceReborn() {
                 </div>
             )}
 
-            import VaultWidget from './VaultWidget';
-
-            // ... (Imports)
-
-            export default function SuperAceReborn() {
-    // ... (Hooks)
-    const [vaultData, setVaultData] = useState(null); // Local vault state for animation syncing
-
-    // Update vaultData from user state on load
-    useEffect(() => {
-        if (user?.wallet) {
-                setVaultData({
-                    locked: user.wallet.game_locked || 0,
-                    required: user.wallet.turnover?.required || 0,
-                    completed: user.wallet.turnover?.completed || 0
-                });
-        }
-    }, [user]);
-
-            // ... (handleSpin)
-
-            try {
-            const {data} = await api.post('/game/super-ace/spin', {betAmount: bet });
-
-            // ... (Spin Success Dispatch)
-
-            setTimeout(() => {
-                // Update Balance & Vault
-                setUser(prev => ({
-                    ...prev,
-                    game_balance: data.balance,
-                    wallet: {
-                        ...prev.wallet,
-                        game: data.balance,
-                        // Update locked balance from response vault data
-                        game_locked: data.vault?.locked ?? prev.wallet.game_locked,
-                        turnover: {
-                            required: data.vault?.required ?? prev.wallet.turnover?.required,
-                            completed: data.vault?.completed ?? prev.wallet.turnover?.completed
-                        }
-                    }
-                }));
-
-            // Sync Local Vault Data for Widget
-            if (data.vault) {
-                setVaultData({
-                    locked: data.vault.locked,
-                    required: data.vault.required,
-                    completed: data.vault.completed
-                });
-                }
-
-            if (data.win === 0) {
-                // ... Loss Logic
-            } else {
-                    // Check if Trapped
-                    if (data.vault?.trappedAmount > 0) {
-                spawnFloat(`🔒 TRAPPED ৳${data.vault.trappedAmount}`, 'damage'); // Use damage style (red/warning) or custom
-            toast("BIG WIN SECURED IN VAULT!", {icon: '🔒', style: {borderRadius: '10px', background: '#333', color: '#fff' } });
-                    } else {
-                spawnFloat(`+৳${data.win}`, 'win');
-                    }
-                }
-
-            // Check Release
-            if (data.vault?.wasReleased) {
-                toast.success(`VAULT UNLOCKED! ৳${data.vault.releasedAmount} RELEASED!`, { duration: 4000, icon: '🔓' });
-                    // Maybe triggering confetti here?
-                }
-
-            // ...
-
-            return (
-            // ... (JSX)
             {/* FREE SPIN BANNER */}
             {state.freeSpinRemaining > 0 && (
                 <div className="absolute top-14 left-0 right-0 z-30 bg-purple-900/80 text-center py-2 border-y border-purple-500/50 backdrop-blur-sm">
