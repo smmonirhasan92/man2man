@@ -206,56 +206,45 @@ export default function SuperAceProGame() {
                 {/* CENTER: The Matrix (Grid) */}
                 <div className="relative">
                 </div>
-            </div>
-        </div>
 
-                {/* BOTTOM/RIGHT: Controls */ }
-    <div className="w-full md:w-64 flex flex-col gap-2">
-        <div className="bg-slate-900/80 border border-slate-700 p-4 rounded-lg flex flex-col gap-4">
-            <div className="flex justify-between items-center bg-black/30 p-2 rounded">
-                <label className="text-xs text-slate-500 font-bold">BET AMOUNT</label>
-                <input className="bg-transparent text-right font-mono text-xl text-white w-24 outline-none border-b border-slate-700 focus:border-cyan-500 transition-colors"
-                    value={bet} readOnly />
-            </div>
+                <div className="grid grid-cols-4 gap-1">
+                    {[10, 20, 50, 100].map(amt => (
+                        <button key={amt} onClick={() => setBet(amt)}
+                            className={`py-1 text-xs font-mono border ${bet === amt ? 'border-cyan-500 text-cyan-500 bg-cyan-950/30' : 'border-slate-700 text-slate-500 hover:border-slate-500'}`}>
+                            {amt}
+                        </button>
+                    ))}
+                </div>
 
-            <div className="grid grid-cols-4 gap-1">
-                {[10, 20, 50, 100].map(amt => (
-                    <button key={amt} onClick={() => setBet(amt)}
-                        className={`py-1 text-xs font-mono border ${bet === amt ? 'border-cyan-500 text-cyan-500 bg-cyan-950/30' : 'border-slate-700 text-slate-500 hover:border-slate-500'}`}>
-                        {amt}
+                <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-slate-500">TURBO MODE</span>
+                    <button onClick={() => setTurboMode(!turboMode)}
+                        className={`w-8 h-4 rounded-full transition-colors relative ${turboMode ? 'bg-cyan-600' : 'bg-slate-700'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${turboMode ? 'left-4.5' : 'left-0.5'}`}></div>
                     </button>
-                ))}
+                </div>
             </div>
 
-            <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-slate-500">TURBO MODE</span>
-                <button onClick={() => setTurboMode(!turboMode)}
-                    className={`w-8 h-4 rounded-full transition-colors relative ${turboMode ? 'bg-cyan-600' : 'bg-slate-700'}`}>
-                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${turboMode ? 'left-4.5' : 'left-0.5'}`}></div>
-                </button>
-            </div>
-        </div>
-
-        <button
-            onClick={handleSpin}
-            disabled={isCooling}
-            className={`
+            <button
+                onClick={handleSpin}
+                disabled={isCooling}
+                className={`
                             h-16 w-full rounded bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-400 text-black font-black text-xl tracking-widest transition-all clip-path-polygon
                             disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
                         `}
-            style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
-        >
-            {isCooling ? <Activity className="animate-spin" /> : <Zap className="fill-current" />}
-            {isCooling ? 'EXECUTING' : 'INITIATE'}
-        </button>
+                style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
+            >
+                {isCooling ? <Activity className="animate-spin" /> : <Zap className="fill-current" />}
+                {isCooling ? 'EXECUTING' : 'INITIATE'}
+            </button>
 
-        {/* Win Popup - Pro Style (Minimal Toast/Overlay in specific area) */}
-        {state.lastWin > 0 && (
-            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none z-50">
-                {/* Only blocking click if big win? No, kept strictly visual */}
-            </div>
-        )}
-    </div>
+            {/* Win Popup - Pro Style (Minimal Toast/Overlay in specific area) */}
+            {state.lastWin > 0 && (
+                <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none z-50">
+                    {/* Only blocking click if big win? No, kept strictly visual */}
+                </div>
+            )}
+        </div>
             </div >
 
         <style jsx>{`
