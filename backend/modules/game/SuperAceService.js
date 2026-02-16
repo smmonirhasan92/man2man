@@ -125,43 +125,90 @@ class SuperAceService {
                     if (isSafe) {
                         grid = self.generateWinningGrid(multiplier);
                         if (client && client.isOpen) await client.set(streakKey, '0');
-
-                        // [TURNOVER TRAP] 🪤
-                        // If Big Win (>5x), lock it by adding to Turnover Requirement
-                        if (multiplier >= 5.0) {
-                            if (!user.wallet.turnover) user.wallet.turnover = { required: 0, completed: 0 };
-                            // Add 1x turnover requirement on the winning amount
-                            user.wallet.turnover.required += totalWin;
-                            console.log(`[ACE_GAME] 🪤 TRAP SET: Added ${totalWin} to Turnover Req for ${userId}`);
-                        }
-
                     } else {
-                        // Force Loss
+                        // Force Loss (Safety block)
                         totalWin = 0;
+                        multiplier = 0;
                         grid = self.generateLosingGrid();
                         if (!isFreeGame && client && client.isOpen) await client.incr(streakKey);
                     }
                 } else {
-                    // LOSS
+                    // LOSS (RNG)
                     totalWin = 0;
                     grid = self.generateLosingGrid();
                     if (!isFreeGame && client && client.isOpen) await client.incr(streakKey);
                 }
 
-                // 3. Payout
+                // [VAULT LOGIC - CHECK RELEASE] 🏦
+                // Trigger after the bet is placed (turnover increased) but before payout
+                let checkVaultRelease = false;
+                let vaultReleasedAmount = 0;
+                let trappedAmount = 0;
+
+                if (user.wallet.game_locked > 0 && user.wallet.turnover) {
+                    if (user.wallet.turnover.completed >= user.wallet.turnover.required) {
+                        checkVaultRelease = true;
+                        vaultReleasedAmount = user.wallet.game_locked;
+
+                        const preVaultBal = user.wallet.game;
+
+                        // Transfer Locked -> Game
+                        user.wallet.game += vaultReleasedAmount;
+                        user.wallet.game_locked = 0;
+
+                        // Reset Turnover
+                        user.wallet.turnover.required = 0;
+                        user.wallet.turnover.completed = 0;
+
+                        await TransactionLedger.create([{
+                            userId, type: 'vault_release', amount: vaultReleasedAmount,
+                            balanceBefore: preVaultBal, balanceAfter: user.wallet.game,
+                            description: 'Vault Unlocked! Turnover Met.',
+                            transactionId: `VAULT_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                            metadata: { game: 'super-ace', wallet: 'game' }
+                        }], { session });
+
+                        console.log(`[ACE_GAME] 🔓 VAULT UNLOCKED! Released ${vaultReleasedAmount}`);
+                    }
+                }
+
+                // [PAYOUT & TRAP LOGIC]
                 if (totalWin > 0) {
-                    const balBefore = user.wallet.game;
-                    user.wallet.game += totalWin;
+                    const currentBal = user.wallet.game;
 
-                    await TransactionLedger.create([{
-                        userId, type: 'credit', amount: totalWin,
-                        balanceBefore: balBefore, balanceAfter: user.wallet.game,
-                        description: isFreeGame ? 'Super Ace Win (Free Spin)' : 'Super Ace Win',
-                        transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                        metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game', isPity: isPityWin }
-                    }], { session });
+                    // Rule: Win > 5x (and not pity) -> TRAP
+                    if (multiplier > 5.0 && !isPityWin) {
+                        trappedAmount = totalWin;
+                        user.wallet.game_locked += trappedAmount;
 
-                    console.log(`[ACE_GAME] User ${userId} Won ${totalWin}`);
+                        // Add to Turnover Req
+                        if (!user.wallet.turnover) user.wallet.turnover = { required: 0, completed: 0 };
+                        user.wallet.turnover.required += trappedAmount;
+
+                        await TransactionLedger.create([{
+                            userId, type: 'win_locked', amount: trappedAmount,
+                            balanceBefore: currentBal, balanceAfter: currentBal,
+                            description: 'Super Ace Big Win (Trapped)',
+                            transactionId: `TRAP_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                            metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game_locked' }
+                        }], { session });
+
+                        console.log(`[ACE_GAME] 🪤 TRAP! ${trappedAmount} locked.`);
+
+                    } else {
+                        // CASH PAYOUT
+                        user.wallet.game += totalWin;
+
+                        await TransactionLedger.create([{
+                            userId, type: 'credit', amount: totalWin,
+                            balanceBefore: currentBal, balanceAfter: user.wallet.game,
+                            description: isFreeGame ? 'Super Ace Win (FS)' : 'Super Ace Win',
+                            transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                            metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game', isPity: isPityWin }
+                        }], { session });
+
+                        console.log(`[ACE_GAME] Won ${totalWin}`);
+                    }
                 }
 
                 user.game_balance = user.wallet.game;
@@ -182,7 +229,15 @@ class SuperAceService {
                     streak: totalWin > 0 ? "WIN" : "LOSS",
                     isFreeGame: isFreeGame,
                     freeSpinsLeft: isScatter ? (freeSpinsLeft + 10) : freeSpinsLeft,
-                    isScatter: isScatter // Signal frontend to show animation
+                    isScatter: isScatter,
+                    vault: {
+                        locked: user.wallet.game_locked,
+                        required: user.wallet.turnover ? user.wallet.turnover.required : 0,
+                        completed: user.wallet.turnover ? user.wallet.turnover.completed : 0,
+                        wasReleased: checkVaultRelease,
+                        releasedAmount: vaultReleasedAmount,
+                        trappedAmount: trappedAmount
+                    }
                 };
             });
         } finally {

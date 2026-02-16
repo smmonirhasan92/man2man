@@ -6,6 +6,7 @@ import { ArrowLeft, Activity, Zap, TrendingUp, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import RollingCounter from './RollingCounter';
 import Card from './Card';
+import VaultWidget from './VaultWidget';
 import toast from 'react-hot-toast';
 
 // [THEME] Cyberpunk / Trader Pro
@@ -96,13 +97,34 @@ export default function SuperAceProGame() {
                 setUser(prev => ({
                     ...prev,
                     game_balance: data.balance,
-                    wallet: { ...prev.wallet, game: data.balance, main: data.wallet_balance, game_locked: data.wallet_locked || prev.wallet.game_locked }
+                    wallet: {
+                        ...prev.wallet,
+                        game: data.balance,
+                        main: data.wallet_balance,
+                        game_locked: data.vault?.locked ?? prev.wallet.game_locked,
+                        turnover: {
+                            required: data.vault?.required ?? prev.wallet.turnover?.required,
+                            completed: data.vault?.completed ?? prev.wallet.turnover?.completed
+                        }
+                    }
                 }));
 
+                // Sync Vault State
+                if (data.vault) {
+                    // We can use a local state if we want smooth anims, or just rely on user.wallet
+                }
+
                 if (data.win > 0) {
+                    if (data.vault?.trappedAmount > 0) {
+                        toast("WIN SECURED IN VAULT", { icon: '🔒', style: { background: '#0f172a', color: '#38bdf8', border: '1px solid #0ea5e9' } });
+                    }
                     spawnFloat(`+${data.win.toFixed(1)}`, 'win');
                 } else {
                     spawnFloat(`-${bet}`, 'damage');
+                }
+
+                if (data.vault?.wasReleased) {
+                    toast.success(`VAULT UNLOCKED: ৳${data.vault.releasedAmount}`, { icon: '🔓', style: { background: '#064e3b', color: '#34d399' } });
                 }
 
             }, turboMode ? 200 : 400);
@@ -180,6 +202,12 @@ export default function SuperAceProGame() {
 
                 {/* LEFT: Stats & Log (Desktop only usually, adapted for mobile as overlay or top bar) */}
                 <div className="hidden md:flex flex-col gap-4 w-64 shrink-0">
+                    <VaultWidget
+                        lockedAmount={user?.wallet?.game_locked || 0}
+                        requiredTurnover={user?.wallet?.turnover?.required || 0}
+                        completedTurnover={user?.wallet?.turnover?.completed || 0}
+                        onClaim={handleSpin}
+                    />
                     <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg">
                         <div className="text-xs text-slate-500 mb-2 flex items-center gap-2">
                             <TrendingUp className="w-3 h-3" /> RTP (Live)

@@ -109,6 +109,30 @@ async function runVerificationSuite() {
             console.log(`⚠️ [TEST 11] Turnover did not increase (Win might have reset it or logic differs) -- Check Service Logic`);
         }
 
+        // TEST 12: VAULT RELEASE (MANUAL TRIGGER)
+        console.log("\n--- TESTING VAULT RELEASE LOGIC ---");
+        // Setup: User has locked funds and meets requirements
+        user.wallet.game_locked = 500;
+        user.wallet.turnover.required = 50;
+        user.wallet.turnover.completed = 60; // Met!
+        await user.save();
+        console.log("   -> Setup: Locked=500, Req=50, Comp=60. Expect Release on next spin.");
+
+        const rVaultRelease = await SuperAceService.spin(user._id, 10);
+        user = await User.findById(TEST_USER_ID);
+
+        if (rVaultRelease.vault && rVaultRelease.vault.wasReleased) {
+            console.log(`✅ [TEST 12] Vault Released! Amount: ${rVaultRelease.vault.releasedAmount}`);
+            if (user.wallet.game_locked === 0) {
+                console.log(`✅ [TEST 12] Game Locked Balance Cleared.`);
+            } else {
+                console.error(`❌ [TEST 12] Game Locked NOT Cleared: ${user.wallet.game_locked}`);
+            }
+        } else {
+            console.error(`❌ [TEST 12] Vault DID NOT Release (Check Logic)`);
+            console.log(rVaultRelease.vault);
+        }
+
         // TEST 12: TRANSACTION LEDGER
         const ledger = await TransactionLedger.findOne({ userId: user._id }).sort({ createdAt: -1 });
         if (ledger && ledger.game === 'super-ace') {

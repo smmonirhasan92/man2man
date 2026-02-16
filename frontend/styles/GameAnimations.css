@@ -150,3 +150,26 @@
 .animate-glow-spin {
     animation: glow-spin 0.5s linear infinite;
 }
+
+/* 7. COIN BURST (CSS Particles) */
+@keyframes coin-drop {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.coin-particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #fbbf24;
+    border-radius: 50%;
+    animation: coin-drop 1s ease-in forwards;
+    box-shadow: 0 0 5px #f59e0b;
+}

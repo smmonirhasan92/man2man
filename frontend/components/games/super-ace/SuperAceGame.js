@@ -4,6 +4,7 @@ import { ArrowLeft, Repeat, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '../../../services/api';
 import Card from './Card';
+import VaultWidget from './VaultWidget';
 import GameBalanceDisplay from '../../game/GameBalanceDisplay';
 import LiveWinMarquee from '../../game/LiveWinMarquee';
 import GameLog from '../../game/GameLog';
@@ -44,6 +45,8 @@ export default function SuperAceGame() {
         setTimeout(() => setFloatElements(prev => prev.filter(e => e.id !== id)), 1500);
     };
 
+    const [vaultData, setVaultData] = useState(null); // [NEW] Vault State
+
     const spin = async () => {
         if (spinning) return;
         const startTime = Date.now();
@@ -78,14 +81,26 @@ export default function SuperAceGame() {
             // Processing
             setGrid(data.grid);
 
+            // Sync Vault
+            if (data.vault) {
+                setVaultData(data.vault);
+            }
+
             // Check for Free Spins logic
             if (data.isFreeGame) setIsFreeSpinMode(true);
             if (data.freeSpinsLeft === 0) setIsFreeSpinMode(false);
 
             if (data.totalWin > 0 || data.isFreeSpin) {
-                setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
-                setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
-                spawnFloat(`+৳${data.totalWin.toFixed(0)}`, 'win');
+                // Check Lock First
+                if (data.vault?.trappedAmount > 0) {
+                    setGameLog({ message: `LOCKED ৳${data.vault.trappedAmount}`, type: 'warning' });
+                    toast("BIG WIN TRAPPED IN VAULT!", { icon: '🔒', style: { borderRadius: '10px', background: '#333', color: '#ffd700' } });
+                    spawnFloat("TRAPPED!", 'damage');
+                } else {
+                    setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
+                    setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
+                    spawnFloat(`+৳${data.totalWin.toFixed(0)}`, 'win');
+                }
 
                 // [WIN POPUP TRIGGER]
                 if (data.totalWin >= (bet * 5) || data.isScatter) {
@@ -95,6 +110,12 @@ export default function SuperAceGame() {
 
             } else {
                 setGameLog({ message: "Try Again", type: 'loss' });
+            }
+
+            // Check Release
+            if (data.vault?.wasReleased) {
+                toast.success(`VAULT UNLOCKED! ৳${data.vault.releasedAmount}`, { icon: '🔓' });
+                spawnFloat("UNLOCKED!", 'win');
             }
 
         } catch (e) {
@@ -141,6 +162,16 @@ export default function SuperAceGame() {
 
             <div className="flex-1 flex flex-col items-center justify-center p-2 relative z-10">
                 <GameLog message={gameLog.message} type={gameLog.type} />
+
+                {/* VAULT (Conditional) */}
+                <div className="mb-2 w-full max-w-sm">
+                    <VaultWidget
+                        lockedAmount={vaultData?.locked || 0}
+                        requiredTurnover={vaultData?.required || 0}
+                        completedTurnover={vaultData?.completed || 0}
+                        onClaim={spin}
+                    />
+                </div>
 
                 {/* Multipliers - Fixed Layout */}
                 <div className="flex gap-4 mb-6">
