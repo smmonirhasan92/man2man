@@ -205,49 +205,87 @@ export default function SuperAceProGame() {
 
                 {/* CENTER: The Matrix (Grid) */}
                 <div className="relative">
-                </div>
+                    {/* GAME GRID (HOLOGRAPHIC STYLE) */}
+                    <div className={`
+                        relative z-10 w-full aspect-[5/4] max-h-[60vh] bg-slate-900/40 backdrop-blur-sm p-1 rounded-sm border-x border-cyan-900/50 
+                        grid grid-cols-5 gap-1
+                         ${state.lastWin > 0 ? 'shadow-[0_0_30px_rgba(34,211,238,0.2)]' : ''}
+                    `}>
+                        {/* Scanline Overlay */}
+                        <div className="absolute inset-0 z-20 pointer-events-none bg-[linear-gradient(transparent_50%,_rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-10"></div>
 
-                <div className="grid grid-cols-4 gap-1">
-                    {[10, 20, 50, 100].map(amt => (
-                        <button key={amt} onClick={() => setBet(amt)}
-                            className={`py-1 text-xs font-mono border ${bet === amt ? 'border-cyan-500 text-cyan-500 bg-cyan-950/30' : 'border-slate-700 text-slate-500 hover:border-slate-500'}`}>
-                            {amt}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-slate-500">TURBO MODE</span>
-                    <button onClick={() => setTurboMode(!turboMode)}
-                        className={`w-8 h-4 rounded-full transition-colors relative ${turboMode ? 'bg-cyan-600' : 'bg-slate-700'}`}>
-                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${turboMode ? 'left-4.5' : 'left-0.5'}`}></div>
-                    </button>
+                        {state.grid.map((col, cIdx) => (
+                            <div key={cIdx} className="flex flex-col gap-1 h-full">
+                                {col.map((sym, rIdx) => {
+                                    const isMatch = state.matches?.some(m => m.c === cIdx && m.r === rIdx);
+                                    return (
+                                        <div
+                                            key={`${cIdx}-${rIdx}`}
+                                            className={`
+                                                flex-1 relative transition-all duration-150
+                                                ${state.spinning ? 'opacity-60 blur-sm scale-95' : 'opacity-100 scale-100'}
+                                                ${isMatch ? 'z-30 scale-105 brightness-125 drop-shadow-[0_0_10px_#06b6d4]' : ''}
+                                            `}
+                                        >
+                                            <Card symbol={sym} className="rounded-none border-none" />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <button
-                onClick={handleSpin}
-                disabled={isCooling}
-                className={`
-                            h-16 w-full rounded bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-400 text-black font-black text-xl tracking-widest transition-all clip-path-polygon
-                            disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
-                        `}
-                style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
-            >
-                {isCooling ? <Activity className="animate-spin" /> : <Zap className="fill-current" />}
-                {isCooling ? 'EXECUTING' : 'INITIATE'}
-            </button>
+            {/* BOTTOM/RIGHT: Controls */}
+            <div className="w-full md:w-64 flex flex-col gap-2 p-4 md:absolute md:bottom-4 md:right-4 z-20">
+                <div className="bg-slate-900/80 border border-slate-700 p-4 rounded-lg flex flex-col gap-4">
+                    <div className="flex justify-between items-center bg-black/30 p-2 rounded">
+                        <label className="text-xs text-slate-500 font-bold">BET AMOUNT</label>
+                        <input className="bg-transparent text-right font-mono text-xl text-white w-24 outline-none border-b border-slate-700 focus:border-cyan-500 transition-colors"
+                            value={bet} readOnly />
+                    </div>
 
-            {/* Win Popup - Pro Style (Minimal Toast/Overlay in specific area) */}
+                    <div className="grid grid-cols-4 gap-1">
+                        {[10, 20, 50, 100].map(amt => (
+                            <button key={amt} onClick={() => setBet(amt)}
+                                className={`py-1 text-xs font-mono border ${bet === amt ? 'border-cyan-500 text-cyan-500 bg-cyan-950/30' : 'border-slate-700 text-slate-500 hover:border-slate-500'}`}>
+                                {amt}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-slate-500">TURBO MODE</span>
+                        <button onClick={() => setTurboMode(!turboMode)}
+                            className={`w-8 h-4 rounded-full transition-colors relative ${turboMode ? 'bg-cyan-600' : 'bg-slate-700'}`}>
+                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${turboMode ? 'left-4.5' : 'left-0.5'}`}></div>
+                        </button>
+                    </div>
+                </div>
+
+                <button
+                    onClick={handleSpin}
+                    disabled={isCooling}
+                    className={`
+                        h-16 w-full rounded bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-400 text-black font-black text-xl tracking-widest transition-all clip-path-polygon
+                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                    `}
+                    style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
+                >
+                    {isCooling ? <Activity className="animate-spin" /> : <Zap className="fill-current" />}
+                    {isCooling ? 'EXECUTING' : 'INITIATE'}
+                </button>
+            </div>
+
+            {/* Win Popup */}
             {state.lastWin > 0 && (
                 <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none z-50">
-                    {/* Only blocking click if big win? No, kept strictly visual */}
+                    {/* Visual only */}
                 </div>
             )}
-        </div>
-            </div >
 
-        <style jsx>{`
+            <style jsx>{`
                 .animate-scan {
                     animation: scan 2s linear infinite;
                 }
@@ -256,6 +294,6 @@ export default function SuperAceProGame() {
                     100% { background-position: 0% 200%; }
                 }
             `}</style>
-        </div >
+        </div>
     );
 }
