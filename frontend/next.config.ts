@@ -66,7 +66,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // output: 'export', // Disabled to allow standard Next.js SSR/Routing
+  output: 'export', // Enabled for SFTP/Static Hosting
   images: {
     unoptimized: true,
   },
