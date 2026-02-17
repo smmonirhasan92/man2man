@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const ticketSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    ticketId: { type: String, required: true }, // [NEW] Explicit Unique ID
     quantity: { type: Number, default: 1 },
     timestamp: { type: Date, default: Date.now }
 }, { _id: false });

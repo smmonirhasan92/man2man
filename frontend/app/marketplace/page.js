@@ -65,6 +65,17 @@ export default function GlobalMarketplace() {
             return;
         }
 
+        // [SAFETY CHECK] Check for Existing Active Plan
+        const activeServerId = localStorage.getItem('active_server_id');
+        if (activeServerId) {
+            // Show custom warning toast or modify modal state to be "Warning Mode"
+            // For now, let's just use the modal but maybe add a warning flag
+            console.log("Active Plan Detected:", activeServerId);
+            // We can pass this strict warning to the modal or handle it here
+            // Let's attach a warning property to the plan object temporarily for the modal to render
+            plan.hasActiveWarning = true;
+        }
+
         // 3. Open Modal
         setSelectedPlan(plan);
         setShowModal(true);
@@ -344,6 +355,7 @@ export default function GlobalMarketplace() {
                     onClose={() => setShowModal(false)}
                     onAccept={handleAcceptPurchase}
                     plan={selectedPlan}
+                    isWarning={selectedPlan?.hasActiveWarning} // [NEW] Pass Warning Flag
                 />
 
             </div>

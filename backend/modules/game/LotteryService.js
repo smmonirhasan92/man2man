@@ -243,7 +243,20 @@ class LotteryService {
             }], { session });
 
             // 4. Update Slot Sales & Tickets
-            const ticketEntries = Array(quantity).fill({ userId, quantity: 1, timestamp: new Date() });
+            const ticketEntries = [];
+            const baseTime = Date.now();
+
+            for (let i = 0; i < quantity; i++) {
+                // Generate Unique ID: Time (last 6) + Random (3)
+                // e.g. 839201492 (9 digits)
+                const uniqueId = baseTime.toString().slice(-6) + Math.floor(Math.random() * 900 + 100).toString();
+                ticketEntries.push({
+                    userId,
+                    ticketId: uniqueId,
+                    quantity: 1,
+                    timestamp: new Date()
+                });
+            }
 
             const updatedSlot = await LotterySlot.findByIdAndUpdate(slot._id, {
                 $inc: { currentSales: cost },
@@ -387,7 +400,9 @@ class LotteryService {
                             userId: winnerId,
                             tierName: tier.name,
                             wonAmount: tier.amount,
-                            ticketId: timestampToTicketId(winTicket.timestamp) // Helper or index
+                            tierName: tier.name,
+                            wonAmount: tier.amount,
+                            ticketId: winTicket.ticketId || timestampToTicketId(winTicket.timestamp) // Use stored ID
                         };
                         winners.push(winEntry);
                     }
@@ -538,7 +553,9 @@ class LotteryService {
                             userId: randomWinnerId,
                             tierName: tier.name,
                             wonAmount: tier.amount,
-                            ticketId: timestampToTicketId(winTicket.timestamp)
+                            tierName: tier.name,
+                            wonAmount: tier.amount,
+                            ticketId: winTicket.ticketId || timestampToTicketId(winTicket.timestamp)
                         });
                     }
                 }
@@ -648,7 +665,7 @@ class LotteryService {
                     const winDetail = isWin ? myWins[idx] : null;
 
                     return {
-                        ticketNumber: timestampToTicketId(t.timestamp) + `-${idx}`, // Fake unique ID for UX
+                        ticketNumber: t.ticketId || (timestampToTicketId(t.timestamp) + `-${idx}`), // Use stored ID or fallback
                         status: slot.status === 'COMPLETED' ? (isWin ? 'WIN' : 'LOSS') : 'PENDING',
                         winAmount: winDetail ? winDetail.wonAmount : 0
                     };

@@ -53,6 +53,19 @@ export default function SuperAceProGame() {
     const [shake, setShake] = useState(false);
     const [floatElements, setFloatElements] = useState([]);
     const [turboMode, setTurboMode] = useState(false);
+    const [vaultData, setVaultData] = useState(null); // [NEW] Local vault state
+
+    // Sync vaultData from user state on load
+    useEffect(() => {
+        if (user?.wallet) {
+            setVaultData({
+                locked: user.wallet.game_locked || 0,
+                required: user.wallet.turnover?.required || 0,
+                completed: user.wallet.turnover?.completed || 0,
+                isSpinLock: (user.wallet.turnover?.required <= 50 && user.wallet.turnover?.required > 0)
+            });
+        }
+    }, [user]);
 
     // Spawning Floating Text
     const spawnFloat = (text, type) => {
@@ -141,7 +154,15 @@ export default function SuperAceProGame() {
 
                 // Sync Vault State
                 if (data.vault) {
-                    // We can use a local state if we want smooth anims, or just rely on user.wallet
+                    setVaultData({
+                        locked: data.vault.locked,
+                        required: data.vault.required,
+                        completed: data.vault.completed,
+                        isSpinLock: data.vault.isSpinLock,
+                        remainingSpins: data.vault.remainingSpins,
+                        wasReleased: data.vault.wasReleased,
+                        releasedAmount: data.vault.releasedAmount
+                    });
                 }
 
                 if (data.win > 0) {
@@ -233,9 +254,11 @@ export default function SuperAceProGame() {
                 {/* LEFT: Stats & Log (Desktop only usually, adapted for mobile as overlay or top bar) */}
                 <div className="hidden md:flex flex-col gap-4 w-64 shrink-0">
                     <VaultWidget
-                        lockedAmount={user?.wallet?.game_locked || 0}
-                        requiredTurnover={user?.wallet?.turnover?.required || 0}
-                        completedTurnover={user?.wallet?.turnover?.completed || 0}
+                        lockedAmount={vaultData?.locked || user?.wallet?.game_locked || 0}
+                        requiredTurnover={vaultData?.required || user?.wallet?.turnover?.required || 0}
+                        completedTurnover={vaultData?.completed || user?.wallet?.turnover?.completed || 0}
+                        isSpinLock={vaultData?.isSpinLock}
+                        remainingSpins={vaultData?.remainingSpins}
                         onClaim={handleSpin}
                     />
                     <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg">
@@ -305,7 +328,7 @@ export default function SuperAceProGame() {
                     </div>
 
                     <div className="grid grid-cols-4 gap-1">
-                        {[10, 20, 50, 100].map(amt => (
+                        {[1, 5, 10, 20, 50, 100, 500, 1000].map(amt => (
                             <button key={amt} onClick={() => setBet(amt)}
                                 className={`py-1 text-xs font-mono border ${bet === amt ? 'border-cyan-500 text-cyan-500 bg-cyan-950/30' : 'border-slate-700 text-slate-500 hover:border-slate-500'}`}>
                                 {amt}

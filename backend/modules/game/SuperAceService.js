@@ -145,82 +145,87 @@ class SuperAceService {
                     if (!isFreeGame && client && client.isOpen) await client.incr(streakKey);
                 }
 
-                // [VAULT LOGIC - CHECK RELEASE] 🏦
-                // Trigger after the bet is placed (turnover increased) but before payout
+                // [WIN-LOCK & SPIN-TO-RELEASE POLICY] 🔐
+                // Logic:
+                // 1. Check if Vault Release is due (Count reached 10)
+                // 2. Decrement Spin Count (Increase 'completed' by 1 if 'required' is small, indicating count mode)
+
                 let checkVaultRelease = false;
                 let vaultReleasedAmount = 0;
                 let trappedAmount = 0;
 
-                if (user.wallet.game_locked > 0 && user.wallet.turnover) {
+                // DETECT MODE: If required is small (e.g. <= 20), it's a SPIN COUNT. If large, it's AMOUNT.
+                // For this policy, we use SPIN COUNT = 10.
+                const isSpinCountMode = user.wallet.turnover && user.wallet.turnover.required > 0 && user.wallet.turnover.required <= 50;
+
+                if (user.wallet.game_locked > 0 && isSpinCountMode) {
+                    // Increment Spin Count
+                    user.wallet.turnover.completed += 1; // 1 Spin
+
+                    // Check Release
                     if (user.wallet.turnover.completed >= user.wallet.turnover.required) {
                         checkVaultRelease = true;
                         vaultReleasedAmount = user.wallet.game_locked;
 
                         const preVaultBal = user.wallet.game;
-
-                        // Transfer Locked -> Game
                         user.wallet.game += vaultReleasedAmount;
                         user.wallet.game_locked = 0;
-
-                        // Reset Turnover
                         user.wallet.turnover.required = 0;
                         user.wallet.turnover.completed = 0;
 
                         await TransactionLedger.create([{
                             userId, type: 'vault_release', amount: vaultReleasedAmount,
                             balanceBefore: preVaultBal, balanceAfter: user.wallet.game,
-                            description: 'Vault Unlocked! Turnover Met.',
+                            description: 'Treasury Unlocked! 10 Spins Completed.',
                             transactionId: `VAULT_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                            metadata: { game: 'super-ace', wallet: 'game' }
+                            metadata: { game: 'super-ace', wallet: 'game', spinsWrapped: 10 }
                         }], { session });
 
-                        console.log(`[ACE_GAME] 🔓 VAULT UNLOCKED! Released ${vaultReleasedAmount}`);
+                        console.log(`[ACE_GAME] 🔓 TREASURE UNLOCKED! Released ${vaultReleasedAmount}`);
                     }
                 }
 
-                // [PAYOUT & TRAP LOGIC]
+                // [RTP & WIN LOGIC] - 60/40 Split
+                // Win >= 100 -> LOCK IT.
                 if (totalWin > 0) {
-                    const currentBal = user.wallet.game;
+                    const WIN_LOCK_THRESHOLD = 100;
 
-                    // Rule: Win > 4.0x (and not pity) -> TRAP
-                    const TRAP_THRESHOLD = 4.0;
-
-                    if (multiplier > TRAP_THRESHOLD && !isPityWin) {
+                    if (totalWin >= WIN_LOCK_THRESHOLD) {
+                        // LOCK THE WIN
                         trappedAmount = totalWin;
                         user.wallet.game_locked += trappedAmount;
 
-                        // Add to Turnover Req (3x multiplier logic)
+                        // Set Spin Count Requirement
                         if (!user.wallet.turnover) user.wallet.turnover = { required: 0, completed: 0 };
 
-                        // [ENGAGEMENT MECHANIC]
-                        // Requirement is 3x the trapped amount. 
-                        // Example: Win 100 -> Must bet 300 to release.
-                        const turnoverMultiplier = 3;
-                        user.wallet.turnover.required += (trappedAmount * turnoverMultiplier);
+                        // If already locked, just add to amount, reset count to 10? Or keep existing count?
+                        // Policy: "Complete 10 Spins to Unlock THIS Prize". 
+                        // Let's reset count to 10 to require fresh engagement for new big win, or add 10?
+                        // Simplest: Reset to 10 if 0, or add 5 if existing? 
+                        // User says "Create a spin_lock_counter set to 10". Implies Reset.
+                        user.wallet.turnover.required = 10;
+                        user.wallet.turnover.completed = 0;
+
+                        console.log(`[ACE_GAME] 🔐 WIN LOCKED: ${trappedAmount} BDT. Req: 10 Spins.`);
 
                         await TransactionLedger.create([{
                             userId, type: 'win_locked', amount: trappedAmount,
-                            balanceBefore: currentBal, balanceAfter: currentBal,
-                            description: 'Super Ace Big Win (Trapped)',
-                            transactionId: `TRAP_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                            metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game_locked', turnoverReq: trappedAmount * turnoverMultiplier }
+                            balanceBefore: user.wallet.game, balanceAfter: user.wallet.game,
+                            description: 'Big Win Locked (Spin to Release)',
+                            transactionId: `LOCK_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                            metadata: { game: 'super-ace', wallet: 'game_locked', spinsReq: 10 }
                         }], { session });
-
-                        console.log(`[ACE_GAME] 🪤 TRAP! ${trappedAmount} locked. Req Turnover: ${trappedAmount * turnoverMultiplier}`);
 
                     } else {
-                        // CASH PAYOUT
+                        // Direct Payout for small wins
                         user.wallet.game += totalWin;
-
                         await TransactionLedger.create([{
-                            userId, type: 'credit', amount: totalWin,
-                            balanceBefore: currentBal, balanceAfter: user.wallet.game,
-                            description: isFreeGame ? 'Super Ace Win (FS)' : 'Super Ace Win',
+                            userId, type: 'win', amount: totalWin,
+                            balanceBefore: user.wallet.game - totalWin, balanceAfter: user.wallet.game,
+                            description: 'Super Ace Win',
                             transactionId: `WIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-                            metadata: { game: 'super-ace', multiplier: multiplier.toFixed(2), wallet: 'game', isPity: isPityWin }
+                            metadata: { game: 'super-ace' }
                         }], { session });
-
-                        console.log(`[ACE_GAME] Won ${totalWin}`);
                     }
                 }
 
@@ -245,11 +250,13 @@ class SuperAceService {
                     isScatter: isScatter,
                     vault: {
                         locked: user.wallet.game_locked,
-                        required: user.wallet.turnover ? user.wallet.turnover.required : 0,
-                        completed: user.wallet.turnover ? user.wallet.turnover.completed : 0,
+                        // Send Spin Count specifically
+                        requiredSpins: 10,
+                        remainingSpins: Math.max(0, user.wallet.turnover.required - user.wallet.turnover.completed),
                         wasReleased: checkVaultRelease,
                         releasedAmount: vaultReleasedAmount,
-                        trappedAmount: trappedAmount
+                        trappedAmount: trappedAmount,
+                        isSpinLock: true // Flag for frontend to show "Spins" not "$"
                     }
                 };
             });

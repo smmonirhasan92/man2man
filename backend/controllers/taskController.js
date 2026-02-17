@@ -1,6 +1,17 @@
 const TaskService = require('../modules/task/TaskService');
+const TaskServiceV2 = require('../modules/task/TaskServiceV2'); // [NEW] V2 Service
 const TaskAd = require('../modules/task/TaskAdModel');
 const PlanService = require('../modules/plan/PlanService');
+
+// Helper: Check if Plan is V2
+const isV2Plan = async (userId, planId) => {
+    if (!planId) return false;
+    try {
+        const Plan = require('../modules/admin/PlanModel');
+        const plan = await Plan.findById(planId);
+        return plan && plan.node_code && plan.node_code.startsWith('PLAN_V2');
+    } catch (e) { return false; }
+};
 
 exports.getTaskStatus = async (req, res) => {
     try {
@@ -98,19 +109,25 @@ exports.getTasks = async (req, res) => {
         // DYNAMIC SESSION:
         const identityHeader = req.headers['x-usa-identity'];
         let planId = null;
+        let isV2 = false;
 
         if (identityHeader) {
             const UserPlan = require('../modules/plan/UserPlanModel');
             const activePlan = await UserPlan.findOne({ userId, syntheticPhone: identityHeader, status: 'active' });
             if (activePlan) {
                 planId = activePlan.planId;
-                console.log(`[DEBUG] TaskController: Resolved PlanID=${planId} for Identity=${identityHeader}`);
-            } else {
-                console.log(`[DEBUG] TaskController: No Active Plan found for Identity=${identityHeader}`);
+                isV2 = await isV2Plan(userId, planId); // Check V2
+                console.log(`[DEBUG] TaskController: Resolved PlanID=${planId} (V2=${isV2}) for Identity=${identityHeader}`);
             }
         }
 
-        console.log(`[DEBUG] TaskController: Calling getAvailableTasks with planId=${planId}`);
+        if (isV2) {
+            console.log(`[DEBUG] Routing to TaskServiceV2 for Plan ${planId}`);
+            const tasks = await TaskServiceV2.getAvailableTasks(userId, planId);
+            return res.json(tasks);
+        }
+
+        console.log(`[DEBUG] TaskController: Calling Legacy getAvailableTasks with planId=${planId}`);
         const tasks = await TaskService.getAvailableTasks(userId, planId);
         console.log(`[DEBUG] TaskController: Tasks found=${tasks.length}`);
         res.json(tasks);
@@ -197,12 +214,23 @@ exports.processTask = async (req, res) => {
         console.log(`[TaskController] Process Request: User=${userId}, Key=${usaKey}`);
 
         // 1. Security Check
-        // [MODIFIED] Multi-Server: We allow TaskService to validate the key against plans
         if (!usaKey) {
             return res.status(403).json({ error_code: 'INVALID_SECURITY_KEY', message: 'Missing USA Key' });
         }
 
-        // 2. Process Logic
+        // [NEW] Check V2 Routing
+        const UserPlan = require('../modules/plan/UserPlanModel');
+        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: usaKey, status: 'active' });
+        if (activePlan) {
+            const v2 = await isV2Plan(userId, activePlan.planId);
+            if (v2) {
+                console.log(`[TaskController] V2 Route Active for Task ${taskId}`);
+                const result = await TaskServiceV2.completeTask(userId, taskId, usaKey);
+                return res.json(result);
+            }
+        }
+
+        // 2. Process Logic (Legacy)
         const result = await TaskService.processTask(userId, taskId, usaKey);
         res.json(result);
 
@@ -223,11 +251,6 @@ exports.claimTask = async (req, res) => {
 
         console.log(`[TaskController] Claim Request: UserID=${userId}, Key=${usaKey ? usaKey.substring(0, 8) + '...' : 'Missing'}`);
 
-        // 3. Lookup User (Wallet/Plan Owner)
-        // const User = require('../modules/user/UserModel');
-        // const user = await User.findById(userId);
-        // if (!user) return res.status(404).json({ message: 'User not found.' });
-
         // 4. Validate Session Key (USA Number)
         if (!usaKey) {
             return res.status(403).json({
@@ -236,8 +259,16 @@ exports.claimTask = async (req, res) => {
             });
         }
 
-        // 5. Credit Reward (Plan Logic)
-        // TaskService handles ALL wallet updates, transactions, and logic.
+        // [NEW] Check V2 Routing
+        const UserPlan = require('../modules/plan/UserPlanModel');
+        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: usaKey, status: 'active' });
+        if (activePlan && await isV2Plan(userId, activePlan.planId)) {
+            console.log(`[TaskController] V2 Route Active for Claim ${taskId}`);
+            const result = await TaskServiceV2.completeTask(userId, taskId, usaKey);
+            return res.json(result);
+        }
+
+        // 5. Credit Reward (Legacy Logic)
         const result = await TaskService.completeTask(userId, taskId, "CLAIM_REWARD", usaKey);
 
         // Success!
@@ -253,6 +284,23 @@ exports.submitTask = async (req, res) => {
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
         const { taskId, answer } = req.body;
+
+        // [NOTE] submitTask doesn't force a 'usaKey' header usually, 
+        // but V2 might require it depending on how frontend sends it.
+        // If frontend sends x-usa-key on submit, we can route.
+        // Assuming V2 tasks always use process/claim or include header.
+
+        const usaKey = req.headers['x-usa-key'];
+        if (usaKey) {
+            const UserPlan = require('../modules/plan/UserPlanModel');
+            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: usaKey, status: 'active' });
+            if (activePlan && await isV2Plan(userId, activePlan.planId)) {
+                console.log(`[TaskController] V2 Route Active for Submit ${taskId}`);
+                // completeTask in V2 checks key strictly
+                const result = await TaskServiceV2.completeTask(userId, taskId, usaKey);
+                return res.json(result);
+            }
+        }
 
         const result = await TaskService.completeTask(userId, taskId, answer);
         res.json(result);

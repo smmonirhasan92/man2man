@@ -291,6 +291,8 @@ export default function SuperAceReborn() {
                     lockedAmount={vaultData?.locked || user?.wallet?.game_locked || 0}
                     requiredTurnover={vaultData?.required || user?.wallet?.turnover?.required || 0}
                     completedTurnover={vaultData?.completed || user?.wallet?.turnover?.completed || 0}
+                    isSpinLock={vaultData?.isSpinLock || (user?.wallet?.turnover?.required <= 50 && user?.wallet?.turnover?.required > 0)}
+                    remainingSpins={vaultData?.remainingSpins}
                     onClaim={handleSpin}
                 />
             </div>
@@ -360,11 +362,21 @@ export default function SuperAceReborn() {
                         <div className="flex items-center justify-between bg-black/60 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-xl">
                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-2">Total Bet</div>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setBet(Math.max(10, bet - 10))} disabled={isCooling} className="btn-control">-</button>
+                                <button onClick={() => {
+                                    const bets = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+                                    const currentIdx = bets.findIndex(b => b === bet);
+                                    const nextIdx = Math.max(0, currentIdx - 1);
+                                    setBet(bets[nextIdx] || 1);
+                                }} disabled={isCooling} className="btn-control">-</button>
                                 <span className="w-20 text-center font-black text-2xl text-yellow-400 font-mono tracking-tighter bg-black/50 rounded-lg py-1">
                                     {bet}
                                 </span>
-                                <button onClick={() => setBet(bet + 10)} disabled={isCooling} className="btn-control">+</button>
+                                <button onClick={() => {
+                                    const bets = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+                                    const currentIdx = bets.findIndex(b => b === bet);
+                                    const nextIdx = Math.min(bets.length - 1, currentIdx + 1);
+                                    setBet(bets[nextIdx] || 10);
+                                }} disabled={isCooling} className="btn-control">+</button>
                             </div>
                         </div>
 

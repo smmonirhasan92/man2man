@@ -9,10 +9,12 @@ import GameBalanceDisplay from '../../game/GameBalanceDisplay';
 import LiveWinMarquee from '../../game/LiveWinMarquee';
 import GameLog from '../../game/GameLog';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../../hooks/useAuth'; // Added useAuth import
 
 // [ROLLBACK] Stable Classic Version
 export default function SuperAceGame() {
     const router = useRouter();
+    const { user } = useAuth(); // Get user for vault sync
     const [grid, setGrid] = useState(Array(5).fill(Array(4).fill(null)));
     const [bet, setBet] = useState(10);
     const [spinning, setSpinning] = useState(false);
@@ -46,6 +48,18 @@ export default function SuperAceGame() {
     };
 
     const [vaultData, setVaultData] = useState(null); // [NEW] Vault State
+
+    // Sync vaultData from user state on load (Classic)
+    useEffect(() => {
+        if (user?.wallet) {
+            setVaultData({
+                locked: user.wallet.game_locked || 0,
+                required: user.wallet.turnover?.required || 0,
+                completed: user.wallet.turnover?.completed || 0,
+                isSpinLock: (user.wallet.turnover?.required <= 50 && user.wallet.turnover?.required > 0)
+            });
+        }
+    }, [user]);
 
     const spin = async () => {
         if (spinning) return;
@@ -95,7 +109,15 @@ export default function SuperAceGame() {
 
             // Sync Vault
             if (data.vault) {
-                setVaultData(data.vault);
+                setVaultData({
+                    locked: data.vault.locked,
+                    required: data.vault.required,
+                    completed: data.vault.completed,
+                    isSpinLock: data.vault.isSpinLock,
+                    remainingSpins: data.vault.remainingSpins,
+                    wasReleased: data.vault.wasReleased,
+                    releasedAmount: data.vault.releasedAmount
+                });
             }
 
             // Check for Free Spins logic
@@ -126,8 +148,6 @@ export default function SuperAceGame() {
                 setTimeout(() => setShowWinPopup(true), 500);
                 setTimeout(() => setShowWinPopup(false), 3500);
             }
-
-
 
             // Check Release
             if (data.vault?.wasReleased) {
@@ -183,9 +203,11 @@ export default function SuperAceGame() {
                 {/* VAULT (Conditional) */}
                 <div className="mb-2 w-full max-w-sm">
                     <VaultWidget
-                        lockedAmount={vaultData?.locked || 0}
-                        requiredTurnover={vaultData?.required || 0}
-                        completedTurnover={vaultData?.completed || 0}
+                        lockedAmount={vaultData?.locked || user?.wallet?.game_locked || 0}
+                        requiredTurnover={vaultData?.required || user?.wallet?.turnover?.required || 0}
+                        completedTurnover={vaultData?.completed || user?.wallet?.turnover?.completed || 0}
+                        isSpinLock={vaultData?.isSpinLock}
+                        remainingSpins={vaultData?.remainingSpins}
                         onClaim={spin}
                     />
                 </div>
@@ -223,9 +245,19 @@ export default function SuperAceGame() {
                     <div className="flex flex-col justify-center">
                         <span className="text-[10px] text-[#d4af37]/70 font-bold uppercase mb-2 tracking-wider ml-1">Bet Amount</span>
                         <div className="flex items-center gap-2 bg-[#03180f] rounded-2xl p-1.5 border border-white/5">
-                            <button onClick={() => setBet(Math.max(10, bet - 10))} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-xl text-[#d4af37] font-black text-lg transition">-</button>
+                            <button onClick={() => {
+                                const bets = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+                                const currentIdx = bets.findIndex(b => b === bet);
+                                const nextIdx = Math.max(0, currentIdx - 1);
+                                setBet(bets[nextIdx] || 1);
+                            }} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-xl text-[#d4af37] font-black text-lg transition">-</button>
                             <input className="bg-transparent text-center w-full font-black text-white text-lg outline-none" value={bet} readOnly />
-                            <button onClick={() => setBet(bet + 10)} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-xl text-[#d4af37] font-black text-lg transition">+</button>
+                            <button onClick={() => {
+                                const bets = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+                                const currentIdx = bets.findIndex(b => b === bet);
+                                const nextIdx = Math.min(bets.length - 1, currentIdx + 1);
+                                setBet(bets[nextIdx] || 10);
+                            }} className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-xl text-[#d4af37] font-black text-lg transition">+</button>
                         </div>
                     </div>
 
