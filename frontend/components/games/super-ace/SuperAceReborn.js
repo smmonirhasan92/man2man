@@ -92,6 +92,17 @@ export default function SuperAceReborn() {
         try {
             const { data } = await api.post('/game/super-ace/spin', { betAmount: bet });
 
+            // [AUDIO LOGIC]
+            const playSound = (name) => {
+                try {
+                    const audio = new Audio(`/sounds/${name}.mp3`);
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log("Audio play failed", e));
+                } catch (e) { console.error(e); }
+            };
+
+            playSound('click'); // Spin Start
+
             // [VISUAL IMPACT]
             setShake(true); // Shake on results landing
             setTimeout(() => setShake(false), 400);
@@ -106,6 +117,31 @@ export default function SuperAceReborn() {
                     isScatter: data.isScatter
                 }
             });
+
+            // [RESULT SOUNDS]
+            if (data.win > 0) {
+                if (data.win > bet * 5) playSound('success'); // Big Win
+                else playSound('win'); // Standard Win
+            } else {
+                // Near Miss Logic (Frontend Detection)
+                let scatterCount = 0;
+                let aceCount = 0;
+                data.grid.flat().forEach(s => {
+                    if (s === 'SCATTER') scatterCount++;
+                    if (s === 'GOLD_A' || s === 'A') aceCount++;
+                });
+
+                if (scatterCount === 2 || aceCount === 2) {
+                    setTimeout(() => playSound('notification'), 200); // Tease Tension
+                } else {
+                    playSound('lose');
+                }
+            }
+
+            // Check Release
+            if (data.vault?.wasReleased) {
+                setTimeout(() => playSound('success'), 600);
+            }
 
             // Delay for dramatic sync
             setTimeout(() => {
@@ -344,7 +380,7 @@ export default function SuperAceReborn() {
                                     : 'bg-gradient-to-b from-purple-600 via-purple-700 to-purple-900 text-white hover:scale-[1.02] active:scale-[0.98] border-t-2 border-purple-400'}
                             `}
                         >
-                            <span className="relative z-10 drop-shadow-md">{isCooling ? '...' : 'SPIN'}</span>
+                            <span className="relative z-10 drop-shadow-md">{isCooling ? '...' : 'STRIKE'}</span>
                             {!isCooling && <span className="text-[10px] opacity-60 font-normal tracking-normal relative z-10">TAP TO PLAY</span>}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                         </button>

@@ -73,9 +73,9 @@ class SuperAceService {
                 if (client && client.isOpen) lossStreak = parseInt(await client.get(streakKey) || '0');
 
                 // [EXCITEMENT PARAMETERS]
-                const PITY_THRESHOLD = 4;
-                const BASE_HIT_RATE = 0.40; // Reduced from 0.48 (Quality over Quantity)
-                const SCATTER_CHANCE = 0.02; // 2% Chance for 3 Scatters (Free Spins)
+                const PITY_THRESHOLD = 3; // Reduced from 4 (Faster Pity)
+                const BASE_HIT_RATE = 0.45; // Increased from 0.40 (More Action)
+                const SCATTER_CHANCE = 0.03; // Slight boost to Feature teaser
 
                 let isWin = Math.random() < BASE_HIT_RATE;
                 let isScatter = Math.random() < SCATTER_CHANCE;
@@ -96,11 +96,8 @@ class SuperAceService {
                     // --- SCATTER WIN ---
                     awardedFreeSpins = 10;
                     grid = self.generateScatterGrid();
-                    // Scatters usually pay a small amount too or just trigger features. 
-                    // Let's assume they don't pay direct cash unless matched, but for simplicity, we focus on the FEATURE.
                     if (client && client.isOpen) {
                         await client.set(fsKey, (freeSpinsLeft + 10).toString());
-                        // Also reset streak on feature trigger
                         await client.set(streakKey, '0');
                     }
                     console.log(`[ACE_GAME] 🌟 SCATTER TRIGGERED for ${userId}`);
@@ -108,17 +105,19 @@ class SuperAceService {
                 else if (isWin) {
                     const rand = Math.random();
                     if (isPityWin) {
-                        // Pity win shouldn't be huge, just enough to keep them going
-                        multiplier = 1.2 + (Math.random() * 1.5);
+                        // Pity win: Just enough to stay alive (1.0x - 1.5x)
+                        multiplier = 1.0 + (Math.random() * 0.5);
                     } else {
-                        // [NEW MATH MODEL]
-                        // 00-50%: Sustain Win (0.8x - 1.5x) - No more 0.2x insult wins
-                        if (rand < 0.50) multiplier = 0.8 + (Math.random() * 0.7);
-                        // 50-80%: Profit Win (1.5x - 3.5x)
-                        else if (rand < 0.80) multiplier = 1.5 + (Math.random() * 2.0);
-                        // 80-96%: Big Win (3.5x - 8.0x) - Likely Trapped
-                        else if (rand < 0.96) multiplier = 3.5 + (Math.random() * 4.5);
-                        // 96-100%: Super Win (10x+) - Definitely Trapped
+                        // [NEW MATH MODEL - "THE TEASE"]
+                        // User Complaint: "Consistent Losing". Fix: Give real profit.
+
+                        // 00-40%: Small Profit (1.1x - 1.8x) - "I won!" (Not 0.8x partial loss)
+                        if (rand < 0.40) multiplier = 1.1 + (Math.random() * 0.7);
+                        // 40-75%: Solid Profit (2.0x - 3.8x)
+                        else if (rand < 0.75) multiplier = 2.0 + (Math.random() * 1.8);
+                        // 75-95%: Big Win (4.0x - 8.0x) - TRAP ZONE
+                        else if (rand < 0.95) multiplier = 4.0 + (Math.random() * 4.0);
+                        // 95-100%: Super Win (10x+) - DEEP TRAP
                         else multiplier = 10.0 + (Math.random() * 20.0);
                     }
 

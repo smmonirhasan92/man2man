@@ -60,6 +60,9 @@ export default function SuperAceGame() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+        // Quick sound trigger (Inline dirty check since helper is scoped below - acceptable for this patch)
+        try { new Audio('/sounds/click.mp3').play().catch(() => { }); } catch (e) { }
+
         try {
             let data;
             try {
@@ -73,6 +76,15 @@ export default function SuperAceGame() {
             } finally {
                 clearTimeout(timeoutId);
             }
+
+            // [AUDIO LOGIC]
+            const playSound = (name) => {
+                try {
+                    const audio = new Audio(`/sounds/${name}.mp3`);
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log("Audio play failed", e));
+                } catch (e) { console.error(e); }
+            };
 
             // [VISUAL IMPACT]
             setShake(true);
@@ -93,24 +105,29 @@ export default function SuperAceGame() {
             if (data.totalWin > 0 || data.isFreeSpin) {
                 // Check Lock First
                 if (data.vault?.trappedAmount > 0) {
+                    playSound('error'); // Trapped sound
                     setGameLog({ message: `LOCKED ৳${data.vault.trappedAmount}`, type: 'warning' });
                     toast("BIG WIN TRAPPED IN VAULT!", { icon: '🔒', style: { borderRadius: '10px', background: '#333', color: '#ffd700' } });
                     spawnFloat("TRAPPED!", 'damage');
                 } else {
+                    if (data.totalWin > bet * 5) playSound('success');
+                    else playSound('win');
+
                     setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
                     setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
                     spawnFloat(`+৳${data.totalWin.toFixed(0)}`, 'win');
                 }
-
-                // [WIN POPUP TRIGGER]
-                if (data.totalWin >= (bet * 5) || data.isScatter) {
-                    setTimeout(() => setShowWinPopup(true), 500);
-                    setTimeout(() => setShowWinPopup(false), 3500);
-                }
-
             } else {
-                setGameLog({ message: " ", type: 'info' });
+                playSound('lose');
             }
+
+            // [WIN POPUP TRIGGER]
+            if (data.totalWin >= (bet * 5) || data.isScatter) {
+                setTimeout(() => setShowWinPopup(true), 500);
+                setTimeout(() => setShowWinPopup(false), 3500);
+            }
+
+
 
             // Check Release
             if (data.vault?.wasReleased) {
@@ -223,7 +240,7 @@ export default function SuperAceGame() {
                         {spinning ? (
                             <Repeat className="w-8 h-8 text-white/50 animate-spin" />
                         ) : (
-                            <Zap className="w-10 h-10 text-[#3d1c10] fill-current" />
+                            <span className="text-xl font-black text-[#3d1c10] tracking-widest">ROLL</span>
                         )}
                     </button>
                 </div>

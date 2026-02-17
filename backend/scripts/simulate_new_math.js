@@ -1,124 +1,141 @@
-const mongoose = require('mongoose');
 const SuperAceService = require('../modules/game/SuperAceService');
-const User = require('../modules/user/UserModel');
-require('dotenv').config();
-
-// Mock dependencies to run service in isolation if needed, 
-// but integration test is better if DB is available.
-// We will use the actual service but mock the User content if possible or create a temp user.
 
 async function runSimulation() {
-    console.log("🔥 Starting Super Ace Math Simulation...");
-    console.log("----------------------------------------");
+    console.log("🔥 Starting Super Ace Gameplay Analysis (100 Spins)...");
+    console.log("-----------------------------------------------------");
 
-    // Connect DB
-    if (mongoose.connection.readyState === 0) {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/man2man');
-    }
-
-    // Create Temp User
-    const testUserId = new mongoose.Types.ObjectId();
-    let mockUser = {
-        _id: testUserId,
-        wallet: {
-            game: 10000,
-            game_locked: 0,
-            turnover: { required: 0, completed: 0 },
-            main: 0
-        },
-        save: async () => { /* Mock Save */ }
+    // Mock Wallet
+    let wallet = {
+        balance: 1000,
+        locked: 0,
+        turnover: { required: 0, completed: 0 }
     };
 
-    // Mock Mongoose User.findById
-    User.findById = async () => ({
-        ...mockUser,
-        session: () => ({}),
-        save: async () => {
-            // Update local mock on save
-            return mockUser;
-        }
-    });
-
-    // Mock TransactionLedger (we don't need real logs for sim)
-    const TransactionLedger = require('../modules/wallet/TransactionLedgerModel');
-    TransactionLedger.create = async () => [];
-
-    // service instance
-    const service = new SuperAceService();
-
-    // Stats
-    let spins = 1000;
     let stats = {
+        spins: 0,
         wins: 0,
         losses: 0,
-        traps: 0, // Wins > 4x
-        sustain: 0, // Wins 0.8x - 1.5x
-        nearMisses: 0,
+        traps: 0,
+        sustainWins: 0, // 0.8x - 1.5x
+        bigWins: 0,     // 1.5x - 4.0x
+        superWins: 0,   // > 4.0x (Trapped)
         totalIn: 0,
         totalOut: 0,
-        lockedAmount: 0
+        nearMisses: 0
     };
 
-    console.log(`🎰 Simulating ${spins} Spins...`);
+    const BET = 10;
+    const SPINS = 100;
 
-    for (let i = 0; i < spins; i++) {
-        const bet = 10;
+    // --- MATH CONSTANTS (Mirrors SuperAceService.js SOLO MODE) ---
+    // SOLO MODE: Hit Rate 48%, Pity 4 (High Engagement)
+    const BASE_HIT_RATE = 0.48;
+    const TRAP_THRESHOLD = 5.0; // Strict Trap > 5x
+    const PITY_THRESHOLD = 4;
+    let lossStreak = 0;
 
-        // Manual Math Logic Simulation (since we can't easily fully mock the complex service flow without redis etc in this specific script context if we want speed, 
-        // BUT running the actual function is better. 
-        // Let's try to wrap the RNG logic from the service to test IT strictly.)
+    for (let i = 1; i <= SPINS; i++) {
+        stats.spins++;
+        stats.totalIn += BET;
+        wallet.balance -= BET;
+        wallet.turnover.completed += BET;
 
-        // Actually, let's copy the Critical Math Block here to verify the ALGORITHM directly.
-        // This ensures we test the LOGIC, not the database connection.
+        // Check Vault Release
+        if (wallet.locked > 0 && wallet.turnover.completed >= wallet.turnover.required) {
+            console.log(`[SPIN ${i}] 🔓 VAULT UNLOCKED! Released ৳${wallet.locked.toFixed(2)}`);
+            wallet.balance += wallet.locked;
+            wallet.locked = 0;
+            wallet.turnover.required = 0;
+            wallet.turnover.completed = 0;
+        }
 
-        // --- MATH MODEL FROM SERVICE ---
-        const BASE_HIT_RATE = 0.40;
-        const isWin = Math.random() < BASE_HIT_RATE;
+        // --- CORE LOGIC ---
+        let isWin = Math.random() < BASE_HIT_RATE;
+        let isPity = false;
+
+        // Pity Logic
+        if (lossStreak >= PITY_THRESHOLD) {
+            isWin = true;
+            isPity = true;
+            lossStreak = 0;
+            console.log(`[SPIN ${i}] 🛡️ Pity Triggered (Hook)`);
+        }
+
         let multiplier = 0;
+        let winAmount = 0;
 
         if (isWin) {
+            lossStreak = 0;
             const rand = Math.random();
-            if (rand < 0.50) multiplier = 0.8 + (Math.random() * 0.7); // Sustain
-            else if (rand < 0.80) multiplier = 1.5 + (Math.random() * 2.0); // Profit
-            else if (rand < 0.96) multiplier = 3.5 + (Math.random() * 4.5); // Big
-            else multiplier = 10.0 + (Math.random() * 20.0); // Super
-        }
 
-        // Stats Tracking
-        if (multiplier > 0) {
-            stats.wins++;
-            stats.totalOut += (bet * multiplier);
-
-            if (multiplier >= 0.8 && multiplier <= 1.5) stats.sustain++;
-            if (multiplier > 4.0) {
-                stats.traps++;
-                stats.lockedAmount += (bet * multiplier);
+            if (isPity) {
+                // Hook Win: 0.5x - 2.0x usually, but chance for 5x excitement
+                multiplier = 0.5 + (Math.random() * 1.5);
+            } else {
+                // [SOLO MODE DISTRIBUTION]
+                // 00-40%: Small Sustain (0.5x - 1.2x)
+                if (rand < 0.40) multiplier = 0.5 + (Math.random() * 0.7);
+                // 40-75%: Profit (1.2x - 3.2x)
+                else if (rand < 0.75) multiplier = 1.2 + (Math.random() * 2.0);
+                // 75-90%: Big Win (3.0x - 6.0x)
+                else if (rand < 0.90) multiplier = 3.0 + (Math.random() * 3.0);
+                // 90-100%: Super Trap (>8.0x)
+                else multiplier = 8.0 + (Math.random() * 10.0);
             }
+
+            winAmount = parseFloat((BET * multiplier).toFixed(2));
+            stats.wins++;
+            stats.totalOut += winAmount;
+
+            // Stats Categorization
+            if (multiplier >= 0.8 && multiplier <= 1.5) stats.sustainWins++;
+            else if (multiplier > 1.5 && multiplier <= 4.0) stats.bigWins++;
+            else if (multiplier > 4.0) stats.superWins++;
+
+            // Trap Logic
+            if (multiplier > TRAP_THRESHOLD && !isPity) {
+                stats.traps++;
+                wallet.locked += winAmount;
+                const req = winAmount * 3;
+                wallet.turnover.required += req;
+                console.log(`[SPIN ${i}] 🪤 TRAP! Win: ৳${winAmount} (${multiplier.toFixed(2)}x) -> Locked. Req: ৳${req.toFixed(0)}`);
+            } else {
+                wallet.balance += winAmount;
+                console.log(`[SPIN ${i}] ✅ WIN: ৳${winAmount} (${multiplier.toFixed(2)}x)`);
+            }
+
         } else {
+            lossStreak++;
             stats.losses++;
-            // Near Miss Check (approximate)
-            if (Math.random() < 0.30) stats.nearMisses++;
+            // Near Miss Check
+            if (Math.random() < 0.35) {
+                stats.nearMisses++;
+                console.log(`[SPIN ${i}] ❌ LOSS (Near Miss Tease)`);
+            } else {
+                console.log(`[SPIN ${i}] ❌ LOSS`);
+            }
         }
-        stats.totalIn += bet;
     }
 
-    // Report
-    console.log("\n📊 Simulation Results:");
-    console.log(`Total Spins: ${spins}`);
-    console.log(`Hit Rate: ${((stats.wins / spins) * 100).toFixed(1)}% (Target: 40%)`);
-    console.log(`Sustain Wins (0.8x-1.5x): ${stats.sustain} (${((stats.sustain / stats.wins) * 100).toFixed(1)}% of wins)`);
-    console.log(`Traps Triggered (>4x): ${stats.traps}`);
-    console.log(`Trap Rate: ${((stats.traps / spins) * 100).toFixed(1)}%`);
-    console.log("-");
-    console.log(`RTP (Theoretical): ${((stats.totalOut / stats.totalIn) * 100).toFixed(1)}%`);
-    console.log(`Total Locked in Vault: ${stats.lockedAmount.toFixed(2)}`);
-    console.log("----------------------------------------");
-
-    if (Math.abs((stats.wins / spins) - 0.40) < 0.05) {
-        console.log("✅ Hit Rate is within acceptable range.");
-    } else {
-        console.log("⚠️ Hit Rate deviation detected.");
-    }
+    console.log("\n📊 GAMEPLAY REPORT (100 Spins)");
+    console.log("-----------------------------------------------------");
+    console.log(`Total Spins: ${stats.spins}`);
+    console.log(`Bet Total:   ৳${stats.totalIn}`);
+    console.log(`Payout Total:৳${stats.totalOut.toFixed(2)}`);
+    console.log(`RTP (Calc):  ${((stats.totalOut / stats.totalIn) * 100).toFixed(2)}%`);
+    console.log(`\nWins: ${stats.wins} | Losses: ${stats.losses}`);
+    console.log(`Hit Rate:    ${((stats.wins / stats.spins) * 100).toFixed(1)}%`);
+    console.log(`\nWin Types:`);
+    console.log(`- Sustain (0.8x-1.5x): ${stats.sustainWins}`);
+    console.log(`- Profit  (1.5x-4.0x): ${stats.bigWins}`);
+    console.log(`- TRAPS   (>4.0x):     ${stats.traps} 🪤`);
+    console.log(`\nEngagement:`);
+    console.log(`- Near Misses: ${stats.nearMisses}`);
+    console.log(`- Pity Triggers: calculated internally`);
+    console.log(`\nFinal Wallet:`);
+    console.log(`- Cash:   ৳${wallet.balance.toFixed(2)}`);
+    console.log(`- Locked: ৳${wallet.locked.toFixed(2)}`);
+    console.log("-----------------------------------------------------");
 }
 
 runSimulation();

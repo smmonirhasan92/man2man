@@ -14,18 +14,21 @@ async function run() {
         await mongoose.connect('mongodb://127.0.0.1:27017/universal_game_core_v1');
         console.log("Connected.");
 
-        console.log("Finding ANY user...");
-        const user = await User.findOne({});
-        if (user) {
-            const fs = require('fs');
-            fs.writeFileSync(path.resolve(__dirname, 'userid.txt'), user._id.toString());
-            console.log("User ID saved to userid.txt");
-        } else {
-            console.log("NULL");
+        const username = process.argv[2];
+        if (!username) {
+            console.log("Usage: node debug_user_find.js <username>");
+            process.exit(1);
         }
 
+        console.log(`Finding user: ${username}...`);
+        const user = await User.findOne({ username: username });
+
         if (user) {
-            console.log("Balance:", user.wallet.game);
+            console.log(JSON.stringify(user, null, 2));
+            console.log("\n--- WALLET ---");
+            console.log(JSON.stringify(user.wallet, null, 2));
+        } else {
+            console.log("USER NOT FOUND");
         }
 
         process.exit(0);

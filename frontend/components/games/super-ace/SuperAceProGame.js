@@ -78,6 +78,17 @@ export default function SuperAceProGame() {
         try {
             const { data } = await api.post('/game/super-ace/spin', { betAmount: bet });
 
+            // [AUDIO LOGIC]
+            const playSound = (name) => {
+                try {
+                    const audio = new Audio(`/sounds/${name}.mp3`);
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log("Audio play failed", e));
+                } catch (e) { console.error(e); }
+            };
+
+            playSound('click'); // Spin Start
+
             setShake(true);
             setTimeout(() => setShake(false), 200); // Shorter shake for pro
 
@@ -91,6 +102,25 @@ export default function SuperAceProGame() {
                     isScatter: data.isScatter
                 }
             });
+
+            // [RESULT SOUNDS]
+            if (data.win > 0) {
+                if (data.win > bet * 5) playSound('success');
+                else playSound('win');
+            } else {
+                // Near Miss Logic
+                let scatterCount = 0;
+                let aceCount = 0;
+                data.grid.flat().forEach(s => {
+                    if (s === 'SCATTER') scatterCount++;
+                    if (s === 'GOLD_A' || s === 'A') aceCount++;
+                });
+                if (scatterCount === 2 || aceCount === 2) {
+                    setTimeout(() => playSound('notification'), 200); // Tension
+                } else {
+                    playSound('lose');
+                }
+            }
 
             // Fast Balance Update
             setTimeout(() => {
@@ -302,7 +332,7 @@ export default function SuperAceProGame() {
                     style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
                 >
                     {isCooling ? <Activity className="animate-spin" /> : <Zap className="fill-current" />}
-                    {isCooling ? 'EXECUTING' : 'INITIATE'}
+                    {isCooling ? 'EXECUTING' : 'BET & DEAL'}
                 </button>
             </div>
 
