@@ -120,8 +120,15 @@ class TaskServiceV2 {
         return await runTransaction(async (session) => {
             const userUpd = await User.findById(userId).session(session);
 
+            // Re-fetch Plan locked for update
+            const lockedPlan = await UserPlan.findById(activeUserPlan._id).session(session);
+            if (!lockedPlan) throw new Error("Plan validation failed during lock");
+
             // Check Limits again inside lock
-            const dailyLimit = planDetails.daily_limit; // Logic restricted to THIS plan's limit effectively
+            const dailyLimit = planDetails.daily_limit;
+            if (lockedPlan.tasksCompletedToday >= dailyLimit) {
+                throw new Error("Daily limit reached (Race Condition Blocked)");
+            }
 
             // Increment
             userUpd.taskData.tasksCompletedToday += 1;
@@ -137,10 +144,17 @@ class TaskServiceV2 {
             await userUpd.save({ session });
 
             // Update Plan Stats
-            activeUserPlan.tasksCompletedToday += 1;
-            activeUserPlan.earnings_today = (activeUserPlan.earnings_today || 0) + rewardAmount;
-            activeUserPlan.last_earning_date = new Date();
-            await activeUserPlan.save({ session });
+            lockedPlan.tasksCompletedToday += 1;
+            // Reset logic if new day (handled by middleware usually, but good to be safe)
+            const lastDate = lockedPlan.last_earning_date ? new Date(lockedPlan.last_earning_date) : new Date(0);
+            const isToday = lastDate.getDate() === new Date().getDate();
+            if (!isToday) {
+                lockedPlan.tasksCompletedToday = 1; // Reset to 1 (current task)
+            }
+
+            lockedPlan.earnings_today = (isToday ? lockedPlan.earnings_today : 0) + rewardAmount;
+            lockedPlan.last_earning_date = new Date();
+            await lockedPlan.save({ session });
 
             // Transaction Log
             await Transaction.create([{
