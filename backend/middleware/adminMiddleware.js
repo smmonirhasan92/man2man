@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
     // Role check logic based on jwt payload structure
     const userRole = req.user.user ? req.user.user.role : req.user.role;
 
-    if (userRole !== 'admin' && userRole !== 'superadmin') {
+    if (userRole !== 'admin' && userRole !== 'super_admin' && userRole !== 'superadmin') {
         return res.status(403).json({ message: 'Access denied. Admin only.' });
     }
 

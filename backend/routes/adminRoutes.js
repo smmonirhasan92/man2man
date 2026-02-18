@@ -66,6 +66,7 @@ router.get('/settings/public', (req, res) => res.json({ message: "Settings Publi
 const adminModuleController = require('../modules/admin/AdminController');
 router.get('/health', authMiddleware, adminModuleController.getSystemHealth);
 router.get('/logs', authMiddleware, adminCheck, adminModuleController.getSystemLogs); // [NEW] Log Viewer
+router.post('/seed-plans-v2', authMiddleware, adminCheck, adminModuleController.seedPlansV2.bind(adminModuleController)); // [NEW] Production Seeder
 
 // Migrated Routes
 router.post('/agent', authMiddleware, adminCheck, agentController.createAgent);
