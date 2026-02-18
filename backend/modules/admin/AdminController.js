@@ -125,17 +125,39 @@ class AdminController {
                     is_active: true
                 };
 
-                // Upsert
                 const updatedPlan = await Plan.findOneAndUpdate(
                     { node_code: planId },
                     planData,
                     { upsert: true, new: true }
                 );
                 results.push(updatedPlan.name);
+
+                // --- SEED TASKS FOR THIS SERVER GROUP ---
+                const TaskAd = require('../task/TaskAdModel');
+                const taskCount = await TaskAd.countDocuments({ server_id: updatedPlan.server_id });
+
+                if (taskCount < 5) { // Only seed if empty or low
+                    const tasksToSeed = [];
+                    for (let t = 1; t <= 10; t++) {
+                        tasksToSeed.push({
+                            title: `Premium Ad View #${t} (${updatedPlan.name})`,
+                            url: "https://google.com", // Placeholder
+                            imageUrl: "https://via.placeholder.com/150",
+                            duration: 10,
+                            reward_amount: perTaskReward, // Display only, overridden by Plan Logic
+                            server_id: updatedPlan.server_id,
+                            type: 'ad_view',
+                            is_active: true,
+                            priority: 100 - t
+                        });
+                    }
+                    await TaskAd.insertMany(tasksToSeed);
+                    Logger.info(`[ADMIN] Seeded 10 Tasks for ${updatedPlan.server_id}`);
+                }
             }
 
-            Logger.info(`[ADMIN] Seeded ${results.length} V2 Plans via API`);
-            return res.json({ success: true, message: "Safe-Patch V2 Plans Seeded Successfully", plans: results });
+            Logger.info(`[ADMIN] Seeded ${results.length} V2 Plans + Tasks via API`);
+            return res.json({ success: true, message: "Safe-Patch V2 Plans & Tasks Seeded Successfully", plans: results });
 
         } catch (err) {
             Logger.error("Failed to seed V2 plans", err);
