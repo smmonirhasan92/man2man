@@ -151,10 +151,44 @@ exports.createPlan = async (req, res) => {
             type: type || 'vip',
             reward_multiplier: reward_multiplier || 1.0,
             is_active: true,
-            server_id: `SERVER_${Date.now()}` // Unique ID for tracking
-        });
+            const validServerId = `SERVER_${Date.now()}`;
 
-        await newPlan.save();
+            const newPlan = new Plan({
+                name,
+                daily_limit,
+                task_reward,
+                unlock_price,
+                validity_days,
+                features: features || [],
+                type: type || 'vip',
+                reward_multiplier: reward_multiplier || 1.0,
+                is_active: true,
+                server_id: validServerId,
+                node_code: `MANUAL_${Date.now()}` // Unique Node Code
+            });
+
+            await newPlan.save();
+
+            // [AUTO-SYNC] Generate Default Tasks for this new Server Group
+            const TaskAd = require('../modules/task/TaskAdModel');
+            const tasksToSeed = [];
+            const limit = parseInt(daily_limit) || 10;
+
+            for(let t = 1; t <= limit; t++) {
+            tasksToSeed.push({
+                title: `${name} - Daily Task #${t}`,
+                url: "https://google.com", // Default Placeholder
+                imageUrl: "https://via.placeholder.com/150",
+                duration: 10,
+                reward_amount: parseFloat(task_reward), // Sync with Plan Setting
+                server_id: validServerId,
+                type: 'ad_view',
+                is_active: true,
+                priority: 100 - t
+            });
+        }
+        await TaskAd.insertMany(tasksToSeed);
+
         res.status(201).json(newPlan);
     } catch (err) {
         console.error(err);
