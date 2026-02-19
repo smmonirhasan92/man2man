@@ -141,6 +141,16 @@ exports.createPlan = async (req, res) => {
     try {
         const { name, daily_limit, task_reward, unlock_price, validity_days, features, type, reward_multiplier } = req.body;
 
+        // [SAFETY] Validate Task Reward Limit (User Req: "Too much loss if high")
+        const rewardLimit = 200; // Max 200 BDT per task
+        if (parseFloat(task_reward) > rewardLimit) {
+            return res.status(400).json({
+                message: `Task Reward Limit Exceeded! Maximum allowed is ৳${rewardLimit}. You entered: ৳${task_reward}`
+            });
+        }
+
+        const validServerId = `SERVER_${Date.now()}`;
+
         const newPlan = new Plan({
             name,
             daily_limit,
@@ -151,30 +161,18 @@ exports.createPlan = async (req, res) => {
             type: type || 'vip',
             reward_multiplier: reward_multiplier || 1.0,
             is_active: true,
-            const validServerId = `SERVER_${Date.now()}`;
+            server_id: validServerId,
+            node_code: `MANUAL_${Date.now()}` // Unique Node Code
+        });
 
-            const newPlan = new Plan({
-                name,
-                daily_limit,
-                task_reward,
-                unlock_price,
-                validity_days,
-                features: features || [],
-                type: type || 'vip',
-                reward_multiplier: reward_multiplier || 1.0,
-                is_active: true,
-                server_id: validServerId,
-                node_code: `MANUAL_${Date.now()}` // Unique Node Code
-            });
+        await newPlan.save();
 
-            await newPlan.save();
+        // [AUTO-SYNC] Generate Default Tasks for this new Server Group
+        const TaskAd = require('../modules/task/TaskAdModel');
+        const tasksToSeed = [];
+        const limit = parseInt(daily_limit) || 10;
 
-            // [AUTO-SYNC] Generate Default Tasks for this new Server Group
-            const TaskAd = require('../modules/task/TaskAdModel');
-            const tasksToSeed = [];
-            const limit = parseInt(daily_limit) || 10;
-
-            for(let t = 1; t <= limit; t++) {
+        for (let t = 1; t <= limit; t++) {
             tasksToSeed.push({
                 title: `${name} - Daily Task #${t}`,
                 url: "https://google.com", // Default Placeholder
