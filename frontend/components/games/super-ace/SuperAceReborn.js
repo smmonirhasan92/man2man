@@ -2,6 +2,7 @@
 import { useState, useReducer, useEffect, useRef } from 'react';
 import api from '../../../services/api';
 import { useAuth } from '../../../hooks/useAuth';
+import { useGameSound } from '../../../hooks/useGameSound';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import RollingCounter from './RollingCounter';
@@ -78,6 +79,9 @@ export default function SuperAceReborn() {
         setTimeout(() => setFloatElements(prev => prev.filter(e => e.id !== id)), 1500);
     };
 
+    // [AUDIO LOGIC]
+    const { play } = useGameSound(true);
+
     const handleSpin = async () => {
         if (state.spinning || isCooling) return;
         if (!user) return toast.error("Please Login to Play");
@@ -92,16 +96,7 @@ export default function SuperAceReborn() {
         try {
             const { data } = await api.post('/game/super-ace/spin', { betAmount: bet });
 
-            // [AUDIO LOGIC]
-            const playSound = (name) => {
-                try {
-                    const audio = new Audio(`/sounds/${name}.mp3`);
-                    audio.volume = 0.5;
-                    audio.play().catch(e => console.log("Audio play failed", e));
-                } catch (e) { console.error(e); }
-            };
-
-            playSound('click'); // Spin Start
+            play('click', 0.6); // Spin Start
 
             // [VISUAL IMPACT]
             setShake(true); // Shake on results landing
@@ -120,8 +115,8 @@ export default function SuperAceReborn() {
 
             // [RESULT SOUNDS]
             if (data.win > 0) {
-                if (data.win > bet * 5) playSound('success'); // Big Win
-                else playSound('win'); // Standard Win
+                if (data.win > bet * 5) play('success', 0.8); // Big Win
+                else play('win', 0.6); // Standard Win
             } else {
                 // Near Miss Logic (Frontend Detection)
                 let scatterCount = 0;
@@ -132,9 +127,9 @@ export default function SuperAceReborn() {
                 });
 
                 if (scatterCount === 2 || aceCount === 2) {
-                    setTimeout(() => playSound('notification'), 200); // Tease Tension
+                    setTimeout(() => play('notification', 0.5), 200); // Tease Tension
                 } else {
-                    playSound('lose');
+                    play('lose', 0.4);
                 }
             }
 

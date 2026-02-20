@@ -1,43 +1,58 @@
-import useSound from 'use-sound';
+import { useRef, useEffect, useCallback } from 'react';
 
-/**
- * Universal Sound Configuration
- * To change a sound, just update the path here.
- * Files should be in /public/sounds/
- */
-export const SOUND_CONFIG = {
-    CLICK: '/sounds/click.mp3',
-    WIN: '/sounds/win.mp3',
-    LOSE: '/sounds/lose.mp3',
-    CARD_FLIP: '/sounds/card-flip.mp3',
-    NOTIFICATION: '/sounds/notification.mp3', // New for OTP
-    ERROR: '/sounds/error.mp3',               // New for Error Toast
-    SUCCESS: '/sounds/success.mp3'            // New for Success Toast
-};
+export const useGameSound = (enabled = true) => {
+    const audioRefs = useRef({});
 
-/**
- * useGameSound: Universal Sound Manager
- * Exposes a standardized API for playing sounds.
- */
-const useGameSound = () => {
-    // Volume defaults (Can be made dynamic/settings based later)
-    const [playClick] = useSound(SOUND_CONFIG.CLICK, { volume: 0.5 });
-    const [playWin] = useSound(SOUND_CONFIG.WIN, { volume: 0.7 });
-    const [playLose] = useSound(SOUND_CONFIG.LOSE, { volume: 0.5 });
-    const [playCardFlip] = useSound(SOUND_CONFIG.CARD_FLIP, { volume: 0.4 });
-    const [playNotification] = useSound(SOUND_CONFIG.NOTIFICATION, { volume: 0.6 });
-    const [playError] = useSound(SOUND_CONFIG.ERROR, { volume: 0.5 });
-    const [playSuccess] = useSound(SOUND_CONFIG.SUCCESS, { volume: 0.5 });
+    // Preload sounds
+    useEffect(() => {
+        const soundFiles = [
+            'click',
+            'win',
+            'lose',
+            'success',
+            'notification',
+            'card-flip',
+            'error'
+        ];
 
-    return {
-        playClick,
-        playWin,
-        playLose,
-        playCardFlip,
-        playNotification,
-        playError,
-        playSuccess
-    };
+        soundFiles.forEach(sound => {
+            const audio = new Audio(`/sounds/${sound}.mp3`);
+            audio.preload = 'auto';
+            audio.volume = 0.5;
+            audioRefs.current[sound] = audio;
+        });
+
+        return () => {
+            // Cleanup
+            Object.values(audioRefs.current).forEach(audio => {
+                audio.pause();
+                audio.src = '';
+            });
+            audioRefs.current = {};
+        };
+    }, []);
+
+    const play = useCallback((name, volume = 0.5) => {
+        if (!enabled) return;
+
+        const audio = audioRefs.current[name];
+        if (audio) {
+            audio.currentTime = 0;
+            audio.volume = volume;
+            audio.play().catch(e => console.warn(`Sound '${name}' failed to play:`, e));
+        } else {
+            // Fallback for lazy loading or missing preload
+            try {
+                const tempAudio = new Audio(`/sounds/${name}.mp3`);
+                tempAudio.volume = volume;
+                tempAudio.play().catch(() => { });
+            } catch (e) {
+                console.warn(`Sound '${name}' not found.`);
+            }
+        }
+    }, [enabled]);
+
+    return { play };
 };
 
 export default useGameSound;

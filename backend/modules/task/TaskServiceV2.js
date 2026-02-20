@@ -114,7 +114,7 @@ class TaskServiceV2 {
         // Force 4 Decimals
         rewardAmount = parseFloat(rewardAmount.toFixed(4));
 
-        console.log(`[TaskServiceV2] Processing Reward: ${rewardAmount} BDT (Plan: ${planDetails.name})`);
+        console.log(`[TaskServiceV2] Processing Reward: $${rewardAmount} USD (Plan: ${planDetails.name})`);
 
         // 4. Execution
         return await runTransaction(async (session) => {

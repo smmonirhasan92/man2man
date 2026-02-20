@@ -5,38 +5,30 @@ import api from '../services/api';
 const CurrencyContext = createContext();
 
 export function CurrencyProvider({ children }) {
-    // Default to USD, but load from storage if available
+    // Default to USD, force rate to 1
     const [currency, setCurrency] = useState('USD');
     const [rates, setRates] = useState({
         USD: 1,
-        BDT: 120 // Fixed Rate as requested
+        BDT: 1 // [FIX] Disabled BDT conversion. 1 Unit = $1 USD.
     });
 
     useEffect(() => {
-        // Load preference
-        const saved = localStorage.getItem('currencyMode');
-        if (saved) setCurrency(saved);
-
-        // Ensure rate is 120 (ignore API for now to satisfy strict test requirement)
-        setRates({ USD: 1, BDT: 120 });
+        // Force USD preference
+        localStorage.setItem('currencyMode', 'USD');
+        setCurrency('USD');
+        setRates({ USD: 1, BDT: 1 });
     }, []);
 
     const toggleCurrency = () => {
-        const newMode = currency === 'USD' ? 'BDT' : 'USD';
-        setCurrency(newMode);
-        localStorage.setItem('currencyMode', newMode);
+        // [FIX] Disabled Toggle. Always USD.
+        setCurrency('USD');
     };
 
     // Helper to format money
-    // ASSUMPTION: Backend stores BDT.
-    // USD Display = BDT / 120. 
-    // BDT Display = BDT.
-    const formatMoney = (amountInBDT) => {
-        const val = parseFloat(amountInBDT || 0);
-        if (currency === 'USD') {
-            return `$${(val / rates.BDT).toFixed(2)}`;
-        }
-        return `৳${val.toFixed(2)}`;
+    // ASSUMPTION: Backend stores USD.
+    const formatMoney = (amount) => {
+        const val = parseFloat(amount || 0);
+        return `$${val.toFixed(2)}`;
     };
 
     return (

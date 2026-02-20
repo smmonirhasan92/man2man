@@ -141,11 +141,11 @@ exports.createPlan = async (req, res) => {
     try {
         const { name, daily_limit, task_reward, unlock_price, validity_days, features, type, reward_multiplier } = req.body;
 
-        // [SAFETY] Validate Task Reward Limit (User Req: "Too much loss if high")
-        const rewardLimit = 200; // Max 200 BDT per task
+        // [SAFETY] Validate Task Reward Limit (User Req: All in USD)
+        const rewardLimit = 50; // Max $50.00 USD per task (Reasonable for high-tier, prevents infinite)
         if (parseFloat(task_reward) > rewardLimit) {
             return res.status(400).json({
-                message: `Task Reward Limit Exceeded! Maximum allowed is ৳${rewardLimit}. You entered: ৳${task_reward}`
+                message: `Task Reward Limit Exceeded! Maximum allowed is $${rewardLimit}. You entered: $${task_reward}`
             });
         }
 

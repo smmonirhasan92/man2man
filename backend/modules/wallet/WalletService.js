@@ -51,7 +51,7 @@ class WalletService {
         // STRICT POLICY: Game Wallet can ONLY receive funds from Main Wallet (BDT)
         // Block Income, Purchase, Agent, or any other source.
         if ((toWallet === 'game' || toWallet === 'wallet.game') && (fromWallet !== 'main' && fromWallet !== 'wallet.main')) {
-            throw new Error('Game Wallet can only receive funds from Main Wallet (BDT). Direct transfers from other wallets are restricted.');
+            throw new Error('Game Wallet can only receive funds from Main Wallet. Direct transfers from other wallets are restricted.');
         }
 
         const TransactionHelper = require('../common/TransactionHelper');
@@ -217,10 +217,10 @@ class WalletService {
             // [AGENT GUARD]
             if (walletType === 'agent' || walletType === 'wallet.agent') {
                 if (balAfter < 500) {
-                    console.log(`[AGENT GUARD] Low Stock Alert: ${user.username} (${balAfter} BDT)`);
+                    console.log(`[AGENT GUARD] Low Stock Alert: ${user.username} ($${balAfter})`);
                     // Notify Super Admin (Async, don't block txn)
                     NotificationService.sendToRole('super_admin',
-                        `⚠️ Low Agent Stock Alert: ${user.username} has ${balAfter.toFixed(2)} BDT left.`,
+                        `⚠️ Low Agent Stock Alert: ${user.username} has $${balAfter.toFixed(2)} left.`,
                         'warning'
                     ).catch(e => console.error(e));
                 }

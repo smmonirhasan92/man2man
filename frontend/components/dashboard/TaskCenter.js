@@ -215,7 +215,7 @@ export default function TaskCenter({ taskData }) {
                     </div>
                     <div className="text-right">
                         <span className="text-[10px] text-slate-400 uppercase tracking-wider">Earnings</span>
-                        <div className="text-lg font-mono font-bold text-green-400">৳{Number(earnings).toFixed(2)}</div>
+                        <div className="text-lg font-mono font-bold text-green-400">${Number(earnings).toFixed(4)}</div>
                     </div>
                 </div>
                 <div className="relative z-10">
@@ -232,7 +232,7 @@ export default function TaskCenter({ taskData }) {
             {/* BLOCKING STATES */}
             {isNoPlan ? (
                 <button onClick={() => router.push('/marketplace')} className="w-full bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold rounded-lg p-4 shadow-lg flex items-center justify-center gap-2">
-                    <span className="font-bold text-lg">৳</span> Rent US Server to Access Tasks
+                    <DollarSign className="w-4 h-4" /> Rent US Server to Access Tasks
                 </button>
             ) : completed >= limit ? (
                 /* LIMIT REACHED STATE */
@@ -289,7 +289,7 @@ export default function TaskCenter({ taskData }) {
                                         <div className="flex flex-col">
                                             <h3 className="font-bold text-white text-base leading-tight group-hover:text-cyan-400 transition-colors">Premium Ad Task</h3>
                                             <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                                <span className="text-emerald-400 font-bold">৳</span> Guaranteed Revenue
+                                                <DollarSign size={10} className="text-emerald-400" /> Guaranteed Revenue
                                             </p>
                                         </div>
                                         <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300">

@@ -32,7 +32,7 @@ export default function TaskPanel({ user, tasks }) {
                         </div>
                         <div className="text-right">
                             <span className="text-[9px] text-slate-400 font-bold uppercase">Today's Earnings</span>
-                            <div className="text-lg font-mono font-bold text-green-400">৳{user?.todaysTaskEarnings || 0}</div>
+                            <div className="text-lg font-mono font-bold text-green-400">${Number(user?.todaysTaskEarnings || 0).toFixed(4)}</div>
                         </div>
                     </div>
 

@@ -4,7 +4,7 @@ import USCIcon from '../ui/USCIcon';
 
 export default function HeaderBalance({ balance }) {
     const { formatMoney } = useCurrency();
-    // State: 0 = Hidden, 1 = USD, 2 = BDT
+    // State: 0 = Hidden, 1 = USD (Default)
     const [viewState, setViewState] = useState(0);
 
     const rawBalance = parseFloat(balance || 0); // Always BDT (e.g. 10000)

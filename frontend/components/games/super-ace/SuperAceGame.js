@@ -10,6 +10,7 @@ import LiveWinMarquee from '../../game/LiveWinMarquee';
 import GameLog from '../../game/GameLog';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth'; // Added useAuth import
+import { useGameSound } from '../../../hooks/useGameSound';
 
 // [ROLLBACK] Stable Classic Version
 export default function SuperAceGame() {
@@ -61,6 +62,9 @@ export default function SuperAceGame() {
         }
     }, [user]);
 
+    // [AUDIO LOGIC]
+    const { play } = useGameSound(true);
+
     const spin = async () => {
         if (spinning) return;
         const startTime = Date.now();
@@ -74,8 +78,8 @@ export default function SuperAceGame() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-        // Quick sound trigger (Inline dirty check since helper is scoped below - acceptable for this patch)
-        try { new Audio('/sounds/click.mp3').play().catch(() => { }); } catch (e) { }
+        // Standardized Click Sound
+        play('click', 0.6);
 
         try {
             let data;
@@ -92,13 +96,7 @@ export default function SuperAceGame() {
             }
 
             // [AUDIO LOGIC]
-            const playSound = (name) => {
-                try {
-                    const audio = new Audio(`/sounds/${name}.mp3`);
-                    audio.volume = 0.5;
-                    audio.play().catch(e => console.log("Audio play failed", e));
-                } catch (e) { console.error(e); }
-            };
+            // useGameSound already initialized
 
             // [VISUAL IMPACT]
             setShake(true);
@@ -127,20 +125,20 @@ export default function SuperAceGame() {
             if (data.totalWin > 0 || data.isFreeSpin) {
                 // Check Lock First
                 if (data.vault?.trappedAmount > 0) {
-                    playSound('error'); // Trapped sound
+                    play('error'); // Trapped sound
                     setGameLog({ message: `LOCKED ৳${data.vault.trappedAmount}`, type: 'warning' });
                     toast("BIG WIN TRAPPED IN VAULT!", { icon: '🔒', style: { borderRadius: '10px', background: '#333', color: '#ffd700' } });
                     spawnFloat("TRAPPED!", 'damage');
                 } else {
-                    if (data.totalWin > bet * 5) playSound('success');
-                    else playSound('win');
+                    if (data.totalWin > bet * 5) play('success', 0.8);
+                    else play('win', 0.6);
 
                     setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
                     setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
                     spawnFloat(`+৳${data.totalWin.toFixed(0)}`, 'win');
                 }
             } else {
-                playSound('lose');
+                play('lose', 0.4);
             }
 
             // [WIN POPUP TRIGGER]

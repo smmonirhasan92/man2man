@@ -20,6 +20,14 @@ exports.createTaskAd = async (req, res) => {
             return res.status(400).json({ message: 'Please fill all required fields.' });
         }
 
+        // [FIX] Prevent "15 seconds -> $15" error
+        if (parseFloat(reward_amount) > 10.00) {
+            return res.status(400).json({ message: 'Maximum Task Reward is $10.00. Did you mean $0.15?' });
+        }
+        if (parseInt(duration) <= 0) {
+            return res.status(400).json({ message: 'Duration must be positive.' });
+        }
+
         const newAd = new TaskAd({
             title,
             url,
