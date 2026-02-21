@@ -19,7 +19,7 @@ async function run() {
         await User.updateOne(
             { phone: phone },
             {
-                \$set: {
+                $set: {
                     fullName: 'Super Admin',
                     username: 'admin1',
                     phone: phone,
