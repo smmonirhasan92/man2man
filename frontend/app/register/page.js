@@ -73,7 +73,7 @@ function RegisterForm() {
         const code = Math.floor(1000 + Math.random() * 9000).toString();
         setGeneratedOtp(code);
         setVerificationStep('verifying');
-        playNotification();
+        // playNotification();
         setNotification({ type: 'info', message: `Your Code: ${code}` });
         setTimeout(() => setNotification(null), 10000);
     };
