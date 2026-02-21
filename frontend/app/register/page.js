@@ -67,7 +67,7 @@ function RegisterForm() {
     const handleSendOtp = () => {
         if (!formData.fullName || !formData.phone) {
             setError('Please enter your Name and Phone Number first.');
-            playError();
+            // playError();
             return;
         }
         const code = Math.floor(1000 + Math.random() * 9000).toString();
@@ -81,12 +81,12 @@ function RegisterForm() {
     const handleVerifyOtp = () => {
         if (userOtp === generatedOtp) {
             setVerificationStep('verified');
-            playSuccess();
+            // playSuccess();
             setNotification({ type: 'success', message: 'Verified!' });
             setTimeout(() => setNotification(null), 3000);
         } else {
             setError('Incorrect Code. Check notification.');
-            playError();
+            // playError();
         }
     };
 
@@ -107,7 +107,7 @@ function RegisterForm() {
             if (res.data.token) {
                 localStorage.setItem('token', res.data.token);
                 localStorage.setItem('user', JSON.stringify(res.data.user));
-                playSuccess();
+                // playSuccess();
                 router.push(res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
             } else { router.push('/'); }
         } catch (err) {
@@ -115,7 +115,7 @@ function RegisterForm() {
 
 
             setError(err.response?.data?.message || 'Registration failed');
-            playError();
+            // playError();
             setLoading(false);
         }
     };
