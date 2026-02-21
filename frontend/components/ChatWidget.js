@@ -20,7 +20,7 @@ export default function ChatWidget() {
     useEffect(() => {
         if (isOpen && !socketInstance) {
             // Lazy Load Socket Logic
-            const BASE_URL = 'https://man2man-api.onrender.com';
+            const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://man2man-api.onrender.com';
             const newSocket = io(BASE_URL + '/system');
 
             newSocket.on('connect', () => console.log('Chat Connected'));

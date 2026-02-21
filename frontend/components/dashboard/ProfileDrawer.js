@@ -4,6 +4,7 @@ import { X, Server, MessageSquare, LogOut, Settings, Wallet, Copy } from 'lucide
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { AnimatePresence } from 'framer-motion';
 import ConnectionFlow from '../ConnectionFlow';
 
@@ -94,8 +95,8 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#1E293B]">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 overflow-hidden">
-                            <img src={user?.photoUrl ? `https://usaaffiliatemarketing.com/api${user.photoUrl}` : `https://ui-avatars.com/api/?name=${user?.fullName || 'User'}`} className="w-full h-full object-cover" />
+                        <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 overflow-hidden relative">
+                            <Image src={user?.photoUrl ? `https://usaaffiliatemarketing.com/api${user.photoUrl}` : `https://ui-avatars.com/api/?name=${user?.fullName ? encodeURIComponent(user.fullName) : 'User'}`} className="w-full h-full object-cover" alt="Profile" fill sizes="40px" />
                         </div>
                         <div>
                             <h3 className="font-bold text-white text-sm">{user?.fullName || 'User'}</h3>
@@ -165,7 +166,7 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                                                 handleCopy(server.syntheticPhone, "USA Number Copied!");
                                             }
                                         }}>
-                                            <img src="https://flagcdn.com/us.svg" className="w-4 h-3 rounded-[1px]" alt="USA" />
+                                            <Image src="https://flagcdn.com/us.svg" className="w-4 h-3 rounded-[1px]" alt="USA" width={16} height={12} loading="lazy" />
                                             {server.syntheticPhone || 'Generating...'}
                                             <Copy size={12} className="text-slate-500 group-hover/copy:text-white ml-auto" />
                                         </div>

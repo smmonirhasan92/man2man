@@ -1,0 +1,42 @@
+name: Deploy to Hostinger VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          script: |
+            # Navigate to the project directory - Update this path if needed
+            cd /var/www/man2man || exit
+
+            # Pull latest changes
+            git pull origin main
+
+            # Install and Build Backend
+            cd backend
+            npm install
+            
+            # Navigate to Frontend
+            cd ../frontend
+            npm install
+            npm run build
+            
+            # Restart Application via PM2 from the root
+            cd ..
+            pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
+            pm2 save

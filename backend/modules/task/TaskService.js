@@ -49,11 +49,40 @@ class TaskService {
             const targetServerId = planDetails.server_id || 'SERVER_01';
             console.log(`[TaskService] Routing to Server Group: ${targetServerId}`);
 
-            // 2. Fetch Tasks for this SPECIFIC Server Group
-            const filteredTasks = await TaskAd.find({
-                is_active: true,
-                server_id: targetServerId // STRICT MATCH
-            }).sort({ priority: -1 });
+            // [REDIS] Check Cache
+            const redisConfig = require('../../config/redis');
+            const cacheKey = `tasks_server_${targetServerId}`;
+            let filteredTasks = null;
+
+            if (redisConfig.client.isOpen) {
+                try {
+                    const cached = await redisConfig.client.get(cacheKey);
+                    if (cached) {
+                        filteredTasks = JSON.parse(cached);
+                        console.log(`[TaskService] Redis Cache Hit: ${cacheKey}`);
+                    }
+                } catch (e) {
+                    console.warn("Redis Get Error:", e.message);
+                }
+            }
+
+            if (!filteredTasks) {
+                // 2. Fetch Tasks for this SPECIFIC Server Group
+                filteredTasks = await TaskAd.find({
+                    is_active: true,
+                    server_id: targetServerId // STRICT MATCH
+                }).sort({ priority: -1 });
+
+                // [REDIS] Store Cache
+                if (redisConfig.client.isOpen) {
+                    try {
+                        await redisConfig.client.set(cacheKey, JSON.stringify(filteredTasks), { EX: 3600 });
+                        console.log(`[TaskService] Redis Cache Set: ${cacheKey}`);
+                    } catch (e) {
+                        console.warn("Redis Set Error:", e.message);
+                    }
+                }
+            }
 
             if (planDetails.daily_limit > 0) {
                 console.log(`[DEBUG] Plan Limit: ${planDetails.daily_limit}. Available: ${filteredTasks.length}`);

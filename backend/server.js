@@ -137,6 +137,13 @@ app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
 // app.use('/api/settings', settingsRoutes); // Cleaned
 
+// --- GLOBAL ERROR HANDLER ---
+const Logger = require('./modules/common/Logger');
+app.use((err, req, res, next) => {
+    Logger.error(`[GLOBAL ERROR] ${req.method} ${req.url} - ${err.message}`, err.stack);
+    res.status(500).json({ message: 'Internal Server Error' });
+});
+
 app.use((req, res) => {
     console.error(`[FALLBACK 404] No route matched for ${req.url}`);
     res.status(404).json({ message: 'Route not found (Fallback)' });
@@ -235,7 +242,7 @@ systemNamespace.on('connection', (socket) => {
 
 
 
-const Logger = require('./modules/common/Logger');
+// Logger already required above
 
 // Global Error Handlers
 process.on('uncaughtException', (err) => {

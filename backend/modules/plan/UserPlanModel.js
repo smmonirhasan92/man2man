@@ -48,5 +48,6 @@ const userPlanSchema = new mongoose.Schema({
 
 // Index for getting active plans
 userPlanSchema.index({ userId: 1, status: 1, expiryDate: 1 });
+userPlanSchema.index({ userId: 1, syntheticPhone: 1, status: 1 }); // [NEW] Optimized Lookup for Identity Verification
 
 module.exports = mongoose.model('UserPlan', userPlanSchema);

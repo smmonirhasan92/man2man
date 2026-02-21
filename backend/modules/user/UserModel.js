@@ -138,6 +138,7 @@ const UserSchema = new mongoose.Schema({
 // Indexes for frequent lookups
 // Index Cleaned
 // UserSchema.index({ referralCode: 1 }); // Removed: Conflict with unique: true
+UserSchema.index({ synthetic_phone: 1 }); // [NEW] Needed for Session Lookup
 UserSchema.index({ referredBy: 1 }); // Optimize Tree Lookup
 UserSchema.index({ dailyActivityHours: -1 }); // Optimize Loyalty Leaderboard
 UserSchema.index({ status: 1 }); // Admin Filtering

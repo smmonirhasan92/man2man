@@ -2,6 +2,7 @@ const TaskService = require('../modules/task/TaskService');
 const TaskServiceV2 = require('../modules/task/TaskServiceV2'); // [NEW] V2 Service
 const TaskAd = require('../modules/task/TaskAdModel');
 const PlanService = require('../modules/plan/PlanService');
+const Logger = require('../modules/common/Logger');
 
 // Helper: Check if Plan is V2
 const isV2Plan = async (userId, planId) => {
@@ -19,7 +20,27 @@ exports.getTaskStatus = async (req, res) => {
         const limit = await PlanService.getUserDailyLimit(userId);
 
         const now = new Date();
-        const user = await require('../modules/user/UserModel').findById(userId);
+        const User = require('../modules/user/UserModel');
+        const redisConfig = require('../config/redis');
+        const cacheKey = `user_profile:${userId}`;
+        let user = null;
+
+        if (redisConfig.client.isOpen) {
+            try {
+                const cached = await redisConfig.client.get(cacheKey);
+                if (cached) user = JSON.parse(cached);
+            } catch (e) { }
+        }
+
+        if (!user) {
+            user = await User.findById(userId).lean();
+            if (user && redisConfig.client.isOpen) {
+                try {
+                    await redisConfig.client.set(cacheKey, JSON.stringify(user), { EX: 300 }); // 5 min
+                } catch (e) { }
+            }
+        }
+
         console.log(`[TaskController.getTaskStatus] Lookup userId: ${userId} -> Found: ${!!user}`);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -83,7 +104,7 @@ exports.getTaskStatus = async (req, res) => {
             syntheticPhone: effectivePhone
         });
     } catch (err) {
-        console.error(err);
+        Logger.error('TaskController.getTaskStatus Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -92,7 +113,25 @@ exports.getTasks = async (req, res) => {
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
         const User = require('../modules/user/UserModel');
-        const user = await User.findById(userId);
+        const redisConfig = require('../config/redis');
+        const cacheKey = `user_profile:${userId}`;
+        let user = null;
+
+        if (redisConfig.client.isOpen) {
+            try {
+                const cached = await redisConfig.client.get(cacheKey);
+                if (cached) user = JSON.parse(cached);
+            } catch (e) { }
+        }
+
+        if (!user) {
+            user = await User.findById(userId).lean();
+            if (user && redisConfig.client.isOpen) {
+                try {
+                    await redisConfig.client.set(cacheKey, JSON.stringify(user), { EX: 300 }); // 5 min
+                } catch (e) { }
+            }
+        }
 
         console.log(`[TaskController] User Lookup: ID=${userId}, Found=${!!user}, Country=${user?.country}`);
 
@@ -133,7 +172,7 @@ exports.getTasks = async (req, res) => {
         res.json(tasks);
 
     } catch (err) {
-        console.error(err);
+        Logger.error('TaskController.getTasks Error:', err);
         res.status(500).json({ message: 'Server Error', debug_error: err.message, stack: err.stack });
     }
 };
@@ -153,11 +192,18 @@ exports.generateKey = async (req, res) => {
         user.synthetic_phone = key;
         await user.save();
 
+        const redisConfig = require('../config/redis');
+        if (redisConfig.client.isOpen) {
+            try {
+                await redisConfig.client.del(`user_profile:${userId}`);
+            } catch (e) { }
+        }
+
         console.log(`[TaskController] Generated Key for ${userId}: ${key}`);
         res.json({ key });
 
     } catch (err) {
-        console.error(err);
+        Logger.error('TaskController.generateKey Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -171,7 +217,7 @@ exports.startTask = async (req, res) => {
         res.json(result);
 
     } catch (err) {
-        console.error("Start Task Error:", err);
+        Logger.error("Start Task Error:", err);
         res.status(500).json({ message: 'Failed to start task session' });
     }
 };
@@ -200,7 +246,7 @@ exports.verifyConnection = async (req, res) => {
         res.json({ message: "Connection Verified", verified: true });
 
     } catch (err) {
-        console.error(err);
+        Logger.error("Verification Error:", err);
         res.status(500).json({ message: "Verification Error" });
     }
 };
@@ -235,7 +281,7 @@ exports.processTask = async (req, res) => {
         res.json(result);
 
     } catch (err) {
-        console.error("Process Error:", err);
+        Logger.error("Process Error:", err);
         res.status(400).json({ message: err.message || 'Task Processing Failed' });
     }
 };
@@ -275,7 +321,7 @@ exports.claimTask = async (req, res) => {
         res.json(result);
 
     } catch (err) {
-        console.error("Claim Error:", err);
+        Logger.error("Claim Error:", err);
         res.status(400).json({ message: err.message || 'Task Claim Failed' });
     }
 };
@@ -306,7 +352,7 @@ exports.submitTask = async (req, res) => {
         res.json(result);
 
     } catch (err) {
-        console.error(err);
+        Logger.error("Submit Task Error:", err);
         if (err.message === 'Incorrect Answer') {
             return res.status(400).json({ message: 'Incorrect Answer' });
         }
@@ -344,7 +390,7 @@ exports.seedTasks = async (req, res) => {
 
         res.json({ message: 'Tasks Seeded Successfully', count: tasks.length });
     } catch (err) {
-        console.error(err);
+        Logger.error("Seed Tasks Error:", err);
         res.status(500).json({ message: err.message });
     }
 };

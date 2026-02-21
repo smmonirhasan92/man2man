@@ -173,13 +173,33 @@ exports.getMe = async (req, res) => {
             console.log(`[Server Sim] Plan Activated for User: ${userId}`);
         }
 
-        const user = await User.findById(userId).select('-password');
+        const User = require('../user/UserModel');
+        const redisConfig = require('../../config/redis');
+        const cacheKey = `user_profile:${userId}`;
+        let user = null;
+
+        if (redisConfig.client.isOpen) {
+            try {
+                const cached = await redisConfig.client.get(cacheKey);
+                if (cached) user = JSON.parse(cached);
+            } catch (e) { }
+        }
+
+        if (!user) {
+            user = await User.findById(userId).select('-password').lean();
+            if (user && redisConfig.client.isOpen) {
+                try {
+                    // Profile/Balance data needs shorter TTL
+                    await redisConfig.client.set(cacheKey, JSON.stringify(user), { EX: 60 });
+                } catch (e) { }
+            }
+        }
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const userData = user.toObject();
+        const userData = user;
 
         // [ARCHITECTURAL FIX] Single Source of Truth: wallet.*
         const wallet = user.wallet || {}; // DEFENSIVE CHECK
