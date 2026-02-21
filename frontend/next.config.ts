@@ -66,7 +66,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  output: 'export' as const, // Enabled for SFTP/Static Hosting
+  // output: 'export' as const, // Disabled for PM2 Next Start
   images: {
     remotePatterns: [
       { protocol: 'https' as const, hostname: 'flagcdn.com' },
