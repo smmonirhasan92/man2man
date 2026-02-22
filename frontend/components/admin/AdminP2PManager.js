@@ -11,6 +11,8 @@ export default function AdminP2PManager() {
     const [trades, setTrades] = useState([]);
     const [commissions, setCommissions] = useState([]); // [REVENUE TRACKING]
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+    const [securityModal, setSecurityModal] = useState({ isOpen: false, tradeId: null });
+    const [secKeys, setSecKeys] = useState(['', '', '']);
 
     useEffect(() => {
         fetchMarket();
@@ -35,21 +37,24 @@ export default function AdminP2PManager() {
     };
 
     const approve = async (tradeId) => {
-        setModal({
-            isOpen: true,
-            title: 'Approve Release?',
-            message: 'This will deduct 2% fee and release funds to the buyer.',
-            confirmText: 'Approve & Release',
-            onConfirm: async () => {
-                try {
-                    await api.post('/p2p/admin/approve', { tradeId });
-                    toast.success("Approved & Released!");
-                    fetchMarket();
-                } catch (e) {
-                    toast.error(e.response?.data?.message || "Failed");
-                }
-            }
-        });
+        setSecKeys(['', '', '']);
+        setSecurityModal({ isOpen: true, tradeId });
+    };
+
+    const submitSecureApprove = async () => {
+        try {
+            await api.post('/p2p/admin/approve', {
+                tradeId: securityModal.tradeId,
+                secKey1: secKeys[0],
+                secKey2: secKeys[1],
+                secKey3: secKeys[2]
+            });
+            toast.success("Approved & Released Securely!");
+            fetchMarket();
+            setSecurityModal({ isOpen: false, tradeId: null });
+        } catch (e) {
+            toast.error(e.response?.data?.message || "Security Verification Failed");
+        }
     };
 
     const resolve = async (tradeId, resolution) => {
@@ -192,6 +197,52 @@ export default function AdminP2PManager() {
                 message={modal.message}
                 confirmText={modal.confirmText || 'Confirm'}
             />
+
+            {/* 3-Layer Security Modal */}
+            {securityModal.isOpen && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setSecurityModal({ isOpen: false })}></div>
+                    <div className="relative bg-[#0a0f1e] border-2 border-red-500/50 rounded-2xl p-6 w-full max-w-sm shadow-[0_0_50px_-12px_rgba(239,68,68,0.5)]">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                                <span className="text-2xl text-red-500 font-black">!</span>
+                            </div>
+                            <h2 className="text-red-500 font-black text-xl uppercase tracking-widest">Security Check</h2>
+                            <p className="text-xs text-slate-400 mt-2">Enter your 3 Secret Keys to authorize this P2P Release.</p>
+                        </div>
+
+                        <div className="space-y-3 mb-6">
+                            {[0, 1, 2].map((i) => (
+                                <input
+                                    key={i}
+                                    type="password"
+                                    placeholder={`Secret Key ${i + 1}`}
+                                    value={secKeys[i]}
+                                    onChange={(e) => {
+                                        const newKeys = [...secKeys];
+                                        newKeys[i] = e.target.value;
+                                        setSecKeys(newKeys);
+                                    }}
+                                    className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white text-center tracking-[0.5em] focus:outline-none focus:border-red-500 transition-colors"
+                                />
+                            ))}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setSecurityModal({ isOpen: false })} className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm hover:bg-slate-700 transition">
+                                CANCEL
+                            </button>
+                            <button
+                                onClick={submitSecureApprove}
+                                disabled={secKeys.some(k => !k)}
+                                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-black text-sm hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+                            >
+                                AUTHORIZE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -112,6 +112,26 @@ exports.completeTransaction = async (req, res) => {
             return res.status(400).json({ message: 'Transaction already processed' });
         }
 
+        // --- 3-LAYER SECURITY CHECK FOR SUPER ADMIN BALANCE CREATION ---
+        if (req.user.user.role === 'super_admin' && status === 'completed' && ['add_money', 'recharge', 'agent_recharge'].includes(transaction.type)) {
+            const { secKey1, secKey2, secKey3 } = req.body;
+
+            // Validate presence
+            if (!secKey1 || !secKey2 || !secKey3) {
+                return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Required to generate balance. Keys missing.' });
+            }
+
+            // Validate against .env secrets
+            const validKey1 = process.env.SUPER_ADMIN_SEC_KEY_1;
+            const validKey2 = process.env.SUPER_ADMIN_SEC_KEY_2;
+            const validKey3 = process.env.SUPER_ADMIN_SEC_KEY_3;
+
+            if (secKey1 !== validKey1 || secKey2 !== validKey2 || secKey3 !== validKey3) {
+                return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Failed! Unauthorized access attempt.' });
+            }
+        }
+        // --- END 3-LAYER SECURITY CHECK ---
+
         transaction.status = status;
         transaction.adminComment = comment || 'Processed by System';
 

@@ -11,6 +11,8 @@ export default function AdminRequestsPage() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+    const [securityModal, setSecurityModal] = useState({ isOpen: false, requestId: null, action: null });
+    const [secKeys, setSecKeys] = useState(['', '', '']);
 
     const fetchRequests = async () => {
         try {
@@ -28,22 +30,46 @@ export default function AdminRequestsPage() {
     }, []);
 
     const handleAction = (id, action) => {
-        setConfirmModal({
-            isOpen: true,
-            title: action === 'approve' ? 'Approve Request' : 'Reject Request',
-            message: `Are you sure you want to ${action} this request?`,
-            confirmText: action === 'approve' ? 'Approve' : 'Reject',
-            onConfirm: async () => {
-                try {
-                    await api.post('/admin/deposit-request', { requestId: id, action });
-                    fetchRequests();
-                    toast.success(`Request ${action}d`);
-                    setConfirmModal({ isOpen: false });
-                } catch (err) {
-                    toast.error('Action failed');
+        if (action === 'approve') {
+            // Trigger 3-Layer Security Modal for Approvals
+            setSecKeys(['', '', '']);
+            setSecurityModal({ isOpen: true, requestId: id, action: 'approve' });
+        } else {
+            // Standard Confirmation for Rejections
+            setConfirmModal({
+                isOpen: true,
+                title: 'Reject Request',
+                message: `Are you sure you want to reject this request?`,
+                confirmText: 'Reject',
+                onConfirm: async () => {
+                    try {
+                        await api.post('/admin/deposit-request', { requestId: id, action: 'reject' });
+                        fetchRequests();
+                        toast.success(`Request rejected`);
+                        setConfirmModal({ isOpen: false });
+                    } catch (err) {
+                        toast.error(err.response?.data?.message || 'Action failed');
+                    }
                 }
-            }
-        });
+            });
+        }
+    };
+
+    const submitSecureAction = async () => {
+        try {
+            await api.post('/admin/deposit-request', {
+                requestId: securityModal.requestId,
+                action: securityModal.action,
+                secKey1: secKeys[0],
+                secKey2: secKeys[1],
+                secKey3: secKeys[2]
+            });
+            fetchRequests();
+            toast.success(`Request Approved Securely!`);
+            setSecurityModal({ isOpen: false, requestId: null, action: null });
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Security Verification Failed');
+        }
     };
 
     return (
@@ -127,6 +153,52 @@ export default function AdminRequestsPage() {
                 message={confirmModal.message}
                 confirmText={confirmModal.confirmText}
             />
+
+            {/* 3-Layer Security Modal */}
+            {securityModal.isOpen && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setSecurityModal({ isOpen: false })}></div>
+                    <div className="relative bg-[#0a0f1e] border-2 border-red-500/50 rounded-2xl p-6 w-full max-w-sm shadow-[0_0_50px_-12px_rgba(239,68,68,0.5)]">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                                <span className="text-2xl text-red-500 font-black">!</span>
+                            </div>
+                            <h2 className="text-red-500 font-black text-xl uppercase tracking-widest">Security Check</h2>
+                            <p className="text-xs text-slate-400 mt-2">Enter your 3 Secret Keys to authorize this balance creation.</p>
+                        </div>
+
+                        <div className="space-y-3 mb-6">
+                            {[0, 1, 2].map((i) => (
+                                <input
+                                    key={i}
+                                    type="password"
+                                    placeholder={`Secret Key ${i + 1}`}
+                                    value={secKeys[i]}
+                                    onChange={(e) => {
+                                        const newKeys = [...secKeys];
+                                        newKeys[i] = e.target.value;
+                                        setSecKeys(newKeys);
+                                    }}
+                                    className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white text-center tracking-[0.5em] focus:outline-none focus:border-red-500 transition-colors"
+                                />
+                            ))}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setSecurityModal({ isOpen: false })} className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm hover:bg-slate-700 transition">
+                                CANCEL
+                            </button>
+                            <button
+                                onClick={submitSecureAction}
+                                disabled={secKeys.some(k => !k)}
+                                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-black text-sm hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
+                            >
+                                AUTHORIZE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

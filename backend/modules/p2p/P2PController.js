@@ -154,7 +154,25 @@ class P2PController {
     // POST /api/p2p/admin/approve
     async adminApprove(req, res) {
         try {
-            const { tradeId } = req.body;
+            const { tradeId, secKey1, secKey2, secKey3 } = req.body;
+
+            // --- 3-LAYER SECURITY CHECK FOR SUPER ADMIN ---
+            if (req.user.user.role === 'super_admin') {
+                if (!secKey1 || !secKey2 || !secKey3) {
+                    return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Required to release funds. Keys missing.' });
+                }
+
+                // Validate against .env secrets
+                const validKey1 = process.env.SUPER_ADMIN_SEC_KEY_1;
+                const validKey2 = process.env.SUPER_ADMIN_SEC_KEY_2;
+                const validKey3 = process.env.SUPER_ADMIN_SEC_KEY_3;
+
+                if (secKey1 !== validKey1 || secKey2 !== validKey2 || secKey3 !== validKey3) {
+                    return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Failed! Unauthorized access attempt.' });
+                }
+            }
+            // --- END 3-LAYER SECURITY CHECK ---
+
             const trade = await P2PService.adminApproveRelease(req.user.user.id, tradeId);
             res.json({ success: true, trade });
         } catch (e) {
