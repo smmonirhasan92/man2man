@@ -84,8 +84,8 @@ exports.updateUserBalance = async (req, res) => {
     const { amount, type, note, secKey1, secKey2, secKey3 } = req.body; // type: 'credit' or 'debit'
 
     // Safely extract role and adminId based on JWT payload structure
-    const role = getattr(req, 'user.user.role') || getattr(req, 'user.role');
-    const adminId = getattr(req, 'user.user.id') || getattr(req, 'user._id') || req.user._id;
+    const role = req.user?.user?.role || req.user?.role;
+    const adminId = req.user?.user?.id || req.user?._id;
 
     if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid Amount" });
 
@@ -115,6 +115,7 @@ exports.updateUserBalance = async (req, res) => {
         }
 
         const adjustment = type === 'debit' ? -Number(amount) : Number(amount);
+        if (!user.wallet) user.wallet = { main: 0, escrow_locked: 0, commission: 0 };
         const balBefore = user.wallet.main || 0;
         const balAfter = balBefore + adjustment;
 
