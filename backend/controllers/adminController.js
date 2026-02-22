@@ -214,3 +214,45 @@ exports.getFinancialStats = async (req, res) => {
         res.status(500).json({ message: "Stats Failure" });
     }
 };
+
+// [ADMIN] Referral Stats
+exports.getReferralStats = async (req, res) => {
+    try {
+        const totalReferrals = await User.countDocuments({ referredBy: { $ne: null } });
+        const commissionAgg = await Transaction.aggregate([
+            { $match: { type: 'referral_commission', status: 'completed' } },
+            { $group: { _id: null, totalEarned: { $sum: '$amount' } } }
+        ]);
+        const totalCommissionPaid = commissionAgg[0]?.totalEarned || 0;
+
+        res.json({
+            totalReferrals,
+            totalCommissionPaid,
+            activeNetworkSize: totalReferrals
+        });
+    } catch (e) {
+        console.error('Referral Stats Error:', e);
+        res.status(500).json({ message: 'Failed to fetch referral stats' });
+    }
+};
+
+// [ADMIN] User Referral Tree
+exports.getUserReferralTree = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id).select("username fullName referralCode");
+
+        if (!user || !user.referralCode) {
+            return res.json({ user, children: [] });
+        }
+
+        // Fetch direct downlines (Level 1)
+        const children = await User.find({ referredBy: user.referralCode })
+            .select("username fullName status wallet.income referralIncome createdAt");
+
+        res.json({ user, children });
+    } catch (e) {
+        console.error('User Tree Error:', e);
+        res.status(500).json({ message: 'Failed to fetch user tree' });
+    }
+};

@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const agentController = require('../controllers/agentController');
 const userController = require('../controllers/userController');
 // const gameController = require('../controllers/gameController');
-// const settingsController = require('../controllers/settingsController');
+const settingsController = require('../controllers/settingsController');
 
 const User = require('../modules/user/UserModel');
 
@@ -53,12 +53,12 @@ router.get('/audit/financial', authMiddleware, adminCheck, adminController.getFi
 // router.post('/game-status', authMiddleware, adminCheck, adminController.updateGameStatus);
 
 // Global Settings
-// router.get('/settings/global', authMiddleware, adminCheck, adminController.getGlobalSettings);
-// router.post('/settings/global', authMiddleware, adminCheck, adminController.updateGlobalSettings);
+router.get('/settings/global', authMiddleware, adminCheck, settingsController.getGlobalSettings);
+router.post('/settings/global', authMiddleware, adminCheck, settingsController.updateGlobalSettings);
 
 // System Settings (Maintenance, etc)
-// router.get('/settings/system', authMiddleware, adminCheck, adminController.getSystemSettings);
-// router.post('/settings/system', authMiddleware, adminCheck, adminController.updateSystemSettings);
+router.get('/settings/system', authMiddleware, adminCheck, settingsController.getSystemSettings);
+router.post('/settings/system', authMiddleware, adminCheck, settingsController.updateSystemSettings);
 router.get('/settings/public', (req, res) => res.json({ message: "Settings Public Placeholder" }));
 // adminController.getPublicSettings
 
@@ -93,8 +93,8 @@ router.post('/user/:id/balance', authMiddleware, adminCheck, adminController.upd
 // router.get('/user/:id/plans', authMiddleware, adminCheck, adminController.getUserPlans);
 
 // Referral Stats
-// router.get('/stats/referrals', authMiddleware, adminCheck, adminController.getReferralStats);
-// router.get('/user/:id/referrals-tree', authMiddleware, adminCheck, adminController.getUserReferralTree);
+router.get('/stats/referrals', authMiddleware, adminCheck, adminController.getReferralStats);
+router.get('/user/:id/referrals-tree', authMiddleware, adminCheck, adminController.getUserReferralTree);
 
 
 // Account Plans / Tiers
