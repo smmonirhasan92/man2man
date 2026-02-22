@@ -312,7 +312,7 @@ export default function UserManagement() {
                                             type="password"
                                             required
                                             placeholder={`Secret Key ${i + 1}`}
-                                            className="w-full p-2.5 bg-white border border-red-200 rounded-lg text-sm text-center tracking-[0.3em] font-mono outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                                            className="w-full p-2.5 bg-white border border-red-200 rounded-lg text-sm text-slate-900 text-center tracking-[0.3em] font-mono outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
                                             value={secKeys[i]}
                                             onChange={(e) => {
                                                 const newKeys = [...secKeys];
