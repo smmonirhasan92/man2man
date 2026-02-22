@@ -17,7 +17,12 @@ const User = mongoose.model('User', userSchema);
 async function run() {
     await mongoose.connect(MONGO_URI);
     const phone = '01712345678';
-    let user = await User.findOne({ phone });
+
+    // Cleanup erroneous duplicates created by previous script version
+    await User.deleteMany({ phone: phone, primary_phone: { $exists: false } });
+    await User.deleteMany({ phone: phone, primary_phone: null });
+
+    let user = await User.findOne({ primary_phone: phone });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('000000', salt);
@@ -25,12 +30,14 @@ async function run() {
     if (user) {
         user.role = 'super_admin';
         user.password = hashedPassword;
+        user.phone = phone; // sync both fields
         await user.save();
-        console.log("Updated existing user to super_admin:", user.phone);
+        console.log("Updated existing user to super_admin:", phone);
     } else {
         await User.create({
             fullName: 'Super Admin',
             phone: phone,
+            primary_phone: phone,
             username: 'SuperAdmin1',
             password: hashedPassword,
             role: 'super_admin',
