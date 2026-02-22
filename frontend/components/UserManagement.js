@@ -18,6 +18,7 @@ export default function UserManagement() {
     const [balanceModal, setBalanceModal] = useState({ show: false, userId: null, type: 'credit', username: '' });
     const [amount, setAmount] = useState('');
     const [note, setNote] = useState('');
+    const [secKeys, setSecKeys] = useState(['', '', '']); // [SECURITY] 3-Layer Keys
 
     const [resetModal, setResetModal] = useState({ show: false, userId: null, username: '' });
     const [newPassword, setNewPassword] = useState('');
@@ -63,12 +64,16 @@ export default function UserManagement() {
             await api.post(`/admin/user/${balanceModal.userId}/balance`, {
                 amount,
                 type: balanceModal.type,
-                comment: note || 'Admin Manual Adjustment'
+                comment: note || 'Admin Manual Adjustment',
+                secKey1: secKeys[0], // [SECURITY] Include keys
+                secKey2: secKeys[1],
+                secKey3: secKeys[2]
             });
             toast.success('Balance Updated Successfully');
             setBalanceModal({ show: false, userId: null, type: 'credit', username: '' });
             setAmount('');
             setNote('');
+            setSecKeys(['', '', '']); // Reset keys
             fetchUsers();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to update balance');
@@ -294,8 +299,33 @@ export default function UserManagement() {
                                     onChange={e => setNote(e.target.value)}
                                 />
                             </div>
+
+                            {/* 3-LAYER SECURITY INPUTS (Only for Credits) */}
+                            {balanceModal.type === 'credit' && (
+                                <div className="space-y-2 mt-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+                                    <label className="block text-xs font-bold text-red-600 uppercase mb-2 flex items-center gap-1">
+                                        <Shield className="w-3 h-3" /> 3-Layer Security Required
+                                    </label>
+                                    {[0, 1, 2].map((i) => (
+                                        <input
+                                            key={i}
+                                            type="password"
+                                            required
+                                            placeholder={`Secret Key ${i + 1}`}
+                                            className="w-full p-2.5 bg-white border border-red-200 rounded-lg text-sm text-center tracking-[0.3em] font-mono outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                                            value={secKeys[i]}
+                                            onChange={(e) => {
+                                                const newKeys = [...secKeys];
+                                                newKeys[i] = e.target.value;
+                                                setSecKeys(newKeys);
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={() => setBalanceModal({ show: false })} className="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Cancel</button>
+                                <button type="button" onClick={() => { setBalanceModal({ show: false }); setSecKeys(['', '', '']); }} className="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Cancel</button>
                                 <button type="submit" className={`flex-1 py-3.5 text-white font-bold rounded-xl transition shadow-lg ${balanceModal.type === 'credit' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'}`}>
                                     Confirm
                                 </button>
