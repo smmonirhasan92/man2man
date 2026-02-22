@@ -57,8 +57,8 @@ router.get('/settings/global', authMiddleware, adminCheck, settingsController.ge
 router.post('/settings/global', authMiddleware, adminCheck, settingsController.updateGlobalSettings);
 
 // System Settings (Maintenance, etc)
-router.get('/settings/system', authMiddleware, adminCheck, settingsController.getSystemSettings);
-router.post('/settings/system', authMiddleware, adminCheck, settingsController.updateSystemSettings);
+// router.get('/settings/system', authMiddleware, adminCheck, settingsController.getSystemSettings);
+// router.post('/settings/system', authMiddleware, adminCheck, settingsController.updateSystemSettings);
 router.get('/settings/public', (req, res) => res.json({ message: "Settings Public Placeholder" }));
 // adminController.getPublicSettings
 
