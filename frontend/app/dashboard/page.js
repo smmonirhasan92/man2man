@@ -15,6 +15,8 @@ import { AnimatePresence } from 'framer-motion';
 import ConnectionFlow from '../../components/ConnectionFlow';
 
 import TaskPanel from '../../components/tasks/TaskPanel';
+import HeaderBalance from '../../components/layout/HeaderBalance';
+import IncomeDisplay from '../../components/layout/IncomeDisplay';
 import WalletSwap from '../../components/wallet/WalletSwap';
 import ProfileDrawer from '../../components/dashboard/ProfileDrawer';
 import P2PDashboard from '../../components/p2p/P2PDashboard';
@@ -83,7 +85,7 @@ function DashboardContent() {
 
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">
 
-                {/* 1. Header (Re-Engineered) */}
+                {/* 1. Header (Compact Style Recreated) */}
                 <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
@@ -108,6 +110,11 @@ function DashboardContent() {
                             </div>
                         </div>
                     </div>
+                    {/* Interactive Tap-to-View Wallet Display */}
+                    <div className="flex items-center gap-2">
+                        <IncomeDisplay amount={user?.wallet?.income} />
+                        <HeaderBalance balance={user?.wallet_balance} />
+                    </div>
                 </div>
 
                 <ProfileDrawer
@@ -120,46 +127,41 @@ function DashboardContent() {
                     }}
                 />
 
-                {/* 2. Balance Focus - Large, Bold Premium Font */}
-                <div className="w-full px-6 mb-2">
-                    <BalanceDisplay user={user} />
-                </div>
-
                 {/* 3. USA Gateway Card */}
                 {user?.synthetic_phone ? (
                     <USAGatewayCard user={user} />
                 ) : (
                     <div className="w-full px-6 mb-2">
-                        <Link href="/marketplace" className="block bg-red-900/50 border border-red-500/50 p-4 rounded-xl text-center hover:bg-red-900/70 transition">
-                            <p className="text-red-200 font-bold text-xs uppercase animate-pulse">⚠️ No USA Connection Found</p>
-                            <p className="text-white font-bold text-sm mt-1">Rent Server to Unlock Verification Key</p>
+                        <Link href="/marketplace" className="block bg-red-900/50 border border-red-500/50 p-3 rounded-xl text-center hover:bg-red-900/70 transition">
+                            <p className="text-red-200 font-bold text-[10px] uppercase animate-pulse">⚠️ No USA Connection Found</p>
+                            <p className="text-white font-bold text-xs mt-1">Rent Server to Unlock Verification Key</p>
                         </Link>
                     </div>
                 )}
 
                 {/* 4. Resotred Image Slider */}
-                <div className="w-full px-6 relative z-0 mb-4">
+                <div className="w-full px-6 relative z-0 mb-3">
                     <div className="p-1 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/20 relative bg-white/5 backdrop-blur-sm">
                         <ImageSlider />
                     </div>
                 </div>
 
-                {/* 5. Finance Priority Actions */}
-                <div className="w-full px-6 mb-4 grid grid-cols-2 gap-4">
-                    <button onClick={() => setP2pMode('buy')} className="bg-[#0f1f33] border border-emerald-500/30 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-[#132840] hover:border-emerald-500/60 transition shadow-xl group relative overflow-hidden">
+                {/* 5. Finance Priority Actions - Compact */}
+                <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
+                    <button onClick={() => setP2pMode('buy')} className="bg-[#0f1f33] border border-emerald-500/30 p-3 rounded-xl flex items-center justify-center gap-3 hover:bg-[#132840] hover:border-emerald-500/60 transition shadow-lg group relative overflow-hidden">
                         <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] group-hover:scale-110 transition-transform">
-                            <Plus className="w-6 h-6" strokeWidth={3} />
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform">
+                            <Plus className="w-4 h-4" strokeWidth={3} />
                         </div>
-                        <span className="text-white font-black text-sm uppercase tracking-widest mt-1">Deposit</span>
+                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Deposit</span>
                     </button>
 
-                    <button onClick={() => setP2pMode('sell')} className="bg-[#0f1f33] border border-red-500/30 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-[#132840] hover:border-red-500/60 transition shadow-xl group relative overflow-hidden">
+                    <button onClick={() => setP2pMode('sell')} className="bg-[#0f1f33] border border-red-500/30 p-3 rounded-xl flex items-center justify-center gap-3 hover:bg-[#132840] hover:border-red-500/60 transition shadow-lg group relative overflow-hidden">
                         <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] group-hover:scale-110 transition-transform">
-                            <ArrowDownLeft className="w-6 h-6" strokeWidth={3} />
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-110 transition-transform">
+                            <ArrowDownLeft className="w-4 h-4" strokeWidth={3} />
                         </div>
-                        <span className="text-white font-black text-sm uppercase tracking-widest mt-1">Withdraw</span>
+                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Withdraw</span>
                     </button>
                 </div>
 

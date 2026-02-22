@@ -75,9 +75,9 @@ export default function WalletSwap({ user, onSuccess }) {
     };
 
     return (
-        <div className="w-full px-6 mb-6">
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 border border-white/10 shadow-xl backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4">
+        <div className="w-full px-6 mb-3">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-3 border border-white/10 shadow-xl backdrop-blur-md">
+                <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <ArrowRightLeft className="w-4 h-4 text-cyan-400" /> Wallet Bridge
                     </h3>
@@ -89,16 +89,13 @@ export default function WalletSwap({ user, onSuccess }) {
                     </button>
                 </div>
 
-                <div className="flex items-center gap-2 mb-4 relative">
+                <div className="flex items-center gap-2 mb-3 relative">
                     {/* From */}
                     <div className={`flex-1 p-2 rounded-xl border ${isIncomeToMain ? 'border-green-500/30 bg-green-500/5' : (isMainToGame ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-cyan-500/30 bg-cyan-500/5')} transition-all`}>
-                        <div className="text-[9px] text-slate-400 uppercase font-bold flex items-center gap-1">
-                            {isIncomeToMain ? <DollarSign className="w-3 h-3" /> : (isMainToGame ? <Wallet className="w-3 h-3" /> : <Gamepad2 className="w-3 h-3" />)} From
+                        <div className="text-[9px] text-slate-400 uppercase font-bold flex items-center gap-1 mb-0.5">
+                            From: {getSourceWallet()}
                         </div>
-                        <div className="text-xs font-bold text-white mt-1">
-                            {getSourceWallet()}
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">
+                        <div className="text-xs font-bold text-white leading-none">
                             {/* [FIX] Strict Dollar Formatting for Income Wallet to match Header */}
                             {isIncomeToMain
                                 ? `$${Number(getSourceBalance()).toFixed(2)}`
@@ -108,42 +105,40 @@ export default function WalletSwap({ user, onSuccess }) {
                     </div>
 
                     {/* Arrow */}
-                    <div className="absolute left-1/2 -translate-x-1/2 bg-slate-700 rounded-full p-1 border border-slate-600 z-10 transition-transform duration-300 hover:rotate-180 cursor-pointer" onClick={cycleDirection}>
+                    <div className="bg-slate-700 rounded-full p-1 border border-slate-600 z-10 transition-transform duration-300 hover:rotate-180 cursor-pointer flex-shrink-0" onClick={cycleDirection}>
                         <ArrowRightLeft className="w-3 h-3 text-slate-300" />
                     </div>
 
                     {/* To */}
                     <div className={`flex-1 p-2 rounded-xl border ${isIncomeToMain ? 'border-yellow-500/30 bg-yellow-500/5' : (!isMainToGame ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-cyan-500/30 bg-cyan-500/5')} transition-all text-right`}>
-                        <div className="text-[9px] text-slate-400 uppercase font-bold flex items-center justify-end gap-1">
-                            To {isIncomeToMain ? <Wallet className="w-3 h-3" /> : (isMainToGame ? <Gamepad2 className="w-3 h-3" /> : <Wallet className="w-3 h-3" />)}
-                        </div>
-                        <div className="text-xs font-bold text-white mt-1">
-                            {getDestWallet()}
+                        <div className="text-[9px] text-slate-400 uppercase font-bold flex items-center justify-end gap-1 mb-0.5">
+                            To: {getDestWallet()}
                         </div>
                     </div>
                 </div>
 
-                <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono">
-                        {isIncomeToMain ? '$' : '৳'}
-                    </span>
-                    <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Amount"
-                        className="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-8 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
-                    />
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono text-xs">
+                            {isIncomeToMain ? '$' : '৳'}
+                        </span>
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="Amount"
+                            className="w-full h-full bg-slate-950/50 border border-slate-700 rounded-xl pl-6 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
+                        />
+                    </div>
+                    {/* Action Button */}
+                    <button
+                        onClick={handleSwap}
+                        disabled={loading || !amount}
+                        className="w-1/3 py-2 rounded-xl bg-gradient-to-r from-amber-200 to-yellow-400 text-black font-bold text-xs shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                        {loading ? 'Wait...' : 'Transfer'}
+                    </button>
                 </div>
-
-                {/* Action Button */}
-                <button
-                    onClick={handleSwap}
-                    disabled={loading || !amount}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-200 to-yellow-400 text-black font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {loading ? 'Processing...' : 'Transfer Funds'}
-                </button>
 
                 {/* Fee Warning */}
                 {isIncomeToMain && (
