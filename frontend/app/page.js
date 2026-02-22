@@ -24,7 +24,9 @@ export default function LoginPage() {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
 
-            if (res.data.user.role === 'admin' || res.data.user.role === 'super_admin') {
+            const adminRoles = ['admin', 'super_admin', 'employee_admin'];
+
+            if (adminRoles.includes(res.data.user.role)) {
                 router.push('/admin/dashboard');
             } else if (res.data.user.role === 'agent') {
                 router.push('/agent/dashboard');

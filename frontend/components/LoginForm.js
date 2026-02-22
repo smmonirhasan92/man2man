@@ -34,7 +34,8 @@ export default function LoginForm() {
 
             // Redirect based on role
             setTimeout(() => {
-                if (user.role === 'admin' || user.role === 'super_admin') {
+                const adminRoles = ['admin', 'super_admin', 'employee_admin'];
+                if (adminRoles.includes(user.role)) {
                     router.push('/admin/dashboard');
                 } else {
                     router.push('/dashboard');
