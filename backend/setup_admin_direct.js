@@ -12,7 +12,7 @@ if (fs.existsSync('./.env.production')) {
     console.log("Loaded default .env");
 }
 
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/man2man';
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/universal_game_core_v1';
 console.log(`Connecting to: ${MONGO_URI.split('@').pop()}`); // Log safe URI part
 
 const userSchema = new mongoose.Schema({
