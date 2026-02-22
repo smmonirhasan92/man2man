@@ -162,10 +162,10 @@ class P2PController {
                     return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Required to release funds. Keys missing.' });
                 }
 
-                // Validate against .env secrets
-                const validKey1 = process.env.SUPER_ADMIN_SEC_KEY_1;
-                const validKey2 = process.env.SUPER_ADMIN_SEC_KEY_2;
-                const validKey3 = process.env.SUPER_ADMIN_SEC_KEY_3;
+                // Validate against .env secrets or user-provided defaults
+                const validKey1 = process.env.SUPER_ADMIN_SEC_KEY_1 || '1234';
+                const validKey2 = process.env.SUPER_ADMIN_SEC_KEY_2 || '2314';
+                const validKey3 = process.env.SUPER_ADMIN_SEC_KEY_3 || '3124';
 
                 if (secKey1 !== validKey1 || secKey2 !== validKey2 || secKey3 !== validKey3) {
                     return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Failed! Unauthorized access attempt.' });
