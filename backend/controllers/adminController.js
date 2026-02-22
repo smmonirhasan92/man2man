@@ -81,10 +81,30 @@ exports.mintUSC = async (req, res) => {
 // Update User Balance (Admin Manual Adjustment)
 exports.updateUserBalance = async (req, res) => {
     const { id } = req.params;
-    const { amount, type, note } = req.body; // type: 'credit' or 'debit'
-    const adminId = req.user._id;
+    const { amount, type, note, secKey1, secKey2, secKey3 } = req.body; // type: 'credit' or 'debit'
+
+    // Safely extract role and adminId based on JWT payload structure
+    const role = getattr(req, 'user.user.role') || getattr(req, 'user.role');
+    const adminId = getattr(req, 'user.user.id') || getattr(req, 'user._id') || req.user._id;
 
     if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid Amount" });
+
+    // --- 3-LAYER SECURITY CHECK FOR SUPER ADMIN BALANCE CREATION ---
+    if (role === 'super_admin' && type === 'credit') {
+        if (!secKey1 || !secKey2 || !secKey3) {
+            return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Required to generate balance. Keys missing.' });
+        }
+
+        // Validate against .env secrets
+        const validKey1 = process.env.SUPER_ADMIN_SEC_KEY_1;
+        const validKey2 = process.env.SUPER_ADMIN_SEC_KEY_2;
+        const validKey3 = process.env.SUPER_ADMIN_SEC_KEY_3;
+
+        if (secKey1 !== validKey1 || secKey2 !== validKey2 || secKey3 !== validKey3) {
+            return res.status(403).json({ message: 'SECURITY ALERT: 3-Layer Verification Failed! Unauthorized access attempt.' });
+        }
+    }
+    // --- END 3-LAYER SECURITY CHECK ---
 
     // const session = await mongoose.startSession();
     // session.startTransaction();

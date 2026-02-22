@@ -18,6 +18,7 @@ function UserDetailContent() {
     const [amount, setAmount] = useState('');
     const [type, setType] = useState('credit');
     const [comment, setComment] = useState('');
+    const [secKeys, setSecKeys] = useState(['', '', '']); // 3-Layer Security Keys
     const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
@@ -61,12 +62,26 @@ function UserDetailContent() {
 
     const handleBalanceUpdate = async () => {
         if (!amount) return;
+
+        // Require security keys for credit
+        if (type === 'credit' && secKeys.some(k => !k)) {
+            return toast.error("All 3 Security Keys are required to add balance.");
+        }
+
         setActionLoading(true);
         try {
-            await api.post(`/admin/user/${id}/balance`, { amount, type, comment });
+            await api.post(`/admin/user/${id}/balance`, {
+                amount,
+                type,
+                comment,
+                secKey1: secKeys[0],
+                secKey2: secKeys[1],
+                secKey3: secKeys[2]
+            });
             setBalanceModal(false);
             setAmount('');
             setComment('');
+            setSecKeys(['', '', '']);
             fetchUser();
             toast.success("Balance updated successfully");
         } catch (err) {
@@ -234,15 +249,40 @@ function UserDetailContent() {
                             placeholder="Admin Comment (Reason)"
                             value={comment}
                             onChange={e => setComment(e.target.value)}
-                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm mb-6 outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-24"
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm mb-4 outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-24"
                         />
+
+                        {/* 3-Layer Security (Only required for Credit) */}
+                        {type === 'credit' && (
+                            <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
+                                <h4 className="text-red-600 font-bold text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <ShieldAlert className="w-4 h-4" /> Security Authorization
+                                </h4>
+                                <div className="space-y-2">
+                                    {[0, 1, 2].map((i) => (
+                                        <input
+                                            key={i}
+                                            type="password"
+                                            placeholder={`Secret Key ${i + 1}`}
+                                            value={secKeys[i]}
+                                            onChange={(e) => {
+                                                const newKeys = [...secKeys];
+                                                newKeys[i] = e.target.value;
+                                                setSecKeys(newKeys);
+                                            }}
+                                            className="w-full bg-white border border-red-200 rounded-lg px-3 py-2 text-center tracking-[0.3em] font-bold text-red-700 outline-none focus:ring-2 focus:ring-red-400"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex gap-3">
                             <button onClick={() => setBalanceModal(false)} className="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl">Cancel</button>
                             <button
                                 onClick={handleBalanceUpdate}
-                                disabled={actionLoading}
-                                className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800"
+                                disabled={actionLoading || (type === 'credit' && secKeys.some(k => !k))}
+                                className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {actionLoading ? 'Processing...' : 'Confirm'}
                             </button>
