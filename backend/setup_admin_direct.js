@@ -1,10 +1,24 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const MONGO_URI = 'mongodb://127.0.0.1:27017/man2man';
+const fs = require('fs');
+const dotenv = require('dotenv');
+
+// Load environment variables prioritizing .env.production
+if (fs.existsSync('./.env.production')) {
+    dotenv.config({ path: './.env.production' });
+    console.log("Loaded .env.production");
+} else {
+    dotenv.config();
+    console.log("Loaded default .env");
+}
+
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/man2man';
+console.log(`Connecting to: ${MONGO_URI.split('@').pop()}`); // Log safe URI part
 
 const userSchema = new mongoose.Schema({
     fullName: String,
     phone: String,
+    primary_phone: String,
     username: String,
     password: String,
     role: String,
