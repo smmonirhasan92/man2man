@@ -36,17 +36,22 @@ async function run() {
     await User.deleteMany({ phone: phone, primary_phone: { $exists: false } });
     await User.deleteMany({ phone: phone, primary_phone: null });
 
-    let user = await User.findOne({ primary_phone: phone });
+    // Find ANY existing users with either the raw or prefixed phone
+    let users = await User.find({
+        primary_phone: { $in: [phone, `+88${phone}`] }
+    });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('000000', salt);
 
-    if (user) {
-        user.role = 'super_admin';
-        user.password = hashedPassword;
-        user.phone = phone; // sync both fields
-        await user.save();
-        console.log("Updated existing user to super_admin:", phone);
+    if (users && users.length > 0) {
+        for (let user of users) {
+            user.role = 'super_admin';
+            user.password = hashedPassword;
+            user.phone = user.phone || phone; // sync both fields safely
+            await user.save();
+            console.log("Updated existing user to super_admin:", user.primary_phone || user.phone);
+        }
     } else {
         await User.create({
             fullName: 'Super Admin',
