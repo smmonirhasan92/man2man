@@ -15,60 +15,15 @@ export default function AdminLotteryManager() {
         { name: 'Grand Jackpot', amount: 5000, winnersCount: 1, id: 1 },
         { name: '2nd Prize', amount: 1000, winnersCount: 2, id: 2 }
     ]);
-    const [multiplier, setMultiplier] = useState(5); // Legacy, will be overridden by Buffer mode usually
-    const [description, setDescription] = useState('');
-    const [profitBuffer, setProfitBuffer] = useState(20); // 20% default
-    const [lockDraw, setLockDraw] = useState(true); // Default to Protected Mode
-
     // [HYBRID] New States
     const [drawType, setDrawType] = useState('SALES_BASED');
-    const [durationMinutes, setDurationMinutes] = useState(60);
+    const [startTime, setStartTime] = useState(new Date(Date.now() + 60000).toISOString().slice(0, 16));
+    const [endTime, setEndTime] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 16));
     const [ticketPrice, setTicketPrice] = useState(20);
     const [targetWinnerId, setTargetWinnerId] = useState('');
 
-    // Gradient Generator State
-    const [genTotalBudget, setGenTotalBudget] = useState(10000);
-    const [genFirstPrize, setGenFirstPrize] = useState(5000);
-    const [genRemainingWinners, setGenRemainingWinners] = useState(19);
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const [manualWinnerTargets, setManualWinnerTargets] = useState({}); // Stores targetWinnerId per slot row
-
-    const generateGradient = () => {
-        const remainder = genTotalBudget - genFirstPrize;
-        if (remainder <= 0) return toast.error("First prize cannot exceed Total Budget");
-        const count = genRemainingWinners;
-        if (count < 1) return toast.error("Need at least 1 remaining winner");
-
-        // Sum of weights 1..N = N(N+1)/2
-        const sumWeights = (count * (count + 1)) / 2;
-        let newPrizes = [];
-        let allocated = 0;
-
-        // 1st Prize
-        newPrizes.push({ name: '1st Prize (Jackpot)', amount: Number(genFirstPrize), winnersCount: 1, id: Date.now() });
-
-        // Gradient
-        for (let i = 0; i < count; i++) {
-            const weight = count - i; // Descending weight
-            const share = Math.floor(remainder * (weight / sumWeights));
-            allocated += share;
-
-            newPrizes.push({
-                name: `Rank ${i + 2}`,
-                amount: share,
-                winnersCount: 1,
-                id: Date.now() + i + 1
-            });
-        }
-
-        // Adjust rounding errors by adding dust to the top ranked remainder prize
-        const dust = remainder - allocated;
-        if (dust > 0 && newPrizes.length > 1) {
-            newPrizes[1].amount += dust;
-        }
-
-        setPrizes(newPrizes);
-    };
 
     useEffect(() => {
         fetchStatus();
@@ -103,7 +58,6 @@ export default function AdminLotteryManager() {
     const updatePrize = (id, field, value) => setPrizes(prizes.map(p => p.id === id ? { ...p, [field]: value } : p));
 
     const totalPrizeBudget = prizes.reduce((sum, p) => sum + (p.amount * p.winnersCount), 0);
-    const targetRevenue = totalPrizeBudget * multiplier;
 
     const [editingSlotId, setEditingSlotId] = useState(null);
     const [editingTierName, setEditingTierName] = useState(null);
@@ -118,10 +72,10 @@ export default function AdminLotteryManager() {
                     const payload = {
                         prizes: prizes.map(({ name, amount, winnersCount }) => ({ name, amount, winnersCount })),
                         description,
-                        profitBuffer,
                         lockDrawUntilTargetMet: lockDraw,
                         drawType,
-                        durationMinutes: drawType === 'TIME_BASED' ? durationMinutes : 0,
+                        startTime: drawType === 'TIME_BASED' ? new Date(startTime).toISOString() : new Date().toISOString(),
+                        endTime: drawType === 'TIME_BASED' ? new Date(endTime).toISOString() : null,
                         ticketPrice,
                         targetWinnerId: targetWinnerId || undefined
                     };
@@ -295,11 +249,8 @@ export default function AdminLotteryManager() {
                                 {activeSlots.length === 0 ? (
                                     <tr><td colSpan="5" className="p-12 text-center opacity-30">No Active Lotteries</td></tr>
                                 ) : activeSlots.map((slot, idx) => {
-                                    // Financial Calculations
-                                    const totalPayout = slot.prizes && slot.prizes.length > 0
-                                        ? slot.prizes.reduce((sum, p) => sum + (p.amount * p.winnersCount), 0)
-                                        : slot.jackpot;
-                                    const profit = (slot.currentSales || 0) - totalPayout;
+                                    // Simplified Financials
+                                    const totalPayout = slot.prizeAmount || slot.jackpot || 0;
 
                                     return (
                                         <tr key={slot.slotId || idx} className="hover:bg-white/5 transition group">
@@ -319,19 +270,9 @@ export default function AdminLotteryManager() {
                                             </td>
                                             <td className="p-4">
                                                 <div className="space-y-1 text-xs">
-                                                    <div className="flex justify-between gap-4">
-                                                        <span className="text-slate-500">Collected:</span>
-                                                        <span className="text-emerald-400 font-mono font-bold">৳{(slot.currentSales || 0).toLocaleString()}</span>
-                                                    </div>
-                                                    <div className="flex justify-between gap-4">
-                                                        <span className="text-slate-500">Payout:</span>
-                                                        <span className="text-yellow-500 font-mono font-bold">৳{totalPayout.toLocaleString()}</span>
-                                                    </div>
-                                                    <div className="flex justify-between gap-4 border-t border-white/10 pt-1 mt-1">
-                                                        <span className="text-slate-500">Est. Profit:</span>
-                                                        <span className={`font-mono font-bold ${profit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                                                            ৳{profit.toLocaleString()}
-                                                        </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <Trophy className="w-3 h-3 text-yellow-500" />
+                                                        <span className="text-yellow-500 font-mono font-bold text-sm">৳{totalPayout.toLocaleString()}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -476,39 +417,6 @@ export default function AdminLotteryManager() {
                         </div>
 
                         <div className="space-y-4">
-                            {/* Simplified Quick Creator */}
-                            {/* Smart Gradient Generator */}
-                            {/* Smart Gradient Generator */}
-                            <div className="bg-white/5 p-4 rounded-lg border border-white/5 space-y-3 mb-6">
-                                <div className="flex justify-between items-center mb-2">
-                                    <h4 className="text-xs font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Zap className="w-3 h-3" /> Smart Gradient
-                                    </h4>
-                                    {editingTierName && (
-                                        <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/50 uppercase font-black tracking-widest animate-pulse">
-                                            ACTVY: {editingTierName}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="text-[10px] text-slate-500 uppercase">Total Budget</label>
-                                        <input type="number" value={genTotalBudget} onChange={e => setGenTotalBudget(Number(e.target.value))} className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] text-slate-500 uppercase">1st Prize</label>
-                                        <input type="number" value={genFirstPrize} onChange={e => setGenFirstPrize(Number(e.target.value))} className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-[10px] text-slate-500 uppercase">Additional Winners (Gradient)</label>
-                                        <input type="number" value={genRemainingWinners} onChange={e => setGenRemainingWinners(Number(e.target.value))} className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" />
-                                    </div>
-                                </div>
-                                <button onClick={generateGradient} className="w-full py-2 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold text-xs rounded hover:brightness-110 transition">
-                                    Generate Prize Structure
-                                </button>
-                            </div>
-
                             {/* [HYBRID] Draw Settings */}
                             <div className="bg-white/5 p-4 rounded-lg border border-white/5 space-y-3">
                                 <div>
@@ -524,15 +432,25 @@ export default function AdminLotteryManager() {
                                 </div>
 
                                 {drawType === 'TIME_BASED' && (
-                                    <div>
-                                        <label className="text-xs text-slate-500 uppercase">Duration (Minutes)</label>
-                                        <input
-                                            type="number"
-                                            value={durationMinutes}
-                                            onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                                            className="w-full bg-black/50 border border-white/10 rounded p-2 text-xs text-white mt-1"
-                                            min="1"
-                                        />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase">Start Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={startTime}
+                                                onChange={(e) => setStartTime(e.target.value)}
+                                                className="w-full bg-black/50 border border-blue-500/30 focus:border-blue-500 rounded p-2 text-xs text-blue-400 mt-1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase">End Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={endTime}
+                                                onChange={(e) => setEndTime(e.target.value)}
+                                                className="w-full bg-black/50 border border-red-500/30 focus:border-red-500 rounded p-2 text-xs text-red-400 mt-1"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
@@ -576,42 +494,6 @@ export default function AdminLotteryManager() {
                                 <button onClick={addPrizeTier} className="w-full py-2 border border-dashed border-white/20 text-slate-500 text-xs rounded hover:bg-white/5">+ Add Prize Tier</button>
                             </div>
 
-                            <div>
-                                <label className="text-xs text-slate-500 uppercase flex justify-between">
-                                    <span>Profit Buffer (%)</span>
-                                    <span className="text-pink-500 font-bold">{profitBuffer}%</span>
-                                </label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="500"
-                                    value={profitBuffer}
-                                    onChange={(e) => setProfitBuffer(Number(e.target.value))}
-                                    className="w-full accent-pink-600 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer mt-2"
-                                />
-                                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                                    <span>0% (Break Even)</span>
-                                    <span>500% (5x)</span>
-                                </div>
-                            </div>
-
-                            <div className="bg-black/40 p-3 rounded-lg border border-white/5 space-y-2">
-                                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                    <span className="text-slate-400 text-xs">Total Prize Pool</span>
-                                    <span className="text-yellow-500 font-bold font-mono">{totalPrizeBudget.toLocaleString()} TK</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 text-xs">Break Even Tickets</span>
-                                    <span className="text-white font-mono">{Math.ceil(totalPrizeBudget / ticketPrice)} Tix</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-pink-400 text-xs font-bold">Target for {profitBuffer}% Profit</span>
-                                    <span className="text-pink-500 font-bold font-mono bg-pink-500/10 px-2 rounded">
-                                        {Math.ceil((totalPrizeBudget * (1 + profitBuffer / 100)) / ticketPrice)} Tix
-                                    </span>
-                                </div>
-                            </div>
-
                             <div className="flex items-center gap-2 bg-white/5 p-3 rounded-lg cursor-pointer" onClick={() => setLockDraw(!lockDraw)}>
                                 <div className={`w-10 h-6 rounded-full relative transition ${lockDraw ? 'bg-emerald-500' : 'bg-slate-700'}`}>
                                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${lockDraw ? 'left-5' : 'left-1'}`}></div>
@@ -623,15 +505,17 @@ export default function AdminLotteryManager() {
                             </div>
 
                             <div className="pt-4 border-t border-white/10">
-                                <div className="flex justify-between text-xs mb-2">
-                                    <span className="text-slate-400">Total Budget</span>
-                                    <span className="text-white font-mono">{totalPrizeBudget.toLocaleString()}</span>
+                                <div className="flex justify-between items-center bg-black/40 p-3 rounded-lg border border-white/5 mb-4">
+                                    <span className="text-slate-400 text-xs">Total Prize Amount:</span>
+                                    <span className="text-yellow-500 font-bold font-mono">{totalPrizeBudget.toLocaleString()} TK</span>
                                 </div>
                                 <button
                                     onClick={createLottery}
                                     disabled={loading}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
                                 >
-                                    {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RocketIcon />} {editingSlotId ? 'Update Active Slot' : 'Launch System'}
+                                    {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
+                                    {editingSlotId ? 'Update Active Slot' : 'Launch Lottery'}
                                 </button>
                             </div>
                         </div>

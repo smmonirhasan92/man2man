@@ -33,12 +33,7 @@
 [TX_TRACE] Session [object Object] Ended.
    -> Normal User bought 15 tickets.
 
-   -> Triggering Force Draw (Waiting 7s for Spin Animation)...
-[LOTTERY_MANUAL] Finalizing Manual Draw for Slot 699c2db290bf62f4951a2dd6 with Winner 699bd8ded6dc678deed1c231
-[TX_TRACE] Starting Session...
-[TX_TRACE] Session Started & Transaction Begin. ID: [object Object]
-[TX_TRACE] Ending Session [object Object]...
-[TX_TRACE] Session [object Object] Ended.
+   -> Triggering Force Draw...
 
 [4] 📊 Verification Results (Sales-Based Manual Draw):
 Target Winner Balance: 49500 (Expected: ~54500)

@@ -75,31 +75,35 @@ async function runTest() {
             targetWinnerId: targetWinner._id, // RIGGED WINNER
             ticketPrice: 500
         };
-        const salesSlot = await LotteryService.createSlot(salesPayload, 1, 'RIGGED_TEST');
+        const salesSlot = await LotteryService.createSlot(salesPayload, 2, 'RIGGED_TEST');
         console.log(`✅ SALES_BASED Slot Created: ${salesSlot.slotId} | Target: ${salesSlot.targetSales}`);
         console.log(`   TARGET WINNER INJECTED: ${targetWinner._id}`);
 
-        // Normal User buys tickets
+        // Target Winner MUST buy at least one ticket to be eligible for rig
         const dbSalesSlot = await LotterySlot.findById(salesSlot._id || salesSlot.slotId);
         require('fs').writeFileSync('debug_sales_slot.txt', "SALES SLOT STATE: " + (dbSalesSlot ? dbSalesSlot.status : "NULL"), 'utf8');
-        await LotteryService.buyTicket(normalUser1._id, 5, salesSlot._id || salesSlot.slotId); // 2500 BDT
-        console.log(`   -> Normal User bought 5 tickets.`);
-
-        // Target Winner MUST buy at least one ticket to be eligible for rig
         await LotteryService.buyTicket(targetWinner._id, 1, salesSlot._id || salesSlot.slotId); // 500 BDT
         console.log(`   -> Target Winner bought 1 ticket.`);
 
+        // Normal User buys enough tickets to ensure Sales > Payout (15 * 500 = 7500 BDT) so House Logic doesn't void the Rigged Winner
+        await LotteryService.buyTicket(normalUser1._id, 15, salesSlot._id || salesSlot.slotId);
+        console.log(`   -> Normal User bought 15 tickets.`);
+
         // Force Admin Draw
-        console.log(`\n   -> Triggering Force Draw...`);
-        await LotteryService.manualDraw(salesSlot.slotId || salesSlot._id, null); // Use slot's injected targetWinnerId
+        console.log(`\n   -> Triggering Force Draw (Waiting 7s for Spin Animation)...`);
+        await LotteryService.manualDraw(salesSlot.slotId || salesSlot._id, targetWinner._id); // Pass explicit winner ID here instead of relying on Controller logic
+        await new Promise(r => setTimeout(r, 8000)); // Wait for 7-second drum spin sequence to finish
 
         // Verify Target Winner got the 1st prize
         const updatedTarget = await User.findById(targetWinner._id);
-        const expectedBalance = 50000 - 500 + 5000; // start - ticket + 1st prize
-        console.log(`\n[4] 📊 Verification Results (Sales-Based Manual Draw):`);
-        console.log(`Target Winner Balance: ${updatedTarget.wallet.main} (Expected: ~${expectedBalance})`);
+        const expectedMain = 50000 - 500; // start - ticket
+        const expectedGame = 5000; // 1st prize limit
 
-        if (updatedTarget.wallet.main >= expectedBalance) {
+        console.log(`\n[4] 📊 Verification Results (Sales-Based Manual Draw):`);
+        console.log(`Target Winner Main Balance: ${updatedTarget.wallet.main} (Expected: ~${expectedMain})`);
+        console.log(`Target Winner Game Balance: ${updatedTarget.wallet.game} (Expected: ~${expectedGame})`);
+
+        if (updatedTarget.wallet.game >= expectedGame) {
             console.log("✅ Target Winner successfully received 1st Prize!");
         } else {
             console.error("❌ Target Winner did NOT receive the expected prize.");

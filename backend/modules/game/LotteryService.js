@@ -84,8 +84,8 @@ class LotteryService {
         }
 
 
-        const startTime = new Date();
-        const endTime = durationMinutes > 0 ? new Date(startTime.getTime() + durationMinutes * 60000) : null;
+        const startTime = data.startTime ? new Date(data.startTime) : new Date();
+        const endTime = data.endTime ? new Date(data.endTime) : (durationMinutes > 0 ? new Date(startTime.getTime() + durationMinutes * 60000) : null);
 
         // Description already extracted above
         const slot = await LotterySlot.create({
@@ -103,7 +103,7 @@ class LotteryService {
             endTime,
             ticketPrice, // [FIX] Save the custom price
             drawType,
-            durationMinutes: drawType === 'TIME_BASED' ? durationMinutes : null,
+            durationMinutes: durationMinutes, // Pass durationMinutes directly
             targetWinnerId
         });
 

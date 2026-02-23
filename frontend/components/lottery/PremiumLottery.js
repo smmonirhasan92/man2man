@@ -442,19 +442,20 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                         </div>
                     </div>
 
-                    {/* Jackpot Display (Golden Glow) */}
-                    <div className="text-center mb-8 relative py-4">
-                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-16 bg-${theme.color}-500/5 blur-3xl rounded-full pointer-events-none"></div>
-                        <div className="flex justify-center items-center gap-2 mb-2 cursor-pointer group/prize" onClick={() => setShowPrizeList(true)}>
-                            <div className="text-[10px] font-bold text-yellow-600 uppercase tracking-[0.3em]">Current Prize Pool</div>
-                            <Trophy className="w-3 h-3 text-yellow-600 group-hover/prize:scale-125 transition" />
+                    {/* Jackpot Display (Golden Glow E-Commerce Style) */}
+                    <div className="text-center mb-8 relative py-6 mt-4">
+                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-24 bg-yellow-500/10 blur-3xl rounded-full pointer-events-none"></div>
+                        <div className="flex justify-center items-center gap-2 mb-3 cursor-pointer group/prize" onClick={() => setShowPrizeList(true)}>
+                            <div className="text-xs font-black text-yellow-500 uppercase tracking-[0.4em] drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]">Current Prize Pool</div>
+                            <Trophy className="w-4 h-4 text-yellow-400 group-hover/prize:scale-125 transition drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
                         </div>
                         <div className="relative">
-                            <h2 className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
-                                <span className="text-3xl bg-clip-text text-transparent bg-gradient-to-b from-yellow-300 to-yellow-600 align-top opacity-80">৳</span>
-                                {jackpot.toLocaleString()}
+                            <h2 className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.8)]">
+                                <span className="text-4xl bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 to-yellow-600 align-top opacity-90 mr-1">৳</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-yellow-100 to-yellow-400">
+                                    {jackpot.toLocaleString()}
+                                </span>
                             </h2>
-                            {/* Reflection/Sheen effect on text via CSS mask or just overlay gradient (Simplified here) */}
                         </div>
                         <button onClick={() => setShowPrizeList(true)} className="text-[10px] text-slate-500 underline mt-2 hover:text-white transition">View All Prizes</button>
                     </div>
@@ -501,24 +502,40 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                             <span className="text-sm font-bold text-white font-mono">{Number(myTickets || 0)}</span>
                         </div>
 
-                        {/* QUANTITY SELECTOR */}
+                        {/* QUANTITY & QUICK BUY SELECTOR */}
                         {(!isPhaseLocked && effectiveStatus !== 'DRAWING') && (
-                            <div className="flex justify-between items-center bg-black/40 p-2 rounded-xl border border-white/5">
-                                <span className="text-xs text-slate-400 ml-2">Qty</span>
-                                <div className="flex items-center gap-3 bg-[#111] rounded-lg border border-white/10 p-1">
-                                    <button
-                                        onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
-                                        className="w-8 h-8 rounded shrink-0 bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center font-bold font-mono transition"
-                                    >
-                                        -
-                                    </button>
-                                    <span className="w-8 text-center font-bold text-white font-mono">{ticketQuantity}</span>
-                                    <button
-                                        onClick={() => setTicketQuantity(Math.min(50, ticketQuantity + 1))} // Max 50 per click for safety
-                                        className={`w-8 h-8 rounded shrink-0 bg-${theme.color}-500/20 hover:bg-${theme.color}-500/40 text-${theme.color}-400 flex items-center justify-center font-bold font-mono transition`}
-                                    >
-                                        +
-                                    </button>
+                            <div className="space-y-3">
+                                {/* Quick Buy Shortcuts */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[5, 10, 20].map(qty => (
+                                        <button
+                                            key={qty}
+                                            onClick={() => setTicketQuantity(qty)}
+                                            className="bg-[#111] hover:bg-yellow-500/20 border border-white/10 hover:border-yellow-500/50 text-slate-300 hover:text-yellow-400 font-bold text-xs py-2 rounded-lg transition"
+                                        >
+                                            {qty}x Tickets
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Manual Adjuster */}
+                                <div className="flex justify-between items-center bg-black/40 p-2 rounded-xl border border-white/5">
+                                    <span className="text-xs text-slate-400 ml-2">Custom Qty</span>
+                                    <div className="flex items-center gap-3 bg-[#111] rounded-lg border border-white/10 p-1">
+                                        <button
+                                            onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
+                                            className="w-8 h-8 rounded shrink-0 bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center font-bold font-mono transition"
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-8 text-center font-bold text-yellow-500 font-mono text-lg">{ticketQuantity}</span>
+                                        <button
+                                            onClick={() => setTicketQuantity(Math.min(50, ticketQuantity + 1))} // Max 50 per click for safety
+                                            className={`w-8 h-8 rounded shrink-0 bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-500 flex items-center justify-center font-bold font-mono transition`}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -545,20 +562,27 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                             }}
                             disabled={loading} // Remove showDrum disable constraint if we want to allow recovery? No, keep standard.
                             className={`
-                                relative w-full py-5 min-h-[56px] rounded-xl font-black text-lg uppercase tracking-widest overflow-hidden cursor-pointer group/btn active:scale-95 transition-transform duration-100
+                                relative w-full py-6 min-h-[64px] rounded-xl font-black text-xl uppercase tracking-widest overflow-hidden cursor-pointer group/btn active:scale-95 transition-transform duration-100
                                 ${loading
-                                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
                                     : (effectiveStatus === 'DRAWING' || effectiveLock)
-                                        ? 'bg-gradient-to-r from-yellow-700 to-yellow-500 hover:from-yellow-600 hover:to-yellow-400 text-black shadow-[0_0_20px_rgba(234,179,8,0.5)] animate-pulse'
-                                        : `bg-gradient-to-r from-${theme.color}-700 to-${theme.color}-600 hover:from-${theme.color}-600 hover:to-${theme.color}-500 text-white shadow-[0_10px_20px_-10px_rgba(var(--${theme.color}-rgb),0.5)]`
+                                        ? 'bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse border border-red-400/50'
+                                        : `bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black shadow-[0_0_40px_-5px_rgba(234,179,8,0.6)] border border-yellow-300/50`
                                 }
                             `}
                         >
-                            <span className="relative z-10 flex items-center justify-center gap-2">
-                                {loading ? 'Processing...' : (effectiveStatus === 'DRAWING' || effectiveLock) ? '👁 WATCH DRAW' : (
+                            <span className="relative z-10 flex items-center justify-center gap-3 drop-shadow-md">
+                                {loading ? 'Processing...' : (effectiveStatus === 'DRAWING' || effectiveLock) ? (
                                     <>
-                                        <span>Join Draw</span>
-                                        <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{ticketPrice * ticketQuantity}৳</span>
+                                        <Zap className="w-6 h-6 animate-pulse text-yellow-300" />
+                                        <span>WATCH DRAW</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>BUY NOW</span>
+                                        <span className="bg-black/30 text-yellow-100 px-3 py-1 rounded-lg text-sm border border-black/20">
+                                            ৳{ticketPrice * ticketQuantity}
+                                        </span>
                                     </>
                                 )}
                             </span>
