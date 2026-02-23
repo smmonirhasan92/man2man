@@ -20,11 +20,18 @@ export default function AdminLotteryManager() {
     const [profitBuffer, setProfitBuffer] = useState(20); // 20% default
     const [lockDraw, setLockDraw] = useState(true); // Default to Protected Mode
 
+    // [HYBRID] New States
+    const [drawType, setDrawType] = useState('SALES_BASED');
+    const [durationMinutes, setDurationMinutes] = useState(60);
+    const [ticketPrice, setTicketPrice] = useState(20);
+    const [targetWinnerId, setTargetWinnerId] = useState('');
+
     // Gradient Generator State
     const [genTotalBudget, setGenTotalBudget] = useState(10000);
     const [genFirstPrize, setGenFirstPrize] = useState(5000);
     const [genRemainingWinners, setGenRemainingWinners] = useState(19);
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+    const [manualWinnerTargets, setManualWinnerTargets] = useState({}); // Stores targetWinnerId per slot row
 
     const generateGradient = () => {
         const remainder = genTotalBudget - genFirstPrize;
@@ -112,7 +119,11 @@ export default function AdminLotteryManager() {
                         prizes: prizes.map(({ name, amount, winnersCount }) => ({ name, amount, winnersCount })),
                         description,
                         profitBuffer,
-                        lockDrawUntilTargetMet: lockDraw
+                        lockDrawUntilTargetMet: lockDraw,
+                        drawType,
+                        durationMinutes: drawType === 'TIME_BASED' ? durationMinutes : 0,
+                        ticketPrice,
+                        targetWinnerId: targetWinnerId || undefined
                     };
 
                     if (editingSlotId) {
@@ -146,6 +157,8 @@ export default function AdminLotteryManager() {
         setEditingTierName(null);
         setPrizes([{ name: 'Grand Jackpot', amount: 5000, winnersCount: 1, id: 1 }]);
         setDescription('');
+        setDrawType('SALES_BASED');
+        setTargetWinnerId('');
     };
 
     const confirmAction = (title, message, action) => {
@@ -157,15 +170,17 @@ export default function AdminLotteryManager() {
         });
     };
 
-    const forceDraw = async (slotId, winnerId = null) => {
+    const forceDraw = async (slotId) => {
+        const winnerId = manualWinnerTargets[slotId] || null;
         confirmAction(
             `FORCE DRAW for Slot ${slotId}?`,
-            "This will pick a winner immediately.",
+            winnerId ? `This will FORCE User ${winnerId} to win 1st Prize.` : "This will pick a random winner immediately.",
             async () => {
                 setLoading(true);
                 try {
-                    await api.post('/lottery/admin/draw', { winnerId: winnerId || undefined });
-                    toast.success('Draw Started!');
+                    await api.post('/lottery/admin/draw', { slotId, winnerId: winnerId || undefined });
+                    toast.success('Draw Started & Finalized!');
+                    fetchStatus();
                 } catch (e) { toast.error(e.response?.data?.message || 'Failed'); }
                 setLoading(false);
             }
@@ -362,17 +377,27 @@ export default function AdminLotteryManager() {
                                                 </div>
                                             </td>
                                             <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-2 opacity-50 group-hover:opacity-100 transition">
-                                                    <button
-                                                        onClick={() => forceDraw(slot.slotId, prompt("Manual Winner ID (Optional):"))}
-                                                        disabled={slot.lockDrawUntilTargetMet && slot.progress < 100}
-                                                        className={`p-2 rounded transition ${slot.lockDrawUntilTargetMet && slot.progress < 100 ? 'text-slate-600 cursor-not-allowed' : 'hover:bg-blue-500/20 text-blue-400'}`}
-                                                        title={slot.lockDrawUntilTargetMet && slot.progress < 100 ? "Target Not Met" : "Execute Draw"}
-                                                    >
-                                                        <Play className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => startEdit(slot)} className="p-2 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/50 text-blue-200 rounded transition" title="Edit Prizes"><Zap className="w-4 h-4" /></button>
-                                                    <button onClick={() => deleteSlot(slot.slotId)} className="p-2 hover:bg-red-500/20 text-red-400 rounded"><Trash className="w-4 h-4" /></button>
+                                                <div className="flex flex-col items-end gap-2 opacity-50 group-hover:opacity-100 transition">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Secret Winner ID"
+                                                        value={manualWinnerTargets[slot.slotId] || ''}
+                                                        onChange={(e) => setManualWinnerTargets({ ...manualWinnerTargets, [slot.slotId]: e.target.value })}
+                                                        className="w-32 bg-black/50 border border-white/10 rounded px-2 py-1 text-[10px] text-red-400 font-mono focus:border-red-500 transition-colors"
+                                                        title="Force a specific user ID to win 1st Prize."
+                                                    />
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => forceDraw(slot.slotId)}
+                                                            disabled={slot.lockDrawUntilTargetMet && slot.progress < 100}
+                                                            className={`p-2 rounded transition ${slot.lockDrawUntilTargetMet && slot.progress < 100 ? 'text-slate-600 cursor-not-allowed' : 'hover:bg-blue-500/20 text-blue-400'}`}
+                                                            title={slot.lockDrawUntilTargetMet && slot.progress < 100 ? "Target Not Met" : "Execute Draw"}
+                                                        >
+                                                            <Play className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={() => startEdit(slot)} className="p-2 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/50 text-blue-200 rounded transition" title="Edit Prizes"><Zap className="w-4 h-4" /></button>
+                                                        <button onClick={() => deleteSlot(slot.slotId)} className="p-2 hover:bg-red-500/20 text-red-400 rounded"><Trash className="w-4 h-4" /></button>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
@@ -484,6 +509,60 @@ export default function AdminLotteryManager() {
                                 </button>
                             </div>
 
+                            {/* [HYBRID] Draw Settings */}
+                            <div className="bg-white/5 p-4 rounded-lg border border-white/5 space-y-3">
+                                <div>
+                                    <label className="text-xs text-slate-500 uppercase">Draw Type</label>
+                                    <select
+                                        value={drawType}
+                                        onChange={(e) => setDrawType(e.target.value)}
+                                        className="w-full bg-black/50 border border-white/10 rounded p-2 text-xs text-white mt-1"
+                                    >
+                                        <option value="SALES_BASED">Sales Based (Progress Bar)</option>
+                                        <option value="TIME_BASED">Time Based (Countdown Clock)</option>
+                                    </select>
+                                </div>
+
+                                {drawType === 'TIME_BASED' && (
+                                    <div>
+                                        <label className="text-xs text-slate-500 uppercase">Duration (Minutes)</label>
+                                        <input
+                                            type="number"
+                                            value={durationMinutes}
+                                            onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                                            className="w-full bg-black/50 border border-white/10 rounded p-2 text-xs text-white mt-1"
+                                            min="1"
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="text-xs text-slate-500 uppercase">Ticket Price (TK)</label>
+                                    <input
+                                        type="number"
+                                        value={ticketPrice}
+                                        onChange={(e) => setTicketPrice(Number(e.target.value))}
+                                        className="w-full bg-black/50 border border-white/10 rounded p-2 text-xs text-white mt-1 font-mono text-yellow-500 font-bold"
+                                        min="1"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-slate-500 uppercase flex justify-between items-center">
+                                        <span>Secret Target Winner ID</span>
+                                        <span className="text-[9px] bg-red-500/20 text-red-500 px-1 rounded">OPTIONAL</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. 64a8v9... (Mongo User ID)"
+                                        value={targetWinnerId}
+                                        onChange={(e) => setTargetWinnerId(e.target.value)}
+                                        className="w-full bg-black/50 border border-red-500/30 focus:border-red-500 rounded p-2 text-xs text-red-400 mt-1 font-mono transition-colors"
+                                    />
+                                    {targetWinnerId && <p className="text-[10px] text-red-500 mt-1">⚠️ IMPORTANT: This user will be forced to win 1st Prize if they buy a ticket.</p>}
+                                </div>
+                            </div>
+
                             {/* Manual Editor */}
                             <div className="space-y-2">
                                 <label className="text-xs text-slate-500 uppercase">Prize Structure</label>
@@ -523,12 +602,12 @@ export default function AdminLotteryManager() {
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-slate-400 text-xs">Break Even Tickets</span>
-                                    <span className="text-white font-mono">{Math.ceil(totalPrizeBudget / 20)} Tix</span>
+                                    <span className="text-white font-mono">{Math.ceil(totalPrizeBudget / ticketPrice)} Tix</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-pink-400 text-xs font-bold">Target for {profitBuffer}% Profit</span>
                                     <span className="text-pink-500 font-bold font-mono bg-pink-500/10 px-2 rounded">
-                                        {Math.ceil((totalPrizeBudget * (1 + profitBuffer / 100)) / 20)} Tix
+                                        {Math.ceil((totalPrizeBudget * (1 + profitBuffer / 100)) / ticketPrice)} Tix
                                     </span>
                                 </div>
                             </div>

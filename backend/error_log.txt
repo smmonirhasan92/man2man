@@ -1,0 +1,4 @@
+Error: Lottery Slot Incorrect or Closed
+    at LotteryService.buyTicket (D:\man2man\backend\modules\game\LotteryService.js:203:54)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async runTest (D:\man2man\backend\verify_hybrid_lottery.js:83:9)

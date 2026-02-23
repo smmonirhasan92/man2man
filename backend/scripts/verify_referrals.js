@@ -30,7 +30,7 @@ async function runTest() {
     await User.deleteOne({ username: 'ref_master' });
     const referrer = await User.create({
         fullName: 'Master Ref', username: 'ref_master',
-        phone: '888000', password: 'hash', referralCode: 'REF_MASTER',
+        phone: '888000', primary_phone: '888000', password: 'hash', referralCode: 'REF_MASTER',
         wallet: { main: 1000, income: 0 }, agentData: { due: 0, milestoneLevel: 0 },
         country: 'US'
     });
@@ -45,7 +45,7 @@ async function runTest() {
         await User.deleteOne({ username });
         const user = await User.create({
             fullName: `Downline ${i}`, username,
-            phone: `88800${i + 1}`, password: 'hash', referredBy: 'REF_MASTER',
+            phone: `88800${i + 1}`, primary_phone: `88800${i + 1}`, password: 'hash', referredBy: 'REF_MASTER',
             wallet: { main: 200 }, referralCode: `REF_DL_${i}`,
             country: 'US'
         });

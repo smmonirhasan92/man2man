@@ -33,6 +33,8 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
     const [prizes, setPrizes] = useState(initialData?.prizes || []);
     const [showPrizeList, setShowPrizeList] = useState(false);
     const [status, setStatus] = useState(initialData?.status || 'ACTIVE');
+    const [drawType, setDrawType] = useState(initialData?.drawType || 'SALES_BASED'); // [HYBRID]
+    const [ticketQuantity, setTicketQuantity] = useState(1); // Multi-Ticket Selector
     const [timeOffset, setTimeOffset] = useState(0); // [SYNC] Server Time - Local Time
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const socket = useSocket(); // Defaults to /system
@@ -58,10 +60,10 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                 setJackpot(data.jackpot);
                 setNextDraw(data.endTime);
                 setProgress(data.progress || 0);
+                setProgress(data.progress || 0);
                 setSlotId(data.slotId);
                 setPrizes(data.prizes || []);
-                setSlotId(data.slotId);
-                setPrizes(data.prizes || []);
+                if (data.drawType) setDrawType(data.drawType);
                 if (data.ticketPrice) setTicketPrice(Number(data.ticketPrice));
 
                 // [SYNC] Calculate Time Offset
@@ -109,6 +111,7 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                 setNextDraw(data.endTime);
                 setSlotId(data.slotId);
                 setPrizes(data.prizes || []);
+                if (data.drawType) setDrawType(data.drawType);
                 if (data.targetSales > 0) {
                     const prog = Math.min((data.currentSales / data.targetSales) * 100, 100);
                     setProgress(prog);
@@ -160,7 +163,7 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
             setConfirmModal({
                 isOpen: true,
                 title: 'Confirm Purchase',
-                message: `Are you sure you want to buy a ticket for ${tier}? It will cost ${ticketPrice} TK.`,
+                message: `Are you sure you want to buy ${ticketQuantity} ticket(s) for ${tier}? It will cost ${ticketPrice * ticketQuantity} TK.`,
                 onConfirm: () => buyTicket(true)
             });
             return;
@@ -168,12 +171,13 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
 
         setLoading(true);
         try {
-            await api.post('/lottery/buy', { lotteryId: slotId });
-            toast.success("Ticket Purchased!", {
+            await api.post('/lottery/buy', { lotteryId: slotId, quantity: ticketQuantity });
+            toast.success(`${ticketQuantity} Ticket(s) Purchased!`, {
                 style: { background: '#0a192f', color: '#fff', border: '1px solid #3b82f6' },
                 iconTheme: { primary: '#3b82f6', secondary: '#fff' }
             });
-            setMyTickets(prev => prev + 1);
+            setMyTickets(prev => prev + ticketQuantity);
+            setTicketQuantity(1); // Reset after purchase
         } catch (e) {
             const msg = e.response?.data?.message || e.response?.data?.error || 'Purchase Failed';
             if (msg.includes('Draw Locked') || msg.includes('Pulse Calculation')) {
@@ -195,9 +199,13 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
     const [timeLeft, setTimeLeft] = useState('');
     useEffect(() => {
         if (!nextDraw) {
-            setTimeLeft('LIVE');
+            setTimeLeft(drawType === 'SALES_BASED' ? 'AWAITING STOCK TARGET' : 'LIVE');
             return;
         }
+
+        // If SALES_BASED and lockDrawUntilTargetMet is true, time is strictly relative to sales. 
+        // But if endTime exists, we still show the timer.
+
         const interval = setInterval(() => {
             const now = new Date().getTime() + timeOffset; // [SYNC] Adjust with offset
             const end = new Date(nextDraw).getTime();
@@ -451,31 +459,40 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                         <button onClick={() => setShowPrizeList(true)} className="text-[10px] text-slate-500 underline mt-2 hover:text-white transition">View All Prizes</button>
                     </div>
 
-                    {/* CSS Pure Progress Bar */}
-                    <div className="mb-6 group/progress">
-                        <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase">
-                            <span>Funding Progress</span>
-                            <span className={`text-${theme.color}-400`}>{Math.round(progress)}%</span>
-                        </div>
-                        <div className="h-4 bg-[#111] rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] border border-white/5 relative">
-                            {/* CSS Stripe Pattern */}
-                            <div
-                                className={`h-full bg-gradient-to-r from-${theme.color}-600 via-${theme.color}-500 to-${theme.color}-400 transition-all duration-1000 ease-out relative overflow-hidden`}
-                                style={{ width: `${progress}%` }}
-                            >
-                                <div className="absolute inset-0 w-full h-full"
-                                    style={{
-                                        backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)',
-                                        backgroundSize: '1rem 1rem'
-                                    }}
-                                ></div>
-                                {/* White Glow Tip */}
-                                <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 blur-[2px]"></div>
+                    {/* UI Mode: TIME_BASED vs SALES_BASED */}
+                    {drawType === 'SALES_BASED' ? (
+                        <div className="mb-6 group/progress">
+                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase">
+                                <span>FUNDING TARGET</span>
+                                <span className={`text-${theme.color}-400`}>{Math.round(progress)}% Sold</span>
+                            </div>
+                            <div className="h-4 bg-[#111] rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] border border-white/5 relative">
+                                {/* CSS Stripe Pattern */}
+                                <div
+                                    className={`h-full bg-gradient-to-r from-${theme.color}-600 via-${theme.color}-500 to-${theme.color}-400 transition-all duration-1000 ease-out relative overflow-hidden`}
+                                    style={{ width: `${progress}%` }}
+                                >
+                                    <div className="absolute inset-0 w-full h-full"
+                                        style={{
+                                            backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)',
+                                            backgroundSize: '1rem 1rem'
+                                        }}
+                                    ></div>
+                                    <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 blur-[2px]"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="mb-6 flex flex-col items-center justify-center bg-white/5 rounded-xl p-4 border border-white/5">
+                            <span className="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-widest flex items-center gap-2">
+                                <Timer className="w-3 h-3" /> Draw Ends In
+                            </span>
+                            <span className={`text-2xl font-black font-mono tracking-wider ${timeLeft.includes('0h 0m') ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                                {timeLeft}
+                            </span>
+                        </div>
+                    )}
 
-                    {/* Ticket Info & Action */}
                     <div className="space-y-3 mt-auto">
                         <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 group-hover:border-white/10 transition">
                             <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -483,6 +500,28 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                             </div>
                             <span className="text-sm font-bold text-white font-mono">{Number(myTickets || 0)}</span>
                         </div>
+
+                        {/* QUANTITY SELECTOR */}
+                        {(!isPhaseLocked && effectiveStatus !== 'DRAWING') && (
+                            <div className="flex justify-between items-center bg-black/40 p-2 rounded-xl border border-white/5">
+                                <span className="text-xs text-slate-400 ml-2">Qty</span>
+                                <div className="flex items-center gap-3 bg-[#111] rounded-lg border border-white/10 p-1">
+                                    <button
+                                        onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
+                                        className="w-8 h-8 rounded shrink-0 bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center font-bold font-mono transition"
+                                    >
+                                        -
+                                    </button>
+                                    <span className="w-8 text-center font-bold text-white font-mono">{ticketQuantity}</span>
+                                    <button
+                                        onClick={() => setTicketQuantity(Math.min(50, ticketQuantity + 1))} // Max 50 per click for safety
+                                        className={`w-8 h-8 rounded shrink-0 bg-${theme.color}-500/20 hover:bg-${theme.color}-500/40 text-${theme.color}-400 flex items-center justify-center font-bold font-mono transition`}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <button
                             onClick={() => {
@@ -519,7 +558,7 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                                 {loading ? 'Processing...' : (effectiveStatus === 'DRAWING' || effectiveLock) ? '👁 WATCH DRAW' : (
                                     <>
                                         <span>Join Draw</span>
-                                        <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{ticketPrice}৳</span>
+                                        <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{ticketPrice * ticketQuantity}৳</span>
                                     </>
                                 )}
                             </span>

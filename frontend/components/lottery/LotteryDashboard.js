@@ -14,18 +14,15 @@ const PremiumLottery = dynamic(() => import('./PremiumLottery'), {
 
 // LotteryDashboard.js
 export default function LotteryDashboard() {
-    const [activeTab, setActiveTab] = useState('TIER_10M');
     const [history, setHistory] = useState([]);
+    const [activeLots, setActiveLots] = useState([]); // [HYBRID] Store all active lotteries
+    const [loadingSlots, setLoadingSlots] = useState(true);
+    const [viewMode, setViewMode] = useState('GLOBAL'); // GLOBAL | MY_TICKETS
     const socket = useSocket();
-
-    // We could fetch all slots here and pass them down, 
-    // OR let each PremiumLottery widget fetch its own data.
-    // Fetching here allows for a "skeleton" load state for the whole dashboard.
-    // For simplicity given the short time, let's keep the widgets self-contained 
-    // or pass the tier as a prop and let them mount/unmount.
 
     useEffect(() => {
         loadHistory();
+        loadActiveSlots();
 
         // GLOBAL WINNER TICKER
         if (socket) {
@@ -47,8 +44,9 @@ export default function LotteryDashboard() {
                         </div>
                     ), { duration: 5000, position: 'top-center' });
                 });
-                // Reload history to show new win
+                // Reload both to show new win and update active slots
                 loadHistory();
+                loadActiveSlots();
             });
         }
 
@@ -57,11 +55,28 @@ export default function LotteryDashboard() {
         };
     }, [socket]);
 
-    const [viewMode, setViewMode] = useState('GLOBAL'); // GLOBAL | MY_TICKETS
-
     useEffect(() => {
         loadHistory();
-    }, [viewMode]); // Reload when mode changes
+    }, [viewMode]);
+
+    const loadActiveSlots = async () => {
+        try {
+            setLoadingSlots(true);
+            // Fetch ALL active lotteries (Hybrid System)
+            const res = await api.get('/lottery/active');
+            if (Array.isArray(res.data)) {
+                setActiveLots(res.data);
+            } else if (res.data && res.data.status !== 'INACTIVE') {
+                setActiveLots([res.data]); // Fallback if API returns single object
+            } else {
+                setActiveLots([]);
+            }
+        } catch (e) {
+            console.error("Active Slots Load Error", e);
+        } finally {
+            setLoadingSlots(false);
+        }
+    };
 
     // ... (socket listener same)
 
@@ -80,17 +95,6 @@ export default function LotteryDashboard() {
         }
     };
 
-    const TABS = [
-        { id: 'TIER_10M', label: '10m', color: 'text-blue-500', border: 'border-blue-500' },
-        { id: 'TIER_30M', label: '30m', color: 'text-emerald-500', border: 'border-emerald-500' },
-        { id: 'TIER_1H', label: '1h', color: 'text-amber-500', border: 'border-amber-500' },
-        { id: 'TIER_6H', label: '6h', color: 'text-yellow-500', border: 'border-yellow-500' },
-        { id: 'TIER_12H', label: '12h', color: 'text-orange-500', border: 'border-orange-500' },
-        { id: 'TIER_24H', label: '24h', color: 'text-cyan-500', border: 'border-cyan-500' },
-        { id: 'TIER_3D', label: '3d', color: 'text-purple-500', border: 'border-purple-500' },
-        { id: 'TIER_7D', label: '7d', color: 'text-red-500', border: 'border-red-500' }
-    ];
-
     return (
         <div className="p-4 space-y-8 max-w-4xl mx-auto">
             <Toaster />
@@ -103,27 +107,26 @@ export default function LotteryDashboard() {
                 <p className="text-slate-400 text-sm">Choose your game pace. Win Big.</p>
             </div>
 
-            {/* TABS */}
-            <div className="flex border-b border-white/10">
-                {TABS.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 py-3 text-sm font-bold uppercase transition-all relative ${activeTab === tab.id ? `${tab.color}` : 'text-slate-500 hover:text-slate-300'
-                            }`}
-                    >
-                        {tab.label}
-                        {activeTab === tab.id && (
-                            <div className={`absolute bottom-0 left-0 w-full h-1 ${tab.color.replace('text', 'bg')} rounded-t-full`}></div>
-                        )}
-                    </button>
-                ))}
-            </div>
-
-            {/* Active Lottery Widget (Dynamic based on Tab) */}
+            {/* NEW HYBRID GRID VIEW */}
             <div className="w-full min-h-[400px]">
-                {/* We mount a fresh component on tab change to reset its internal state cleanly */}
-                <PremiumLottery key={activeTab} tier={activeTab} />
+                {loadingSlots ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                        <div className="h-96 bg-white/5 rounded-2xl"></div>
+                        <div className="h-96 bg-white/5 rounded-2xl hidden md:block"></div>
+                    </div>
+                ) : activeLots.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                        {activeLots.map((slot) => (
+                            <PremiumLottery key={slot.slotId} tier={slot.tier} initialData={slot} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-[#111] rounded-2xl p-10 border border-white/5 text-center flex flex-col items-center justify-center">
+                        <Ticket className="w-16 h-16 text-slate-600 mb-4 opacity-50" />
+                        <h3 className="text-slate-400 font-bold text-xl">No Active Lotteries</h3>
+                        <p className="text-sm text-slate-500 mt-2">Check back later for new draws.</p>
+                    </div>
+                )}
             </div>
 
             {/* History Section */}
@@ -149,10 +152,7 @@ export default function LotteryDashboard() {
                 </div>
             </div>
 
-
-
             <LotteryHistory history={history} mode={viewMode} />
         </div>
-
     );
 }

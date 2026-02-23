@@ -70,10 +70,29 @@ router.post('/admin/create', protect, async (req, res) => {
         return res.status(403).json({ message: 'Admin Only' });
     }
     try {
-        const { prizes, prize, multiplier, tier, durationMinutes } = req.body;
-        // Pass either new 'prizes' array or legacy 'prize' amount
-        const data = prizes || prize;
-        const slot = await LotteryService.createSlot(data, parseInt(multiplier || 5), tier || 'INSTANT', parseInt(durationMinutes || 0));
+        const { prizes, prize, multiplier, tier, durationMinutes, drawType, targetWinnerId, ticketPrice } = req.body;
+        // Pass either new 'prizes' array or fallback to legacy 'prize' amount
+        // Also package the new Hybrid fields into the data object
+
+        let dataToPass;
+        if (prizes) {
+            dataToPass = {
+                prizes,
+                drawType,
+                targetWinnerId,
+                ticketPrice
+            };
+        } else {
+            // Legacy fallback but wrapped as object to hold new fields
+            dataToPass = {
+                prizes: [{ name: 'Grand Jackpot', amount: parseInt(prize), winnersCount: 1 }],
+                drawType,
+                targetWinnerId,
+                ticketPrice
+            };
+        }
+
+        const slot = await LotteryService.createSlot(dataToPass, parseInt(multiplier || 5), tier || 'INSTANT', parseInt(durationMinutes || 0));
         res.json(slot);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -86,15 +105,22 @@ router.post('/admin/draw', protect, async (req, res) => {
         return res.status(403).json({ message: 'Admin Only' });
     }
     try {
-        const { winnerId } = req.body; // Optional Manual Override
+        const { winnerId, slotId } = req.body; // Optional Manual Override
         let result;
+
+        // Find specific target slot or just pick the ACTIVE fallback
+        const targetSlotId = slotId || (await LotteryService.getActiveSlot())?.slotId;
+
+        if (!targetSlotId) {
+            return res.status(400).json({ message: "No active slot available to draw" });
+        }
+
         if (winnerId) {
-            // Find active slot first
-            const active = await LotteryService.getActiveSlot();
-            if (!active) return res.status(400).json({ message: "No active slot" });
-            result = await LotteryService.manualDraw(active.slotId, winnerId);
+            result = await LotteryService.manualDraw(targetSlotId, winnerId);
         } else {
-            result = await LotteryService.forceDraw();
+            // Standard Random Draw
+            await LotteryService.startDrawSequence(targetSlotId, true); // forceOverride = true
+            result = { message: "Standard Draw Initiated" };
         }
         res.json(result);
     } catch (err) {

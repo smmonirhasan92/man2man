@@ -15,6 +15,15 @@ const lotterySlotSchema = new mongoose.Schema({
     targetSales: { type: Number, required: true }, // prize * multiplier
     currentSales: { type: Number, default: 0 },
 
+    // [HYBRID MULTI-DRAW SYSTEM]
+    drawType: {
+        type: String,
+        enum: ['TIME_BASED', 'SALES_BASED'],
+        default: 'SALES_BASED'
+    },
+    durationMinutes: { type: Number }, // Only for TIME_BASED
+    targetWinnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // [SECRET ADMIN CONTROL]
+
     tier: {
         type: String,
         required: true,
@@ -63,7 +72,20 @@ lotterySlotSchema.pre('save', async function () {
     if ((!this.targetSales || this.targetSales === 0) && this.prizes && this.prizes.length > 0 && this.profitMultiplier) {
         const totalPrizePool = this.prizes.reduce((sum, p) => sum + (p.amount * p.winnersCount), 0);
         this.prizeAmount = totalPrizePool; // Sync legacy field for display
-        this.targetSales = totalPrizePool * this.profitMultiplier;
+
+        // For Time-Based, targetSales might not be strict, but we still calculate an estimated threshold for UI/Profit tracking
+        if (this.drawType === 'SALES_BASED') {
+            this.targetSales = totalPrizePool * this.profitMultiplier;
+        } else if (this.drawType === 'TIME_BASED') {
+            // Optional: Calculate a break-even target or leave as 0 and rely purely on time
+            // We'll set a soft target for UI progress calculation
+            this.targetSales = totalPrizePool * this.profitMultiplier;
+        }
+    }
+
+    // Auto-calculate end time for Time-Based
+    if (this.drawType === 'TIME_BASED' && this.durationMinutes && !this.endTime) {
+        this.endTime = new Date(new Date().getTime() + this.durationMinutes * 60000);
     }
 });
 
