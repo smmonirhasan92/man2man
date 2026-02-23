@@ -25,6 +25,9 @@ if [ -d "frontend" ]; then
     cd frontend
     npm install
     
+    echo "🧹 Clearing old Next.js build cache..."
+    rm -rf .next
+    
     echo "🏗️ Building frontend..."
     npm run build
     cd ..
