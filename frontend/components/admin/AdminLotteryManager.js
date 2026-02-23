@@ -21,6 +21,8 @@ export default function AdminLotteryManager() {
     const [endTime, setEndTime] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 16));
     const [ticketPrice, setTicketPrice] = useState(20);
     const [targetWinnerId, setTargetWinnerId] = useState('');
+    const [lockDraw, setLockDraw] = useState(false);
+    const [description, setDescription] = useState('');
 
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const [manualWinnerTargets, setManualWinnerTargets] = useState({}); // Stores targetWinnerId per slot row
