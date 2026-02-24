@@ -199,31 +199,21 @@ class P2PService {
 
     // --- 5. SELLER CONFIRMS RELEASE (INSTANT RELEASE WITH PIN) ---
     async confirmRelease(userId, tradeId, pin) {
-        if (!pin) throw new Error("Transaction PIN is required to release funds");
+        if (!pin) throw new Error("Password is required to release funds");
 
         const trade = await P2PTrade.findById(tradeId);
         if (!trade) throw new Error("Trade not found");
         if (trade.sellerId.toString() !== userId.toString()) throw new Error("Unauthorized");
         if (trade.status !== 'PAID') throw new Error("Buyer must mark as paid first");
 
-        // [SECURITY] Verify Transaction PIN
-        const user = await User.findById(userId).select('+transactionPin');
+        // [SECURITY] Verify Account Password instead of separate PIN for ease of use
+        const user = await User.findById(userId).select('+password');
         if (!user) throw new Error("User not found");
 
-        // [FIX] Handle Default/Unhashed PINs for migrated users smoothly
-        const storedPin = user.transactionPin || '123456';
-        let isMatch = false;
-
-        if (storedPin.length < 10) {
-            // It's a raw unhashed pin (e.g. default '123456')
-            isMatch = (pin.toString() === storedPin);
-        } else {
-            // It's a hashed pin
-            isMatch = await bcrypt.compare(pin.toString(), storedPin);
-        }
+        const isMatch = await bcrypt.compare(pin.toString(), user.password);
 
         if (!isMatch) {
-            throw new Error("Invalid Transaction PIN");
+            throw new Error("Invalid Login Password");
         }
 
         // [CHANGE] "Seamless" Logic: Trust Seller -> Execute Transfer Immediately

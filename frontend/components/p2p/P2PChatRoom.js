@@ -30,7 +30,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     const confirmReleaseWithPin = async () => {
-        if (pin.length < 4) return toast.error("Enter valid PIN");
+        if (pin.length < 4) return toast.error("Enter valid Password");
         try {
             await api.post(`/p2p/trade/${tradeId}/release`, { pin });
             toast.success("Funds Released Successfully!");
@@ -285,14 +285,13 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
                     <div className="bg-[#1a1b2e] p-6 rounded-xl border border-white/10 w-80">
                         <h3 className="text-lg font-bold text-white mb-4 text-center">Security Verification</h3>
-                        <p className="text-xs text-slate-400 mb-4 text-center">Enter your 6-digit Transaction PIN to authorize fund release.</p>
+                        <p className="text-xs text-slate-400 mb-4 text-center">Enter your Account Password to authorize fund release.</p>
                         <input
                             type="password"
                             className="w-full bg-black/50 border border-white/20 rounded p-3 text-center text-xl tracking-widest text-white mb-4 focus:border-blue-500 outline-none"
-                            maxLength={6}
                             value={pin}
                             onChange={(e) => setPin(e.target.value)}
-                            placeholder="• • • • • •"
+                            placeholder="Password"
                         />
                         <div className="flex gap-2">
                             <button onClick={() => setIsPinModalOpen(false)} className="flex-1 py-2 bg-white/5 rounded hover:bg-white/10 text-sm">Cancel</button>
