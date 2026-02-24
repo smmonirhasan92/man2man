@@ -363,7 +363,11 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                             );
                         }
 
-                        const isMe = msg.senderId === user?._id;
+                        // [FIX] Ensure safe string comparison for Mongoose Object IDs
+                        const senderStr = typeof msg.senderId === 'object' ? msg.senderId._id?.toString() : msg.senderId?.toString();
+                        const userStr = user?._id?.toString();
+                        const isMe = senderStr === userStr;
+
                         return (
                             <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[75%] p-3 rounded-2xl text-xs relative group ${isMe
