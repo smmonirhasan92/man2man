@@ -315,16 +315,41 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                             <div key={i} className="smoke-particle" style={{ left: `${40 + i * 5}%`, bottom: '40%', animationDelay: `${i * 0.2}s` }}></div>
                         ))}
 
-                        <motion.div
-                            animate={{ rotateX: [0, 360 * 5] }}
-                            transition={{ duration: 3, ease: "easeOut" }}
-                            className="text-6xl mb-4 relative z-10"
-                        >
-                            🎰
-                        </motion.div>
-                        <div className={`text-${theme.color}-500 font-black text-3xl animate-pulse drop-shadow-[0_0_15px_rgba(var(--${theme.color}-rgb),0.8)] relative z-10`}>
-                            DRAWING...
+                        {/* SLOT MACHINE ANIMATION */}
+                        <div className="flex gap-2 mb-8 relative z-10 px-4 py-8 bg-black/50 rounded-3xl border border-yellow-500/20 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden">
+                            {[1, 2, 3, 4, 5].map((_, idx) => (
+                                <div key={idx} className="w-16 h-24 bg-gradient-to-b from-slate-900 via-[#111] to-slate-900 rounded-xl relative overflow-hidden border-2 border-slate-700 shadow-inner flex items-center justify-center">
+                                    <motion.div
+                                        animate={{ y: [0, -1000] }}
+                                        transition={{
+                                            duration: 2 + (idx * 0.5),
+                                            ease: "circOut",
+                                            repeat: 0,
+                                        }}
+                                        className="absolute flex flex-col items-center top-0 font-black text-5xl font-mono text-yellow-500 tracking-tighter drop-shadow-[0_2px_5px_rgba(0,0,0,1)]"
+                                    >
+                                        {/* Generate long strip of random numbers for the roll, ending in a '? ' or final digit since we don't know the exact winner ticket text early */}
+                                        {[...Array(20)].map((_, i) => (
+                                            <div key={i} className="h-24 flex items-center justify-center">
+                                                {Math.floor(Math.random() * 10)}
+                                            </div>
+                                        ))}
+                                        <div className="h-24 flex items-center justify-center text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]">?</div>
+                                    </motion.div>
+
+                                    {/* Glass Overlay for 3D effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/80 pointer-events-none"></div>
+                                </div>
+                            ))}
                         </div>
+
+                        <motion.div
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ repeat: Infinity, duration: 1 }}
+                            className={`text-${theme.color}-500 font-black text-2xl tracking-[0.2em] animate-pulse drop-shadow-[0_0_15px_rgba(var(--${theme.color}-rgb),0.8)] relative z-10`}
+                        >
+                            GENERATING WINNER...
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -32,6 +32,7 @@
     "react-p5": "^1.4.1",
     "react-quill-new": "^3.6.0",
     "react-spinners": "^0.17.0",
+    "recharts": "^3.7.0",
     "seedrandom": "^3.0.5",
     "socket.io-client": "^4.8.3",
     "use-sound": "^5.0.0"

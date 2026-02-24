@@ -6,6 +6,7 @@ import api from '../../../services/api';
 import { ArrowLeft, Users, FileText, Settings, Shield, ShieldCheck, Wallet, Trophy, Briefcase, Crown, MessageSquare, Ticket, Lock, Zap, Activity, Gem, ClipboardList, Bell, TrendingUp, AlertTriangle } from 'lucide-react';
 import DashboardCard from '../../../components/admin/DashboardCard';
 import LiveVaultTracker from '../../../components/admin/LiveVaultTracker';
+import AdminLiveChart from '../../../components/admin/AdminLiveChart';
 import ConfirmationModal from '../../../components/ui/ConfirmationModal';
 import toast from 'react-hot-toast';
 
@@ -99,7 +100,7 @@ export default function AdminDashboard() {
             <header className="bg-[#0D0D0D] border-b border-[#D4AF37]/20 sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
                 <div className="w-full px-6 lg:px-10 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-white/10 transition">
+                        <button onClick={() => router.push('/')} className="p-2 rounded-full hover:bg-white/10 transition">
                             <ArrowLeft className="w-5 h-5 text-slate-400" />
                         </button>
                         <h1 className="text-xl font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-2">
@@ -195,7 +196,11 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* DASHBOARD GRID */}
+                {/* 2. REALTIME CHART OVERVIEW */}
+                <div className="mb-8">
+                    <AdminLiveChart />
+                </div>
+
                 {/* DASHBOARD GRID (2-Column Strict) */}
                 <div className="grid grid-cols-2 gap-4">
                     <DashboardCard href="/admin/transactions" title="Transactions" description="Deposits & Payouts" icon={FileText} colorClass="blue" badge={stats.pendingActions > 0 ? `${stats.pendingActions}` : ''} />

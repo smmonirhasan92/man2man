@@ -25,6 +25,10 @@ export default function ProfilePage() {
     const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
     const [passLoading, setPassLoading] = useState(false);
 
+    // Transaction PIN State
+    const [pinData, setPinData] = useState({ password: '', pin: '', confirm: '' });
+    const [pinLoading, setPinLoading] = useState(false);
+
     const router = useRouter();
     const { logout } = useAuth();
     const [assets, setAssets] = useState([]);
@@ -92,6 +96,23 @@ export default function ProfilePage() {
             toast.error(err.response?.data?.message || 'Failed');
         } finally {
             setPassLoading(false);
+        }
+    };
+
+    const handlePinSetup = async () => {
+        if (pinData.pin !== pinData.confirm) return toast.error('PINs do not match');
+        if (pinData.pin.length !== 6) return toast.error('PIN must be exactly 6 digits');
+        if (!pinData.password) return toast.error('Account Password is required');
+
+        setPinLoading(true);
+        try {
+            await api.post('/auth/set-pin', { password: pinData.password, pin: pinData.pin });
+            toast.success('Transaction PIN Set Successfully! 🔐');
+            setPinData({ password: '', pin: '', confirm: '' });
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to set PIN');
+        } finally {
+            setPinLoading(false);
         }
     };
 
@@ -250,6 +271,51 @@ export default function ProfilePage() {
                             className="w-full py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition border border-white/5"
                         >
                             {passLoading ? 'Updating' : 'Update Credentials'}
+                        </button>
+                    </div>
+
+                    {/* Transaction PIN Section [NEW] */}
+                    <div className="bg-emerald-900/10 p-4 rounded-xl border border-emerald-500/20 space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-2">
+                                <Lock className="w-3 h-3" /> P2P Release PIN
+                            </label>
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-bold">REQUIRED FOR P2P</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">Create a secure 6-digit PIN. You will need this to release funds during P2P trades.</p>
+
+                        <input
+                            type="password"
+                            placeholder="Current Account Password"
+                            value={pinData.password}
+                            onChange={(e) => setPinData({ ...pinData, password: e.target.value })}
+                            className="w-full bg-black/20 text-white rounded-lg border border-emerald-500/20 p-3 text-sm focus:border-emerald-500/50 transition outline-none"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <input
+                                type="password"
+                                maxLength={6}
+                                placeholder="6-Digit PIN"
+                                value={pinData.pin}
+                                onChange={(e) => setPinData({ ...pinData, pin: e.target.value.replace(/\D/g, '') })}
+                                className="w-full bg-black/20 text-white rounded-lg border border-emerald-500/20 p-3 text-center text tracking-widest focus:border-emerald-500/50 transition outline-none"
+                            />
+                            <input
+                                type="password"
+                                maxLength={6}
+                                placeholder="Confirm PIN"
+                                value={pinData.confirm}
+                                onChange={(e) => setPinData({ ...pinData, confirm: e.target.value.replace(/\D/g, '') })}
+                                className="w-full bg-black/20 text-white rounded-lg border border-emerald-500/20 p-3 text-center text tracking-widest focus:border-emerald-500/50 transition outline-none"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handlePinSetup}
+                            disabled={pinLoading}
+                            className="w-full py-2 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-lg text-xs font-bold transition border border-emerald-500/20"
+                        >
+                            {pinLoading ? 'Saving...' : 'Set / Update PIN'}
                         </button>
                     </div>
 

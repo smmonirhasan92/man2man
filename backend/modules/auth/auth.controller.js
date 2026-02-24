@@ -280,3 +280,64 @@ exports.changePassword = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+exports.setTransactionPin = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const { password, pin } = req.body;
+
+        if (!pin || pin.length !== 6) {
+            return res.status(400).json({ message: 'PIN must be 6 digits' });
+        }
+
+        const user = await User.findById(userId).select('+transactionPin');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect account password' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.transactionPin = await bcrypt.hash(pin.toString(), salt);
+        await user.save();
+
+        res.json({ message: 'Transaction PIN set successfully' });
+    } catch (err) {
+        console.error('setTransactionPin Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.changeTransactionPin = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const { password, oldPin, newPin } = req.body;
+
+        if (!newPin || newPin.length !== 6) {
+            return res.status(400).json({ message: 'New PIN must be 6 digits' });
+        }
+
+        const user = await User.findById(userId).select('+transactionPin');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect account password' });
+        }
+
+        const isPinMatch = await bcrypt.compare(oldPin.toString(), user.transactionPin);
+        if (!isPinMatch) {
+            return res.status(400).json({ message: 'Incorrect old PIN' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.transactionPin = await bcrypt.hash(newPin.toString(), salt);
+        await user.save();
+
+        res.json({ message: 'Transaction PIN changed successfully' });
+    } catch (err) {
+        console.error('changeTransactionPin Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};

@@ -178,6 +178,16 @@ exports.completeTransaction = async (req, res) => {
                     const systemIo = req.app.get('systemIo');
                     if (systemIo) {
                         systemIo.to(`user_${user._id}`).emit('balance_update', user.wallet.main);
+                        // [NEW] Trigger Global Notification Toast
+                        systemIo.to(`user_${user._id}`).emit('notification', {
+                            type: 'success',
+                            message: `Deposit Approved: ${amountToAdd} NXS`
+                        });
+                        // [NEW] Trigger Context Wallet Refund Toast
+                        systemIo.to(`user_${user._id}`).emit('wallet:update', {
+                            type: 'deposit_received',
+                            amount: amountToAdd
+                        });
                     }
                 } catch (notifyErr) {
                     console.error('[Notification Error] Failed to emit balance update:', notifyErr.message);
@@ -221,14 +231,24 @@ exports.completeTransaction = async (req, res) => {
 
         // --- HANDLING REJECTION (Refunds) ---
         if (status === 'rejected') {
+            const user = await User.findById(transaction.userId);
             if (['send_money', 'withdraw', 'cash_out', 'mobile_recharge', 'agent_withdraw'].includes(transaction.type)) {
                 const refundAmount = Math.abs(parseFloat(transaction.amount));
-                const user = await User.findById(transaction.userId);
                 if (user) {
                     user.wallet.main = (user.wallet.main || 0) + refundAmount;
                     await user.save();
                 }
             }
+
+            try {
+                const systemIo = req.app.get('systemIo');
+                if (systemIo && user) {
+                    systemIo.to(`user_${user._id}`).emit('notification', {
+                        type: 'error',
+                        message: `Transaction Rejected: ${transaction.type}`
+                    });
+                }
+            } catch (e) { console.error(e); }
         }
 
         res.json({ message: 'Transaction processed successfully', status: status });

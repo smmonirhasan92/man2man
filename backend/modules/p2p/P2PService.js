@@ -7,6 +7,7 @@ const Transaction = require('../wallet/TransactionModel');
 const TransactionHelper = require('../common/TransactionHelper');
 const SocketService = require('../common/SocketService');
 const NotificationService = require('../notification/NotificationService');
+const bcrypt = require('bcryptjs');
 
 class P2PService {
 
@@ -150,20 +151,31 @@ class P2PService {
         return trade;
     }
 
-    // --- 5. SELLER CONFIRMS RELEASE (INSTANT RELEASE) ---
-    async confirmRelease(userId, tradeId) {
+    // --- 5. SELLER CONFIRMS RELEASE (INSTANT RELEASE WITH PIN) ---
+    async confirmRelease(userId, tradeId, pin) {
+        if (!pin) throw new Error("Transaction PIN is required to release funds");
+
         const trade = await P2PTrade.findById(tradeId);
         if (!trade) throw new Error("Trade not found");
         if (trade.sellerId.toString() !== userId.toString()) throw new Error("Unauthorized");
         if (trade.status !== 'PAID') throw new Error("Buyer must mark as paid first");
 
+        // [SECURITY] Verify Transaction PIN
+        const user = await User.findById(userId).select('+transactionPin');
+        if (!user) throw new Error("User not found");
+
+        // Use default 123456 if none is set yet (for backward compatibility during migration)
+        const storedPin = user.transactionPin || await bcrypt.hash('123456', 10);
+
+        const isMatch = await bcrypt.compare(pin.toString(), storedPin);
+        if (!isMatch) {
+            throw new Error("Invalid Transaction PIN");
+        }
+
         // [CHANGE] "Seamless" Logic: Trust Seller -> Execute Transfer Immediately
-        // Reuse adminApproveRelease logic but automated
-        console.log(`[P2P] Seller ${userId} confirmed receipt. Releasing funds...`);
+        console.log(`[P2P] Seller ${userId} confirmed receipt with valid PIN. Releasing funds...`);
 
-        // We can call adminApproveRelease passing null as adminId (system action)
-        // But we need to ensure adminApproveRelease handles null adminId correctly (it does, checked in Step 974)
-
+        // We call adminApproveRelease passing 'SYSTEM_AUTO' as adminId (system action)
         return await this.adminApproveRelease('SYSTEM_AUTO', tradeId);
     }
 

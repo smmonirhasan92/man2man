@@ -4,8 +4,7 @@ import { authService } from '../../services/authService';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ImageSlider from '../../components/ImageSlider';
-import Loading from '../../components/Loading';
-
+import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
     Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign
@@ -72,7 +71,11 @@ function DashboardContent() {
         return () => { };
     }, [router, user?._id]);
 
-    if (loading) return <Loading />;
+    if (loading) return (
+        <div className="min-h-screen font-sans bg-[#0A2540] relative">
+            <DashboardSkeleton />
+        </div>
+    );
 
     return (
         <div className="min-h-screen font-sans text-slate-200 pb-32 relative overflow-y-auto overflow-x-hidden bg-[#0A2540]">

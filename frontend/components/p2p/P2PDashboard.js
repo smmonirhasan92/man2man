@@ -9,6 +9,7 @@ import { useSocket } from '../../hooks/useSocket';
 import RatingModal from './RatingModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import toast from 'react-hot-toast';
+import { P2PSkeleton } from '../ui/SkeletonLoader';
 
 export default function P2PDashboard({ initialMode }) {
     const [mode, setMode] = useState(initialMode || 'buy');
@@ -165,7 +166,7 @@ export default function P2PDashboard({ initialMode }) {
             <div className="space-y-3">
                 {/* [NEW] History Layout */}
                 {mode === 'history' ? (
-                    loading ? <div className="text-center py-10 opacity-50">Loading History...</div> :
+                    loading ? <P2PSkeleton /> :
                         orders.length === 0 ? <div className="text-center py-10 opacity-30">No Trade History</div> :
                             orders.map(trade => (
                                 <div key={trade._id} className="bg-[#161b2e] border border-white/5 p-4 rounded-xl flex justify-between items-center opacity-80 hover:opacity-100 transition">
@@ -190,7 +191,7 @@ export default function P2PDashboard({ initialMode }) {
                             ))
                 ) : (
                     /* Existing Order List */
-                    loading ? <div className="text-center py-10 opacity-50">Loading Market...</div> :
+                    loading ? <P2PSkeleton /> :
                         orders.length === 0 ? <div className="text-center py-10 opacity-30">No Active Orders</div> :
                             orders.map(order => (
                                 <div key={order._id} className="bg-[#111927] border border-white/5 p-4 rounded-xl flex justify-between items-center group relative overflow-hidden shadow-lg mb-3">

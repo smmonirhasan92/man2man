@@ -135,6 +135,20 @@ const UserSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// [PHASE 3: LIVE SYNC] Automatic Wallet Sync via Socket
+UserSchema.post('save', function (doc) {
+    // We broadcast the new wallet balance to the user's personal room instantly.
+    try {
+        const SocketService = require('../common/SocketService');
+        if (SocketService.getIO()) {
+            SocketService.broadcast(`user_${doc._id}`, `balance_update_${doc._id}`, doc.wallet.main); // Legacy compatibility
+            SocketService.broadcast(`user_${doc._id}`, `balance_update`, doc.wallet); // Standard new format
+        }
+    } catch (e) {
+        console.error("[LIVE SYNC] Failed to broadcast wallet update", e);
+    }
+});
+
 // Indexes for frequent lookups
 // Index Cleaned
 // UserSchema.index({ referralCode: 1 }); // Removed: Conflict with unique: true
