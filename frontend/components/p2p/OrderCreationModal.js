@@ -65,13 +65,13 @@ export default function OrderCreationModal({ onClose, onSuccess }) {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Max Limit (BDT)</label>
+                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Max Limit (NXS)</label>
                             <input
                                 type="number"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 className="w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white font-bold focus:border-emerald-500 outline-none transition"
-                                placeholder="e.g. 50000"
+                                placeholder="e.g. 500"
                             />
                         </div>
                     </div>

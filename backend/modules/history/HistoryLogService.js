@@ -11,8 +11,14 @@ class HistoryLogService {
 
         const queries = [];
 
+        // [SECURITY] Enforce 24-hour history limit for untraceability
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
         // 1. Transactions (Wallet)
-        const txnFilter = { userId };
+        const txnFilter = {
+            userId,
+            createdAt: { $gte: twentyFourHoursAgo }
+        };
         if (type && type !== 'all' && type !== 'game') txnFilter.type = type;
 
         queries.push(Transaction.find(txnFilter).lean().then(docs => docs.map(d => ({
@@ -30,7 +36,10 @@ class HistoryLogService {
 
         // 2. Game Logs
         if (!type || type === 'all' || type === 'game') {
-            queries.push(GameLog.find({ userId }).limit(100).sort({ createdAt: -1 }).lean().then(docs => docs.map(d => ({
+            queries.push(GameLog.find({
+                userId,
+                createdAt: { $gte: twentyFourHoursAgo }
+            }).limit(100).sort({ createdAt: -1 }).lean().then(docs => docs.map(d => ({
                 ...d,
                 id: d._id.toString(), // Fix: Ensure ID exists
                 category: 'GAME',

@@ -210,10 +210,18 @@ class P2PService {
         const user = await User.findById(userId).select('+transactionPin');
         if (!user) throw new Error("User not found");
 
-        // Use default 123456 if none is set yet (for backward compatibility during migration)
-        const storedPin = user.transactionPin || await bcrypt.hash('123456', 10);
+        // [FIX] Handle Default/Unhashed PINs for migrated users smoothly
+        const storedPin = user.transactionPin || '123456';
+        let isMatch = false;
 
-        const isMatch = await bcrypt.compare(pin.toString(), storedPin);
+        if (storedPin.length < 10) {
+            // It's a raw unhashed pin (e.g. default '123456')
+            isMatch = (pin.toString() === storedPin);
+        } else {
+            // It's a hashed pin
+            isMatch = await bcrypt.compare(pin.toString(), storedPin);
+        }
+
         if (!isMatch) {
             throw new Error("Invalid Transaction PIN");
         }
@@ -266,13 +274,13 @@ class P2PService {
 
             await P2POrder.findByIdAndUpdate(trade.orderId, { status: 'COMPLETED' }, { session });
 
-            // 5. Logs
+            // 5. Logs - [SECURITY] Made untraceable for users (no sender/receiver ID exposed)
             const transactionLogs = [
                 {
                     userId: trade.sellerId,
                     amount: -trade.amount,
                     type: 'p2p_sell',
-                    description: `P2P Sold to ${trade.buyerId} (Fee: ${feeAmount}) [TxID: ${trade.txId || 'N/A'}]`,
+                    description: `P2P Trade Settled`, // Generic description 
                     source: 'transaction',
                     status: 'completed'
                 },
@@ -280,7 +288,7 @@ class P2PService {
                     userId: trade.buyerId,
                     amount: finalAmount,
                     type: 'p2p_buy',
-                    description: `P2P Bought from ${trade.sellerId} (Fee deducted)`,
+                    description: `P2P Escrow Release`, // Generic description
                     source: 'transaction',
                     status: 'completed'
                 }
