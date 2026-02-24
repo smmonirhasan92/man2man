@@ -142,13 +142,7 @@ class P2PService {
             if (order.userId.toString() !== userId.toString()) throw new Error("Unauthorized");
             if (order.status !== 'OPEN') throw new Error("Cannot cancel active/completed order");
 
-            // 1. Refund Funds
-            await User.findByIdAndUpdate(userId, {
-                $inc: {
-                    'wallet.main': order.amount,
-                    'wallet.escrow_locked': -order.amount
-                }
-            }, { session });
+
 
             // 2. Update Order
             order.status = 'CANCELLED';
@@ -365,7 +359,12 @@ class P2PService {
 
 
     async getMyOrders(userId) {
-        return await P2POrder.find({ userId }).sort({ createdAt: -1 });
+        return await P2POrder.find({ userId })
+            .populate({
+                path: 'userId',
+                select: 'username badges wallet.main trustScore ratingCount isVerified completedTrades'
+            })
+            .sort({ createdAt: -1 });
     }
 
     // [NEW] Get all trades where I am Buyer OR Seller

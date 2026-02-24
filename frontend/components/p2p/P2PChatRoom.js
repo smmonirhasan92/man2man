@@ -349,6 +349,17 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                     {messages.map((msg, i) => {
+                        if (msg.type === 'SYSTEM') {
+                            return (
+                                <div key={i} className="flex justify-center my-4">
+                                    <div className="bg-white/5 border border-white/10 text-slate-400 text-[10px] px-4 py-2 rounded-full text-center flex items-center gap-2">
+                                        <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            );
+                        }
+
                         const isMe = msg.senderId === user?._id;
                         return (
                             <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
@@ -472,24 +483,26 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             />
 
             {/* Custom Upload Modal */}
-            {showUploadModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-[#1F2937] border border-white/10 rounded-3xl p-6 w-full max-w-sm">
-                        <h3 className="text-xl font-bold text-white mb-4">Attach Proof</h3>
-                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Image URL</label>
-                        <input
-                            type="text"
-                            value={uploadInput}
-                            onChange={(e) => setUploadInput(e.target.value)}
-                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:border-blue-500"
-                        />
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowUploadModal(false)} className="flex-1 py-3 text-slate-400 font-bold bg-white/5 rounded-xl">Cancel</button>
-                            <button onClick={submitProof} className="flex-1 py-3 text-white font-bold bg-blue-600 rounded-xl">Attach</button>
+            {
+                showUploadModal && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <div className="bg-[#1F2937] border border-white/10 rounded-3xl p-6 w-full max-w-sm">
+                            <h3 className="text-xl font-bold text-white mb-4">Attach Proof</h3>
+                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Image URL</label>
+                            <input
+                                type="text"
+                                value={uploadInput}
+                                onChange={(e) => setUploadInput(e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:border-blue-500"
+                            />
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowUploadModal(false)} className="flex-1 py-3 text-slate-400 font-bold bg-white/5 rounded-xl">Cancel</button>
+                                <button onClick={submitProof} className="flex-1 py-3 text-white font-bold bg-blue-600 rounded-xl">Attach</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
