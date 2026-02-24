@@ -390,7 +390,7 @@ class P2PService {
         return await P2PTrade.findById(tradeId)
             .populate('sellerId', 'username primary_phone')
             .populate('buyerId', 'username')
-            .populate('orderId', 'paymentMethod paymentDetails');
+            .populate('orderId', 'paymentMethod paymentDetails rate amount');
     }
 
     async holdTrade(tradeId) {

@@ -262,8 +262,11 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs text-slate-400">Total Amount</div>
-                                <div className="text-2xl font-black text-emerald-400">{trade.amount} <span className="text-sm text-emerald-600">BDT</span></div>
+                                <div className="text-[10px] text-slate-400">Rate: 1 NXS = {trade.orderId.rate || 126} BDT</div>
+                                <div className="text-xs text-slate-300 mt-1">Total Amount</div>
+                                <div className="text-2xl font-black text-emerald-400">
+                                    {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} <span className="text-sm text-emerald-600">BDT</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -392,7 +395,10 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     <div className=" p-3 bg-blue-900/20 rounded-lg border border-blue-500/30 flex justify-between items-center">
                         <div>
                             <div className="text-xs text-blue-300">Amount to Pay</div>
-                            <div className="text-lg font-bold text-white font-mono">{trade.amount} NXS</div>
+                            <div className="text-lg font-bold text-white font-mono">
+                                {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} BDT
+                                <span className="text-xs font-normal text-slate-400 ml-2">({trade.amount} NXS)</span>
+                            </div>
                             <div className="text-[10px] text-slate-400">Method: {trade.orderId.paymentMethod}</div>
                         </div>
                         <button onClick={handleMarkPaid} className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20">

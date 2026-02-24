@@ -180,26 +180,19 @@ exports.getTasks = async (req, res) => {
 exports.generateKey = async (req, res) => {
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
-        const User = require('../modules/user/UserModel');
-        const user = await User.findById(userId);
+        const UserPlan = require('../modules/plan/UserPlanModel');
 
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        // Find the user's active plan (node connection)
+        const activePlan = await UserPlan.findOne({ userId, status: 'active' }).sort({ createdAt: -1 });
 
-        // Generate Fresh Key
-        const key = `+1 (${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`;
-
-        // Save as current valid access key
-        user.synthetic_phone = key;
-        await user.save();
-
-        const redisConfig = require('../config/redis');
-        if (redisConfig.client.isOpen) {
-            try {
-                await redisConfig.client.del(`user_profile:${userId}`);
-            } catch (e) { }
+        if (!activePlan || !activePlan.syntheticPhone) {
+            return res.status(403).json({ message: 'No active node connection found. Please purchase a Server Node.' });
         }
 
-        console.log(`[TaskController] Generated Key for ${userId}: ${key}`);
+        // Return the authentic token assigned to their node
+        const key = activePlan.syntheticPhone;
+
+        console.log(`[TaskController] Authorized Gateway Connection for ${userId} via Node: ${key}`);
         res.json({ key });
 
     } catch (err) {

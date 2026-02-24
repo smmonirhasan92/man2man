@@ -114,7 +114,19 @@ export default function P2PDashboard({ initialMode, onClose }) {
         });
     };
 
-    // Restore from LocalStorage on mount
+    const handleCancelOrder = async (orderId) => {
+        if (!confirm("Are you sure you want to cancel this listing?")) return;
+        try {
+            const res = await api.post(`/p2p/sell/${orderId}/cancel`);
+            if (res.data.success) {
+                toast.success("Order Cancelled Successfully");
+                fetchOrders();
+            }
+        } catch (e) {
+            toast.error(e.response?.data?.message || "Failed to cancel order");
+        }
+    };
+
     useEffect(() => {
         const savedTrade = localStorage.getItem('active_p2p_trade');
         if (savedTrade) setActiveTradeId(savedTrade);
@@ -266,12 +278,27 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                             </button>
                                         ) : (
                                             <div className="text-right">
-                                                <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? 'text-emerald-400' : 'text-yellow-500'}`}>{order.status}</div>
+                                                <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? 'text-emerald-400' : 'text-yellow-500'}`}>
+                                                    {order.status}
+                                                </div>
                                                 {order.status === 'OPEN' && (
-                                                    <button className="text-[10px] text-red-500 hover:text-red-400 font-bold">CANCEL</button>
+                                                    <button
+                                                        onClick={() => handleCancelOrder(order._id)}
+                                                        className="text-[10px] text-red-500 hover:text-red-400 font-bold px-2 py-1 border border-red-500/20 rounded-md bg-red-500/10"
+                                                    >
+                                                        CANCEL
+                                                    </button>
                                                 )}
                                                 {order.status === 'LOCKED' && order.activeTradeId && (
-                                                    <button onClick={() => { setActiveTradeId(order.activeTradeId); localStorage.setItem('active_p2p_trade', order.activeTradeId); }} className="text-[10px] bg-cyan-600 px-3 py-1.5 rounded text-white font-bold shadow-lg shadow-cyan-600/20">CHAT</button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveTradeId(order.activeTradeId);
+                                                            localStorage.setItem('active_p2p_trade', order.activeTradeId);
+                                                        }}
+                                                        className="text-[10px] bg-cyan-600 px-3 py-1.5 rounded text-white font-bold shadow-lg shadow-cyan-600/20"
+                                                    >
+                                                        CHAT
+                                                    </button>
                                                 )}
                                             </div>
                                         )}
