@@ -205,7 +205,7 @@ function DashboardContent() {
 
                             {/* P2P Component */}
                             <div className="flex-1 overflow-y-auto">
-                                <P2PDashboard initialMode={p2pMode} />
+                                <P2PDashboard initialMode={p2pMode} onClose={() => setP2pMode(null)} />
                             </div>
                         </div>
                     </div>

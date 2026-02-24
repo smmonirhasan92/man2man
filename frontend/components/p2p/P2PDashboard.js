@@ -11,7 +11,8 @@ import ConfirmationModal from '../ui/ConfirmationModal';
 import toast from 'react-hot-toast';
 import { P2PSkeleton } from '../ui/SkeletonLoader';
 
-export default function P2PDashboard({ initialMode }) {
+
+export default function P2PDashboard({ initialMode, onClose }) {
     const [mode, setMode] = useState(initialMode || 'buy');
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -70,19 +71,41 @@ export default function P2PDashboard({ initialMode }) {
         setLoading(false);
     };
 
-    const handleBuy = async (orderId) => {
+    const handleBuy = async (order) => {
+        // [LIVE BALANCE SYSTEM]
+        // order.userId.wallet.main is the live balance available
+        // order.amount is the maximum limit set by seller
+        const liveAvailable = order.userId?.wallet?.main || 0;
+        const maxLimit = Math.min(order.amount, liveAvailable); // Can't buy more than what's available
+
+        if (maxLimit <= 0) {
+            return toast.error("Seller has no balance available right now.");
+        }
+
+        const requestedString = window.prompt(`Seller's Live Balance: ${liveAvailable} NXS\nMax Limit: ${order.amount} NXS\nExchange Rate: 1 NXS = ${order.rate || 126} BDT\n\nEnter amount of NXS you want to buy (Max: ${maxLimit}):`);
+
+        if (!requestedString) return; // Cancelled
+        const requestedAmount = Number(requestedString);
+
+        if (isNaN(requestedAmount) || requestedAmount <= 0) {
+            return toast.error("Invalid amount");
+        }
+        if (requestedAmount > maxLimit) {
+            return toast.error(`Amount exceeds maximum available limit of ${maxLimit} NXS`);
+        }
+
         setModal({
             isOpen: true,
             title: 'Initiate Trade?',
-            message: 'Funds will be locked in escrow. Proceed?',
+            message: `You are about to buy ${requestedAmount} NXS. The funds will be locked in escrow. Proceed?`,
             confirmText: 'Start Trade',
             onConfirm: async () => {
                 try {
-                    const res = await api.post(`/p2p/buy/${orderId}`);
+                    const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount });
                     if (res.data.success) {
                         setActiveTradeId(res.data.trade._id);
                         localStorage.setItem('active_p2p_trade', res.data.trade._id); // Persist
-                        toast.success("Trade Started!");
+                        toast.success("Trade Started! Funds Locked in Escrow.");
                     }
                 } catch (e) {
                     toast.error(e.response?.data?.message || "Failed to start trade");
@@ -113,7 +136,7 @@ export default function P2PDashboard({ initialMode }) {
             {/* Header */}
             <div className="flex justify-between items-center mb-6 pt-4">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => router.push('/dashboard')} className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white">
+                    <button onClick={onClose || (() => router.back())} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition border border-white/5">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
@@ -151,16 +174,18 @@ export default function P2PDashboard({ initialMode }) {
             </div>
 
             {/* Content Area */}
-            {mode === 'sell' && (
-                <div className="mb-6">
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:scale-[1.02] transition"
-                    >
-                        <Plus className="w-5 h-5" /> Create Sell Order
-                    </button>
-                </div>
-            )}
+            {
+                mode === 'sell' && (
+                    <div className="mb-6">
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:scale-[1.02] transition"
+                        >
+                            <Plus className="w-5 h-5" /> Create Sell Order
+                        </button>
+                    </div>
+                )
+            }
 
             {/* Order List */}
             <div className="space-y-3">
@@ -217,7 +242,10 @@ export default function P2PDashboard({ initialMode }) {
 
                                         {/* Price Display */}
                                         <div className="text-2xl font-black text-white leading-none">
-                                            {order.amount.toLocaleString()} <span className="text-xs font-bold text-slate-500">BDT</span>
+                                            {Math.min(order.amount, order.userId?.wallet?.main || 0).toLocaleString()} <span className="text-xs font-bold text-slate-500">NXS</span>
+                                        </div>
+                                        <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+                                            Rate: <span className="text-emerald-400">1 NXS = {order.rate || 126} BDT</span>
                                         </div>
 
                                         {/* Limits & Methods */}
@@ -230,7 +258,7 @@ export default function P2PDashboard({ initialMode }) {
                                     <div className="relative z-10 flex flex-col items-end gap-2">
                                         {mode === 'buy' ? (
                                             <button
-                                                onClick={() => handleBuy(order._id)}
+                                                onClick={() => handleBuy(order)}
                                                 disabled={order.status !== 'OPEN'}
                                                 className={`h-10 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 ${order.status !== 'OPEN' ? 'bg-slate-800 text-slate-500' : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'}`}
                                             >
@@ -254,18 +282,22 @@ export default function P2PDashboard({ initialMode }) {
             </div>
 
             {/* Modals */}
-            {showCreateModal && (
-                <OrderCreationModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchOrders(); }} />
-            )}
+            {
+                showCreateModal && (
+                    <OrderCreationModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchOrders(); }} />
+                )
+            }
 
             {/* Rating Modal */}
-            {ratingTradeId && (
-                <RatingModal
-                    tradeId={ratingTradeId}
-                    onClose={() => setRatingTradeId(null)}
-                    onSuccess={() => setRatingTradeId(null)}
-                />
-            )}
+            {
+                ratingTradeId && (
+                    <RatingModal
+                        tradeId={ratingTradeId}
+                        onClose={() => setRatingTradeId(null)}
+                        onSuccess={() => setRatingTradeId(null)}
+                    />
+                )
+            }
             {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={modal.isOpen}
@@ -275,6 +307,6 @@ export default function P2PDashboard({ initialMode }) {
                 message={modal.message}
                 confirmText={modal.confirmText || 'Confirm'}
             />
-        </div>
+        </div >
     );
 }

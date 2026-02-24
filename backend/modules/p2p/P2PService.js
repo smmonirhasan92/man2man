@@ -11,46 +11,128 @@ const bcrypt = require('bcryptjs');
 
 class P2PService {
 
-    // --- 1. CREATE SELL ORDER (Locks Funds) ---
-    async createSellOrder(userId, amount, paymentMethod, paymentDetails) {
-        if (amount <= 0) throw new Error("Invalid Amount");
+    // --- 1. CREATE SELL ORDER (List on Market) ---
+    async createSellOrder(userId, amount, paymentMethod, paymentDetails, rate = 126) {
+        if (amount <= 0) throw new Error("Invalid Limit Amount");
+
+        // We DO NOT run an escrow transaction here. We just verify they have some balance.
+        const user = await User.findById(userId);
+        if (!user) throw new Error("User not found");
+        if (user.wallet.main <= 0) throw new Error("Your Main Balance is zero. Cannot list.");
+        if (user.wallet.main < amount) throw new Error("Your limit cannot exceed your current Main Balance.");
+
+        // Check if user already has an OPEN order
+        const existing = await P2POrder.findOne({ userId, status: 'OPEN' });
+        if (existing) throw new Error("You already have an active P2P Listing. Cancel it first.");
+
+        // Create Order (Listing)
+        const order = await P2POrder.create({
+            userId,
+            amount, // Acts as a Max Limit setting now.
+            rate,
+            paymentMethod,
+            paymentDetails,
+            status: 'OPEN'
+        });
+
+        return order;
+    }
+
+    // --- 3. INITIATE BUY (Match & Lock Escrow) ---
+    async initiateTrade(buyerId, orderId, requestedAmount) {
+        if (!requestedAmount || requestedAmount <= 0) throw new Error("Invalid amount requested");
 
         return await TransactionHelper.runTransaction(async (session) => {
-            // 1. Lock Funds
-            const user = await User.findById(userId).session(session);
-            if (!user) throw new Error("User not found");
-            if (user.wallet.main < amount) throw new Error("Insufficient Main Balance");
+            const order = await P2POrder.findById(orderId).session(session);
+            if (!order) throw new Error("Order not found");
+            if (order.status !== 'OPEN') throw new Error("Order is no longer available");
+            if (order.userId.toString() === buyerId.toString()) throw new Error("Cannot buy your own order");
 
-            await User.findByIdAndUpdate(userId, {
+            // Check seller's actual LIVE balance
+            const seller = await User.findById(order.userId).session(session);
+            if (seller.wallet.main < requestedAmount) {
+                // Seller doesn't have enough anymore
+                if (seller.wallet.main <= 0) {
+                    order.status = 'CANCELLED'; // Auto close listing
+                    await order.save({ session });
+                }
+                throw new Error(`Seller only has ${seller.wallet.main} NXS available.`);
+            }
+
+            // Check if requested exceeds the order's stated limit (optional constraint)
+            if (requestedAmount > order.amount) {
+                throw new Error(`Maximum limit for this listing is ${order.amount} NXS.`);
+            }
+
+            // 1. Lock Seller's Escrow LIVE
+            await User.findByIdAndUpdate(order.userId, {
                 $inc: {
-                    'wallet.main': -amount,
-                    'wallet.escrow_locked': amount
+                    'wallet.main': -requestedAmount,
+                    'wallet.escrow_locked': requestedAmount
                 }
             }, { session });
 
-            // 2. Create Order
-            const order = await P2POrder.create([{
-                userId,
-                amount,
-                paymentMethod,
-                paymentDetails,
-                status: 'OPEN'
+            // 2. Create Trade Session
+            const trade = await P2PTrade.create([{
+                orderId: order._id,
+                sellerId: order.userId,
+                buyerId: buyerId,
+                amount: requestedAmount,
+                status: 'CREATED'
             }], { session });
 
             // 3. Log Escrow Transaction
             await Transaction.create([{
-                userId,
-                amount: -amount,
-                type: 'admin_debit', // Could add 'p2p_escrow_lock' enum later
-                description: `P2P Sell Order Locked (Order #${order[0]._id})`,
-                source: 'transaction', // [HISTORY FIX]
+                userId: order.userId,
+                amount: -requestedAmount,
+                type: 'admin_debit',
+                description: `P2P Sell Escrow Locked (Trade #${trade[0]._id})`,
+                source: 'transaction',
                 status: 'completed',
                 currency: 'NXS'
             }], { session });
 
-            return order[0];
+            // We do NOT mark order as LOCKED anymore, because it's a Live Listing that others can still buy from until balance is 0.
+            // But we will update the stated max limit
+            await P2POrder.findByIdAndUpdate(order._id, {
+                $inc: { amount: -requestedAmount }
+            }, { session });
+
+            // If order limit hit exactly 0, close it. (Though logic mostly relies on seller.wallet.main now)
+            if (order.amount - requestedAmount <= 0) {
+                await P2POrder.findByIdAndUpdate(order._id, { status: 'COMPLETED' }, { session });
+            }
+
+            return trade[0];
+        }).then(async (trade) => {
+            // Notify System & Users out of session
+            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_start', trade);
+            SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
+            await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id });
+
+            // Because Seller's balance changed, the UserModel pre/post save hook WILL NOT fire from findByIdAndUpdate.
+            // So we manually broadcast the new balance to the global market or just personal room.
+            const updatedSeller = await User.findById(trade.sellerId);
+            SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
+
+            return trade;
         });
     }
+
+    // Read Methods
+    async getOpenOrders() {
+        // We select the LIVE wallet.main of the user alongside the order
+        const orders = await P2POrder.find({ status: 'OPEN' }).populate({
+            path: 'userId',
+            select: 'username badges wallet.main trustScore ratingCount isVerified completedTrades'
+        });
+
+        // Filter out orders where seller literally has 0 balance (stale orders)
+        // Or we could auto-close them here.
+        return orders.filter(o => o.userId && o.userId.wallet && o.userId.wallet.main > 0);
+    }
+
+
 
     // --- 2. CANCEL SELL ORDER (Refunds Escrow) ---
     async cancelOrder(userId, orderId) {
@@ -86,37 +168,7 @@ class P2PService {
         });
     }
 
-    // --- 3. INITIATE BUY (Match) ---
-    async initiateTrade(buyerId, orderId) {
-        // Prevent self-buying
-        const order = await P2POrder.findById(orderId);
-        if (!order) throw new Error("Order not found");
-        if (order.userId.toString() === buyerId.toString()) throw new Error("Cannot buy your own order");
-        if (order.status !== 'OPEN') throw new Error("Order is no longer available");
 
-        // Lock Order
-        order.status = 'LOCKED';
-        await order.save();
-
-        // Create Trade Session
-        const trade = await P2PTrade.create({
-            orderId: order._id,
-            sellerId: order.userId,
-            buyerId: buyerId,
-            amount: order.amount,
-            status: 'CREATED'
-        });
-
-        order.activeTradeId = trade._id;
-        await order.save();
-
-        // Notify Seller
-        SocketService.broadcast(`user_${order.userId}`, 'p2p_trade_start', trade);
-        SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${order.amount} NXS`, tradeId: trade._id });
-        await NotificationService.send(order.userId, `New P2P Match! Buyer is ready to pay ${order.amount} NXS`, 'success', { tradeId: trade._id });
-
-        return trade;
-    }
 
     // --- 4. BUYER MARKS PAID ---
     // --- 4. BUYER MARKS PAID ---
@@ -310,10 +362,7 @@ class P2PService {
         SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_message', msg);
     }
 
-    // Read Methods
-    async getOpenOrders() {
-        return await P2POrder.find({ status: 'OPEN' }).populate('userId', 'username badges');
-    }
+
 
     async getMyOrders(userId) {
         return await P2POrder.find({ userId }).sort({ createdAt: -1 });

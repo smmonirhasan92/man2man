@@ -5,8 +5,8 @@ class P2PController {
     // POST /api/p2p/sell
     async createSellOrder(req, res) {
         try {
-            const { amount, paymentMethod, paymentDetails } = req.body;
-            const order = await P2PService.createSellOrder(req.user.user.id, amount, paymentMethod, paymentDetails);
+            const { amount, paymentMethod, paymentDetails, rate } = req.body;
+            const order = await P2PService.createSellOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate);
             res.json({ success: true, order });
         } catch (e) {
             res.status(400).json({ message: e.message });
@@ -66,7 +66,8 @@ class P2PController {
     // POST /api/p2p/buy/:orderId
     async initiateTrade(req, res) {
         try {
-            const trade = await P2PService.initiateTrade(req.user.user.id, req.params.orderId);
+            const { requestedAmount } = req.body; // New field for partial buying
+            const trade = await P2PService.initiateTrade(req.user.user.id, req.params.orderId, requestedAmount);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });

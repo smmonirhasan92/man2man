@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const P2POrderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    amount: { type: Number, required: true },
+    amount: { type: Number, required: true }, // The maximum available limit when the order was created
+    rate: { type: Number, required: true, default: 126 }, // Exchange rate: e.g., 1 NXS = 126 BDT
     currency: { type: String, default: 'NXS' },
 
     paymentMethod: {
