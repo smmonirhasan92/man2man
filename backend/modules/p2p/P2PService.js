@@ -233,7 +233,7 @@ class P2PService {
             const allowedStatuses = ['AWAITING_ADMIN', 'PAID'];
             if (!allowedStatuses.includes(trade.status)) throw new Error(`Trade status ${trade.status} not valid for release`);
 
-            const PLATFORM_FEE_PERCENT = 0.02; // 2%
+            const PLATFORM_FEE_PERCENT = 0.01; // 1%
             const feeAmount = trade.amount * PLATFORM_FEE_PERCENT;
             const finalAmount = trade.amount - feeAmount;
 
