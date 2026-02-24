@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { useSocket } from '../../../hooks/useSocket';
+import { useSocket } from '../../hooks/useSocket';
 import { Activity } from 'lucide-react';
 
 export default function AdminLiveChart({ initialData }) {
