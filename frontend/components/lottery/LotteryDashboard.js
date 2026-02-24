@@ -37,7 +37,7 @@ export default function LotteryDashboard() {
                             <div>
                                 <h4 className="text-yellow-200 font-bold text-xs uppercase tracking-widest">Global Win Alert</h4>
                                 <p className="text-white font-bold">
-                                    User {w.userId.substr(-4)} just won <span className="text-yellow-400">{w.wonAmount} TK</span>!
+                                    User {w.userId.substr(-4)} just won <span className="text-yellow-400">{w.wonAmount} NXS</span>!
                                 </p>
                                 <p className="text-[10px] text-yellow-500/80 uppercase">{w.tierName || 'Lottery Win'}</p>
                             </div>
@@ -102,9 +102,9 @@ export default function LotteryDashboard() {
             <div>
                 <h2 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
                     <Ticket className="text-yellow-400 w-8 h-8" />
-                    LOTTERY ECOSYSTEM
+                    ECOSYSTEM REWARDS
                 </h2>
-                <p className="text-slate-400 text-sm">Choose your game pace. Win Big.</p>
+                <p className="text-slate-400 text-sm">Select your desired reward tier. Participate to win.</p>
             </div>
 
             {/* NEW HYBRID GRID VIEW */}
@@ -123,8 +123,8 @@ export default function LotteryDashboard() {
                 ) : (
                     <div className="bg-[#111] rounded-2xl p-10 border border-white/5 text-center flex flex-col items-center justify-center">
                         <Ticket className="w-16 h-16 text-slate-600 mb-4 opacity-50" />
-                        <h3 className="text-slate-400 font-bold text-xl">No Active Lotteries</h3>
-                        <p className="text-sm text-slate-500 mt-2">Check back later for new draws.</p>
+                        <h3 className="text-slate-400 font-bold text-xl">No Active Draws</h3>
+                        <p className="text-sm text-slate-500 mt-2">Check back later for new rewards.</p>
                     </div>
                 )}
             </div>
@@ -133,7 +133,7 @@ export default function LotteryDashboard() {
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-bold flex items-center gap-2 text-slate-300">
-                        <span>{viewMode === 'GLOBAL' ? '📜 Ecosystem Wins' : '🎫 My Entries'}</span>
+                        <span>{viewMode === 'GLOBAL' ? '📜 Ecosystem Rewards' : '🎫 My Entries'}</span>
                     </h2>
                     <div className="flex bg-slate-800 rounded-lg p-1 border border-white/5">
                         <button

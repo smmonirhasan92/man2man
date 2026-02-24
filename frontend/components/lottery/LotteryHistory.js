@@ -76,7 +76,7 @@ export default function LotteryHistory({ history, mode = 'GLOBAL' }) {
                                     {item.prizes.map((p, pi) => (
                                         <div key={pi} className="flex justify-between items-center text-[10px] text-slate-500">
                                             <span>{p.name}</span>
-                                            <span className="text-yellow-500 font-mono">৳{p.amount}</span>
+                                            <span className="text-yellow-500 font-mono">{p.amount} NXS</span>
                                         </div>
                                     ))}
                                 </div>

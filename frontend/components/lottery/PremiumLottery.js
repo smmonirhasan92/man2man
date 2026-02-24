@@ -135,15 +135,10 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
             if (data.slotId === slotId) {
                 setShowDrum(false); // [FIX] Ensure drum stops immediately on win
                 fetchData();
-                import('canvas-confetti').then((confetti) => {
-                    confetti.default({
-                        particleCount: 150,
-                        spread: 70,
-                        origin: { y: 0.6 },
-                        disableForReducedMotion: true,
-                        zIndex: 2000 // Above modals
-                    });
-                }).catch(e => console.warn("Confetti skipped", e));
+                toast('Draw Cycle Complete. Winners Finalized.', {
+                    icon: '🏆',
+                    style: { background: '#1e293b', color: '#fff', border: '1px solid #3b82f6' }
+                });
             }
         };
 
@@ -163,7 +158,7 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
             setConfirmModal({
                 isOpen: true,
                 title: 'Confirm Purchase',
-                message: `Are you sure you want to buy ${ticketQuantity} ticket(s) for ${tier}? It will cost ${ticketPrice * ticketQuantity} TK.`,
+                message: `Are you sure you want to buy ${ticketQuantity} entry(s) for ${tier}? It will cost ${ticketPrice * ticketQuantity} NXS.`,
                 onConfirm: () => buyTicket(true)
             });
             return;
@@ -315,40 +310,24 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                             <div key={i} className="smoke-particle" style={{ left: `${40 + i * 5}%`, bottom: '40%', animationDelay: `${i * 0.2}s` }}></div>
                         ))}
 
-                        {/* SLOT MACHINE ANIMATION */}
-                        <div className="flex gap-2 mb-8 relative z-10 px-4 py-8 bg-black/50 rounded-3xl border border-yellow-500/20 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden">
-                            {[1, 2, 3, 4, 5].map((_, idx) => (
-                                <div key={idx} className="w-16 h-24 bg-gradient-to-b from-slate-900 via-[#111] to-slate-900 rounded-xl relative overflow-hidden border-2 border-slate-700 shadow-inner flex items-center justify-center">
-                                    <motion.div
-                                        animate={{ y: [0, -1000] }}
-                                        transition={{
-                                            duration: 2 + (idx * 0.5),
-                                            ease: "circOut",
-                                            repeat: 0,
-                                        }}
-                                        className="absolute flex flex-col items-center top-0 font-black text-5xl font-mono text-yellow-500 tracking-tighter drop-shadow-[0_2px_5px_rgba(0,0,0,1)]"
-                                    >
-                                        {/* Generate long strip of random numbers for the roll, ending in a '? ' or final digit since we don't know the exact winner ticket text early */}
-                                        {[...Array(20)].map((_, i) => (
-                                            <div key={i} className="h-24 flex items-center justify-center">
-                                                {Math.floor(Math.random() * 10)}
-                                            </div>
-                                        ))}
-                                        <div className="h-24 flex items-center justify-center text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]">?</div>
-                                    </motion.div>
-
-                                    {/* Glass Overlay for 3D effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/80 pointer-events-none"></div>
-                                </div>
-                            ))}
+                        {/* PROFESSIONAL PROCESSING ANIMATION */}
+                        <div className="flex flex-col items-center justify-center mb-8 relative z-10 px-8 py-12 bg-black/50 rounded-3xl border border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.2)]">
+                            <div className="w-16 h-16 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+                            <div className="text-xl font-bold text-slate-300 font-mono tracking-widest uppercase text-center mb-2">
+                                Executing Draw Algorithm
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500 font-mono uppercase">
+                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                Validating blockchain hashes...
+                            </div>
                         </div>
 
                         <motion.div
                             animate={{ scale: [1, 1.1, 1] }}
                             transition={{ repeat: Infinity, duration: 1 }}
-                            className={`text-${theme.color}-500 font-black text-2xl tracking-[0.2em] animate-pulse drop-shadow-[0_0_15px_rgba(var(--${theme.color}-rgb),0.8)] relative z-10`}
+                            className={`text-white font-black text-2xl tracking-[0.2em] animate-pulse drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] relative z-10`}
                         >
-                            GENERATING WINNER...
+                            FINALIZING RESULTS...
                         </motion.div>
                     </motion.div>
                 )}
@@ -426,9 +405,9 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                                 {/* Prize Range Badge */}
                                 <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-1">
                                     Winning:
-                                    <span className="text-yellow-500 font-bold">৳{prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()}</span>
+                                    <span className="text-yellow-500 font-bold">{prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS</span>
                                     <span className="text-slate-600">-</span>
-                                    <span className="text-yellow-500 font-bold">৳{prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()}</span>
+                                    <span className="text-yellow-500 font-bold">{prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS</span>
                                 </div>
 
                                 <div className="flex items-center gap-2 mt-1">
@@ -447,13 +426,13 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                                     <div className="bg-black/40 border border-white/5 rounded px-2 py-1.5 flex flex-col items-center justify-center">
                                         <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Jackpot</span>
                                         <span className="text-yellow-400 font-mono font-bold text-xs">
-                                            ৳{prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()}
+                                            {prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS
                                         </span>
                                     </div>
                                     <div className="bg-black/40 border border-white/5 rounded px-2 py-1.5 flex flex-col items-center justify-center">
                                         <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Min Prize</span>
                                         <span className="text-emerald-400 font-mono font-bold text-xs">
-                                            ৳{prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : '0'}
+                                            {prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : '0'} NXS
                                         </span>
                                     </div>
                                     <div className="bg-black/40 border border-white/5 rounded px-2 py-1.5 flex flex-col items-center justify-center">
@@ -476,10 +455,10 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                         </div>
                         <div className="relative">
                             <h2 className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.8)]">
-                                <span className="text-4xl bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 to-yellow-600 align-top opacity-90 mr-1">৳</span>
                                 <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-yellow-100 to-yellow-400">
                                     {jackpot.toLocaleString()}
                                 </span>
+                                <span className="text-2xl font-bold text-yellow-500/80 ml-2 tracking-normal align-middle">NXS</span>
                             </h2>
                         </div>
                         <button onClick={() => setShowPrizeList(true)} className="text-[10px] text-slate-500 underline mt-2 hover:text-white transition">View All Prizes</button>
@@ -606,7 +585,7 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                                     <>
                                         <span>BUY NOW</span>
                                         <span className="bg-black/30 text-yellow-100 px-3 py-1 rounded-lg text-sm border border-black/20">
-                                            ৳{ticketPrice * ticketQuantity}
+                                            {ticketPrice * ticketQuantity} NXS
                                         </span>
                                     </>
                                 )}
