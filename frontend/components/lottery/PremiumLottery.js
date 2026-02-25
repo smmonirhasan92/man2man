@@ -381,221 +381,189 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
             </AnimatePresence>
 
 
-            {/* GOLDEN CARD CONTAIENR */}
-            <motion.div
-                layoutId={`lottery-card-${tier}`}
-                className={`relative bg-[#050505] rounded-3xl p-[1px] shadow-[0_0_30px_-5px_rgba(var(--${theme.color}-rgb),0.3)] overflow-hidden group`}
-            >
-                {/* CSS Animated Border Gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br from-${theme.color}-500 via-transparent to-${theme.color}-900 opacity-50 group-hover:opacity-100 transition duration-1000`}></div>
+            {/* UI CONDITIONAL RENDERING */}
+            {drawType === 'TIME_BASED' ? (
+                /* -------------------------------------------------------------------------- */
+                /*                         DESIGN A: TIME-BASED (NEON TECH)                   */
+                /* -------------------------------------------------------------------------- */
+                <motion.div layoutId={`lottery-card-${tier}`} className="relative bg-[#050505] rounded-3xl p-[1px] shadow-[0_0_40px_-5px_rgba(6,182,212,0.2)] overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-transparent to-blue-900/30 opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+                    <div className="relative w-full h-auto bg-[#080d16] rounded-[23px] overflow-hidden flex flex-col justify-between p-5 md:p-7">
 
-                {/* Core Card Container */}
-                <div className={`relative w-full h-auto bg-slate-900 rounded-[2rem] overflow-hidden flex flex-col justify-between`}>
-
-                    {/* Header: Tier Label & Timer */}
-                    <div className="flex justify-between items-start mb-8">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-3 rounded-xl bg-gradient-to-br from-${theme.color}-500/20 to-black border border-${theme.color}-500/30 shadow-[inset_0_0_10px_rgba(var(--${theme.color}-rgb),0.2)]`}>
-                                <Icon className={`w-6 h-6 text-${theme.color}-400 drop-shadow-[0_0_8px_rgba(var(--${theme.color}-rgb),1)]`} />
-                            </div>
-                            <div>
-                                <h3 className={`font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 text-xl tracking-wider select-none uppercase`}>
-                                    {theme.label}
-                                </h3>
-                                {/* Prize Range Badge */}
-                                <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-1">
-                                    Winning:
-                                    <span className="text-yellow-500 font-bold">{prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS</span>
-                                    <span className="text-slate-600">-</span>
-                                    <span className="text-yellow-500 font-bold">{prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS</span>
+                        {/* Header Content */}
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-black border border-cyan-500/30 shadow-[inset_0_0_15px_rgba(6,182,212,0.2)]">
+                                    <Timer className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
                                 </div>
-
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className={`relative flex h-2 w-2`}>
-                                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-${theme.color}-400 opacity-75`}></span>
-                                        <span className={`relative inline-flex rounded-full h-2 w-2 bg-${theme.color}-500`}></span>
-                                    </span>
-                                    <span className={`text-[10px] font-bold text-${theme.color}-400 uppercase tracking-widest`}>
-                                        {effectiveStatus === 'DRAWING' ? 'DRAWING NOW' : (timeLeft === 'LIVE' ? 'LIVE NOW' : (isOpenPhase ? 'STATUS: OPEN FOR ENTRIES' : timeLeft))}
-                                        {isPhaseLocked && <span className="ml-2 text-red-500 animate-pulse">(Locked)</span>}
-                                    </span>
-                                </div>
-
-                                {/* NEW: Prize Metrics */}
-                                <div className="grid grid-cols-3 gap-2 mt-4 w-full">
-                                    <div className="bg-black/40 border border-white/5 rounded px-2 py-1.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Jackpot</span>
-                                        <span className="text-yellow-400 font-mono font-bold text-xs">
-                                            {prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS
-                                        </span>
+                                <div>
+                                    <h3 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-cyan-200 text-xl tracking-wider uppercase drop-shadow-md">
+                                        {theme.label}
+                                    </h3>
+                                    <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                                        WINNING: <span className="text-cyan-400 font-bold">{prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()}</span> - <span className="text-cyan-400 font-bold">{prizes.length > 0 ? Math.max(...prizes.map(p => p.amount)).toLocaleString() : jackpot.toLocaleString()} NXS</span>
                                     </div>
-                                    <div className="bg-black/40 border border-white/5 rounded px-2 py-1.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Min Prize</span>
-                                        <span className="text-emerald-400 font-mono font-bold text-xs">
-                                            {prizes.length > 0 ? Math.min(...prizes.map(p => p.amount)).toLocaleString() : '0'} NXS
-                                        </span>
-                                    </div>
-                                    <div className="bg-black/40 border border-white/5 rounded px-2 py-1.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Winners</span>
-                                        <span className="text-white font-mono font-bold text-xs">
-                                            {prizes.length > 0 ? prizes.length : 1}
-                                        </span>
+                                    <div className="text-[10px] font-bold text-cyan-500 uppercase flex items-center gap-2 mt-1 drop-shadow-sm">
+                                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                        {effectiveStatus === 'DRAWING' ? 'DRAWING NOW' : (timeLeft === 'LIVE' ? 'LIVE NOW' : (isOpenPhase ? 'STATUS: OPEN' : 'STATUS: WAITING'))}
+                                        {isPhaseLocked && <span className="text-red-500 ml-1">(Locked)</span>}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Jackpot Display (Golden Glow E-Commerce Style) */}
-                    <div className="text-center mb-8 relative py-6 mt-4">
-                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-24 bg-yellow-500/10 blur-3xl rounded-full pointer-events-none"></div>
-                        <div className="flex justify-center items-center gap-2 mb-3 cursor-pointer group/prize" onClick={() => setShowPrizeList(true)}>
-                            <div className="text-xs font-black text-yellow-500 uppercase tracking-[0.4em] drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]">Current Prize Pool</div>
-                            <Trophy className="w-4 h-4 text-yellow-400 group-hover/prize:scale-125 transition drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
-                        </div>
-                        <div className="relative">
-                            <h2 className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.8)]">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-yellow-100 to-yellow-400">
-                                    {jackpot.toLocaleString()}
-                                </span>
-                                <span className="text-2xl font-bold text-yellow-500/80 ml-2 tracking-normal align-middle">NXS</span>
-                            </h2>
-                        </div>
-                        <button onClick={() => setShowPrizeList(true)} className="text-[10px] text-slate-500 underline mt-2 hover:text-white transition">View All Prizes</button>
-                    </div>
-
-                    {/* UI Mode: TIME_BASED vs SALES_BASED */}
-                    {drawType === 'SALES_BASED' ? (
-                        <div className="mb-6 group/progress">
-                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase">
-                                <span>FUNDING TARGET</span>
-                                <span className={`text-${theme.color}-400`}>{Math.round(progress)}% Sold</span>
-                            </div>
-                            <div className="h-4 bg-[#111] rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] border border-white/5 relative">
-                                {/* CSS Stripe Pattern */}
-                                <div
-                                    className={`h-full bg-gradient-to-r from-${theme.color}-600 via-${theme.color}-500 to-${theme.color}-400 transition-all duration-1000 ease-out relative overflow-hidden`}
-                                    style={{ width: `${progress}%` }}
-                                >
-                                    <div className="absolute inset-0 w-full h-full"
-                                        style={{
-                                            backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)',
-                                            backgroundSize: '1rem 1rem'
-                                        }}
-                                    ></div>
-                                    <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 blur-[2px]"></div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="mb-6 flex flex-col items-center justify-center bg-white/5 rounded-xl p-4 border border-white/5">
-                            <span className="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-widest flex items-center gap-2">
-                                <Timer className="w-3 h-3" /> Draw Ends In
+                        {/* Neon Digital Clock */}
+                        <div className="mb-6 flex flex-col items-center justify-center bg-[#03060a] rounded-2xl p-6 border border-cyan-900/50 shadow-[0_0_20px_rgba(6,182,212,0.05)] relative overflow-hidden">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent pointer-events-none"></div>
+                            <span className="text-[10px] font-bold text-cyan-700 mb-2 uppercase tracking-[0.2em] flex items-center gap-2 z-10">
+                                <Zap className="w-3 h-3 text-cyan-500" /> Time Remaining
                             </span>
-                            <span className={`text-2xl font-black font-mono tracking-wider ${timeLeft.includes('0h 0m') ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                            <span className={`text-5xl md:text-6xl font-black font-mono tracking-widest text-center z-10 ${timeLeft.includes('0h 0m') ? 'text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]'}`}>
                                 {timeLeft}
                             </span>
                         </div>
-                    )}
 
-                    <div className="space-y-3 mt-auto">
-                        <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 group-hover:border-white/10 transition">
-                            <div className="flex items-center gap-2 text-xs text-slate-400">
-                                <Ticket className="w-3 h-3" /> My Entries
+                        {/* Jackpot Display */}
+                        <div className="text-center mb-8 relative">
+                            <div className="text-[10px] font-black text-cyan-700/80 uppercase tracking-[0.3em] mb-1 cursor-pointer flex justify-center items-center gap-1" onClick={() => setShowPrizeList(true)}>
+                                Guaranteed Prize Pool <Trophy className="w-3 h-3 text-cyan-600" />
                             </div>
-                            <span className="text-sm font-bold text-white font-mono">{Number(myTickets || 0)}</span>
+                            <h2 className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]">
+                                {jackpot.toLocaleString()}<span className="text-2xl font-bold text-cyan-500 ml-2">NXS</span>
+                            </h2>
+                            <button onClick={() => setShowPrizeList(true)} className="text-[10px] text-cyan-700 underline mt-2 hover:text-cyan-400 transition">View Tiers ({prizes.length || 1} Winners)</button>
                         </div>
 
-                        {/* QUANTITY & QUICK BUY SELECTOR */}
-                        {(!isPhaseLocked && effectiveStatus !== 'DRAWING') && (
-                            <div className="space-y-3">
-                                {/* Quick Buy Shortcuts */}
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[5, 10, 20].map(qty => (
-                                        <button
-                                            key={qty}
-                                            onClick={() => setTicketQuantity(qty)}
-                                            className="bg-[#111] hover:bg-yellow-500/20 border border-white/10 hover:border-yellow-500/50 text-slate-300 hover:text-yellow-400 font-bold text-xs py-2 rounded-lg transition"
-                                        >
-                                            {qty}x Tickets
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Action Area */}
+                        <div className="space-y-4 mt-auto">
+                            <div className="flex justify-between items-center bg-cyan-950/20 p-3 rounded-xl border border-cyan-900/30">
+                                <span className="text-xs text-cyan-600/80 uppercase font-bold tracking-widest flex items-center gap-2"><Ticket className="w-3 h-3" /> My Entries</span>
+                                <span className="font-bold text-white font-mono text-lg">{Number(myTickets || 0)}</span>
+                            </div>
 
-                                {/* Manual Adjuster */}
-                                <div className="flex justify-between items-center bg-black/40 p-2 rounded-xl border border-white/5">
-                                    <span className="text-xs text-slate-400 ml-2">Custom Qty</span>
-                                    <div className="flex items-center gap-3 bg-[#111] rounded-lg border border-white/10 p-1">
-                                        <button
-                                            onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
-                                            className="w-8 h-8 rounded shrink-0 bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center font-bold font-mono transition"
-                                        >
-                                            -
-                                        </button>
-                                        <span className="w-8 text-center font-bold text-yellow-500 font-mono text-lg">{ticketQuantity}</span>
-                                        <button
-                                            onClick={() => setTicketQuantity(Math.min(50, ticketQuantity + 1))} // Max 50 per click for safety
-                                            className={`w-8 h-8 rounded shrink-0 bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-500 flex items-center justify-center font-bold font-mono transition`}
-                                        >
-                                            +
-                                        </button>
+                            {(!isPhaseLocked && effectiveStatus !== 'DRAWING') && (
+                                <div className="flex justify-between items-center bg-[#03060a] p-2 rounded-xl border border-cyan-900/50">
+                                    <span className="text-[10px] text-cyan-700 uppercase font-bold ml-2">Quantity</span>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))} className="w-10 h-10 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-cyan-400 font-bold transition flex items-center justify-center text-xl">-</button>
+                                        <span className="w-10 text-center font-bold text-white font-mono text-xl">{ticketQuantity}</span>
+                                        <button onClick={() => setTicketQuantity(Math.min(50, ticketQuantity + 1))} className="w-10 h-10 rounded-lg bg-cyan-900/80 hover:bg-cyan-800 text-cyan-300 font-bold transition flex items-center justify-center text-xl">+</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Buy Button */}
+                            <button
+                                onClick={() => {
+                                    if (isOpenPhase) { buyTicket(); return; }
+                                    if (effectiveStatus === 'DRAWING') setShowDrum(true);
+                                    else if (effectiveLock) toast('Draw starts soon! Ticket sales closed.', { icon: '⏳', style: { background: '#333', color: '#fff' } });
+                                    else buyTicket();
+                                }}
+                                disabled={loading}
+                                className={`relative w-full py-5 rounded-xl font-black text-lg uppercase tracking-[0.2em] transition-all overflow-hidden group/btn ${loading ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : (effectiveStatus === 'DRAWING' || effectiveLock) ? 'bg-cyan-700 text-white animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.5)] border border-cyan-400/50' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-[0_0_30px_rgba(6,182,212,0.4)] border border-cyan-400/30'}`}
+                            >
+                                <span className="relative z-10 drop-shadow-md">
+                                    {loading ? 'Processing...' : (effectiveStatus === 'DRAWING' || effectiveLock) ? 'Watch Draw' : `Secure Entry (${ticketPrice * ticketQuantity} NXS)`}
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            ) : (
+                /* -------------------------------------------------------------------------- */
+                /*                         DESIGN B: SALES-BASED (CROWD FUNDING)              */
+                /* -------------------------------------------------------------------------- */
+                <motion.div layoutId={`lottery-card-${tier}`} className="relative bg-[#050505] rounded-3xl p-[1px] shadow-[0_0_40px_-5px_rgba(16,185,129,0.2)] overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/30 via-transparent to-emerald-900/30 opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+                    <div className="relative w-full h-auto bg-[#040d08] rounded-[23px] overflow-hidden flex flex-col justify-between p-5 md:p-7">
+
+                        {/* Header Content */}
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-black border border-emerald-500/30 shadow-[inset_0_0_15px_rgba(16,185,129,0.2)]">
+                                    <Target className="w-6 h-6 text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-emerald-200 text-xl tracking-wider uppercase drop-shadow-md">
+                                        Volume Target
+                                    </h3>
+                                    <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                                        TIER: <span className="text-emerald-400 font-bold uppercase">{theme.label}</span>
+                                    </div>
+                                    <div className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-2 mt-1 drop-shadow-sm">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"></span>
+                                        {effectiveStatus === 'DRAWING' ? 'EXECUTING NOW' : 'COLLECTING ENTRIES'}
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        <button
-                            onClick={() => {
-                                // [FIXED] Priority: If Open Phase, always Buy.
-                                if (isOpenPhase) {
-                                    buyTicket();
-                                    return;
-                                }
+                        {/* Jackpot Display */}
+                        <div className="text-center mb-8 relative py-4 bg-emerald-950/10 rounded-2xl border border-emerald-900/20">
+                            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 bg-emerald-500/5 blur-3xl rounded-full"></div>
+                            <div className="text-[10px] font-black text-emerald-700/80 uppercase tracking-[0.3em] mb-2 cursor-pointer flex justify-center items-center gap-1" onClick={() => setShowPrizeList(true)}>
+                                Target Prize Pool <Trophy className="w-3 h-3 text-emerald-600" />
+                            </div>
+                            <h2 className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]">
+                                {jackpot.toLocaleString()}<span className="text-2xl font-bold text-emerald-500 ml-2">NXS</span>
+                            </h2>
+                            <button onClick={() => setShowPrizeList(true)} className="text-[10px] text-emerald-700 underline mt-2 hover:text-emerald-400 transition">View Tiers ({prizes.length || 1} Winners)</button>
+                        </div>
 
-                                if (effectiveStatus === 'DRAWING') {
-                                    setShowDrum(true);
-                                } else if (effectiveLock) {
-                                    // [FIX] Pre-Draw Alert
-                                    toast('Draw starts soon! Ticket sales closed.', {
-                                        icon: '⏳',
-                                        style: { background: '#333', color: '#fff' }
-                                    });
-                                } else {
-                                    buyTicket();
-                                }
-                            }}
-                            disabled={loading} // Remove showDrum disable constraint if we want to allow recovery? No, keep standard.
-                            className={`
-                                relative w-full py-6 min-h-[64px] rounded-xl font-black text-xl uppercase tracking-widest overflow-hidden cursor-pointer group/btn active:scale-95 transition-transform duration-100
-                                ${loading
-                                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
-                                    : (effectiveStatus === 'DRAWING' || effectiveLock)
-                                        ? 'bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse border border-red-400/50'
-                                        : `bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black shadow-[0_0_40px_-5px_rgba(234,179,8,0.6)] border border-yellow-300/50`
-                                }
-                            `}
-                        >
-                            <span className="relative z-10 flex items-center justify-center gap-3 drop-shadow-md">
-                                {loading ? 'Processing...' : (effectiveStatus === 'DRAWING' || effectiveLock) ? (
-                                    <>
-                                        <Zap className="w-6 h-6 animate-pulse text-yellow-300" />
-                                        <span>WATCH DRAW</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>BUY NOW</span>
-                                        <span className="bg-black/30 text-yellow-100 px-3 py-1 rounded-lg text-sm border border-black/20">
-                                            {ticketPrice * ticketQuantity} NXS
-                                        </span>
-                                    </>
-                                )}
-                            </span>
-                            {/* Button Shine Effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
-                        </button>
+                        {/* Crowd Funding Bar */}
+                        <div className="mb-10 bg-[#020604] p-4 rounded-xl border border-emerald-900/30">
+                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">
+                                <span>Volume Goal</span>
+                                <span className="text-emerald-400 font-mono">{Math.round(progress)}% Filled</span>
+                            </div>
+                            <div className="h-6 bg-[#010302] rounded-full overflow-hidden border border-emerald-900/50 relative shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]">
+                                <div className="h-full bg-gradient-to-r from-emerald-700 via-emerald-500 to-emerald-400 relative transition-all duration-1000 ease-out" style={{ width: `${progress}%` }}>
+                                    <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)', backgroundSize: '1.5rem 1.5rem' }}></div>
+                                    <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/60 blur-[3px]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Area */}
+                        <div className="space-y-4 mt-auto">
+                            <div className="flex justify-between items-center bg-emerald-950/20 p-3 rounded-xl border border-emerald-900/30">
+                                <span className="text-xs text-emerald-600/80 uppercase font-bold tracking-widest flex items-center gap-2"><Ticket className="w-3 h-3" /> My Entries</span>
+                                <span className="font-bold text-white font-mono text-lg">{Number(myTickets || 0)}</span>
+                            </div>
+
+                            {(!isPhaseLocked && effectiveStatus !== 'DRAWING') && (
+                                <div className="flex justify-between items-center bg-[#020604] p-2 rounded-xl border border-emerald-900/50">
+                                    <span className="text-[10px] text-emerald-700 uppercase font-bold ml-2">Quantity</span>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))} className="w-10 h-10 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-500 font-bold transition flex items-center justify-center text-xl">-</button>
+                                        <span className="w-10 text-center font-bold text-white font-mono text-xl">{ticketQuantity}</span>
+                                        <button onClick={() => setTicketQuantity(Math.min(50, ticketQuantity + 1))} className="w-10 h-10 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-400 font-bold transition flex items-center justify-center text-xl">+</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Buy Button */}
+                            <button
+                                onClick={() => {
+                                    if (isOpenPhase) { buyTicket(); return; }
+                                    if (effectiveStatus === 'DRAWING') setShowDrum(true);
+                                    else if (effectiveLock) toast('Market closed! Target reached.', { icon: '🎯', style: { background: '#111', color: '#10b981' } });
+                                    else buyTicket();
+                                }}
+                                disabled={loading}
+                                className={`relative w-full py-5 rounded-xl font-black text-lg uppercase tracking-[0.2em] transition-all overflow-hidden group/btn ${loading ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : (effectiveStatus === 'DRAWING' || effectiveLock) ? 'bg-emerald-700 text-white animate-pulse shadow-[0_0_20px_rgba(16,185,129,0.5)] border border-emerald-400/50' : 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-[0_0_30px_rgba(16,185,129,0.3)] border border-emerald-400/30'}`}
+                            >
+                                <span className="relative z-10 drop-shadow-md">
+                                    {loading ? 'Processing...' : (effectiveStatus === 'DRAWING' || effectiveLock) ? 'Watch Draw' : `Contribute (${ticketPrice * ticketQuantity} NXS)`}
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </motion.div>
+                </motion.div>
+            )}
 
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}
