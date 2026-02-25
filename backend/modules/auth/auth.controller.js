@@ -36,13 +36,17 @@ exports.register = async (req, res) => {
 
         // 4. Referral Logic
         let referrerCodeStored = null;
+        let referrerDoc = null;
         if (referralCode) {
             const referrer = await User.findOne({ referralCode });
             if (referrer) {
                 referrerCodeStored = referralCode;
+                referrerDoc = referrer;
                 referrer.referralCount = (referrer.referralCount || 0) + 1;
-                // Credit Legacy Pending Balance (optional)
-                referrer.wallet.pending_referral = (referrer.wallet.pending_referral || 0) + 20.00;
+
+                // [NEW] Fixed 20 BDT Direct Referral Bonus
+                referrer.wallet.income = (referrer.wallet.income || 0) + 20.00;
+                referrer.referralIncome = (referrer.referralIncome || 0) + 20.00;
                 await referrer.save();
             }
         }
@@ -65,7 +69,7 @@ exports.register = async (req, res) => {
             wallet: {
                 main: 0.00,
                 game: 0.00,
-                income: 0.00,
+                income: referrerCodeStored ? 20.00 : 0.00, // 20 BDT Welcome Bonus
                 purchase: 0.00,
                 pending_referral: 0.00,
                 agent: 0.00
@@ -84,6 +88,31 @@ exports.register = async (req, res) => {
             lastIp: '0.0.0.0',
             status: 'active'
         });
+
+        // 6.5 Log Referral Transactions
+        if (referrerDoc) {
+            const Transaction = require('../wallet/TransactionModel');
+
+            // Log for Referrer
+            await Transaction.create({
+                userId: referrerDoc._id,
+                type: 'referral_bonus',
+                amount: 20.00,
+                status: 'completed',
+                description: `Signup Bonus from ${username}`,
+                balanceAfter: referrerDoc.wallet.income
+            });
+
+            // Log for New User
+            await Transaction.create({
+                userId: user._id,
+                type: 'referral_bonus',
+                amount: 20.00,
+                status: 'completed',
+                description: `Welcome Bonus (Referred by ${referrerCodeStored})`,
+                balanceAfter: 20.00
+            });
+        }
 
         // 7. JWT
         const payload = { user: { id: user._id, role: user.role } };

@@ -7,7 +7,6 @@ import { ArrowLeft, Users, FileText, Settings, Shield, ShieldCheck, Wallet, Trop
 import DashboardCard from '../../../components/admin/DashboardCard';
 import LiveVaultTracker from '../../../components/admin/LiveVaultTracker';
 import EcosystemTracker from '../../../components/admin/EcosystemTracker';
-import AdminLiveChart from '../../../components/admin/AdminLiveChart';
 import ConfirmationModal from '../../../components/ui/ConfirmationModal';
 import toast from 'react-hot-toast';
 
@@ -137,26 +136,8 @@ export default function AdminDashboard() {
                 <EcosystemTracker />
 
                 {/* 1. FINANCIAL SUMMARY CARD */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    {/* Card 1: Platform Liability */}
-                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                            <Wallet className="w-20 h-20 text-blue-500" />
-                        </div>
-                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3 relative z-10">Total Liability</h3>
-                        <div className="flex flex-col gap-3 relative z-10">
-                            <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                <span className="text-slate-400 text-xs font-bold uppercase">Main</span>
-                                <span className="text-lg font-mono font-black text-blue-400">৳{Number(stats.userMainBalance).toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase">Game</span>
-                                <span className="text-lg font-mono font-black text-yellow-400">৳{Number(stats.userGameBalance).toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card 2: Today's Cashflow */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    {/* Card 1: Today's Cashflow */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                             <Activity className="w-20 h-20 text-emerald-500" />
@@ -187,7 +168,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
-                    {/* Card 3: Pending Actions */}
+                    {/* Card 2: Pending Actions */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-6 rounded-2xl relative overflow-hidden group flex flex-col justify-center items-center">
                         <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition"></div>
                         <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2 relative z-10">Pending Requests</h3>
@@ -198,11 +179,6 @@ export default function AdminDashboard() {
                             View All Requests &rarr;
                         </Link>
                     </div>
-                </div>
-
-                {/* 2. REALTIME CHART OVERVIEW */}
-                <div className="mb-8">
-                    <AdminLiveChart />
                 </div>
 
                 {/* DASHBOARD GRID (2-Column Strict) */}

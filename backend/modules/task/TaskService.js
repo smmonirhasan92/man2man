@@ -395,12 +395,8 @@ class TaskService {
                 await redisInv.client.del(`user_profile:${userId}`);
             } catch (e) { console.warn('Redis Invalidate Error:', e.message); }
 
-            // Distribute Referral Bonus
-            if (userUpd.referredBy && userUpd.taskData.tasksCompletedToday >= dailyLimit) {
-                const totalDailyReward = rewardAmount * dailyLimit;
-                // Use the session!
-                await this.ReferralService.distributeIncome(userUpd.referredBy, totalDailyReward, 'task_commission', session);
-            }
+            // [SECURITY FIX] Removed Daily Task Referral Bonus
+            // User Strategy: Prevent infinite liability generation. Referral commission is now strictly One-Time on package buys.
 
             return {
                 message: 'Task Completed',
