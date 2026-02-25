@@ -96,11 +96,7 @@ export default function WalletSwap({ user, onSuccess }) {
                             From: {getSourceWallet()}
                         </div>
                         <div className="text-xs font-bold text-white leading-none">
-                            {/* [FIX] Strict Dollar Formatting for Income Wallet to match Header */}
-                            {isIncomeToMain
-                                ? `$${Number(getSourceBalance()).toFixed(2)}`
-                                : `৳${Number(getSourceBalance()).toFixed(2)}`
-                            }
+                            {Number(getSourceBalance()).toFixed(2)}
                         </div>
                     </div>
 
@@ -119,15 +115,12 @@ export default function WalletSwap({ user, onSuccess }) {
 
                 <div className="flex gap-2">
                     <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono text-xs">
-                            {isIncomeToMain ? '$' : '৳'}
-                        </span>
                         <input
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="Amount"
-                            className="w-full h-full bg-slate-950/50 border border-slate-700 rounded-xl pl-6 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
+                            className="w-full h-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
                         />
                     </div>
                     {/* Action Button */}
