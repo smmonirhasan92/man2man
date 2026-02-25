@@ -182,7 +182,7 @@ function DashboardContent() {
                     <div className="grid grid-cols-3 gap-3">
                         {/* <FolderCard href="/gaming-zone" icon={Gamepad2} label="Gaming" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-white/20" /> */}
                         <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-yellow-400" gradient="from-yellow-600/20 to-yellow-900/40" border="border-white/20" />
-                        <FolderCard href="/marketplace" icon={Server} label="My Nodes" color="text-blue-400" gradient="from-blue-600/20 to-blue-900/40" border="border-white/20" />
+                        <FolderCard href="/p2p" icon={Server} label="P2P Market" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
 
                         <FolderCard href="/history" icon={Briefcase} label="History" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-white/20" />
                         <FolderCard href="/profile" icon={Users} label="Invite" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-white/20" />

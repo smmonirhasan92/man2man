@@ -24,7 +24,7 @@ export default function BottomNav() {
         // { name: 'Games', href: '/game-center', icon: Gamepad2 }, // [REMOVED]
 
         { name: 'Lottery', href: '/lottery', icon: Ticket },
-        { name: 'Marketplace', href: '/marketplace', icon: Globe, isFab: true },
+        { name: 'P2P Market', href: '/p2p', icon: Globe, isFab: true },
         { name: 'Wallet', href: '/wallet/recharge', icon: Wallet },
         { name: 'Member', action: () => setIsMenuOpen(!isMenuOpen), icon: User },
     ];

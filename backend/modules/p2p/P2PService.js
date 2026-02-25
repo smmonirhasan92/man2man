@@ -233,7 +233,7 @@ class P2PService {
             const allowedStatuses = ['AWAITING_ADMIN', 'PAID'];
             if (!allowedStatuses.includes(trade.status)) throw new Error(`Trade status ${trade.status} not valid for release`);
 
-            const PLATFORM_FEE_PERCENT = 0.01; // 1%
+            const PLATFORM_FEE_PERCENT = 0.02; // 2% Burn Fee
             const feeAmount = trade.amount * PLATFORM_FEE_PERCENT;
             const finalAmount = trade.amount - feeAmount;
 
@@ -247,14 +247,17 @@ class P2PService {
                 $inc: { 'wallet.main': finalAmount }
             }, { session });
 
-            // 3. Credit Admin Fee (To Admin Wallet - assuming ID exists or System Wallet)
-            // Implementation: We'll log it as a profit transaction for now since we don't have a hardcoded Admin user ID handy in this context without querying.
-            // Or if adminId is passed, credit them.
-            if (adminId && adminId !== 'SYSTEM_AUTO') {
-                await User.findByIdAndUpdate(adminId, {
-                    $inc: { 'wallet.commission': feeAmount } // Use commission wallet for fees
-                }, { session });
-            }
+            // 3. Ecosystem Money Burn (No Admin Credit)
+            // The fee amount simply vanishes from the system, tracking it as Ecosystem Recovery.
+            await Transaction.create([{
+                userId: trade.sellerId, // Tagged to seller for tracking source
+                amount: -feeAmount,
+                type: 'fee', // This links exactly to the Ecosystem Tracker
+                description: `P2P Trade Burn Fee (2%)`,
+                source: 'system',
+                status: 'completed',
+                currency: 'NXS'
+            }], { session });
 
             // 4. Close Trade & Order
             trade.status = 'COMPLETED';
