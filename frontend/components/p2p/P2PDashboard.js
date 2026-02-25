@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock } from 'lucide-react';
 import OrderCreationModal from './OrderCreationModal';
+import BuyOrderModal from './BuyOrderModal';
 import P2PChatRoom from './P2PChatRoom';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '../../hooks/useSocket';
@@ -19,6 +20,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [activeTradeId, setActiveTradeId] = useState(null);
     const [ratingTradeId, setRatingTradeId] = useState(null); // State for rating
+    const [buyModalConfig, setBuyModalConfig] = useState({ isOpen: false, order: null });
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const router = useRouter(); // [FIX] Initialize hook here
 
@@ -71,7 +73,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
         setLoading(false);
     };
 
-    const handleBuy = async (order) => {
+    const handleBuy = (order) => {
         // [LIVE BALANCE SYSTEM]
         // order.userId.wallet.main is the live balance available
         // order.amount is the maximum limit set by seller
@@ -82,17 +84,12 @@ export default function P2PDashboard({ initialMode, onClose }) {
             return toast.error("Seller has no balance available right now.");
         }
 
-        const requestedString = window.prompt(`Seller's Live Balance: ${liveAvailable} NXS\nMax Limit: ${order.amount} NXS\nExchange Rate: 1 NXS = ${order.rate || 126} BDT\n\nEnter amount of NXS you want to buy (Max: ${maxLimit}):`);
+        setBuyModalConfig({ isOpen: true, order });
+    };
 
-        if (!requestedString) return; // Cancelled
-        const requestedAmount = Number(requestedString);
-
-        if (isNaN(requestedAmount) || requestedAmount <= 0) {
-            return toast.error("Invalid amount");
-        }
-        if (requestedAmount > maxLimit) {
-            return toast.error(`Amount exceeds maximum available limit of ${maxLimit} NXS`);
-        }
+    const confirmBuy = (requestedAmount) => {
+        const order = buyModalConfig.order;
+        setBuyModalConfig({ isOpen: false, order: null });
 
         setModal({
             isOpen: true,
@@ -314,6 +311,13 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     <OrderCreationModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchOrders(); }} />
                 )
             }
+
+            <BuyOrderModal
+                isOpen={buyModalConfig.isOpen}
+                onClose={() => setBuyModalConfig({ isOpen: false, order: null })}
+                order={buyModalConfig.order}
+                onConfirm={confirmBuy}
+            />
 
             {/* Rating Modal */}
             {
