@@ -3,8 +3,8 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: "public",
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheOnFrontEndNav: false, // Disabling to prevent White Screen on Back Button (Next.js App Router Bug)
+  aggressiveFrontEndNavCaching: false, // Disabling to prevent heavy cache lockups
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
   workboxOptions: {

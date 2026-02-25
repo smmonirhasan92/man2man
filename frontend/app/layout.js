@@ -8,6 +8,7 @@ export const metadata = {
     title: 'USA Affiliate - Official Access',
     description: 'Secure, fast, and reliable earning platform.',
     metadataBase: new URL('https://usaaffiliatemarketing.com'),
+    manifest: '/manifest.json',
     appleWebApp: {
         title: 'USA Affiliate',
         statusBarStyle: 'black-translucent',

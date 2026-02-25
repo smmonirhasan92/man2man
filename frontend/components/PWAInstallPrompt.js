@@ -44,15 +44,16 @@ export default function PWAInstallPrompt() {
     if (!show) return null;
 
     return (
-        <div className="fixed bottom-20 left-4 right-4 z-50 animate-slide-up">
-            <div className="bg-slate-900/90 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/10 flex items-center justify-between">
+        <div className="fixed bottom-24 left-4 right-4 z-[60] animate-slide-up">
+            <div className="bg-[#0f1f33]/95 backdrop-blur-xl rounded-2xl p-4 shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-emerald-500/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="bg-primary/20 p-2 rounded-xl">
-                        <Download className="w-6 h-6 text-primary" />
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-white shadow-inner flex items-center justify-center p-1 border border-white/10">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo.png" alt="USA Affiliate App" className="w-full h-full object-contain" />
                     </div>
                     <div>
-                        <h4 className="text-white font-bold text-sm">Install App</h4>
-                        <p className="text-slate-400 text-xs text-nowrap">Add to Home Screen</p>
+                        <h4 className="text-white font-black text-sm tracking-wide">USA Affiliate</h4>
+                        <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">Official App</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -64,7 +65,7 @@ export default function PWAInstallPrompt() {
                     </button>
                     <button
                         onClick={handleInstall}
-                        className="bg-white text-slate-900 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 transition"
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-900 px-5 py-2.5 rounded-lg text-xs font-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all tracking-wide uppercase"
                     >
                         Install
                     </button>
