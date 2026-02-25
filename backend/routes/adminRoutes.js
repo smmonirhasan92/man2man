@@ -39,6 +39,7 @@ const adminCheck = async (req, res, next) => {
 // [LIVE VAULTS] - Transparent Admin Tracker
 router.get('/live-vaults', authMiddleware, adminCheck, adminController.getLiveVaults);
 router.get('/mint-logs', authMiddleware, adminCheck, adminController.getMintLogs);
+router.get('/economy-sheet', authMiddleware, adminCheck, adminController.getEconomyBalanceSheet);
 
 // router.get('/recharges', authMiddleware, adminCheck, adminController.getPendingRecharges);
 // router.post('/manage-transaction', authMiddleware, adminCheck, adminController.manageTransaction);

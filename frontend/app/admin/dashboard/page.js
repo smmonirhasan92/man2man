@@ -6,6 +6,7 @@ import api from '../../../services/api';
 import { ArrowLeft, Users, FileText, Settings, Shield, ShieldCheck, Wallet, Trophy, Briefcase, Crown, MessageSquare, Ticket, Lock, Zap, Activity, Gem, ClipboardList, Bell, TrendingUp, AlertTriangle } from 'lucide-react';
 import DashboardCard from '../../../components/admin/DashboardCard';
 import LiveVaultTracker from '../../../components/admin/LiveVaultTracker';
+import EcosystemTracker from '../../../components/admin/EcosystemTracker';
 import AdminLiveChart from '../../../components/admin/AdminLiveChart';
 import ConfirmationModal from '../../../components/ui/ConfirmationModal';
 import toast from 'react-hot-toast';
@@ -131,6 +132,9 @@ export default function AdminDashboard() {
             <main className="w-full px-6 lg:px-10 py-8 relative z-10">
                 {/* LIVE VAULT TRACKER */}
                 <LiveVaultTracker />
+
+                {/* ECOSYSTEM RECOVERY TRACKER */}
+                <EcosystemTracker />
 
                 {/* 1. FINANCIAL SUMMARY CARD */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

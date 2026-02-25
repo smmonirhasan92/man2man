@@ -331,3 +331,82 @@ exports.getMintLogs = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch mint logs" });
     }
 };
+
+// [ADMIN] Ecosystem Balance Sheet (Liability vs Recovery)
+exports.getEconomyBalanceSheet = async (req, res) => {
+    try {
+        const days = parseInt(req.query.days) || 7;
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        startDate.setHours(0, 0, 0, 0);
+
+        // 1. Group daily transactions to see what is generated vs burned
+        const dailyStats = await Transaction.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate },
+                    status: 'completed',
+                    type: { $in: ['task_reward', 'referral_commission', 'lottery_buy', 'plan_purchase', 'fee'] }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+                    },
+                    taskMined: {
+                        $sum: { $cond: [{ $eq: ["$type", "task_reward"] }, "$amount", 0] }
+                    },
+                    referralMined: {
+                        $sum: { $cond: [{ $eq: ["$type", "referral_commission"] }, "$amount", 0] }
+                    },
+                    lotteryBurned: {
+                        $sum: { $cond: [{ $eq: ["$type", "lottery_buy"] }, { $abs: "$amount" }, 0] }
+                    },
+                    planBurned: {
+                        $sum: { $cond: [{ $eq: ["$type", "plan_purchase"] }, { $abs: "$amount" }, 0] }
+                    }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 2. Format the data for the frontend chart
+        let todayGen = 0;
+        let todayBurn = 0;
+
+        const formattedStats = dailyStats.map(stat => {
+            const totalGen = stat.taskMined + stat.referralMined;
+            const totalBurn = stat.lotteryBurned + stat.planBurned;
+
+            // Check if this is "today" comparing the YYYY-MM-DD string
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (stat._id === todayStr) {
+                todayGen = totalGen;
+                todayBurn = totalBurn;
+            }
+
+            return {
+                date: stat._id,
+                generated: totalGen,
+                tasks: stat.taskMined,
+                referrals: stat.referralMined,
+                burned: totalBurn,
+                lottery_recovery: stat.lotteryBurned,
+                plan_recovery: stat.planBurned,
+                net_drain: totalGen - totalBurn
+            };
+        });
+
+        res.json({
+            today_generation: todayGen,
+            today_recovery: todayBurn,
+            today_net: todayGen - todayBurn,
+            chart_data: formattedStats
+        });
+
+    } catch (e) {
+        console.error("Economy Stats Error:", e);
+        res.status(500).json({ message: "Failed to fetch economy stats" });
+    }
+};
