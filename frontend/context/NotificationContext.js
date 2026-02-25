@@ -32,15 +32,23 @@ export function NotificationProvider({ children }) {
                 const res = await api.get('/auth/me');
                 if (res.data && res.data._id) {
                     socket.emit('join_user_room', res.data._id);
+                    console.log(`[SOCKET_CONTEXT] Joined room: user_${res.data._id}`);
                 }
             } catch (e) {
                 // Squelch 401s here as they are expected during token expiry
             }
         };
 
+        // 1. Initial Join
         joinRoom();
 
-        // 1. Generic Notification
+        // 1.5. Re-join on Reconnect (Fixes mobile sleep disconnects)
+        socket.on('connect', () => {
+            console.log('[SOCKET_CONTEXT] Reconnected - rejoining rooms...');
+            joinRoom();
+        });
+
+        // 2. Generic Notification
         socket.on('notification', (newNotif) => {
             const style = newNotif.type === 'error' ? errorStyle : premiumStyle;
             toast(newNotif.message, { style });
@@ -75,6 +83,7 @@ export function NotificationProvider({ children }) {
         });
 
         return () => {
+            socket.off('connect');
             socket.off('notification');
             socket.off('wallet:update');
             socket.off('config:update');

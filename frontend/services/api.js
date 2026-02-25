@@ -40,6 +40,13 @@ api.interceptors.request.use(
             config.headers['x-usa-identity'] = usaKey;  // For Session/Rate Guard
         }
 
+        // [BUG FIX] Aggressive Cache Busting for Next.js App Router (Stale Data Issue)
+        if (config.method === 'get') {
+            config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+            config.headers['Pragma'] = 'no-cache';
+            config.headers['Expires'] = '0';
+        }
+
         return config;
     },
     (error) => {
