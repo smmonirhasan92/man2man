@@ -22,7 +22,15 @@ export default function LoginForm() {
 
         try {
             // [REFACTOR] Send primary_phone to match Backend
-            const payload = { ...formData, primary_phone: formData.phone };
+            // [FIX] Sanitize inputs to remove hidden trailing spaces from mobile keyboards
+            const cleanPhone = formData.phone.trim();
+            const cleanPassword = formData.password.trim();
+
+            const payload = {
+                phone: cleanPhone,
+                password: cleanPassword,
+                primary_phone: cleanPhone
+            };
             const res = await api.post('/auth/login', payload);
             const { token, user } = res.data;
 

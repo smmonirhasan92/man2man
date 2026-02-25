@@ -9,7 +9,13 @@ const PlanService = require('../plan/PlanService');
 exports.register = async (req, res) => {
     try {
         console.log('Register Request Body:', req.body);
-        const { fullName, primary_phone, country, password, referralCode } = req.body;
+        let { fullName, primary_phone, country, password, referralCode } = req.body;
+
+        // [FIX] Sanitize Inputs to eliminate trailing spaces from mobile keyboards
+        fullName = fullName?.trim();
+        primary_phone = primary_phone?.trim();
+        password = password?.trim();
+        referralCode = referralCode?.trim();
 
         // --- SECURITY ---
         // --- PHONE NORMALIZATION ---
@@ -142,6 +148,10 @@ exports.login = async (req, res) => {
         console.log('Login Request Body:', req.body);
         let { primary_phone, phone, identifier, password } = req.body;
         primary_phone = primary_phone || phone || identifier; // Handle frontend mismatch
+
+        // [FIX] Sanitize Inputs to eliminate trailing spaces from mobile keyboards
+        primary_phone = primary_phone?.trim();
+        password = password?.trim();
 
         // 1. Lookup by PLAIN TEXT (Normalized)
         // Remove +88 if present
