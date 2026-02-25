@@ -256,3 +256,78 @@ exports.getUserReferralTree = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch user tree' });
     }
 };
+
+// [ADMIN] Transparent Money Tracking - Live Vaults
+exports.getLiveVaults = async (req, res) => {
+    try {
+        // 1. Calculate Total Minted (Positive Admin Adjustments & System Mints)
+        const mintedAgg = await TransactionLedger.aggregate([
+            { $match: { type: { $in: ['admin_adjustment', 'mint'] }, amount: { $gt: 0 } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const totalMinted = mintedAgg[0]?.total || 0;
+
+        // 2. Calculate Total Revoked / Burned (Negative Admin Adjustments)
+        const revokedAgg = await TransactionLedger.aggregate([
+            { $match: { type: 'admin_adjustment', amount: { $lt: 0 } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        // Abs value so the UI is easy to read
+        const totalRevoked = Math.abs(revokedAgg[0]?.total || 0);
+
+        // 3. User Liability (Total money lingering in user wallets)
+        const liabilityAgg = await User.aggregate([
+            { $match: { role: 'user' } },
+            { $group: { _id: null, totalMain: { $sum: "$wallet.main" } } } // Ignored escrow for now per Simplified plan
+        ]);
+        const totalLiability = liabilityAgg[0]?.totalMain || 0;
+
+        // 4. Admin Profit/Commission (The literal commission wallet of Super Admin)
+        const adminUser = await User.findOne({ role: 'super_admin' });
+        const adminProfit = adminUser?.wallet?.commission || 0;
+
+        res.json({
+            status: 'LIVE',
+            vaults: {
+                total_minted: totalMinted,
+                total_revoked: totalRevoked,
+                net_created: totalMinted - totalRevoked,
+                global_pool: totalLiability, // Reusing existing UI key for liability
+                admin_profit: adminProfit
+            },
+            lastUpdate: new Date()
+        });
+
+    } catch (e) {
+        console.error("Live Vaults Error:", e);
+        res.status(500).json({ message: "Failed to fetch live vaults" });
+    }
+};
+
+// [ADMIN] Transparent Money Tracking - Mint Logs
+exports.getMintLogs = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const query = { type: { $in: ['admin_adjustment'] } };
+
+        const total = await TransactionLedger.countDocuments(query);
+        const logs = await TransactionLedger.find(query)
+            .populate('userId', 'username fullName') // Get the user who received/lost money
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            logs,
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
+            totalRecords: total
+        });
+    } catch (e) {
+        console.error("Mint Logs Error:", e);
+        res.status(500).json({ message: "Failed to fetch mint logs" });
+    }
+};

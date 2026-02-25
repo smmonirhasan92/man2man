@@ -36,11 +36,9 @@ const adminCheck = async (req, res, next) => {
     }
 };
 
-// [LIVE VAULTS]
-router.get('/live-vaults', authMiddleware, adminCheck, (req, res) => {
-    // Mock Response to prevent 404 on Dashboard
-    res.json({ vaults: [], lastUpdate: new Date() });
-});
+// [LIVE VAULTS] - Transparent Admin Tracker
+router.get('/live-vaults', authMiddleware, adminCheck, adminController.getLiveVaults);
+router.get('/mint-logs', authMiddleware, adminCheck, adminController.getMintLogs);
 
 // router.get('/recharges', authMiddleware, adminCheck, adminController.getPendingRecharges);
 // router.post('/manage-transaction', authMiddleware, adminCheck, adminController.manageTransaction);
