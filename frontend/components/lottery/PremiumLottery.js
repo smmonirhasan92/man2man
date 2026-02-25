@@ -389,8 +389,8 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
                 {/* CSS Animated Border Gradient */}
                 <div className={`absolute inset-0 bg-gradient-to-br from-${theme.color}-500 via-transparent to-${theme.color}-900 opacity-50 group-hover:opacity-100 transition duration-1000`}></div>
 
-                {/* Inner Card */}
-                <div className="bg-[#0a0a0a] rounded-[23px] p-6 relative z-10 h-full flex flex-col justify-between">
+                {/* Core Card Container */}
+                <div className={`relative w-full h-auto bg-slate-900 rounded-[2rem] overflow-hidden flex flex-col justify-between`}>
 
                     {/* Header: Tier Label & Timer */}
                     <div className="flex justify-between items-start mb-8">

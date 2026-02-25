@@ -23,6 +23,7 @@ export default function AdminLotteryManager() {
     const [targetWinnerId, setTargetWinnerId] = useState('');
     const [lockDraw, setLockDraw] = useState(false);
     const [description, setDescription] = useState('');
+    const [activeTab, setActiveTab] = useState('SALES_BASED'); // 'SALES_BASED' or 'TIME_BASED'
 
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const [manualWinnerTargets, setManualWinnerTargets] = useState({}); // Stores targetWinnerId per slot row
@@ -113,7 +114,7 @@ export default function AdminLotteryManager() {
         setEditingTierName(null);
         setPrizes([{ name: 'Grand Jackpot', amount: 5000, winnersCount: 1, id: 1 }]);
         setDescription('');
-        setDrawType('SALES_BASED');
+        setDrawType(activeTab); // Sync with currently viewed tab
         setTargetWinnerId('');
     };
 
@@ -215,6 +216,24 @@ export default function AdminLotteryManager() {
                 </div>
             </div>
 
+            {/* 1.5. TAB NAVIGATION */}
+            <div className="flex border-b border-white/10 mb-6 gap-6">
+                <button
+                    onClick={() => { setActiveTab('SALES_BASED'); setDrawType('SALES_BASED'); cancelEdit(); }}
+                    className={`pb-4 font-bold uppercase tracking-widest text-sm transition-colors relative ${activeTab === 'SALES_BASED' ? 'text-emerald-400' : 'text-slate-500 hover:text-white'}`}
+                >
+                    Sales-Based Draws (Volume)
+                    {activeTab === 'SALES_BASED' && <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full"></div>}
+                </button>
+                <button
+                    onClick={() => { setActiveTab('TIME_BASED'); setDrawType('TIME_BASED'); cancelEdit(); }}
+                    className={`pb-4 font-bold uppercase tracking-widest text-sm transition-colors relative ${activeTab === 'TIME_BASED' ? 'text-blue-400' : 'text-slate-500 hover:text-white'}`}
+                >
+                    Time-Based Draws (Countdown)
+                    {activeTab === 'TIME_BASED' && <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500 rounded-t-full"></div>}
+                </button>
+            </div>
+
             {/* 2. MAIN GRID: Left (Table/Slots) - Right (Controls) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -222,10 +241,11 @@ export default function AdminLotteryManager() {
                 <div className="space-y-6 lg:col-span-8">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Target className="text-pink-500" /> Live Operations
+                            <Target className={activeTab === 'SALES_BASED' ? 'text-emerald-500' : 'text-blue-500'} />
+                            {activeTab === 'SALES_BASED' ? 'Live Sales Objectives' : 'Live Countdowns'}
                         </h2>
                         <div className="flex gap-2">
-                            {activeSlots.length > 0 && (
+                            {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).length > 0 && (
                                 <button onClick={nukeAll} className="px-3 py-1 bg-red-600/20 text-red-500 border border-red-600/50 rounded-lg hover:bg-red-600 hover:text-white transition text-xs font-bold uppercase flex items-center gap-1">
                                     <AlertTriangle className="w-3 h-3" /> Nuke All
                                 </button>
@@ -241,16 +261,16 @@ export default function AdminLotteryManager() {
                                 <tr>
                                     <th className="p-4">Slot</th>
                                     <th className="p-4">Prize Pool</th>
-                                    <th className="p-4 w-1/3">Progress</th>
+                                    <th className="p-4 w-1/3">Progress / Timer</th>
                                     <th className="p-4">Status</th>
                                     <th className="p-4 text-right">Control</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
 
-                                {activeSlots.length === 0 ? (
-                                    <tr><td colSpan="5" className="p-12 text-center opacity-30">No Active Lotteries</td></tr>
-                                ) : activeSlots.map((slot, idx) => {
+                                {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).length === 0 ? (
+                                    <tr><td colSpan="5" className="p-12 text-center opacity-30">No Active {activeTab === 'SALES_BASED' ? 'Sales' : 'Time'} Lotteries</td></tr>
+                                ) : activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).map((slot, idx) => {
                                     // Simplified Financials
                                     const totalPayout = slot.prizeAmount || slot.jackpot || 0;
 
@@ -279,15 +299,26 @@ export default function AdminLotteryManager() {
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="flex justify-between text-[10px] mb-1">
-                                                    <span className="text-emerald-400 font-mono">৳{(slot.currentSales || 0).toLocaleString()}</span>
-                                                    <span className="text-slate-500 font-mono">/ ৳{slot.targetSales.toLocaleString()} Target</span>
-                                                </div>
-                                                <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-white/5">
-                                                    <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 relative" style={{ width: `${slot.progress}%` }}>
-                                                        <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white opacity-50 shadow-[0_0_10px_white]"></div>
+                                                {/* DYNAMIC PROGRESS / TIMER */}
+                                                {slot.drawType === 'TIME_BASED' ? (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Time Remaining</span>
+                                                        <span className="text-blue-400 font-mono font-bold">{new Date(slot.endTime).toLocaleString()}</span>
+                                                        <span className="text-[10px] text-slate-500 mt-1 whitespace-nowrap">Target Sales: ৳{slot.targetSales?.toLocaleString()}</span>
                                                     </div>
-                                                </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="flex justify-between text-[10px] mb-1">
+                                                            <span className="text-emerald-400 font-mono">৳{(slot.currentSales || 0).toLocaleString()}</span>
+                                                            <span className="text-slate-500 font-mono">/ {slot.targetSales?.toLocaleString()} NXS Target</span>
+                                                        </div>
+                                                        <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-white/5">
+                                                            <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 relative" style={{ width: `${slot.progress}%` }}>
+                                                                <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white opacity-50 shadow-[0_0_10px_white]"></div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex flex-col gap-2">
@@ -352,7 +383,7 @@ export default function AdminLotteryManager() {
 
                     {/* MOBILE CARD VIEW (Visible only on < lg) */}
                     <div className="lg:hidden space-y-4">
-                        {activeSlots.map(slot => (
+                        {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).map(slot => (
                             <div key={slot.slotId} className="bg-[#111] p-4 rounded-xl border border-white/10 space-y-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
@@ -367,15 +398,22 @@ export default function AdminLotteryManager() {
                                     <span className="text-[10px] bg-white/5 px-2 py-1 rounded border border-white/10">{slot.status}</span>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <div className="flex justify-between text-xs text-slate-500">
-                                        <span>Progress</span>
-                                        <span className="text-white">{Math.round(slot.progress)}%</span>
+                                {slot.drawType === 'TIME_BASED' ? (
+                                    <div className="space-y-1">
+                                        <div className="text-xs text-slate-500">Ends At</div>
+                                        <div className="text-blue-400 font-mono">{new Date(slot.endTime).toLocaleString()}</div>
                                     </div>
-                                    <div className="w-full bg-black h-2 rounded-full overflow-hidden">
-                                        <div className="h-full bg-emerald-500" style={{ width: `${slot.progress}%` }}></div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between text-xs text-slate-500">
+                                            <span>Progress</span>
+                                            <span className="text-white">{Math.round(slot.progress)}%</span>
+                                        </div>
+                                        <div className="w-full bg-black h-2 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500" style={{ width: `${slot.progress}%` }}></div>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="grid grid-cols-2 gap-3 pt-2">
                                     <button onClick={() => forceDraw(slot.slotId)} className="bg-blue-600/20 text-blue-400 py-3 rounded-lg font-bold text-sm flex justify-center gap-2"><Play className="w-4 h-4" /> Force Draw</button>
@@ -406,7 +444,7 @@ export default function AdminLotteryManager() {
                                     }}
                                 >
                                     <option value="">-- Select Target Lottery Slot --</option>
-                                    {activeSlots.map(s => (
+                                    {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).map(s => (
                                         <option key={s.slotId} value={s.slotId}>
                                             {s.tier} (#{s.slotId.substr(-4)}) - {s.status}
                                         </option>
@@ -422,15 +460,10 @@ export default function AdminLotteryManager() {
                             {/* [HYBRID] Draw Settings */}
                             <div className="bg-white/5 p-4 rounded-lg border border-white/5 space-y-3">
                                 <div>
-                                    <label className="text-xs text-slate-500 uppercase">Draw Type</label>
-                                    <select
-                                        value={drawType}
-                                        onChange={(e) => setDrawType(e.target.value)}
-                                        className="w-full bg-black/50 border border-white/10 rounded p-2 text-xs text-white mt-1"
-                                    >
-                                        <option value="SALES_BASED">Sales Based (Progress Bar)</option>
-                                        <option value="TIME_BASED">Time Based (Countdown Clock)</option>
-                                    </select>
+                                    <label className="text-xs text-slate-500 uppercase">Draw Mechanism</label>
+                                    <div className="w-full bg-black/50 border border-white/10 rounded p-3 text-xs text-white opacity-80 mt-1 cursor-not-allowed">
+                                        {activeTab === 'SALES_BASED' ? '✅ Target Sales Based (Closes when 100% Volume Met)' : '✅ Strict Time Based (Closes on Timer Expiry)'}
+                                    </div>
                                 </div>
 
                                 {drawType === 'TIME_BASED' && (
