@@ -110,12 +110,12 @@ export default function LotteryDashboard() {
             {/* NEW HYBRID GRID VIEW */}
             <div className="w-full">
                 {loadingSlots ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                    <div className="grid grid-cols-1 gap-6 animate-pulse">
                         <div className="min-h-96 bg-white/5 rounded-2xl"></div>
                         <div className="min-h-96 bg-white/5 rounded-2xl hidden md:block"></div>
                     </div>
                 ) : activeLots.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                    <div className="grid grid-cols-1 gap-6 lg:gap-8">
                         {activeLots.map((slot) => (
                             <PremiumLottery key={slot.slotId} tier={slot.tier} initialData={slot} />
                         ))}

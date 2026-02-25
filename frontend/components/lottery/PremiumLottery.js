@@ -277,7 +277,7 @@ export default function PremiumLottery({ tier = 'INSTANT', initialData = null })
     );
 
     return (
-        <div className="relative w-full max-w-md mx-auto perspective-1000">
+        <div className="relative w-full shadow-2xl mx-auto perspective-1000">
             {/* Same styles ... */}
             <style jsx>{`
                 @keyframes smoke {
