@@ -96,7 +96,7 @@ export default function WalletSwap({ user, onSuccess }) {
                             From: {getSourceWallet()}
                         </div>
                         <div className="text-xs font-bold text-white leading-none">
-                            {isIncomeToMain ? 'USD ' : 'NXS '}
+                            {isIncomeToMain ? '$' : 'NXS '}
                             {Number(getSourceBalance()).toFixed(2)}
                         </div>
                     </div>
@@ -117,7 +117,7 @@ export default function WalletSwap({ user, onSuccess }) {
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono text-[10px] tracking-widest mt-[0.5px]">
-                            {isIncomeToMain ? 'USD' : 'NXS'}
+                            {isIncomeToMain ? '$' : 'NXS'}
                         </span>
                         <input
                             type="number"
