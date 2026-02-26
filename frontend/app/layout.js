@@ -101,7 +101,7 @@ export default function RootLayout({ children }) {
                                     
                                     Let's just put the Nav inside Shell.
                                 */}
-                                <div className="fixed bottom-0 w-full max-w-[450px] z-50 pointer-events-none mobile-only-nav">
+                                <div className="fixed bottom-0 w-full sm:max-w-md mx-auto z-50 pointer-events-none left-0 right-0 mobile-only-nav">
                                     <div className="pointer-events-auto">
                                         <BottomNav />
                                     </div>

@@ -47,7 +47,7 @@ export default function WalletTransferModal({ isOpen, onClose, onSuccess, mainBa
             <div className="bg-[#1a1b2e] border border-white/10 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 text-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-xl">Transfer Funds</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full">
+                    <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 hover:bg-white/10 rounded-full transition-colors">
                         <X className="w-5 h-5 text-slate-400" />
                     </button>
                 </div>

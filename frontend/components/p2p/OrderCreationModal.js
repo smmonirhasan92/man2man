@@ -3,13 +3,40 @@ import { useState } from 'react';
 import api from '../../services/api';
 import { X, Globe2, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function OrderCreationModal({ onClose, onSuccess }) {
+    const { user } = useAuth();
     const [amount, setAmount] = useState(''); // Acts as Max Limit
     const [rate, setRate] = useState('126'); // Exchange Rate
-    const [method, setMethod] = useState('bkash');
+    const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
+    const [method, setMethod] = useState(defaultMethod);
     const [details, setDetails] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const getPaymentMethods = () => {
+        const c = user?.country?.toUpperCase() || 'BD';
+        if (c === 'IN') {
+            return [
+                { value: 'gpay', label: 'Google Pay' },
+                { value: 'phonepe', label: 'PhonePe' },
+                { value: 'paytm', label: 'Paytm' },
+                { value: 'bank', label: 'Bank Transfer' }
+            ];
+        } else if (c === 'BD') {
+            return [
+                { value: 'bkash', label: 'bKash' },
+                { value: 'nagad', label: 'Nagad' },
+                { value: 'rocket', label: 'Rocket' },
+                { value: 'bank', label: 'Bank Transfer' }
+            ];
+        } else {
+            return [
+                { value: 'binance', label: 'Binance Pay' },
+                { value: 'bank', label: 'Bank Transfer' }
+            ];
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -83,10 +110,9 @@ export default function OrderCreationModal({ onClose, onSuccess }) {
                             onChange={e => setMethod(e.target.value)}
                             className="w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white font-bold focus:border-emerald-500 outline-none transition appearance-none"
                         >
-                            <option value="bkash">bKash</option>
-                            <option value="nagad">Nagad</option>
-                            <option value="rocket">Rocket</option>
-                            <option value="bank">Bank Transfer</option>
+                            {getPaymentMethods().map(pm => (
+                                <option key={pm.value} value={pm.value}>{pm.label}</option>
+                            ))}
                         </select>
                     </div>
 

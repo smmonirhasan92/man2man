@@ -120,16 +120,40 @@ class P2PService {
     }
 
     // Read Methods
-    async getOpenOrders() {
-        // We select the LIVE wallet.main of the user alongside the order
+    async getOpenOrders(currentUserId) {
+        // We select the LIVE wallet.main of the user alongside the order + country
         const orders = await P2POrder.find({ status: 'OPEN' }).populate({
             path: 'userId',
-            select: 'username badges wallet.main trustScore ratingCount isVerified completedTrades'
+            select: 'username badges wallet.main trustScore ratingCount isVerified completedTrades country'
         });
 
-        // Filter out orders where seller literally has 0 balance (stale orders)
-        // Or we could auto-close them here.
-        return orders.filter(o => o.userId && o.userId.wallet && o.userId.wallet.main > 0);
+        // Current User Country
+        let currentUserCountry = "BD"; // Default
+        if (currentUserId) {
+            const cUser = await User.findById(currentUserId).select('country');
+            if (cUser && cUser.country) currentUserCountry = cUser.country.toUpperCase();
+        }
+
+        // 1. Filter out stale orders (balance <= 0)
+        // 2. Hide own orders
+        let filteredOrders = orders.filter(o =>
+            o.userId &&
+            o.userId.wallet &&
+            o.userId.wallet.main > 0 &&
+            o.userId._id.toString() !== currentUserId?.toString()
+        );
+
+        // 3. Sort by Country (Same country first)
+        filteredOrders.sort((a, b) => {
+            const aCountry = a.userId.country ? a.userId.country.toUpperCase() : "BD";
+            const bCountry = b.userId.country ? b.userId.country.toUpperCase() : "BD";
+
+            if (aCountry === currentUserCountry && bCountry !== currentUserCountry) return -1;
+            if (bCountry === currentUserCountry && aCountry !== currentUserCountry) return 1;
+            return 0; // Same country logic
+        });
+
+        return filteredOrders;
     }
 
 

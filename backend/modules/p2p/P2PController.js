@@ -26,7 +26,7 @@ class P2PController {
     // GET /api/p2p/market
     async getMarket(req, res) {
         try {
-            const orders = await P2PService.getOpenOrders();
+            const orders = await P2PService.getOpenOrders(req.user.user.id);
             res.json(orders);
         } catch (e) {
             res.status(500).json({ message: e.message });

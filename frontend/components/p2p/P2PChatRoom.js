@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Send, Clock, AlertTriangle, CheckCircle, Upload, Shield, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import VisualGuide from '../ui/VisualGuide';
 
 export default function P2PChatRoom({ tradeId, onBack }) {
     const { user } = useAuth();
@@ -213,6 +214,29 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     const isBuyer = user._id === trade.buyerId._id;
     const isSeller = user._id === trade.sellerId._id;
 
+    const getTutorialSteps = () => {
+        const c = user?.country?.toUpperCase() || 'BD';
+        if (c === 'IN') {
+            return [
+                { targetId: 'step-1-copy', title: '1. नंबर कॉपी करें', content: 'सेलर को पैसे भेजने के लिए इस नंबर पर क्लिक करके कॉपी करें।' },
+                { targetId: 'step-2-proof', title: '2. ट्रांजेक्शन प्रूफ दें', content: 'पैसे भेजने के बाद अपने नंबर के आखिरी 4 अंक और TxID यहाँ डालें।' },
+                { targetId: 'step-3-submit', title: '3. कंफर्म करें', content: 'सब कुछ सही होने पर पेमेंट प्राप्त करने का रिक्वेस्ट भेज दें।' }
+            ];
+        } else if (c === 'BD') {
+            return [
+                { targetId: 'step-1-copy', title: '১. নম্বর কপি করুন', content: 'সেলারকে টাকা পাঠানোর জন্য এই নম্বরে ক্লিক করে নম্বরটি কপি করুন।' },
+                { targetId: 'step-2-proof', title: '২. ট্রানজেকশন প্রুফ দিন', content: 'টাকা পাঠানোর পর আপনার যে নাম্বার থেকে টাকা পাঠিয়েছেন তার শেষের ৪ ডিজিট এবং মেসেজের TxID এখানে বসান।' },
+                { targetId: 'step-3-submit', title: '৩. কনফার্ম করুন', content: 'সবকিছু ঠিক থাকলে এই বাটনে ক্লিক করে সেলারকে পেমেন্ট রিসিভ করার রিকোয়েস্ট পাঠান।' }
+            ];
+        } else {
+            return [
+                { targetId: 'step-1-copy', title: '1. Copy Number', content: 'Click here to copy the seller\'s payment number.' },
+                { targetId: 'step-2-proof', title: '2. Submit Proof', content: 'Enter the last 4 digits of your sending number and the TxID.' },
+                { targetId: 'step-3-submit', title: '3. Confirm', content: 'Click this button to notify the seller that you have sent the payment.' }
+            ];
+        }
+    };
+
     return (
         <div className="flex flex-col h-screen bg-[#0a0f1e] text-white font-sans max-w-4xl mx-auto border-x border-white/5">
             {/* 1. Header with Timer */}
@@ -251,7 +275,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                             SELLER INFO
                         </div>
                         <div className="flex justify-between items-end">
-                            <div onClick={copyPaymentInfo} className="cursor-pointer group">
+                            <div id="step-1-copy" onClick={copyPaymentInfo} className="cursor-pointer group p-1 -m-1 rounded">
                                 <div className="text-xs text-blue-300 font-medium mb-1">Send Payment To (Tap to Copy)</div>
                                 <div className="text-xl font-mono font-black text-white tracking-wider flex items-center gap-2">
                                     {trade.orderId.paymentDetails || "Contact Seller"}
@@ -404,7 +428,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                             </div>
                             <div className="text-[10px] text-slate-400">Method: {trade.orderId.paymentMethod}</div>
                         </div>
-                        <button onClick={handleMarkPaid} className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20">
+                        <button id="step-3-submit" onClick={handleMarkPaid} className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
                             Mark Transferred
                         </button>
                     </div>
@@ -412,7 +436,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
                 {/* PROOF INPUTS (Buyer Only) */}
                 {trade.status === 'CREATED' && isBuyer && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div id="step-2-proof" className="grid grid-cols-2 gap-2 p-1 -m-1 rounded">
                         <input
                             value={senderNumber}
                             onChange={(e) => setSenderNumber(e.target.value)}
@@ -512,6 +536,14 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     </div>
                 )
             }
+
+            {/* Visual Tutorial for First-Time Buyers */}
+            {isBuyer && trade.status === 'CREATED' && (
+                <VisualGuide
+                    guideId={`p2p_buyer_guide_${user?.country?.toUpperCase() || 'BD'}`}
+                    steps={getTutorialSteps()}
+                />
+            )}
         </div >
     );
 }
