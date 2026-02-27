@@ -15,27 +15,17 @@ export default function OrderCreationModal({ onClose, onSuccess }) {
     const [loading, setLoading] = useState(false);
 
     const getPaymentMethods = () => {
-        const c = user?.country?.toUpperCase() || 'BD';
-        if (c === 'IN') {
-            return [
-                { value: 'gpay', label: 'Google Pay' },
-                { value: 'phonepe', label: 'PhonePe' },
-                { value: 'paytm', label: 'Paytm' },
-                { value: 'bank', label: 'Bank Transfer' }
-            ];
-        } else if (c === 'BD') {
-            return [
-                { value: 'bkash', label: 'bKash' },
-                { value: 'nagad', label: 'Nagad' },
-                { value: 'rocket', label: 'Rocket' },
-                { value: 'bank', label: 'Bank Transfer' }
-            ];
-        } else {
-            return [
-                { value: 'binance', label: 'Binance Pay' },
-                { value: 'bank', label: 'Bank Transfer' }
-            ];
-        }
+        // [MODIFIED] Show all methods globally so users aren't restricted by incorrect profile data
+        return [
+            { value: 'bkash', label: 'bKash (BD)' },
+            { value: 'nagad', label: 'Nagad (BD)' },
+            { value: 'rocket', label: 'Rocket (BD)' },
+            { value: 'binance', label: 'Binance Pay (Global)' },
+            { value: 'gpay', label: 'Google Pay (IN)' },
+            { value: 'phonepe', label: 'PhonePe (IN)' },
+            { value: 'paytm', label: 'Paytm (IN)' },
+            { value: 'bank', label: 'Bank Transfer' }
+        ];
     };
 
     const handleSubmit = async (e) => {

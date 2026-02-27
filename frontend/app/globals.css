@@ -51,7 +51,19 @@ body {
   /* Parallax effect */
   font-family: 'Inter', sans-serif;
   color: var(--text-primary);
-  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+  /* Prevent rubber-band bounce on mobile */
+}
+
+@layer utilities {
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+
+  .h-screen {
+    height: 100dvh !important;
+  }
 }
 
 /* Utility Components (Outside of @theme) */
