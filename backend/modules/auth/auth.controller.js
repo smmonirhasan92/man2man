@@ -50,8 +50,8 @@ exports.register = async (req, res) => {
                 referrerDoc = referrer;
                 referrer.referralCount = (referrer.referralCount || 0) + 1;
 
-                // [NEW] Fixed 20 BDT Direct Referral Bonus
-                referrer.wallet.income = (referrer.wallet.income || 0) + 20.00;
+                // [NEW] Fixed 20 BDT Direct Referral Bonus (Main Wallet)
+                referrer.wallet.main = (referrer.wallet.main || 0) + 20.00;
                 referrer.referralIncome = (referrer.referralIncome || 0) + 20.00;
                 await referrer.save();
             }
@@ -73,9 +73,9 @@ exports.register = async (req, res) => {
 
             // [FIX] CORRECT NESTED WALLET STRUCTURE
             wallet: {
-                main: 0.00,
+                main: referrerCodeStored ? 20.00 : 0.00, // 20 BDT Welcome Bonus
                 game: 0.00,
-                income: referrerCodeStored ? 20.00 : 0.00, // 20 BDT Welcome Bonus
+                income: 0.00,
                 purchase: 0.00,
                 pending_referral: 0.00,
                 agent: 0.00
@@ -106,7 +106,7 @@ exports.register = async (req, res) => {
                 amount: 20.00,
                 status: 'completed',
                 description: `Signup Bonus from ${username}`,
-                balanceAfter: referrerDoc.wallet.income
+                balanceAfter: referrerDoc.wallet.main
             });
 
             // Log for New User
