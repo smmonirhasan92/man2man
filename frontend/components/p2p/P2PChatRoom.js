@@ -191,11 +191,33 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         });
     };
 
+    const handleCancelTrade = async () => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Cancel Trade',
+            message: 'Are you sure you want to cancel this trade? Locked funds will be returned to the seller.',
+            confirmText: 'Yes, Cancel It',
+            onConfirm: async () => {
+                try {
+                    await api.post(`/p2p/trade/${tradeId}/cancel`);
+                    toast.success("Trade Cancelled.");
+                    fetchTradeData();
+                    setConfirmModal({ isOpen: false });
+                } catch (e) { toast.error(e.response?.data?.message || "Failed to cancel"); }
+            }
+        });
+    };
+
     // ... (rest of render)
     {/* Input Area */ }
     <div className="flex gap-2 p-2">
-        <button onClick={handleHold} className="p-3 bg-red-900/20 rounded-lg text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white" title="Report/Hold"><AlertTriangle className="w-5 h-5" /></button>
-        {trade && trade.status !== 'COMPLETED' && (
+        <button onClick={handleHold} className="p-3 bg-red-900/20 rounded-lg text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white shrink-0" title="Report/Hold"><AlertTriangle className="w-5 h-5" /></button>
+        {trade && trade.status === 'CREATED' && (
+            <button onClick={handleCancelTrade} className="px-3 bg-slate-800 rounded-lg text-white border border-white/10 hover:bg-red-500 hover:border-red-500 text-xs font-bold flex items-center justify-center shrink-0">
+                Cancel Trade
+            </button>
+        )}
+        {trade && trade.status !== 'COMPLETED' && trade.status !== 'CANCELLED' && (
             <>
                 <button onClick={handleUploadProof} className={`p-3 rounded-lg ${proofUrl ? 'bg-emerald-500 text-black' : 'bg-white/5 text-slate-400'} hover:text-white relative`}>
                     <ImageIcon className="w-5 h-5" />

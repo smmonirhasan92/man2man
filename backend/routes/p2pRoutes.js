@@ -20,6 +20,7 @@ router.get('/trade/:id', auth, P2PController.getTradeDetails);
 router.post('/trade/:id/pay', auth, P2PController.markPaid);
 router.post('/trade/:id/release', auth, P2PController.confirmRelease);
 router.post('/trade/:id/hold', auth, P2PController.holdTrade); // [SECURITY]
+router.post('/trade/:id/cancel', auth, P2PController.cancelTrade); // [NEW] Refund Escrow
 router.post('/trade/:id/chat', auth, P2PController.sendChat);
 
 // Chat

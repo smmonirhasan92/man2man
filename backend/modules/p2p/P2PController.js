@@ -140,6 +140,16 @@ class P2PController {
             res.status(500).json({ message: e.message });
         }
     }
+
+    // POST /api/p2p/trade/:id/cancel
+    async cancelTrade(req, res) {
+        try {
+            const trade = await P2PService.cancelTrade(req.user.user.id, req.params.id);
+            res.json({ success: true, trade });
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
     // POST /api/p2p/admin/resolve
     async resolveDispute(req, res) {
         try {

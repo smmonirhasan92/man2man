@@ -188,6 +188,70 @@ class P2PService {
 
 
 
+    // --- 2.5 CANCEL TRADE (Reverses Escrow lock if unpaid) ---
+    async cancelTrade(userId, tradeId) {
+        return await TransactionHelper.runTransaction(async (session) => {
+            const trade = await P2PTrade.findById(tradeId).session(session);
+            if (!trade) throw new Error("Trade not found");
+
+            if (trade.buyerId.toString() !== userId.toString() && trade.sellerId.toString() !== userId.toString()) {
+                throw new Error("Unauthorized to cancel this trade");
+            }
+
+            if (trade.status !== 'CREATED') {
+                throw new Error("Cannot cancel a trade that is already Paid or Completed");
+            }
+
+            // 1. Release Seller's Escrow back to Main
+            await User.findByIdAndUpdate(trade.sellerId, {
+                $inc: {
+                    'wallet.main': trade.amount,
+                    'wallet.escrow_locked': -trade.amount
+                }
+            }, { session });
+
+            // 2. Log Escrow Return
+            await Transaction.create([{
+                userId: trade.sellerId,
+                amount: trade.amount,
+                type: 'admin_credit',
+                description: `P2P Escrow Released (Trade #${trade._id} Cancelled)`,
+                source: 'transaction',
+                status: 'completed',
+                currency: 'NXS'
+            }], { session });
+
+            // 3. Restore Order Limit so it's visible again
+            const order = await P2POrder.findById(trade.orderId).session(session);
+            if (order) {
+                order.amount += trade.amount;
+                if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+                    // It hit 0 earlier/closed, reopen it
+                    order.status = 'OPEN';
+                }
+                await order.save({ session });
+            }
+
+            // 4. Mark Trade as Cancelled
+            trade.status = 'CANCELLED';
+            trade.completedAt = new Date();
+            await trade.save({ session });
+
+            return trade;
+        }).then(async (trade) => {
+            // Notify System & Users out of session
+            SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade); // 'completed' acts as terminal state to update UI
+            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
+
+            const updatedSeller = await User.findById(trade.sellerId);
+            SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
+
+            this.addSystemMessage(trade._id, `Trade was CANCELLED. Escrow returned to Seller.`);
+
+            return trade;
+        });
+    }
+
     // --- 4. BUYER MARKS PAID ---
     // --- 4. BUYER MARKS PAID ---
     async markPaid(userId, tradeId, proofData) {
