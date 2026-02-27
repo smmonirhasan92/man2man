@@ -50,9 +50,9 @@ exports.register = async (req, res) => {
                 referrerDoc = referrer;
                 referrer.referralCount = (referrer.referralCount || 0) + 1;
 
-                // [NEW] Fixed 20 BDT Direct Referral Bonus (Main Wallet)
-                referrer.wallet.main = (referrer.wallet.main || 0) + 20.00;
-                referrer.referralIncome = (referrer.referralIncome || 0) + 20.00;
+                // [FIX] Bonus moved to first deposit approval
+                // referrer.wallet.main = (referrer.wallet.main || 0) + 20.00;
+                // referrer.referralIncome = (referrer.referralIncome || 0) + 20.00;
                 await referrer.save();
             }
         }
@@ -73,7 +73,7 @@ exports.register = async (req, res) => {
 
             // [FIX] CORRECT NESTED WALLET STRUCTURE
             wallet: {
-                main: referrerCodeStored ? 20.00 : 0.00, // 20 BDT Welcome Bonus
+                main: 0.00, // Welcome Bonus moved to first deposit
                 game: 0.00,
                 income: 0.00,
                 purchase: 0.00,
@@ -96,29 +96,7 @@ exports.register = async (req, res) => {
         });
 
         // 6.5 Log Referral Transactions
-        if (referrerDoc) {
-            const Transaction = require('../wallet/TransactionModel');
-
-            // Log for Referrer
-            await Transaction.create({
-                userId: referrerDoc._id,
-                type: 'referral_bonus',
-                amount: 20.00,
-                status: 'completed',
-                description: `Signup Bonus from ${username}`,
-                balanceAfter: referrerDoc.wallet.main
-            });
-
-            // Log for New User
-            await Transaction.create({
-                userId: user._id,
-                type: 'referral_bonus',
-                amount: 20.00,
-                status: 'completed',
-                description: `Welcome Bonus (Referred by ${referrerCodeStored})`,
-                balanceAfter: 20.00
-            });
-        }
+        // Referral and Welcome bonus transactions are now moved to first deposit logic.
 
         // 7. JWT
         const payload = { user: { id: user._id, role: user.role } };

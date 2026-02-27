@@ -198,10 +198,40 @@ exports.completeTransaction = async (req, res) => {
                 if (client.isOpen) await client.del(`user_profile:${user._id}`);
 
                 // [REFERRAL ENGINE INTEGRATION]
-                // 1. Joining Bonus (Type A)
+                // 1. Joining Bonus (Type A) + Fixed 20 Unit Main Wallet Bonus
                 if (!user.isReferralBonusPaid && user.referredBy) {
-                    // console.log(`[Transaction] First Deposit detected. Triggering Joining Bonus.`);
+                    // Dynamic MLM Commission
                     await ReferralService.distributeIncome(user._id, amountToAdd, 'joining');
+
+                    // [NEW] 20 Unit Fixed Referral Bonus to Main Wallet (Replacing Auth Instant Bonus)
+                    const referrerDoc = await User.findOne({ referralCode: user.referredBy });
+                    if (referrerDoc) {
+                        referrerDoc.wallet.main = (referrerDoc.wallet.main || 0) + 20.00;
+                        // referrerDoc.referralCount = (referrerDoc.referralCount || 0) + 1; // It increments during registration to show 'Pending' referrals
+                        referrerDoc.referralIncome = (referrerDoc.referralIncome || 0) + 20.00;
+                        await referrerDoc.save();
+
+                        // Give New User their 20 Unit Welcome Bonus
+                        user.wallet.main = (user.wallet.main || 0) + 20.00;
+
+                        // Create Logs
+                        await Transaction.create([{
+                            userId: referrerDoc._id,
+                            type: 'referral_bonus',
+                            amount: 20.00,
+                            status: 'completed',
+                            description: `Signup Bonus from ${user.username || 'User'} (Deposit Verified)`,
+                            balanceAfter: referrerDoc.wallet.main
+                        }, {
+                            userId: user._id,
+                            type: 'referral_bonus',
+                            amount: 20.00,
+                            status: 'completed',
+                            description: `Welcome Bonus (Referred by ${user.referredBy})`,
+                            balanceAfter: user.wallet.main
+                        }]);
+                    }
+
                     user.isReferralBonusPaid = true;
                     await user.save();
                 }
