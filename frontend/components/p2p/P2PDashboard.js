@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock, Globe2 } from 'lucide-react';
+import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock, Globe2, ArrowDownCircle, ArrowUpCircle, Zap } from 'lucide-react';
 import OrderCreationModal from './OrderCreationModal';
 import BuyOrderModal from './BuyOrderModal';
 import P2PChatRoom from './P2PChatRoom';
@@ -201,7 +201,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
         return 'bg-[#1a2c3d] text-cyan-400 border-cyan-500/20';
     };
 
-    const displayOrders = mode === 'buy' && !globalMode
+    const displayOrders = mode === 'buy'
         ? orders.filter(o => o.userId?.country?.toUpperCase() === userCountry)
         : orders;
 
@@ -422,7 +422,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 isOpen={buyModalConfig.isOpen}
                 onClose={() => setBuyModalConfig({ isOpen: false, order: null })}
                 order={buyModalConfig.order}
-                onConfirm={confirmBuy}
+                onConfirm={confirmTrade}
             />
 
             {/* Rating Modal */}
