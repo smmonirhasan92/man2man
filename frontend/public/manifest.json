@@ -2,7 +2,7 @@
   "name": "USA Affiliate Marketing - Elite Gaming & Wallet",
   "short_name": "USA Affiliate",
   "description": "Premium Gaming, Lottery & Secure Wallet System",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0a192f",
   "theme_color": "#0a192f",
