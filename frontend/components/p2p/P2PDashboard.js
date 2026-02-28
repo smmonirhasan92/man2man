@@ -210,6 +210,16 @@ export default function P2PDashboard({ initialMode, onClose }) {
         return <P2PChatRoom tradeId={activeTradeId} onBack={exitTrade} />;
     }
 
+    // [NEW/PSYCHOLOGICAL] Calculate VIP Fee Tier
+    const getFeeTier = (count) => {
+        if (count >= 500) return { name: 'WHALE', fee: '0.07%', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]' };
+        if (count >= 250) return { name: 'EXPERT', fee: '0.25%', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]' };
+        if (count >= 100) return { name: 'PRO', fee: '0.50%', color: 'text-[#fcd535] bg-[#fcd535]/10 border-[#fcd535]/30' };
+        if (count >= 20) return { name: 'TRADER', fee: '0.80%', color: 'text-[#0ecb81] bg-[#0ecb81]/10 border-[#0ecb81]/30' };
+        return { name: 'NEWBIE', fee: '1.00%', color: 'text-[#848e9c] bg-[#2b3139]' };
+    };
+    const userTier = getFeeTier(user?.completedTrades || 0);
+
     return (
         <div className="min-h-screen bg-[#0b0e11] text-[#eaeaec] font-sans pb-24 overflow-x-hidden">
             {/* Header */}
@@ -221,7 +231,6 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     <div>
                         <h1 className="text-xl font-black text-[#eaeaec] flex items-center gap-2">
                             P2P Market
-                            <span className="bg-[#fcd535] text-black text-[9px] px-1.5 py-0.5 rounded font-black tracking-widest mt-0.5">PRO</span>
                         </h1>
                         <p className="text-[10px] text-[#848e9c] font-bold uppercase tracking-widest flex items-center gap-1">
                             <ShieldCheck className="w-3 h-3 text-[#0ecb81]" /> Escrow Active
@@ -243,11 +252,11 @@ export default function P2PDashboard({ initialMode, onClose }) {
                             <h2 className="text-2xl font-black text-[#eaeaec]">NXS / BDT</h2>
                             <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">P2P</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mt-1">
                             <span className="text-lg font-bold text-[#0ecb81]">126.00</span>
-                            <span className="text-[11px] font-bold text-[#0ecb81] bg-[#0ecb81]/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                                <TrendingUp className="w-3 h-3" /> +0.00%
-                            </span>
+                            <div className={`text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 border ${userTier.color}`}>
+                                <Zap className="w-3 h-3" /> {userTier.name} FEE: {userTier.fee}
+                            </div>
                         </div>
                     </div>
                     <div className="flex gap-4 text-right">

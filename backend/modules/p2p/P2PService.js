@@ -369,18 +369,27 @@ class P2PService {
             const allowedStatuses = ['AWAITING_ADMIN', 'PAID'];
             if (!allowedStatuses.includes(trade.status)) throw new Error(`Trade status ${trade.status} not valid for release`);
 
-            const PLATFORM_FEE_PERCENT = 0.02; // 2% Burn Fee
+            // --- PSYCHOLOGICAL DYNAMIC FEE SCHEME (VIP TIERS) ---
+            const buyerObj = await User.findById(trade.buyerId).session(session);
+            const tradesDone = buyerObj.completedTrades || 0;
+
+            let PLATFORM_FEE_PERCENT = 0.01; // Base: 1%
+            if (tradesDone >= 500) PLATFORM_FEE_PERCENT = 0.0007; // Whale: 0.07%
+            else if (tradesDone >= 250) PLATFORM_FEE_PERCENT = 0.0025; // Expert: 0.25%
+            else if (tradesDone >= 100) PLATFORM_FEE_PERCENT = 0.005;  // Pro: 0.50%
+            else if (tradesDone >= 20) PLATFORM_FEE_PERCENT = 0.008;   // Trader: 0.80%
+
             const feeAmount = trade.amount * PLATFORM_FEE_PERCENT;
             const finalAmount = trade.amount - feeAmount;
 
-            // 1. Burn Escrow from Seller
+            // 1. Burn Escrow from Seller & Increment completedTrades
             await User.findByIdAndUpdate(trade.sellerId, {
-                $inc: { 'wallet.escrow_locked': -trade.amount }
+                $inc: { 'wallet.escrow_locked': -trade.amount, completedTrades: 1 }
             }, { session });
 
-            // 2. Credit Buyer (Net Amount)
+            // 2. Credit Buyer (Net Amount) & Increment completedTrades
             await User.findByIdAndUpdate(trade.buyerId, {
-                $inc: { 'wallet.main': finalAmount }
+                $inc: { 'wallet.main': finalAmount, completedTrades: 1 }
             }, { session });
 
             // 3. Ecosystem Money Burn (No Admin Credit)
