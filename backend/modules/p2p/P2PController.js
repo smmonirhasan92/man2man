@@ -2,11 +2,12 @@ const P2PService = require('./P2PService');
 
 class P2PController {
 
-    // POST /api/p2p/sell
-    async createSellOrder(req, res) {
+    // POST /api/p2p/order (Renamed from sell)
+    async createOrder(req, res) {
         try {
-            const { amount, paymentMethod, paymentDetails, rate } = req.body;
-            const order = await P2PService.createSellOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate);
+            const { amount, paymentMethod, paymentDetails, rate, type } = req.body;
+            // Only Super Admins should be able to create isInstant true orders, handle securely if needed later. Defaulting to false for users.
+            const order = await P2PService.createOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate, type || 'SELL');
             res.json({ success: true, order });
         } catch (e) {
             res.status(400).json({ message: e.message });
@@ -26,7 +27,14 @@ class P2PController {
     // GET /api/p2p/market
     async getMarket(req, res) {
         try {
-            const orders = await P2PService.getOpenOrders(req.user.user.id);
+            // Advanced Filtering and Sorting Parameters
+            const filters = {
+                type: req.query.type || 'SELL',
+                sort: req.query.sort, // 'lowest', 'highest'
+                country: req.query.country,
+                paymentMethod: req.query.paymentMethod
+            };
+            const orders = await P2PService.getOpenOrders(req.user.user.id, filters);
             res.json(orders);
         } catch (e) {
             res.status(500).json({ message: e.message });
@@ -100,10 +108,11 @@ class P2PController {
         }
     }
 
-    // POST /api/p2p/trade/:id/release
-    async holdTrade(req, res) {
+    // POST /api/p2p/trade/:id/dispute
+    async disputeTrade(req, res) {
         try {
-            const trade = await P2PService.holdTrade(req.params.id);
+            const { reason } = req.body;
+            const trade = await P2PService.disputeTrade(req.user.user.id, req.params.id, reason);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ success: false, message: e.message });

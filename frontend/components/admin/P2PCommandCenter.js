@@ -52,7 +52,7 @@ export default function P2PCommandCenter() {
 
             // Auto-select first awaiting trade if none selected
             if (!selectedTrade) {
-                const pending = tradeRes.data.find(t => t.status === 'AWAITING_ADMIN');
+                const pending = tradeRes.data.find(t => ['AWAITING_ADMIN', 'DISPUTE'].includes(t.status));
                 if (pending) selectTrade(pending);
             }
         } catch (e) { console.error(e); }
@@ -74,13 +74,13 @@ export default function P2PCommandCenter() {
     const approve = (tradeId) => {
         setConfirmModal({
             isOpen: true,
-            title: 'Confirm Release',
-            message: 'Are you sure you verified the proof? This will release funds to the buyer.',
-            confirmText: 'Verify & Release',
+            title: 'FORCE RELEASE FUNDS',
+            message: 'Tribunal action: Release locked funds to the BUYER? This is irreversible.',
+            confirmText: 'Release to Buyer',
             onConfirm: async () => {
                 try {
-                    await api.post('/p2p/admin/approve', { tradeId });
-                    toast.success("FUNDS RELEASED");
+                    await api.post('/p2p/admin/resolve', { tradeId, resolution: 'RELEASE_TO_BUYER' });
+                    toast.success("FUNDS RELEASED TO BUYER");
                     fetchMarket();
                     setSelectedTrade(null);
                     setConfirmModal({ isOpen: false });
@@ -94,13 +94,13 @@ export default function P2PCommandCenter() {
     const reject = (tradeId) => {
         setConfirmModal({
             isOpen: true,
-            title: 'Confirm Reject',
-            message: 'CONFIRM REJECT: Use this for fake proofs or scams. Funds will return to the SELLER.',
-            confirmText: 'Reject Trade',
+            title: 'FORCE REFUND TO SELLER',
+            message: 'Tribunal action: Cancel the trade and return locked funds to the SELLER?',
+            confirmText: 'Refund Seller',
             onConfirm: async () => {
                 try {
                     await api.post('/p2p/admin/resolve', { tradeId, resolution: 'REFUND_TO_SELLER' });
-                    toast.success("TRADE CANCELLED");
+                    toast.success("FUNDS REFUNDED TO SELLER");
                     fetchMarket();
                     setSelectedTrade(null);
                     setConfirmModal({ isOpen: false });
@@ -121,7 +121,7 @@ export default function P2PCommandCenter() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    const pendingTrades = trades.filter(t => t.status === 'AWAITING_ADMIN');
+    const pendingTrades = trades.filter(t => ['AWAITING_ADMIN', 'DISPUTE'].includes(t.status));
 
     return (
         <div className="h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 text-white font-sans">
@@ -131,7 +131,7 @@ export default function P2PCommandCenter() {
             <div className={`w-full md:w-1/3 bg-[#111] border border-white/10 rounded-2xl flex flex-col overflow-hidden ${selectedTrade && isMobileView ? 'hidden' : 'flex'}`}>
                 <div className="p-4 border-b border-white/10 bg-slate-900/50 flex justify-between items-center">
                     <h2 className="font-bold flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-red-500 animate-pulse" /> Awaiting ({pendingTrades.length})
+                        <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" /> Disputes ({pendingTrades.length})
                     </h2>
                     <button onClick={fetchMarket}><RefreshCw className="w-4 h-4" /></button>
                 </div>
@@ -145,7 +145,7 @@ export default function P2PCommandCenter() {
                         >
                             <div className="flex justify-between mb-1">
                                 <span className="font-bold text-sm text-slate-300">Order #{t._id.substr(-4)}</span>
-                                <span className="text-xs font-mono text-yellow-400">AWAITING</span>
+                                <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20">{t.status}</span>
                             </div>
                             <div className="flex justify-between items-end">
                                 <div>
@@ -178,9 +178,19 @@ export default function P2PCommandCenter() {
                             <div className="flex flex-col md:flex-row justify-between items-start relative z-10 gap-4">
                                 <div>
                                     <h3 className="text-2xl font-black mb-1 flex items-center gap-2">
-                                        <Shield className="w-6 h-6 text-emerald-400" /> Security Check
+                                        <Shield className="w-6 h-6 text-emerald-400" /> Tribunal Audit
                                     </h3>
-                                    <p className="text-slate-400 text-sm mb-4">Verify proof before releasing funds.</p>
+                                    <p className="text-slate-400 text-sm mb-4">Investigate evidence, force resolution.</p>
+
+                                    {selectedTrade.status === 'DISPUTE' && selectedTrade.disputeReason && (
+                                        <div className="mb-4 bg-red-950/40 border border-red-500/30 p-3 rounded-xl max-w-sm">
+                                            <div className="text-[10px] uppercase font-bold text-red-400 mb-1 flex justify-between">
+                                                <span>Dispute Reason</span>
+                                                <span>Reported By: {selectedTrade.disputeRaisedBy === selectedTrade.buyerId?._id ? 'BUYER' : 'SELLER'}</span>
+                                            </div>
+                                            <div className="text-sm text-red-100">{selectedTrade.disputeReason}</div>
+                                        </div>
+                                    )}
 
                                     <div className="grid grid-cols-2 gap-8 text-sm">
                                         <div>
@@ -199,12 +209,13 @@ export default function P2PCommandCenter() {
                                 </div>
 
                                 <div className="flex flex-col gap-3">
-                                    <button onClick={() => approve(selectedTrade._id)} className="w-full md:w-48 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex flex-col items-center leading-none gap-1">
-                                        <span className="text-xs">Verify &</span>
-                                        <span>Approve</span>
+                                    <button onClick={() => approve(selectedTrade._id)} className="w-full md:w-48 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex flex-col items-center leading-none gap-1 border border-emerald-400/50">
+                                        <span className="text-[10px] opacity-70">Force Action</span>
+                                        <span>Release to Buyer</span>
                                     </button>
-                                    <button onClick={() => reject(selectedTrade._id)} className="w-full md:w-48 py-3 bg-red-900/40 border border-red-500/30 hover:bg-red-500 hover:text-white text-red-500 font-bold uppercase tracking-wider rounded-xl transition-all text-xs flex items-center justify-center gap-2">
-                                        <Ban className="w-3 h-3" /> Reject & Refund
+                                    <button onClick={() => reject(selectedTrade._id)} className="w-full md:w-48 py-4 bg-red-900/60 border border-red-500/50 hover:bg-red-500 hover:text-white text-red-500 font-bold uppercase tracking-wider rounded-xl transition-all flex flex-col items-center justify-center gap-1 shadow-lg shadow-red-900/20">
+                                        <span className="text-[10px] opacity-80">Force Action</span>
+                                        <span className="flex items-center gap-1"><Ban className="w-3 h-3" /> Refund Seller</span>
                                     </button>
 
                                     {/* Fail-Safe */}

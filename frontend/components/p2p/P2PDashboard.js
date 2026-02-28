@@ -17,13 +17,20 @@ import { P2PSkeleton } from '../ui/SkeletonLoader';
 export default function P2PDashboard({ initialMode, onClose }) {
     const { user } = useAuth();
     const userCountry = user?.country?.toUpperCase() || 'BD';
-    const [mode, setMode] = useState(initialMode || 'buy');
-    const [globalMode, setGlobalMode] = useState(false);
+    const [mode, setMode] = useState(initialMode || 'buy'); // 'buy', 'sell', 'history', 'my_ads'
+
+    // [NEW] Global Advanced Filters
+    const [filters, setFilters] = useState({
+        sort: '', // 'lowest', 'highest'
+        country: 'all',
+        paymentMethod: 'all'
+    });
+
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [activeTradeId, setActiveTradeId] = useState(null);
-    const [ratingTradeId, setRatingTradeId] = useState(null); // State for rating
+    const [ratingTradeId, setRatingTradeId] = useState(null);
     const [buyModalConfig, setBuyModalConfig] = useState({ isOpen: false, order: null });
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const router = useRouter(); // [FIX] Initialize hook here
@@ -92,61 +99,67 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 socket.off('p2p_trade_start');
             }
         };
-    }, [mode, socket, user]);
+    }, [mode, filters, socket, user]);
 
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            if (mode === 'buy') {
-                // Get MARKET (Others' Sell Orders)
-                const res = await api.get('/p2p/market');
+            if (mode === 'buy' || mode === 'sell') {
+                // If Taker wants to BUY NXS -> Fetch SELL Ads. If Taker wants to SELL NXS -> Fetch BUY Ads.
+                const targetAdType = mode === 'buy' ? 'SELL' : 'BUY';
+
+                const query = new URLSearchParams({
+                    type: targetAdType,
+                    ...(filters.sort && { sort: filters.sort }),
+                    ...(filters.country !== 'all' && { country: filters.country }),
+                    ...(filters.paymentMethod !== 'all' && { paymentMethod: filters.paymentMethod })
+                }).toString();
+
+                const res = await api.get(`/p2p/market?${query}`);
                 setOrders(res.data);
-            } else if (mode === 'sell') {
-                // Get MY ORDERS (Sell Offers)
+            } else if (mode === 'my_ads') {
                 const res = await api.get('/p2p/my-orders');
                 setOrders(res.data);
             } else if (mode === 'history') {
-                // [NEW] Get MY COMPLETE TRADE HISTORY
                 const res = await api.get('/p2p/my-trades');
                 setOrders(res.data);
             }
         } catch (e) {
             console.error(e);
-            setOrders([]); // [FIX] Show empty on error
+            setOrders([]);
         }
         setLoading(false);
     };
 
-    const handleBuy = (order) => {
-        // [LIVE BALANCE SYSTEM]
-        // order.userId.wallet.main is the live balance available
-        // order.amount is the maximum limit set by seller
-        const liveAvailable = order.userId?.wallet?.main || 0;
-        const maxLimit = Math.min(order.amount, liveAvailable); // Can't buy more than what's available
-
-        if (maxLimit <= 0) {
-            return toast.error("Seller has no balance available right now.");
+    const handleTradeAction = (order) => {
+        // [LIVE BALANCE CHECK] For SELL ads only
+        if (order.type === 'SELL') {
+            const liveAvailable = order.userId?.wallet?.main || 0;
+            const maxLimit = Math.min(order.amount, liveAvailable);
+            if (maxLimit <= 0) return toast.error("Seller has no balance available right now.");
         }
 
         setBuyModalConfig({ isOpen: true, order });
     };
 
-    const confirmBuy = (requestedAmount) => {
+    const confirmTrade = (requestedAmount) => {
         const order = buyModalConfig.order;
+        const actionWord = order.type === 'SELL' ? 'buy' : 'sell';
+
         setBuyModalConfig({ isOpen: false, order: null });
 
         setModal({
             isOpen: true,
-            title: 'Initiate Trade?',
-            message: `You are about to buy ${requestedAmount} NXS. The funds will be locked in escrow. Proceed?`,
-            confirmText: 'Start Trade',
+            title: `Confirm ${actionWord.toUpperCase()}`,
+            message: `You are about to ${actionWord} ${requestedAmount} NXS. Proceed?`,
+            confirmText: 'Confirm Trade',
             onConfirm: async () => {
                 try {
                     const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount });
                     if (res.data.success) {
                         setActiveTradeId(res.data.trade._id);
-                        localStorage.setItem('active_p2p_trade', res.data.trade._id); // Persist
-                        toast.success("Trade Started! Funds Locked in Escrow.");
+                        localStorage.setItem('active_p2p_trade', res.data.trade._id);
+                        toast.success("Trade Started Successfully!");
                     }
                 } catch (e) {
                     toast.error(e.response?.data?.message || "Failed to start trade");
@@ -218,22 +231,28 @@ export default function P2PDashboard({ initialMode, onClose }) {
             </div>
 
             {/* Toggle Switch */}
-            <div className="flex bg-[#111] p-1 rounded-xl mb-6 border border-white/10 gap-1">
+            <div className="flex bg-[#111] p-1 rounded-xl mb-4 border border-white/10 gap-1">
                 <button
                     onClick={() => setMode('buy')}
                     className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'buy' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/50' : 'text-slate-500 hover:text-white'}`}
                 >
-                    <ArrowRight className="w-4 h-4 rotate-45" /> Buy
+                    <ArrowDownCircle className="w-4 h-4" /> Buy NXS
                 </button>
                 <button
                     onClick={() => setMode('sell')}
                     className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'sell' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'text-slate-500 hover:text-white'}`}
                 >
-                    <DollarSign className="w-4 h-4" /> Sell
+                    <ArrowUpCircle className="w-4 h-4" /> Sell NXS
+                </button>
+                <button
+                    onClick={() => setMode('my_ads')}
+                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'my_ads' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-500 hover:text-white'}`}
+                >
+                    <User className="w-4 h-4" /> My Ads
                 </button>
                 <button
                     onClick={() => setMode('history')}
-                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'history' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-500 hover:text-white'}`}
+                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'history' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                 >
                     <Clock className="w-4 h-4" /> History
                 </button>
@@ -241,32 +260,58 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
             {/* Content Area */}
             {
-                mode === 'sell' && (
-                    <div className="mb-6">
+                (mode === 'buy' || mode === 'sell' || mode === 'my_ads') && (
+                    <div className="mb-4">
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:scale-[1.02] transition"
                         >
-                            <Plus className="w-5 h-5" /> Create Sell Order
+                            <Plus className="w-5 h-5" /> Post New Ad
                         </button>
                     </div>
                 )
             }
 
+            {/* Advanced Filters */}
+            {(mode === 'buy' || mode === 'sell') && (
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
+                    <select
+                        value={filters.country}
+                        onChange={(e) => setFilters(f => ({ ...f, country: e.target.value }))}
+                        className="bg-[#111927] border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500"
+                    >
+                        <option value="all">🌐 Any Country</option>
+                        <option value="BD">🇧🇩 Bangladesh</option>
+                        <option value="IN">🇮🇳 India</option>
+                        <option value="GLOBAL">🌍 Global (Binance)</option>
+                    </select>
+
+                    <select
+                        value={filters.sort}
+                        onChange={(e) => setFilters(f => ({ ...f, sort: e.target.value }))}
+                        className="bg-[#111927] border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500"
+                    >
+                        <option value="">Sort: Best Rate</option>
+                        <option value="lowest">Lowest Price</option>
+                        <option value="highest">Highest Price</option>
+                    </select>
+
+                    <select
+                        value={filters.paymentMethod}
+                        onChange={(e) => setFilters(f => ({ ...f, paymentMethod: e.target.value }))}
+                        className="bg-[#111927] border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500"
+                    >
+                        <option value="all">All Payments</option>
+                        <option value="bkash">bKash</option>
+                        <option value="nagad">Nagad</option>
+                        <option value="binance">Binance</option>
+                        <option value="bank">Bank</option>
+                    </select>
+                </div>
+            )}
+
             {/* Order List */}
             <div className="space-y-3">
-                {/* Global/Local Toggle for Buy Market */}
-                {mode === 'buy' && (
-                    <div className="flex justify-end mb-2">
-                        <button
-                            onClick={() => setGlobalMode(!globalMode)}
-                            className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-2 transition-all ${globalMode ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'bg-[#111] text-slate-400 border border-white/5 hover:text-white'}`}
-                        >
-                            <Globe2 className="w-3.5 h-3.5" />
-                            {globalMode ? 'Showing Global Market' : `Showing ${userCountry} Only`}
-                        </button>
-                    </div>
-                )}
                 {/* [NEW] History Layout */}
                 {mode === 'history' ? (
                     loading ? <P2PSkeleton /> :
@@ -295,8 +340,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 ) : (
                     /* Existing Order List */
                     loading ? <P2PSkeleton /> :
-                        displayOrders.length === 0 ? <div className="text-center py-10 opacity-30">No Active Orders in this Region</div> :
-                            displayOrders.map(order => (
+                        orders.length === 0 ? <div className="text-center py-10 opacity-30">No Active Ads matching filters</div> :
+                            orders.map(order => (
                                 <div key={order._id} className="bg-[#111927] border border-white/5 p-4 rounded-xl flex justify-between items-center group relative overflow-hidden shadow-lg mb-3">
 
                                     {/* Verified Background Glow */}
@@ -308,19 +353,22 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-white/10">
                                                 {order.userId?.username?.charAt(0) || 'U'}
                                             </div>
-                                            <span className="font-bold text-sm text-slate-200 flex items-center gap-1">
+                                            <span className="font-bold text-sm text-slate-200 flex items-baseline gap-1">
                                                 {order.userId?.username || `User ${order.userId?._id?.substr(-4)}`}
-                                                {/* Always show Verified for now to match request for Trust Aesthetics, or strictly if logic exists */}
                                                 {(order.userId?.isVerified || true) && (
-                                                    <ShieldCheck className="w-3.5 h-3.5 text-blue-400 fill-blue-400/20" />
+                                                    <ShieldCheck className="w-3.5 h-3.5 text-blue-400 fill-blue-400/20 translate-y-0.5" />
                                                 )}
                                             </span>
-                                            <span className="text-[10px] text-slate-500">• {order.completedTrades || '98%'} Rate</span>
+                                            {order.isInstant && (
+                                                <span className="text-[9px] bg-yellow-500 text-black px-1.5 py-0.5 rounded font-black tracking-widest flex items-center gap-0.5">
+                                                    <Zap className="w-3 h-3" /> INSTANT
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Price Display */}
                                         <div className="text-2xl font-black text-white leading-none">
-                                            {Math.min(order.amount, order.userId?.wallet?.main || 0).toLocaleString()} <span className="text-xs font-bold text-slate-500">NXS</span>
+                                            {order.amount.toLocaleString()} <span className="text-xs font-bold text-slate-500">NXS</span>
                                         </div>
                                         <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
                                             Rate: <span className="text-emerald-400">1 NXS = {order.rate || 126} BDT</span>
@@ -334,18 +382,10 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
                                     {/* Action Button */}
                                     <div className="relative z-10 flex flex-col items-end gap-2">
-                                        {mode === 'buy' ? (
-                                            <button
-                                                onClick={() => handleBuy(order)}
-                                                disabled={order.status !== 'OPEN'}
-                                                className={`h-10 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 ${order.status !== 'OPEN' ? 'bg-slate-800 text-slate-500' : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'}`}
-                                            >
-                                                {order.status !== 'OPEN' ? 'Taken' : 'BUY'}
-                                            </button>
-                                        ) : (
+                                        {mode === 'my_ads' ? (
                                             <div className="text-right">
-                                                <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? 'text-emerald-400' : 'text-yellow-500'}`}>
-                                                    {order.status}
+                                                <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? (order.type === 'BUY' ? 'text-blue-400' : 'text-emerald-400') : 'text-yellow-500'}`}>
+                                                    {order.type} AD • {order.status}
                                                 </div>
                                                 {order.status === 'OPEN' && (
                                                     <button
@@ -355,18 +395,15 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                                         CANCEL
                                                     </button>
                                                 )}
-                                                {order.status === 'LOCKED' && order.activeTradeId && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveTradeId(order.activeTradeId);
-                                                            localStorage.setItem('active_p2p_trade', order.activeTradeId);
-                                                        }}
-                                                        className="text-[10px] bg-cyan-600 px-3 py-1.5 rounded text-white font-bold shadow-lg shadow-cyan-600/20"
-                                                    >
-                                                        CHAT
-                                                    </button>
-                                                )}
                                             </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleTradeAction(order)}
+                                                disabled={order.status !== 'OPEN'}
+                                                className={`h-10 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 ${order.status !== 'OPEN' ? 'bg-slate-800 text-slate-500' : (order.type === 'SELL' ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/20')}`}
+                                            >
+                                                {order.status !== 'OPEN' ? 'Taken' : (order.type === 'SELL' ? 'BUY NXS' : 'SELL NXS')}
+                                            </button>
                                         )}
                                     </div>
                                 </div>

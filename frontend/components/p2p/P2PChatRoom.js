@@ -16,6 +16,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(true);
     const scrollRef = useRef(null);
+    const [timeLeft, setTimeLeft] = useState('15:00');
 
     // [SECURITY] PIN & Modal State
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -25,6 +26,10 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadInput, setUploadInput] = useState('https://via.placeholder.com/300?text=Payment+Proof');
+
+    // Dispute Modal
+    const [showDisputeModal, setShowDisputeModal] = useState(false);
+    const [disputeReason, setDisputeReason] = useState('');
 
     const handleReleaseClick = () => {
         setIsPinModalOpen(true);
@@ -83,10 +88,18 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             }
         });
 
+        socket.on('p2p_trade_dispute', (updatedTrade) => {
+            if (updatedTrade._id === tradeId) {
+                setTrade(updatedTrade);
+                toast.error('Trade Frozen by Tribunal.');
+            }
+        });
+
         return () => {
             socket.off('p2p_message');
             socket.off('p2p_mark_paid');
             socket.off('p2p_completed');
+            socket.off('p2p_trade_dispute');
         };
     }, [socket, tradeId]);
 
@@ -111,6 +124,34 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             setLoading(false); // [FIX] Always stop loading
         }
     };
+
+    // Timer Logic
+    useEffect(() => {
+        if (!trade || ['COMPLETED', 'CANCELLED', 'DISPUTE'].includes(trade.status)) {
+            if (trade && trade.status === 'COMPLETED') setTimeLeft('00:00');
+            else if (trade && trade.status === 'DISPUTE') setTimeLeft('PAUSED');
+            else if (trade && trade.status === 'CANCELLED') setTimeLeft('00:00');
+            return;
+        }
+
+        const endTime = new Date(trade.createdAt).getTime() + 15 * 60000;
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = endTime - now;
+
+            if (distance <= 0) {
+                clearInterval(interval);
+                setTimeLeft('00:00');
+            } else {
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [trade]);
 
     const scrollToBottom = () => {
         setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -174,21 +215,21 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         });
     };
 
-    const handleHold = async () => {
-        setConfirmModal({
-            isOpen: true,
-            title: 'Report Problem',
-            message: 'Report Problem? This will freeze the trade and summon Admin.',
-            confirmText: 'Freeze Trade',
-            onConfirm: async () => {
-                try {
-                    await api.post(`/p2p/trade/${tradeId}/hold`);
-                    toast.success("Trade Frozen. Admin Summoned.");
-                    fetchTradeData();
-                    setConfirmModal({ isOpen: false });
-                } catch (e) { toast.error(e.response?.data?.message); }
-            }
-        });
+    const handleDispute = () => {
+        setShowDisputeModal(true);
+    };
+
+    const submitDispute = async () => {
+        if (!disputeReason.trim()) return toast.error("Provide a reason");
+        try {
+            await api.post(`/p2p/trade/${tradeId}/dispute`, { reason: disputeReason });
+            toast.success("Dispute Raised. Admin Summoned.");
+            setShowDisputeModal(false);
+            setDisputeReason('');
+            fetchTradeData();
+        } catch (e) {
+            toast.error(e.response?.data?.message || "Failed to raise dispute");
+        }
     };
 
     const handleCancelTrade = async () => {
@@ -211,15 +252,20 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     // ... (rest of render)
     {/* Input Area */ }
     <div className="flex gap-2 p-2">
-        <button onClick={handleHold} className="p-3 bg-red-900/20 rounded-lg text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white shrink-0" title="Report/Hold"><AlertTriangle className="w-5 h-5" /></button>
+        {trade && !['COMPLETED', 'CANCELLED', 'DISPUTE'].includes(trade.status) && (
+            <button onClick={handleDispute} className="p-3 bg-red-900/20 rounded-lg text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white shrink-0 flex gap-2 items-center" title="Report Issue">
+                <AlertTriangle className="w-5 h-5" />
+                <span className="hidden sm:inline font-bold text-xs">Report Issue</span>
+            </button>
+        )}
         {trade && trade.status === 'CREATED' && (
             <button onClick={handleCancelTrade} className="px-3 bg-slate-800 rounded-lg text-white border border-white/10 hover:bg-red-500 hover:border-red-500 text-xs font-bold flex items-center justify-center shrink-0">
                 Cancel Trade
             </button>
         )}
-        {trade && trade.status !== 'COMPLETED' && trade.status !== 'CANCELLED' && (
+        {trade && !['COMPLETED', 'CANCELLED'].includes(trade.status) && (
             <>
-                <button onClick={handleUploadProof} className={`p-3 rounded-lg ${proofUrl ? 'bg-emerald-500 text-black' : 'bg-white/5 text-slate-400'} hover:text-white relative`}>
+                <button onClick={handleUploadProof} disabled={trade.status === 'DISPUTE'} className={`p-3 rounded-lg ${proofUrl ? 'bg-emerald-500 text-black' : 'bg-white/5 text-slate-400'} hover:text-white relative disabled:opacity-50`}>
                     <ImageIcon className="w-5 h-5" />
                     {proofUrl && <CheckCircle className="w-3 h-3 absolute top-0 right-0 text-white bg-black rounded-full" />}
                 </button>
@@ -274,11 +320,12 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 </div>
                 <div className="text-right">
                     <div className="text-xl font-black font-mono text-yellow-500 flex items-center gap-2">
-                        <Clock className="w-4 h-4" /> 14:59 {/* TODO: Real Timer */}
+                        <Clock className="w-4 h-4" /> {timeLeft}
                     </div>
                     <div className={`text-[10px] uppercase font-bold px-2 rounded ${trade.status === 'COMPLETED' ? 'bg-emerald-500 text-black' :
                         trade.status === 'PAID' ? 'bg-yellow-500 text-black' :
-                            'bg-blue-500 text-white'
+                            trade.status === 'DISPUTE' ? 'bg-red-500 text-white' :
+                                'bg-blue-500 text-white'
                         }`}>
                         {trade.status}
                     </div>
@@ -323,6 +370,16 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             {(trade.status === 'CREATED' || trade.status === 'PAID') && (
                 <div className="bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-200 text-xs text-center py-1">
                     🔔 {trade.status === 'CREATED' ? 'Waiting for Payment...' : 'Payment Marked Sent. Verify & Release.'}
+                </div>
+            )}
+
+            {/* Sticky Alert for Disputed Trades */}
+            {trade.status === 'DISPUTE' && (
+                <div className="bg-red-500/10 border-b border-red-500/20 text-red-200 text-xs text-center p-3">
+                    <div className="flex items-center justify-center gap-2 font-bold mb-1">
+                        <AlertTriangle className="w-4 h-4 text-red-500" /> TRADE FROZEN BY TRIBUNAL
+                    </div>
+                    An Admin has been summoned to resolve this dispute. Please provide evidence in the chat.
                 </div>
             )}
 
@@ -474,59 +531,53 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     </div>
                 )}
 
-                {trade.status === 'PAID' && isSeller && (
-                    <div className="p-4 bg-emerald-900/20 rounded-xl border border-emerald-500/30">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <div className="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">Action Required</div>
-                                <div className="text-lg font-bold text-white">Buyer Claims Payment Sent</div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-2xl font-black text-white font-mono">{trade.amount} NXS</div>
-                            </div>
-                        </div>
 
-                        {/* Proof Details */}
-                        <div className="bg-black/40 rounded-lg p-3 mb-4 space-y-2 border border-white/5">
-                            <div className="flex justify-between text-xs">
-                                <span className="text-slate-400">Sender Number:</span>
-                                <span className="font-mono text-white select-all">{trade.senderNumber || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                                <span className="text-slate-400">Transaction ID:</span>
-                                <span className="font-mono text-emerald-300 font-bold select-all">{trade.txId || 'N/A'}</span>
-                            </div>
-                            {trade.paymentProofUrl && (
-                                <a href={trade.paymentProofUrl} target="_blank" className="block text-center text-[10px] text-blue-400 hover:underline mt-2">View Screenshot Proof</a>
-                            )}
-                        </div>
-
-                        <div className="flex gap-3 items-center">
-                            <div className="text-[10px] text-slate-500 flex-1">
-                                Check your bank app. Only release if the exact amount is reflected in your balance.
-                            </div>
-                            <button onClick={handleReleaseClick} className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-lg font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center gap-2">
-                                Confirm Release
-                            </button>
-                        </div>
-                    </div>
-                )}
 
                 {/* Input Area */}
-                {trade.status !== 'COMPLETED' && (
+                {trade.status !== 'COMPLETED' && trade.status !== 'CANCELLED' && (
                     <div className="flex gap-2">
-                        <button className="p-3 bg-white/5 rounded-lg text-slate-400 hover:text-white"><ImageIcon className="w-5 h-5" /></button>
+                        <button className="p-3 bg-white/5 rounded-lg text-slate-400 hover:text-white" disabled={trade.status === 'DISPUTE'}><ImageIcon className="w-5 h-5" /></button>
                         <input
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                            placeholder="Type a message..."
+                            placeholder={trade.status === 'DISPUTE' ? "Chat is active for Tribunal review..." : "Type a message..."}
                             className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 text-sm text-white focus:border-blue-500 outline-none"
                         />
                         <button onClick={sendMessage} className="p-3 bg-blue-600 rounded-lg text-white hover:bg-blue-500"><Send className="w-4 h-4" /></button>
                     </div>
                 )}
             </div>
+
+            {/* Dispute Modal */}
+            {showDisputeModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#1a1b2e] p-6 rounded-3xl border border-red-500/20 w-full max-w-sm shadow-[0_0_50px_rgba(239,68,68,0.15)]">
+                        <div className="flex justify-center mb-4">
+                            <div className="p-4 bg-red-500/10 rounded-full border border-red-500/20">
+                                <AlertTriangle className="w-8 h-8 text-red-500" />
+                            </div>
+                        </div>
+                        <h3 className="text-xl font-black text-white text-center mb-2">Report Issue</h3>
+                        <p className="text-xs text-red-300/80 mb-6 text-center">
+                            Reporting an issue will freeze this trade's funds and summon an Admin. False reports may lead to an account ban.
+                        </p>
+
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reason for Dispute</label>
+                        <textarea
+                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white mb-6 h-24 resize-none outline-none focus:border-red-500 transition-colors"
+                            placeholder="e.g. Buyer marked as paid but funds not received..."
+                            value={disputeReason}
+                            onChange={(e) => setDisputeReason(e.target.value)}
+                        />
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowDisputeModal(false)} className="flex-1 py-3 bg-white/5 font-bold rounded-xl hover:bg-white/10 transition text-slate-300 text-sm">Cancel</button>
+                            <button onClick={submitDispute} className="flex-1 py-3 bg-red-600 font-bold text-white rounded-xl hover:bg-red-500 shadow-lg shadow-red-900/50 transition tracking-wide text-sm">FREEZE TRADE</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}

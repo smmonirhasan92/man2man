@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 const P2POrderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    type: { type: String, enum: ['BUY', 'SELL'], default: 'SELL', index: true }, // Dual-sided market
+    isInstant: { type: Boolean, default: false, index: true }, // Admin/System marker for instant cashout
     amount: { type: Number, required: true }, // The maximum available limit when the order was created
-    rate: { type: Number, required: true, default: 126 }, // Exchange rate: e.g., 1 NXS = 126 BDT
+    rate: { type: Number, required: true, default: 126, index: true }, // Exchange rate: e.g., 1 NXS = 126 BDT
     currency: { type: String, default: 'NXS' },
 
     paymentMethod: {

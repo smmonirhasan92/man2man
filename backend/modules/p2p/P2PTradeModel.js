@@ -21,6 +21,7 @@ const P2PTradeSchema = new mongoose.Schema({
     txId: { type: String }, // New
     senderNumber: { type: String }, // New
     disputeReason: { type: String },
+    disputeRaisedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Tracks who initiated the Tribunal
 
     // Timestamps
     paidAt: { type: Date },

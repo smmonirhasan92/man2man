@@ -11,24 +11,24 @@ const bcrypt = require('bcryptjs');
 
 class P2PService {
 
-    // --- 1. CREATE SELL ORDER (List on Market) ---
-    async createSellOrder(userId, amount, paymentMethod, paymentDetails, rate = 126) {
+    // --- 1. CREATE P2P AD (BUY or SELL Listing) ---
+    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL') {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
-        // We DO NOT run an escrow transaction here. We just verify they have some balance.
         const user = await User.findById(userId);
         if (!user) throw new Error("User not found");
-        if (user.wallet.main <= 0) throw new Error("Your Main Balance is zero. Cannot list.");
-        if (user.wallet.main < amount) throw new Error("Your limit cannot exceed your current Main Balance.");
 
-        // Check if user already has an OPEN order
-        const existing = await P2POrder.findOne({ userId, status: 'OPEN' });
-        if (existing) throw new Error("You already have an active P2P Listing. Cancel it first.");
+        // If they are selling NXS, they must have NXS balance
+        if (type === 'SELL') {
+            if (user.wallet.main <= 0) throw new Error("Your Main Balance is zero. Cannot list a SELL Ad.");
+            if (user.wallet.main < amount) throw new Error("Your limit cannot exceed your current Main Balance.");
+        }
 
         // Create Order (Listing)
         const order = await P2POrder.create({
             userId,
-            amount, // Acts as a Max Limit setting now.
+            type, // 'BUY' or 'SELL'
+            amount, // Max Limit setting
             rate,
             paymentMethod,
             paymentDetails,
@@ -38,34 +38,40 @@ class P2PService {
         return order;
     }
 
-    // --- 3. INITIATE BUY (Match & Lock Escrow) ---
-    async initiateTrade(buyerId, orderId, requestedAmount) {
+    // --- 3. INITIATE TRADE (Match & Lock Escrow) ---
+    async initiateTrade(takerId, orderId, requestedAmount) {
         if (!requestedAmount || requestedAmount <= 0) throw new Error("Invalid amount requested");
 
         return await TransactionHelper.runTransaction(async (session) => {
             const order = await P2POrder.findById(orderId).session(session);
             if (!order) throw new Error("Order not found");
             if (order.status !== 'OPEN') throw new Error("Order is no longer available");
-            if (order.userId.toString() === buyerId.toString()) throw new Error("Cannot buy your own order");
+            if (order.userId.toString() === takerId.toString()) throw new Error("Cannot trade with your own order");
+
+            // Identify Roles based on Dual-Market Ad Type
+            // SELL Ad = Maker(userId) wants to sell NXS. Taker(takerId) is BUYER.
+            // BUY Ad = Maker(userId) wants to buy NXS. Taker(takerId) is SELLER.
+            const isSellAd = order.type === 'SELL';
+            const sellerId = isSellAd ? order.userId : takerId;
+            const buyerId = isSellAd ? takerId : order.userId;
 
             // Check seller's actual LIVE balance
-            const seller = await User.findById(order.userId).session(session);
+            const seller = await User.findById(sellerId).session(session);
             if (seller.wallet.main < requestedAmount) {
-                // Seller doesn't have enough anymore
-                if (seller.wallet.main <= 0) {
-                    order.status = 'CANCELLED'; // Auto close listing
+                if (isSellAd && seller.wallet.main <= 0) {
+                    order.status = 'CANCELLED'; // Auto close listing if it was a SELL ad
                     await order.save({ session });
                 }
                 throw new Error(`Seller only has ${seller.wallet.main} NXS available.`);
             }
 
-            // Check if requested exceeds the order's stated limit (optional constraint)
+            // Check if requested exceeds the order's stated limit
             if (requestedAmount > order.amount) {
                 throw new Error(`Maximum limit for this listing is ${order.amount} NXS.`);
             }
 
             // 1. Lock Seller's Escrow LIVE
-            await User.findByIdAndUpdate(order.userId, {
+            await User.findByIdAndUpdate(sellerId, {
                 $inc: {
                     'wallet.main': -requestedAmount,
                     'wallet.escrow_locked': requestedAmount
@@ -75,7 +81,7 @@ class P2PService {
             // 2. Create Trade Session
             const trade = await P2PTrade.create([{
                 orderId: order._id,
-                sellerId: order.userId,
+                sellerId: sellerId,
                 buyerId: buyerId,
                 amount: requestedAmount,
                 status: 'CREATED'
@@ -83,7 +89,7 @@ class P2PService {
 
             // 3. Log Escrow Transaction
             await Transaction.create([{
-                userId: order.userId,
+                userId: sellerId,
                 amount: -requestedAmount,
                 type: 'admin_debit',
                 description: `P2P Sell Escrow Locked (Trade #${trade[0]._id})`,
@@ -119,10 +125,21 @@ class P2PService {
         });
     }
 
-    // Read Methods
-    async getOpenOrders(currentUserId) {
-        // We select the LIVE wallet.main of the user alongside the order + country
-        const orders = await P2POrder.find({ status: 'OPEN' }).populate({
+    // Read Methods (Dual-Market & Advanced Filtering)
+    async getOpenOrders(currentUserId, filters = {}) {
+        let query = { status: 'OPEN' };
+
+        // Filter by Type (BUY / SELL)
+        if (filters.type) {
+            query.type = filters.type;
+        }
+
+        // Filter by Payment Method
+        if (filters.paymentMethod && filters.paymentMethod !== 'all') {
+            query.paymentMethod = filters.paymentMethod;
+        }
+
+        const orders = await P2POrder.find(query).populate({
             path: 'userId',
             select: 'username badges wallet.main trustScore ratingCount isVerified completedTrades country'
         });
@@ -134,24 +151,55 @@ class P2PService {
             if (cUser && cUser.country) currentUserCountry = cUser.country.toUpperCase();
         }
 
-        // 1. Filter out stale orders (balance <= 0)
+        // Apply Country Filtering natively if explicitly requested
+        let filteredOrders = orders;
+
+        if (filters.country && filters.country !== 'all') {
+            filteredOrders = filteredOrders.filter(o =>
+                o.userId && o.userId.country && o.userId.country.toUpperCase() === filters.country.toUpperCase()
+            );
+        }
+
+        // 1. Filter out stale orders (Sellers must have > 0 balance. Buyers don't need NXS balance)
         // 2. Hide own orders
-        let filteredOrders = orders.filter(o =>
-            o.userId &&
-            o.userId.wallet &&
-            o.userId.wallet.main > 0 &&
-            o.userId._id.toString() !== currentUserId?.toString()
-        );
+        filteredOrders = filteredOrders.filter(o => {
+            if (!o.userId) return false;
+            if (o.userId._id.toString() === currentUserId?.toString()) return false;
 
-        // 3. Sort by Country (Same country first)
-        filteredOrders.sort((a, b) => {
-            const aCountry = a.userId.country ? a.userId.country.toUpperCase() : "BD";
-            const bCountry = b.userId.country ? b.userId.country.toUpperCase() : "BD";
+            // If it's a SELL ad, maker MUST have NXS balance
+            if (o.type === 'SELL') {
+                return o.userId.wallet && o.userId.wallet.main > 0;
+            }
 
-            if (aCountry === currentUserCountry && bCountry !== currentUserCountry) return -1;
-            if (bCountry === currentUserCountry && aCountry !== currentUserCountry) return 1;
-            return 0; // Same country logic
+            // BUY ad relies on BDT outside, so no NXS balance check
+            return true;
         });
+
+        // Sorting Logic
+        if (filters.sort) {
+            // Priority 1: Requested Sorting
+            filteredOrders.sort((a, b) => {
+                if (filters.sort === 'lowest') return a.rate - b.rate;
+                if (filters.sort === 'highest') return b.rate - a.rate;
+                return 0;
+            });
+        } else {
+            // Default Sorting: Best Rate First based on Type, then Local Country
+            filteredOrders.sort((a, b) => {
+                // If it's a SELL ad, buyers want the LOWEST rate
+                // If it's a BUY ad, sellers want the HIGHEST rate
+                const rateDiff = query.type === 'BUY' ? b.rate - a.rate : a.rate - b.rate;
+                if (rateDiff !== 0) return rateDiff;
+
+                // Tie-breaker: Same Country logic
+                const aCountry = a.userId.country ? a.userId.country.toUpperCase() : "BD";
+                const bCountry = b.userId.country ? b.userId.country.toUpperCase() : "BD";
+
+                if (aCountry === currentUserCountry && bCountry !== currentUserCountry) return -1;
+                if (bCountry === currentUserCountry && aCountry !== currentUserCountry) return 1;
+                return 0; // Same country logic
+            });
+        }
 
         return filteredOrders;
     }
@@ -482,16 +530,39 @@ class P2PService {
             .populate('orderId', 'paymentMethod paymentDetails rate amount');
     }
 
-    async holdTrade(tradeId) {
+    // --- USER INITIATES DISPUTE (TRIBUNAL) ---
+    async disputeTrade(userId, tradeId, reason) {
+        if (!reason) throw new Error("A reason must be provided to open a dispute.");
+
         const trade = await P2PTrade.findById(tradeId);
         if (!trade) throw new Error("Trade not found");
-        if (['COMPLETED', 'CANCELLED'].includes(trade.status)) throw new Error("Cannot hold finalized trade");
+
+        // Only involved parties can open dispute
+        if (trade.buyerId.toString() !== userId.toString() && trade.sellerId.toString() !== userId.toString()) {
+            throw new Error("Unauthorized: Only participants can report this trade.");
+        }
+
+        if (['COMPLETED', 'CANCELLED', 'RESOLVED_BUYER', 'RESOLVED_SELLER'].includes(trade.status)) {
+            throw new Error("Cannot dispute a finalized trade");
+        }
 
         trade.status = 'DISPUTE';
+        trade.disputeReason = reason;
+        trade.disputeRaisedBy = userId;
+        trade.disputeAt = new Date();
         await trade.save();
+
+        // Lock the Order as well
         await P2POrder.findByIdAndUpdate(trade.orderId, { status: 'DISPUTE' });
 
-        this.addSystemMessage(trade._id, "Trade put on HOLD by System/Admin.");
+        const reporterRole = trade.sellerId.toString() === userId.toString() ? 'Seller' : 'Buyer';
+        this.addSystemMessage(trade._id, `⚠️ Trade put on HOLD. ${reporterRole} reported an issue: "${reason}". Admin will review this chat shortly.`);
+
+        // Broadcast
+        SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_trade_dispute', trade);
+        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_dispute', trade);
+        SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'DISPUTE_RAISED', message: `P2P Dispute: Trade #${trade._id}`, tradeId: trade._id });
+
         return trade;
     }
 
