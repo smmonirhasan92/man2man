@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock, Globe2, ArrowDownCircle, ArrowUpCircle, Zap } from 'lucide-react';
+import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock, Globe2, ArrowDownCircle, ArrowUpCircle, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import OrderCreationModal from './OrderCreationModal';
 import BuyOrderModal from './BuyOrderModal';
 import P2PChatRoom from './P2PChatRoom';
@@ -211,186 +211,209 @@ export default function P2PDashboard({ initialMode, onClose }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0f1e] text-white p-4 pb-24 font-sans">
+        <div className="min-h-screen bg-[#0b0e11] text-[#eaeaec] font-sans pb-24 overflow-x-hidden">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6 pt-4">
+            <div className="flex justify-between items-center p-4 bg-[#181a20] border-b border-[#2b3139]">
                 <div className="flex items-center gap-3">
-                    <button onClick={onClose || (() => router.back())} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition border border-white/5">
+                    <button onClick={onClose || (() => router.back())} className="text-[#848e9c] hover:text-[#eaeaec] transition">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-xl font-black text-white tracking-wide">P2P TRADING</h1>
-                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                            <ShieldCheck className="w-3 h-3" /> Secure Escrow
+                        <h1 className="text-xl font-black text-[#eaeaec] flex items-center gap-2">
+                            P2P Market
+                            <span className="bg-[#fcd535] text-black text-[9px] px-1.5 py-0.5 rounded font-black tracking-widest mt-0.5">PRO</span>
+                        </h1>
+                        <p className="text-[10px] text-[#848e9c] font-bold uppercase tracking-widest flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-[#0ecb81]" /> Escrow Active
                         </p>
                     </div>
                 </div>
-                <button onClick={fetchOrders} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition border border-white/5">
-                    <RefreshCw className="w-4 h-4 text-cyan-400" />
-                </button>
+                <div className="flex items-center gap-3">
+                    <button onClick={fetchOrders} className="text-[#848e9c] hover:text-[#eaeaec] transition">
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#fcd535]' : ''}`} />
+                    </button>
+                </div>
             </div>
 
-            {/* Toggle Switch */}
-            <div className="flex bg-[#111] p-1 rounded-xl mb-4 border border-white/10 gap-1">
-                <button
-                    onClick={() => setMode('buy')}
-                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'buy' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/50' : 'text-slate-500 hover:text-white'}`}
-                >
-                    <ArrowDownCircle className="w-4 h-4" /> Buy NXS
-                </button>
-                <button
-                    onClick={() => setMode('sell')}
-                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'sell' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'text-slate-500 hover:text-white'}`}
-                >
-                    <ArrowUpCircle className="w-4 h-4" /> Sell NXS
-                </button>
-                <button
-                    onClick={() => setMode('my_ads')}
-                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'my_ads' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-500 hover:text-white'}`}
-                >
-                    <User className="w-4 h-4" /> My Ads
-                </button>
-                <button
-                    onClick={() => setMode('history')}
-                    className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${mode === 'history' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                >
-                    <Clock className="w-4 h-4" /> History
-                </button>
-            </div>
-
-            {/* Content Area */}
-            {
-                (mode === 'buy' || mode === 'sell' || mode === 'my_ads') && (
-                    <div className="mb-4">
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:scale-[1.02] transition"
-                        >
-                            <Plus className="w-5 h-5" /> Post New Ad
-                        </button>
+            {/* Trading View / Market Stats Header */}
+            <div className="p-4 bg-[#181a20] border-b border-[#2b3139]">
+                <div className="flex items-end justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-2xl font-black text-[#eaeaec]">NXS / BDT</h2>
+                            <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">P2P</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-[#0ecb81]">126.00</span>
+                            <span className="text-[11px] font-bold text-[#0ecb81] bg-[#0ecb81]/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                <TrendingUp className="w-3 h-3" /> +0.00%
+                            </span>
+                        </div>
                     </div>
-                )
-            }
+                    <div className="flex gap-4 text-right">
+                        <div>
+                            <div className="text-[9px] text-[#848e9c] uppercase font-bold tracking-widest mb-0.5">24h High</div>
+                            <div className="text-[11px] font-mono text-[#eaeaec]">128.50</div>
+                        </div>
+                        <div>
+                            <div className="text-[9px] text-[#848e9c] uppercase font-bold tracking-widest mb-0.5">24h Low</div>
+                            <div className="text-[11px] font-mono text-[#eaeaec]">124.00</div>
+                        </div>
+                        <div className="hidden sm:block">
+                            <div className="text-[9px] text-[#848e9c] uppercase font-bold tracking-widest mb-0.5">24h Vol</div>
+                            <div className="text-[11px] font-mono text-[#eaeaec]">84.5K</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Sleek Tabs */}
+            <div className="flex bg-[#181a20] px-3 overflow-x-auto scrollbar-none border-b border-[#2b3139]">
+                {['buy', 'sell', 'my_ads', 'history'].map(t => (
+                    <button
+                        key={t}
+                        onClick={() => setMode(t)}
+                        className={`px-4 py-3 text-sm font-bold tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : 'text-[#fcd535]') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
+                    >
+                        {t === 'my_ads' ? 'MY ADS' : t.toUpperCase()}
+                        {mode === t && (
+                            <div className={`absolute bottom-0 left-0 w-full h-[2px] ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : 'bg-[#fcd535]'}`} />
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* Post Ad Button (Moved inside My Ads) */}
+            {mode === 'my_ads' && (
+                <div className="px-4 py-3">
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="w-full py-3 bg-[#fcd535] hover:bg-[#e6c130] text-black rounded-lg font-black flex items-center justify-center gap-2 transition"
+                    >
+                        <Plus className="w-5 h-5" /> POST NEW AD
+                    </button>
+                </div>
+            )}
 
             {/* Advanced Filters */}
             {(mode === 'buy' || mode === 'sell') && (
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
-                    <select
-                        value={filters.country}
-                        onChange={(e) => setFilters(f => ({ ...f, country: e.target.value }))}
-                        className="bg-[#111927] border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500"
-                    >
-                        <option value="all">🌐 Any Country</option>
-                        <option value="BD">🇧🇩 Bangladesh</option>
-                        <option value="IN">🇮🇳 India</option>
-                        <option value="GLOBAL">🌍 Global (Binance)</option>
-                    </select>
-
-                    <select
-                        value={filters.sort}
-                        onChange={(e) => setFilters(f => ({ ...f, sort: e.target.value }))}
-                        className="bg-[#111927] border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500"
-                    >
-                        <option value="">Sort: Best Rate</option>
-                        <option value="lowest">Lowest Price</option>
-                        <option value="highest">Highest Price</option>
-                    </select>
-
-                    <select
-                        value={filters.paymentMethod}
-                        onChange={(e) => setFilters(f => ({ ...f, paymentMethod: e.target.value }))}
-                        className="bg-[#111927] border border-white/10 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500"
-                    >
-                        <option value="all">All Payments</option>
-                        <option value="bkash">bKash</option>
-                        <option value="nagad">Nagad</option>
-                        <option value="binance">Binance</option>
-                        <option value="bank">Bank</option>
-                    </select>
+                <div className="p-3 bg-[#0b0e11]">
+                    <div className="flex bg-[#181a20] rounded-lg p-1 border border-[#2b3139]">
+                        <select
+                            value={filters.country}
+                            onChange={(e) => setFilters(f => ({ ...f, country: e.target.value }))}
+                            className="flex-1 bg-transparent text-[#eaeaec] text-xs font-bold px-2 py-2 outline-none border-r border-[#2b3139] appearance-none"
+                        >
+                            <option value="all">🌐 Any Country</option>
+                            <option value="BD">🇧🇩 Bangladesh</option>
+                            <option value="IN">🇮🇳 India</option>
+                            <option value="GLOBAL">🌍 Global</option>
+                        </select>
+                        <select
+                            value={filters.paymentMethod}
+                            onChange={(e) => setFilters(f => ({ ...f, paymentMethod: e.target.value }))}
+                            className="flex-1 bg-transparent text-[#eaeaec] text-xs font-bold px-2 py-2 outline-none border-r border-[#2b3139] appearance-none"
+                        >
+                            <option value="all">All Payments</option>
+                            <option value="bkash">bKash</option>
+                            <option value="nagad">Nagad</option>
+                            <option value="binance">Binance</option>
+                        </select>
+                        <select
+                            value={filters.sort}
+                            onChange={(e) => setFilters(f => ({ ...f, sort: e.target.value }))}
+                            className="flex-1 bg-transparent text-[#eaeaec] text-xs font-bold px-2 py-2 outline-none appearance-none"
+                        >
+                            <option value="">Sort: Best Rate</option>
+                            <option value="lowest">Lowest Price</option>
+                            <option value="highest">Highest Price</option>
+                        </select>
+                    </div>
                 </div>
             )}
 
             {/* Order List */}
-            <div className="space-y-3">
-                {/* [NEW] History Layout */}
+            <div className="">
                 {mode === 'history' ? (
                     loading ? <P2PSkeleton /> :
-                        orders.length === 0 ? <div className="text-center py-10 opacity-30">No Trade History</div> :
+                        orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Trade History</div> :
                             orders.map(trade => (
-                                <div key={trade._id} className="bg-[#161b2e] border border-white/5 p-4 rounded-xl flex justify-between items-center opacity-80 hover:opacity-100 transition">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${trade.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : trade.status === 'CANCELLED' ? 'bg-slate-700 text-slate-400' : 'bg-yellow-500/10 text-yellow-500'}`}>
-                                                {trade.status}
-                                            </span>
-                                            <span className="text-xs text-slate-500 font-mono">#{trade._id.substr(-6)}</span>
+                                <div key={trade._id} className="bg-[#181a20] border-b border-[#2b3139] p-4 flex justify-between items-center hover:bg-[#1e2329] transition">
+                                    <div className="flex gap-4 items-center">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : 'bg-[#fcd535]/10 text-[#fcd535]'}`}>
+                                            N
                                         </div>
-                                        <div className="text-lg font-bold text-white flex items-center gap-2">
-                                            {trade.amount} NXS
-                                        </div>
-                                        <div className="text-[10px] text-slate-500 mt-1 font-mono">
-                                            TxID: {trade.txId || '---'} | Sender: {trade.senderNumber || '---'}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81] text-black' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : 'bg-[#fcd535] text-black'}`}>
+                                                    {trade.status}
+                                                </span>
+                                                <span className="text-[10px] text-[#848e9c] font-mono">#{trade._id.substr(-6)}</span>
+                                            </div>
+                                            <div className="text-sm font-bold text-[#eaeaec]">
+                                                {trade.amount} NXS
+                                            </div>
+                                            <div className="text-[10px] text-[#848e9c] font-mono mt-0.5">
+                                                TxID: {trade.txId || '---'}
+                                            </div>
                                         </div>
                                     </div>
-                                    <button onClick={() => { setActiveTradeId(trade._id); localStorage.setItem('active_p2p_trade', trade._id); }} className="p-2 hover:bg-white/10 rounded-full">
-                                        <ArrowRight className="w-5 h-5 text-slate-400" />
+                                    <button onClick={() => { setActiveTradeId(trade._id); localStorage.setItem('active_p2p_trade', trade._id); }} className="text-[#848e9c] hover:text-[#eaeaec] transition">
+                                        <ArrowRight className="w-5 h-5" />
                                     </button>
                                 </div>
                             ))
                 ) : (
-                    /* Existing Order List */
+                    /* Exchange Style Order Book View */
                     loading ? <P2PSkeleton /> :
-                        orders.length === 0 ? <div className="text-center py-10 opacity-30">No Active Ads matching filters</div> :
-                            orders.map(order => (
-                                <div key={order._id} className="bg-[#111927] border border-white/5 p-4 rounded-xl flex justify-between items-center group relative overflow-hidden shadow-lg mb-3">
-
-                                    {/* Verified Background Glow */}
-                                    {order.userId?.isVerified && <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 blur-[40px] rounded-full pointer-events-none"></div>}
-
-                                    <div className="relative z-10">
-                                        {/* User Info */}
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-white/10">
-                                                {order.userId?.username?.charAt(0) || 'U'}
-                                            </div>
-                                            <span className="font-bold text-sm text-slate-200 flex items-baseline gap-1">
-                                                {order.userId?.username || `User ${order.userId?._id?.substr(-4)}`}
-                                                {(order.userId?.isVerified || true) && (
-                                                    <ShieldCheck className="w-3.5 h-3.5 text-blue-400 fill-blue-400/20 translate-y-0.5" />
-                                                )}
+                        orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Ads Match criteria</div> :
+                            displayOrders.map(order => (
+                                <div key={order._id} className="bg-[#181a20] border-b border-[#2b3139] p-4 hover:bg-[#1e2329] transition flex justify-between items-center group relative cursor-pointer">
+                                    {/* Left: User & Limits */}
+                                    <div className="flex flex-col gap-1 w-[40%] text-left">
+                                        <div className="flex items-center gap-1.5 overflow-hidden">
+                                            <span className="font-bold text-[13px] text-[#eaeaec] truncate max-w-full">
+                                                {order.userId?.username || `User`}
                                             </span>
-                                            {order.isInstant && (
-                                                <span className="text-[9px] bg-yellow-500 text-black px-1.5 py-0.5 rounded font-black tracking-widest flex items-center gap-0.5">
-                                                    <Zap className="w-3 h-3" /> INSTANT
-                                                </span>
-                                            )}
+                                            {(order.userId?.isVerified || true) && <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-[#fcd535]" fill="currentColor" opacity={0.2} />}
                                         </div>
-
-                                        {/* Price Display */}
-                                        <div className="text-2xl font-black text-white leading-none">
-                                            {order.amount.toLocaleString()} <span className="text-xs font-bold text-slate-500">NXS</span>
+                                        <div className="flex items-center gap-1.5 text-[10px] text-[#848e9c]">
+                                            <span>{order.userId?.completedTrades || 0} orders</span>
+                                            <div className="w-[1px] h-2 bg-[#2b3139]"></div>
+                                            <span>{order.userId?.trustScore || 0}%</span>
                                         </div>
-                                        <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
-                                            Rate: <span className="text-emerald-400">1 NXS = {order.rate || 126} BDT</span>
+                                        <div className="mt-1 text-[10px] flex gap-1">
+                                            <span className="text-[#848e9c]">Limit</span>
+                                            <span className="text-[#eaeaec] font-mono">100 - {((order.amount || 0) * (order.rate || 126)).toLocaleString('en-IN')} ৳</span>
                                         </div>
-
-                                        {/* Limits & Methods */}
-                                        <div className="flex gap-2 mt-3">
-                                            <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border ${getMethodStyle(order.paymentMethod)}`}>{order.paymentMethod}</span>
+                                        <div className="mt-0.5 text-[9px] font-bold text-[#848e9c] uppercase flex gap-1">
+                                            <span className="bg-[#2b3139] border border-[#2b3139] px-1.5 py-0.5 rounded text-[#eaeaec]">{order.paymentMethod}</span>
                                         </div>
                                     </div>
 
-                                    {/* Action Button */}
-                                    <div className="relative z-10 flex flex-col items-end gap-2">
+                                    {/* Middle: Crypto Amount & empty space to push right */}
+                                    <div className="hidden sm:flex flex-col w-[25%] text-left">
+                                        <div className="text-[10px] text-[#848e9c] mb-0.5">Available</div>
+                                        <div className="text-xs font-mono font-bold text-[#eaeaec]">{order.amount.toLocaleString()} NXS</div>
+                                    </div>
+
+                                    {/* Right: Price & Action */}
+                                    <div className="flex flex-col items-end justify-between h-full w-[35%] sm:w-[35%]">
+                                        <div className="text-lg font-black font-mono text-[#eaeaec] mb-1 leading-none">
+                                            {order.rate || 126} <span className="text-[10px] text-[#848e9c] ml-1">BDT</span>
+                                        </div>
+                                        <div className="text-[10px] text-[#848e9c] mb-2 sm:hidden text-right leading-none">
+                                            Vol: {order.amount.toLocaleString()} NXS
+                                        </div>
                                         {mode === 'my_ads' ? (
                                             <div className="text-right">
-                                                <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? (order.type === 'BUY' ? 'text-blue-400' : 'text-emerald-400') : 'text-yellow-500'}`}>
-                                                    {order.type} AD • {order.status}
+                                                <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? (order.type === 'BUY' ? 'text-[#0ecb81]' : 'text-[#f6465d]') : 'text-[#fcd535]'}`}>
+                                                    {order.type} • {order.status}
                                                 </div>
                                                 {order.status === 'OPEN' && (
                                                     <button
-                                                        onClick={() => handleCancelOrder(order._id)}
-                                                        className="text-[10px] text-red-500 hover:text-red-400 font-bold px-2 py-1 border border-red-500/20 rounded-md bg-red-500/10"
+                                                        onClick={(e) => { e.stopPropagation(); handleCancelOrder(order._id); }}
+                                                        className="text-[10px] text-[#f6465d] bg-[#f6465d]/10 hover:bg-[#f6465d]/20 font-bold px-3 py-1 rounded"
                                                     >
                                                         CANCEL
                                                     </button>
@@ -400,9 +423,9 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                             <button
                                                 onClick={() => handleTradeAction(order)}
                                                 disabled={order.status !== 'OPEN'}
-                                                className={`h-10 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 ${order.status !== 'OPEN' ? 'bg-slate-800 text-slate-500' : (order.type === 'SELL' ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/20')}`}
+                                                className={`px-6 py-2 rounded font-bold text-[11px] uppercase transition-all ${order.status !== 'OPEN' ? 'bg-[#2b3139] text-[#848e9c]' : (order.type === 'SELL' ? 'bg-[#0ecb81] hover:bg-[#0b9e65] text-white' : 'bg-[#f6465d] hover:bg-[#c93046] text-white')}`}
                                             >
-                                                {order.status !== 'OPEN' ? 'Taken' : (order.type === 'SELL' ? 'BUY NXS' : 'SELL NXS')}
+                                                {order.status !== 'OPEN' ? 'Taken' : (order.type === 'SELL' ? 'Buy NXS' : 'Sell NXS')}
                                             </button>
                                         )}
                                     </div>
@@ -412,38 +435,10 @@ export default function P2PDashboard({ initialMode, onClose }) {
             </div>
 
             {/* Modals */}
-            {
-                showCreateModal && (
-                    <OrderCreationModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchOrders(); }} />
-                )
-            }
-
-            <BuyOrderModal
-                isOpen={buyModalConfig.isOpen}
-                onClose={() => setBuyModalConfig({ isOpen: false, order: null })}
-                order={buyModalConfig.order}
-                onConfirm={confirmTrade}
-            />
-
-            {/* Rating Modal */}
-            {
-                ratingTradeId && (
-                    <RatingModal
-                        tradeId={ratingTradeId}
-                        onClose={() => setRatingTradeId(null)}
-                        onSuccess={() => setRatingTradeId(null)}
-                    />
-                )
-            }
-            {/* Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={modal.isOpen}
-                onClose={() => setModal({ ...modal, isOpen: false })}
-                onConfirm={modal.onConfirm}
-                title={modal.title}
-                message={modal.message}
-                confirmText={modal.confirmText || 'Confirm'}
-            />
-        </div >
+            {showCreateModal && <OrderCreationModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchOrders(); }} />}
+            <BuyOrderModal isOpen={buyModalConfig.isOpen} onClose={() => setBuyModalConfig({ isOpen: false, order: null })} order={buyModalConfig.order} onConfirm={confirmTrade} />
+            {ratingTradeId && <RatingModal tradeId={ratingTradeId} onClose={() => setRatingTradeId(null)} onSuccess={() => setRatingTradeId(null)} />}
+            <ConfirmationModal isOpen={modal.isOpen} onClose={() => setModal({ ...modal, isOpen: false })} onConfirm={modal.onConfirm} title={modal.title} message={modal.message} confirmText={modal.confirmText || 'Confirm'} />
+        </div>
     );
 }
