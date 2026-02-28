@@ -34,11 +34,13 @@ export default function AutoUpdater() {
 
                 // Nuclear Cache Busting: Delete all caches to prevent white screen loops
                 try {
-                    const cacheNames = await caches.keys();
-                    await Promise.all(
-                        cacheNames.map((cacheName) => caches.delete(cacheName))
-                    );
-                    console.log('Successfully cleared old PWA caches.');
+                    if ('caches' in window) {
+                        const cacheNames = await window.caches.keys();
+                        await Promise.all(
+                            cacheNames.map((cacheName) => window.caches.delete(cacheName))
+                        );
+                        console.log('Successfully cleared old PWA caches.');
+                    }
                 } catch (err) {
                     console.error('Failed to clear caches:', err);
                 }

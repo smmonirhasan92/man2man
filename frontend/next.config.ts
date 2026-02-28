@@ -61,6 +61,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
+  transpilePackages: ['framer-motion', 'lucide-react', 'react-hot-toast'],
   /* config options here */
   eslint: {
     ignoreDuringBuilds: true,

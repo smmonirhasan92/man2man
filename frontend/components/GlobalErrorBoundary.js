@@ -24,11 +24,13 @@ class GlobalErrorBoundary extends React.Component {
         // Nuclear Fallback: If the app crashes, it might be due to a zombie cache.
         // Clear all caches aggressively before reloading.
         try {
-            const cacheNames = await caches.keys();
-            await Promise.all(
-                cacheNames.map((cacheName) => caches.delete(cacheName))
-            );
-            console.log('Crash Fallback: Cleared old PWA caches.');
+            if ('caches' in window) {
+                const cacheNames = await window.caches.keys();
+                await Promise.all(
+                    cacheNames.map((cacheName) => window.caches.delete(cacheName))
+                );
+                console.log('Crash Fallback: Cleared old PWA caches.');
+            }
         } catch (err) {
             console.error('Crash Fallback: Failed to clear caches:', err);
         }
