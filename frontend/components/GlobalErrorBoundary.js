@@ -18,8 +18,21 @@ class GlobalErrorBoundary extends React.Component {
         logger.error('GlobalErrorBoundary caught an error:', { error, errorInfo });
     }
 
-    handleRetry = () => {
+    handleRetry = async () => {
         this.setState({ hasError: false, error: null });
+
+        // Nuclear Fallback: If the app crashes, it might be due to a zombie cache.
+        // Clear all caches aggressively before reloading.
+        try {
+            const cacheNames = await caches.keys();
+            await Promise.all(
+                cacheNames.map((cacheName) => caches.delete(cacheName))
+            );
+            console.log('Crash Fallback: Cleared old PWA caches.');
+        } catch (err) {
+            console.error('Crash Fallback: Failed to clear caches:', err);
+        }
+
         window.location.reload();
     };
 

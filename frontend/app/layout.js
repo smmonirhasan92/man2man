@@ -64,11 +64,13 @@ import { Toaster } from 'react-hot-toast';
 
 import GlobalProfileDrawer from '../components/GlobalProfileDrawer';
 import Shell from '../components/layout/Shell';
+import AutoUpdater from '../components/AutoUpdater';
 
 export default function RootLayout({ children }) {
     return (
         <html lang="en" suppressHydrationWarning={true}>
             <body className={`${inter.className} min-h-screen text-white`} suppressHydrationWarning={true}>
+                <AutoUpdater />
                 <NotificationProvider>
                     <CurrencyProvider>
                         <CardSkinProvider>
