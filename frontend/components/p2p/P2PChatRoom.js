@@ -67,7 +67,11 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         // Listen for new messages
         socket.on('p2p_message', (msg) => {
             if (msg.tradeId === tradeId) {
-                setMessages(prev => [...prev, msg]);
+                setMessages(prev => {
+                    // Prevent duplicate messages if socket reconnects or fires twice
+                    if (prev.some(m => m._id === msg._id)) return prev;
+                    return [...prev, msg];
+                });
                 scrollToBottom();
                 playDing();
             }
@@ -306,59 +310,54 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-[#0a0f1e] text-white font-sans max-w-4xl mx-auto border-x border-white/5">
+        <div className="flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full mx-auto relative">
             {/* 1. Header with Timer */}
-            <div className="p-4 border-b border-white/10 bg-[#111] flex justify-between items-center shadow-md">
-                <div className="flex items-center gap-3">
-                    <button onClick={onBack}><ArrowLeft className="w-5 h-5 text-slate-400" /></button>
+            <div className="p-3 border-b border-[#2b3139] bg-[#181a20] flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-2">
+                    <button onClick={onBack} className="p-1 text-[#848e9c] hover:text-[#eaeaec]"><ArrowLeft className="w-5 h-5" /></button>
                     <div>
-                        <h2 className="font-bold text-sm text-slate-200">
-                            {isBuyer ? `Paying ${trade.sellerId.username}` : `Selling to ${trade.buyerId.username}`}
+                        <h2 className="font-bold text-[13px] text-[#eaeaec] leading-tight">
+                            {isBuyer ? `Pay ${trade.sellerId.username}` : `Sell to ${trade.buyerId.username}`}
                         </h2>
-                        <div className="text-xs font-mono text-cyan-400">Order #{trade._id.substr(-6)}</div>
+                        <div className="text-[10px] font-mono text-[#848e9c]">Order #{trade._id.substr(-6)}</div>
                     </div>
                 </div>
                 <div className="text-right">
-                    <div className="text-xl font-black font-mono text-yellow-500 flex items-center gap-2">
-                        <Clock className="w-4 h-4" /> {timeLeft}
+                    <div className="text-lg font-black font-mono text-[#fcd535] flex items-center justify-end gap-1.5 leading-none mb-1">
+                        <Clock className="w-3.5 h-3.5" /> {timeLeft}
                     </div>
-                    <div className={`text-[10px] uppercase font-bold px-2 rounded ${trade.status === 'COMPLETED' ? 'bg-emerald-500 text-black' :
-                        trade.status === 'PAID' ? 'bg-yellow-500 text-black' :
-                            trade.status === 'DISPUTE' ? 'bg-red-500 text-white' :
-                                'bg-blue-500 text-white'
+                    <div className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded inline-block ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81] text-black' :
+                        trade.status === 'PAID' ? 'bg-[#fcd535] text-black' :
+                            trade.status === 'DISPUTE' ? 'bg-[#f6465d] text-white' :
+                                'bg-[#0ecb81]/20 text-[#0ecb81]'
                         }`}>
                         {trade.status}
                     </div>
                 </div>
             </div>
 
-
-
-
-
-            {/* 1.5 PAYMENT INFO CARD (Sticky & Auto-Show for Buyer) */}
+            {/* 1.5 PAYMENT INFO CARD (Buyer Only - Compact) */}
             {isBuyer && trade.status === 'CREATED' && (
-                <div className="sticky top-0 z-10 px-4 pt-4 pb-2 bg-[#0a0f1e]/95 backdrop-blur-md border-b border-white/5 shadow-xl">
-                    <div className="p-4 bg-gradient-to-r from-blue-900/40 to-slate-900/40 border border-blue-500/30 rounded-xl shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 bg-blue-600 text-[9px] font-bold px-2 py-1 rounded-bl-lg text-white">
-                            SELLER INFO
+                <div className="shrink-0 p-3 bg-[#181a20] border-b border-[#2b3139]">
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-3 relative">
+                        <div className="absolute top-0 right-0 bg-[#2b3139] text-[9px] font-bold px-2 py-0.5 rounded-bl-lg text-[#848e9c]">
+                            PAYMENT INFO
                         </div>
                         <div className="flex justify-between items-end">
-                            <div id="step-1-copy" onClick={copyPaymentInfo} className="cursor-pointer group p-1 -m-1 rounded">
-                                <div className="text-xs text-blue-300 font-medium mb-1">Send Payment To (Tap to Copy)</div>
-                                <div className="text-xl font-mono font-black text-white tracking-wider flex items-center gap-2">
+                            <div id="step-1-copy" onClick={copyPaymentInfo} className="cursor-pointer group flex-1">
+                                <div className="text-[10px] text-[#848e9c] mb-0.5">Transfer To (Tap to Copy)</div>
+                                <div className="text-lg font-mono font-black text-[#eaeaec] flex items-center gap-1.5">
                                     {trade.orderId.paymentDetails || "Contact Seller"}
-                                    <span className="opacity-0 group-hover:opacity-100 text-xs bg-white text-black px-1 rounded">COPY</span>
                                 </div>
-                                <div className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
-                                    {trade.orderId.paymentMethod} • {trade.sellerId.username}
+                                <div className="text-[10px] text-[#848e9c] uppercase mt-0.5 flex items-center gap-1">
+                                    <span className="border border-[#2b3139] px-1 rounded">{trade.orderId.paymentMethod}</span>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-[10px] text-slate-400">Rate: 1 NXS = {trade.orderId.rate || 126} BDT</div>
-                                <div className="text-xs text-slate-300 mt-1">Total Amount</div>
-                                <div className="text-2xl font-black text-emerald-400">
-                                    {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} <span className="text-sm text-emerald-600">BDT</span>
+                                <div className="text-[10px] text-[#848e9c]">1 NXS = {trade.orderId.rate || 126} BDT</div>
+                                <div className="text-[10px] text-[#848e9c] mt-1">Total Amount</div>
+                                <div className="text-xl font-black text-[#0ecb81] leading-none">
+                                    {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} <span className="text-[10px]">BDT</span>
                                 </div>
                             </div>
                         </div>
@@ -366,257 +365,227 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 </div>
             )}
 
-            {/* Sticky Alert for Active Trades */}
+            {/* Sticky Alerts */}
             {(trade.status === 'CREATED' || trade.status === 'PAID') && (
-                <div className="bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-200 text-xs text-center py-1">
-                    🔔 {trade.status === 'CREATED' ? 'Waiting for Payment...' : 'Payment Marked Sent. Verify & Release.'}
+                <div className="shrink-0 bg-[#fcd535]/10 border-b border-[#fcd535]/20 text-[#fcd535] text-[10px] font-bold text-center py-1.5 flex justify-center items-center gap-1">
+                    <Shield className="w-3 h-3" /> {trade.status === 'CREATED' ? 'Waiting for buyer payment...' : 'Payment marked sent. Verify & release.'}
                 </div>
             )}
 
-            {/* Sticky Alert for Disputed Trades */}
             {trade.status === 'DISPUTE' && (
-                <div className="bg-red-500/10 border-b border-red-500/20 text-red-200 text-xs text-center p-3">
-                    <div className="flex items-center justify-center gap-2 font-bold mb-1">
-                        <AlertTriangle className="w-4 h-4 text-red-500" /> TRADE FROZEN BY TRIBUNAL
+                <div className="shrink-0 bg-[#f6465d]/10 border-b border-[#f6465d]/20 text-[#f6465d] text-[10px] text-center p-2">
+                    <div className="flex items-center justify-center gap-1.5 font-bold mb-0.5">
+                        <AlertTriangle className="w-3 h-3" /> TRADE FROZEN BY TRIBUNAL
                     </div>
-                    An Admin has been summoned to resolve this dispute. Please provide evidence in the chat.
+                    Admin reviewing. Please upload proof in chat.
                 </div>
             )}
 
+            {/* Seller Action Required Box (Compact) */}
+            {trade.status === 'PAID' && isSeller && (
+                <div className="shrink-0 p-3 bg-[#181a20] border-b border-[#2b3139]">
+                    <div className="flex justify-between items-center mb-3">
+                        <div>
+                            <div className="text-[10px] text-[#0ecb81] font-bold uppercase">Action Required</div>
+                            <div className="text-[13px] font-bold text-[#eaeaec]">Verify Payment</div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-lg font-black text-[#eaeaec] font-mono">{trade.amount} NXS</div>
+                        </div>
+                    </div>
+                    <div className="bg-[#0b0e11] rounded p-2 mb-3 border border-[#2b3139] grid grid-cols-2 gap-2">
+                        <div>
+                            <div className="text-[9px] text-[#848e9c]">Sender:</div>
+                            <div className="font-mono text-[11px] text-[#eaeaec] font-bold">{trade.senderNumber || '---'}</div>
+                        </div>
+                        <div>
+                            <div className="text-[9px] text-[#848e9c]">TxID:</div>
+                            <div className="font-mono text-[11px] text-[#0ecb81] font-bold">{trade.txId || '---'}</div>
+                        </div>
+                        {trade.paymentProofUrl && (
+                            <div className="col-span-2 text-center mt-1">
+                                <a href={trade.paymentProofUrl} target="_blank" className="text-[10px] text-[#fcd535] underline">View Receipt Screenshot</a>
+                            </div>
+                        )}
+                    </div>
+                    <button onClick={handleReleaseClick} className="w-full bg-[#0ecb81] hover:bg-[#0b9e65] text-black py-2.5 rounded font-black text-xs uppercase transition">
+                        Release Crypto
+                    </button>
+                </div>
+            )}
+
+            {/* 2. Chat Area */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[#0b0e11] custom-scrollbar">
+                {messages.map((msg, i) => {
+                    if (msg.type === 'SYSTEM') {
+                        return (
+                            <div key={i} className="flex justify-center my-2">
+                                <div className="bg-[#2b3139]/50 border border-[#2b3139] text-[#848e9c] text-[9px] px-3 py-1.5 rounded-sm max-w-[80%] text-center">
+                                    {msg.text}
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    const senderStr = typeof msg.senderId === 'object' ? msg.senderId._id?.toString() : msg.senderId?.toString();
+                    const userStr = user?._id?.toString();
+                    const isMe = senderStr === userStr;
+
+                    return (
+                        <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] p-2 rounded-lg text-[11px] relative leading-relaxed ${isMe ? 'bg-[#fcd535] text-black rounded-br-sm' : 'bg-[#2b3139] text-[#eaeaec] rounded-bl-sm'}`}>
+                                {msg.imageUrl && (
+                                    <img src={msg.imageUrl} alt="attachment" className="w-full h-auto rounded mb-1" />
+                                )}
+                                <p className="whitespace-pre-wrap word-break">{msg.text}</p>
+                                <div className={`text-[8px] mt-1 text-right ${isMe ? 'text-black/60' : 'text-[#848e9c]'}`}>
+                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+                <div ref={scrollRef} />
+            </div>
+
+            {/* 3. Action Bar (Fixed at bottom) */}
+            <div className="shrink-0 bg-[#181a20] border-t border-[#2b3139]">
+                {/* Proof Panel (Buyer) */}
+                {trade.status === 'CREATED' && isBuyer && (
+                    <div id="step-2-proof" className="p-3 border-b border-[#2b3139]">
+                        <div className="text-[10px] text-[#848e9c] mb-1.5 font-bold uppercase">Submit Proof of Payment</div>
+                        <div className="flex gap-2 mb-2">
+                            <input
+                                value={senderNumber}
+                                onChange={(e) => setSenderNumber(e.target.value)}
+                                placeholder="Sender Last 4"
+                                className="flex-1 bg-[#0b0e11] border border-[#2b3139] rounded px-3 py-2 text-[11px] text-[#eaeaec] outline-none focus:border-[#fcd535]"
+                            />
+                            <input
+                                value={txId}
+                                onChange={(e) => setTxId(e.target.value)}
+                                placeholder="TxID"
+                                className="flex-[1.5] bg-[#0b0e11] border border-[#2b3139] rounded px-3 py-2 text-[11px] text-[#eaeaec] outline-none focus:border-[#fcd535]"
+                            />
+                        </div>
+                        <button id="step-3-submit" onClick={handleMarkPaid} className="w-full bg-[#fcd535] hover:bg-[#e6c130] text-black py-2.5 rounded font-black text-xs uppercase transition">
+                            Transferred, Notify Seller
+                        </button>
+                    </div>
+                )}
+
+                {/* Input Area */}
+                <div className="flex gap-2 p-2">
+                    {/* Utility Buttons */}
+                    {trade && !['COMPLETED', 'CANCELLED', 'DISPUTE'].includes(trade.status) && (
+                        <button onClick={handleDispute} className="p-2.5 bg-[#f6465d]/10 rounded text-[#f6465d] flex-shrink-0" title="Report">
+                            <AlertTriangle className="w-4 h-4" />
+                        </button>
+                    )}
+                    {trade && trade.status === 'CREATED' && (
+                        <button onClick={handleCancelTrade} className="p-2.5 bg-[#2b3139] rounded text-[#848e9c] text-[10px] font-bold flex-shrink-0 uppercase">
+                            Cancel
+                        </button>
+                    )}
+                    {trade && !['COMPLETED', 'CANCELLED'].includes(trade.status) && (
+                        <button onClick={handleUploadProof} disabled={trade.status === 'DISPUTE'} className={`p-2.5 rounded ${proofUrl ? 'bg-[#0ecb81] text-black' : 'bg-[#2b3139] text-[#848e9c]'} flex-shrink-0 relative`}>
+                            <ImageIcon className="w-4 h-4" />
+                            {proofUrl && <CheckCircle className="w-2.5 h-2.5 absolute top-0.5 right-0.5 bg-black text-[#0ecb81] rounded-full" />}
+                        </button>
+                    )}
+
+                    {/* Chat Input */}
+                    {trade.status !== 'COMPLETED' && trade.status !== 'CANCELLED' && (
+                        <div className="flex gap-2 flex-1 relative">
+                            <input
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                                placeholder={trade.status === 'DISPUTE' ? "Chat active for Tribunal..." : "Type a message..."}
+                                className="flex-1 bg-[#0b0e11] border border-[#2b3139] rounded px-3 py-2 text-[11px] text-[#eaeaec] outline-none focus:border-[#fcd535]"
+                            />
+                            <button onClick={sendMessage} className="absolute right-1 top-1 bottom-1 px-3 bg-[#fcd535] rounded-sm text-black hover:bg-[#e6c130] transition flex items-center justify-center">
+                                <Send className="w-3.5 h-3.5 -ml-0.5" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Modals & Guides remain exactly the same logically but updated UI colors */}
             {/* PIN MODAL */}
             {isPinModalOpen && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                    <div className="bg-[#1a1b2e] p-6 rounded-xl border border-white/10 w-80">
-                        <h3 className="text-lg font-bold text-white mb-4 text-center">Security Verification</h3>
-                        <p className="text-xs text-slate-400 mb-4 text-center">Enter your Account Password to authorize fund release.</p>
+                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#181a20] p-5 rounded-lg border border-[#2b3139] w-full max-w-[280px]">
+                        <h3 className="text-[13px] font-bold text-[#eaeaec] mb-1">Security Verification</h3>
+                        <p className="text-[10px] text-[#848e9c] mb-4">Enter Password to release crypto</p>
                         <input
                             type="password"
-                            className="w-full bg-black/50 border border-white/20 rounded p-3 text-center text-xl tracking-widest text-white mb-4 focus:border-blue-500 outline-none"
+                            className="w-full bg-[#0b0e11] border border-[#2b3139] rounded p-2.5 text-center text-sm tracking-widest text-[#eaeaec] mb-4 focus:border-[#0ecb81] outline-none font-mono"
                             value={pin}
                             onChange={(e) => setPin(e.target.value)}
                             placeholder="Password"
                         />
                         <div className="flex gap-2">
-                            <button onClick={() => setIsPinModalOpen(false)} className="flex-1 py-2 bg-white/5 rounded hover:bg-white/10 text-sm">Cancel</button>
-                            <button onClick={confirmReleaseWithPin} className="flex-1 py-2 bg-emerald-500 text-black font-bold rounded hover:bg-emerald-400 text-sm">Confirm</button>
+                            <button onClick={() => setIsPinModalOpen(false)} className="flex-1 py-2 bg-[#2b3139] text-[#848e9c] rounded font-bold text-[11px] uppercase">Cancel</button>
+                            <button onClick={confirmReleaseWithPin} className="flex-1 py-2 bg-[#0ecb81] text-black font-bold rounded text-[11px] uppercase">Confirm</button>
                         </div>
                     </div>
                 </div>
             )}
-
-
-            {trade.status === 'PAID' && isSeller && (
-                <div className="p-4 bg-emerald-900/20 rounded-xl border border-emerald-500/30">
-                    <div className="flex justify-between items-start mb-4">
-                        <div>
-                            <div className="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">Action Required</div>
-                            <div className="text-lg font-bold text-white">Buyer Claims Payment Sent</div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-2xl font-black text-white font-mono">{trade.amount} NXS</div>
-                        </div>
-                    </div>
-
-                    {/* Proof Details - CRITICAL FIX */}
-                    <div className="bg-black/40 rounded-lg p-3 mb-4 space-y-2 border border-white/5">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Sender Number:</span>
-                            <span className="font-mono text-white select-all">{trade.senderNumber || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Transaction ID:</span>
-                            <span className="font-mono text-emerald-300 font-bold select-all">{trade.txId || 'N/A'}</span>
-                        </div>
-                        {trade.paymentProofUrl && (
-                            <a href={trade.paymentProofUrl} target="_blank" className="block text-center text-[10px] text-blue-400 hover:underline mt-2">View Screenshot Proof</a>
-                        )}
-                    </div>
-
-                    <div className="flex gap-3 items-center">
-                        <div className="text-[10px] text-slate-500 flex-1">
-                            Check your bank app. Only release if the exact amount is reflected in your balance.
-                        </div>
-                        <button onClick={handleReleaseClick} className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-lg font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center gap-2">
-                            Confirm Release
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* 2. Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
-                <div className="flex justify-center">
-                    <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 text-xs p-3 rounded-lg max-w-sm text-center">
-                        <Shield className="w-4 h-4 mx-auto mb-1 opacity-50" />
-                        Do not release crypto/funds before verifying the payment in your bank account. Screenshots can be faked.
-                    </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                    {messages.map((msg, i) => {
-                        if (msg.type === 'SYSTEM') {
-                            return (
-                                <div key={i} className="flex justify-center my-4">
-                                    <div className="bg-white/5 border border-white/10 text-slate-400 text-[10px] px-4 py-2 rounded-full text-center flex items-center gap-2">
-                                        <AlertTriangle className="w-3 h-3 text-yellow-500" />
-                                        {msg.text}
-                                    </div>
-                                </div>
-                            );
-                        }
-
-                        // [FIX] Ensure safe string comparison for Mongoose Object IDs
-                        const senderStr = typeof msg.senderId === 'object' ? msg.senderId._id?.toString() : msg.senderId?.toString();
-                        const userStr = user?._id?.toString();
-                        const isMe = senderStr === userStr;
-
-                        return (
-                            <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[75%] p-3 rounded-2xl text-xs relative group ${isMe
-                                    ? 'bg-indigo-600 text-white rounded-br-none'
-                                    : 'bg-[#1a1b2e] border border-white/10 text-slate-300 rounded-bl-none'
-                                    }`}>
-                                    {msg.imageUrl && (
-                                        <div className="mb-2 rounded-lg overflow-hidden border border-white/10">
-                                            <img src={msg.imageUrl} alt="attachment" className="w-full h-auto" />
-                                        </div>
-                                    )}
-                                    <p>{msg.text}</p>
-                                    <span className="text-[9px] opacity-40 mt-1 block text-right">
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    <div ref={scrollRef} />
-                </div>
-            </div>
-
-            {/* 3. Action Bar (Conditional) */}
-            <div className="p-4 bg-[#111] border-t border-white/10 space-y-4">
-
-                {/* Status Actions */}
-                {trade.status === 'CREATED' && isBuyer && (
-                    <div className=" p-3 bg-blue-900/20 rounded-lg border border-blue-500/30 flex justify-between items-center">
-                        <div>
-                            <div className="text-xs text-blue-300">Amount to Pay</div>
-                            <div className="text-lg font-bold text-white font-mono">
-                                {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} BDT
-                                <span className="text-xs font-normal text-slate-400 ml-2">({trade.amount} NXS)</span>
-                            </div>
-                            <div className="text-[10px] text-slate-400">Method: {trade.orderId.paymentMethod}</div>
-                        </div>
-                        <button id="step-3-submit" onClick={handleMarkPaid} className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
-                            Mark Transferred
-                        </button>
-                    </div>
-                )}
-
-                {/* PROOF INPUTS (Buyer Only) */}
-                {trade.status === 'CREATED' && isBuyer && (
-                    <div id="step-2-proof" className="grid grid-cols-2 gap-2 p-1 -m-1 rounded">
-                        <input
-                            value={senderNumber}
-                            onChange={(e) => setSenderNumber(e.target.value)}
-                            placeholder="Sender Number (Last 4 digits)"
-                            className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500 outline-none"
-                        />
-                        <input
-                            value={txId}
-                            onChange={(e) => setTxId(e.target.value)}
-                            placeholder="Transaction ID (TxID)"
-                            className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500 outline-none"
-                        />
-                    </div>
-                )}
-
-
-
-                {/* Input Area */}
-                {trade.status !== 'COMPLETED' && trade.status !== 'CANCELLED' && (
-                    <div className="flex gap-2">
-                        <button className="p-3 bg-white/5 rounded-lg text-slate-400 hover:text-white" disabled={trade.status === 'DISPUTE'}><ImageIcon className="w-5 h-5" /></button>
-                        <input
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                            placeholder={trade.status === 'DISPUTE' ? "Chat is active for Tribunal review..." : "Type a message..."}
-                            className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 text-sm text-white focus:border-blue-500 outline-none"
-                        />
-                        <button onClick={sendMessage} className="p-3 bg-blue-600 rounded-lg text-white hover:bg-blue-500"><Send className="w-4 h-4" /></button>
-                    </div>
-                )}
-            </div>
 
             {/* Dispute Modal */}
             {showDisputeModal && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#1a1b2e] p-6 rounded-3xl border border-red-500/20 w-full max-w-sm shadow-[0_0_50px_rgba(239,68,68,0.15)]">
-                        <div className="flex justify-center mb-4">
-                            <div className="p-4 bg-red-500/10 rounded-full border border-red-500/20">
-                                <AlertTriangle className="w-8 h-8 text-red-500" />
+                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#181a20] p-5 rounded-lg border border-[#f6465d]/50 w-full max-w-[300px]">
+                        <div className="flex justify-center mb-3">
+                            <div className="p-2.5 bg-[#f6465d]/10 rounded-full">
+                                <AlertTriangle className="w-6 h-6 text-[#f6465d]" />
                             </div>
                         </div>
-                        <h3 className="text-xl font-black text-white text-center mb-2">Report Issue</h3>
-                        <p className="text-xs text-red-300/80 mb-6 text-center">
-                            Reporting an issue will freeze this trade's funds and summon an Admin. False reports may lead to an account ban.
+                        <h3 className="text-sm font-black text-[#eaeaec] text-center mb-1">Report Issue</h3>
+                        <p className="text-[9px] text-[#848e9c] mb-4 text-center">
+                            Freezes trade and summons Admin. False reports lead to ban.
                         </p>
-
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reason for Dispute</label>
                         <textarea
-                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white mb-6 h-24 resize-none outline-none focus:border-red-500 transition-colors"
-                            placeholder="e.g. Buyer marked as paid but funds not received..."
+                            className="w-full bg-[#0b0e11] border border-[#2b3139] rounded p-2.5 text-[11px] text-[#eaeaec] mb-4 h-20 resize-none outline-none focus:border-[#f6465d]"
+                            placeholder="Reason for dispute..."
                             value={disputeReason}
                             onChange={(e) => setDisputeReason(e.target.value)}
                         />
-
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowDisputeModal(false)} className="flex-1 py-3 bg-white/5 font-bold rounded-xl hover:bg-white/10 transition text-slate-300 text-sm">Cancel</button>
-                            <button onClick={submitDispute} className="flex-1 py-3 bg-red-600 font-bold text-white rounded-xl hover:bg-red-500 shadow-lg shadow-red-900/50 transition tracking-wide text-sm">FREEZE TRADE</button>
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowDisputeModal(false)} className="flex-1 py-2 bg-[#2b3139] rounded text-[10px] font-bold text-[#848e9c] uppercase">Cancel</button>
+                            <button onClick={submitDispute} className="flex-[1.5] py-2 bg-[#f6465d] font-bold text-white rounded text-[10px] uppercase">Freeze Trade</button>
                         </div>
                     </div>
                 </div>
             )}
-            {/* Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={confirmModal.isOpen}
-                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                onConfirm={confirmModal.onConfirm}
-                title={confirmModal.title}
-                message={confirmModal.message}
-                confirmText={confirmModal.confirmText}
-            />
 
             {/* Custom Upload Modal */}
-            {
-                showUploadModal && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                        <div className="bg-[#1F2937] border border-white/10 rounded-3xl p-6 w-full max-w-sm">
-                            <h3 className="text-xl font-bold text-white mb-4">Attach Proof</h3>
-                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Image URL</label>
-                            <input
-                                type="text"
-                                value={uploadInput}
-                                onChange={(e) => setUploadInput(e.target.value)}
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:border-blue-500"
-                            />
-                            <div className="flex gap-3">
-                                <button onClick={() => setShowUploadModal(false)} className="flex-1 py-3 text-slate-400 font-bold bg-white/5 rounded-xl">Cancel</button>
-                                <button onClick={submitProof} className="flex-1 py-3 text-white font-bold bg-blue-600 rounded-xl">Attach</button>
-                            </div>
+            {showUploadModal && (
+                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#181a20] p-5 rounded-lg border border-[#2b3139] w-full max-w-[280px]">
+                        <h3 className="text-[13px] font-bold text-[#eaeaec] mb-3">Attach Proof</h3>
+                        <input
+                            type="text"
+                            value={uploadInput}
+                            onChange={(e) => setUploadInput(e.target.value)}
+                            placeholder="Image URL"
+                            className="w-full bg-[#0b0e11] border border-[#2b3139] rounded p-2 text-[11px] text-[#eaeaec] mb-4 outline-none focus:border-[#fcd535]"
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowUploadModal(false)} className="flex-1 py-2 bg-[#2b3139] text-[#848e9c] rounded font-bold text-[11px] uppercase">Cancel</button>
+                            <button onClick={submitProof} className="flex-1 py-2 bg-[#fcd535] text-black font-bold rounded text-[11px] uppercase">Attach</button>
                         </div>
                     </div>
-                )
-            }
-
-            {/* Visual Tutorial for First-Time Buyers */}
-            {isBuyer && trade.status === 'CREATED' && (
-                <VisualGuide
-                    guideId={`p2p_buyer_guide_${user?.country?.toUpperCase() || 'BD'}`}
-                    steps={getTutorialSteps()}
-                />
+                </div>
             )}
-        </div >
+
+            <ConfirmationModal isOpen={confirmModal.isOpen} onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })} onConfirm={confirmModal.onConfirm} title={confirmModal.title} message={confirmModal.message} confirmText={confirmModal.confirmText} />
+
+            {isBuyer && trade.status === 'CREATED' && (
+                <VisualGuide guideId={`p2p_buyer_guide_${user?.country?.toUpperCase() || 'BD'}`} steps={getTutorialSteps()} />
+            )}
+        </div>
     );
 }

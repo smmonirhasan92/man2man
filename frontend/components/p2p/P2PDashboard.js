@@ -338,29 +338,32 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     loading ? <P2PSkeleton /> :
                         orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Trade History</div> :
                             orders.map(trade => (
-                                <div key={trade._id} className="bg-[#181a20] border-b border-[#2b3139] p-4 flex justify-between items-center hover:bg-[#1e2329] transition">
-                                    <div className="flex gap-4 items-center">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : 'bg-[#fcd535]/10 text-[#fcd535]'}`}>
-                                            N
+                                <div key={trade._id} className="bg-[#181a20] mb-2 p-3 flex flex-col hover:bg-[#1e2329] transition group cursor-pointer" onClick={() => { setActiveTradeId(trade._id); localStorage.setItem('active_p2p_trade', trade._id); }}>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : trade.status === 'DISPUTE' ? 'bg-[#f6465d]/10 text-[#f6465d]' : 'bg-[#fcd535]/10 text-[#fcd535]'}`}>
+                                                {trade.status}
+                                            </span>
+                                            <span className="text-[10px] text-[#848e9c] font-mono">#{trade._id.substr(-6)}</span>
                                         </div>
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81] text-black' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : 'bg-[#fcd535] text-black'}`}>
-                                                    {trade.status}
-                                                </span>
-                                                <span className="text-[10px] text-[#848e9c] font-mono">#{trade._id.substr(-6)}</span>
-                                            </div>
-                                            <div className="text-sm font-bold text-[#eaeaec]">
-                                                {trade.amount} NXS
-                                            </div>
-                                            <div className="text-[10px] text-[#848e9c] font-mono mt-0.5">
-                                                TxID: {trade.txId || '---'}
-                                            </div>
+                                        <div className="text-[10px] text-[#848e9c]">
+                                            {new Date(trade.createdAt).toLocaleDateString()}
                                         </div>
                                     </div>
-                                    <button onClick={() => { setActiveTradeId(trade._id); localStorage.setItem('active_p2p_trade', trade._id); }} className="text-[#848e9c] hover:text-[#eaeaec] transition">
-                                        <ArrowRight className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <div className="text-sm font-bold text-[#eaeaec] flex items-center gap-1">
+                                                {trade.amount} NXS
+                                            </div>
+                                            <div className="text-[10px] text-[#848e9c] mt-0.5">
+                                                {(trade.amount * (trade.orderId?.rate || 126)).toLocaleString('en-IN')} BDT
+                                            </div>
+                                        </div>
+                                        <div className="text-right flex items-center gap-2 text-[#848e9c] group-hover:text-[#eaeaec] transition">
+                                            <span className="text-[10px] uppercase font-bold">{trade.orderId?.type === 'SELL' ? 'Bought' : 'Sold'}</span>
+                                            <ArrowRight className="w-4 h-4" />
+                                        </div>
+                                    </div>
                                 </div>
                             ))
                 ) : (
@@ -368,66 +371,69 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     loading ? <P2PSkeleton /> :
                         orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Ads Match criteria</div> :
                             displayOrders.map(order => (
-                                <div key={order._id} className="bg-[#181a20] border-b border-[#2b3139] p-4 hover:bg-[#1e2329] transition flex justify-between items-center group relative cursor-pointer">
-                                    {/* Left: User & Limits */}
-                                    <div className="flex flex-col gap-1 w-[40%] text-left">
-                                        <div className="flex items-center gap-1.5 overflow-hidden">
-                                            <span className="font-bold text-[13px] text-[#eaeaec] truncate max-w-full">
-                                                {order.userId?.username || `User`}
-                                            </span>
-                                            {(order.userId?.isVerified || true) && <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-[#fcd535]" fill="currentColor" opacity={0.2} />}
+                                <div key={order._id} className="bg-[#181a20] mb-2 p-3 hover:bg-[#1e2329] transition relative">
+                                    {/* Top Row: User Info */}
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-6 h-6 rounded-full bg-[#2b3139] flex items-center justify-center text-[10px] font-bold text-[#848e9c]">
+                                            {order.userId?.username?.charAt(0) || 'U'}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-[10px] text-[#848e9c]">
-                                            <span>{order.userId?.completedTrades || 0} orders</span>
-                                            <div className="w-[1px] h-2 bg-[#2b3139]"></div>
-                                            <span>{order.userId?.trustScore || 0}%</span>
-                                        </div>
-                                        <div className="mt-1 text-[10px] flex gap-1">
-                                            <span className="text-[#848e9c]">Limit</span>
-                                            <span className="text-[#eaeaec] font-mono">100 - {((order.amount || 0) * (order.rate || 126)).toLocaleString('en-IN')} ৳</span>
-                                        </div>
-                                        <div className="mt-0.5 text-[9px] font-bold text-[#848e9c] uppercase flex gap-1">
-                                            <span className="bg-[#2b3139] border border-[#2b3139] px-1.5 py-0.5 rounded text-[#eaeaec]">{order.paymentMethod}</span>
+                                        <span className="font-bold text-sm text-[#eaeaec] truncate max-w-[120px]">
+                                            {order.userId?.username || `User`}
+                                        </span>
+                                        {(order.userId?.isVerified || true) && <ShieldCheck className="w-3 h-3 text-[#fcd535]" />}
+                                        <div className="flex gap-2 text-[10px] text-[#848e9c] ml-auto">
+                                            <span>{order.userId?.completedTrades || 0} trades</span>
+                                            <span>{order.userId?.trustScore || 100}%</span>
                                         </div>
                                     </div>
 
-                                    {/* Middle: Crypto Amount & empty space to push right */}
-                                    <div className="hidden sm:flex flex-col w-[25%] text-left">
-                                        <div className="text-[10px] text-[#848e9c] mb-0.5">Available</div>
-                                        <div className="text-xs font-mono font-bold text-[#eaeaec]">{order.amount.toLocaleString()} NXS</div>
-                                    </div>
-
-                                    {/* Right: Price & Action */}
-                                    <div className="flex flex-col items-end justify-between h-full w-[35%] sm:w-[35%]">
-                                        <div className="text-lg font-black font-mono text-[#eaeaec] mb-1 leading-none">
-                                            {order.rate || 126} <span className="text-[10px] text-[#848e9c] ml-1">BDT</span>
-                                        </div>
-                                        <div className="text-[10px] text-[#848e9c] mb-2 sm:hidden text-right leading-none">
-                                            Vol: {order.amount.toLocaleString()} NXS
-                                        </div>
-                                        {mode === 'my_ads' ? (
-                                            <div className="text-right">
-                                                <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${order.status === 'OPEN' ? (order.type === 'BUY' ? 'text-[#0ecb81]' : 'text-[#f6465d]') : 'text-[#fcd535]'}`}>
-                                                    {order.type} • {order.status}
-                                                </div>
-                                                {order.status === 'OPEN' && (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleCancelOrder(order._id); }}
-                                                        className="text-[10px] text-[#f6465d] bg-[#f6465d]/10 hover:bg-[#f6465d]/20 font-bold px-3 py-1 rounded"
-                                                    >
-                                                        CANCEL
-                                                    </button>
-                                                )}
+                                    {/* Middle Row: Price, Limits and Action */}
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex flex-col gap-1.5">
+                                            <div className="text-lg font-black font-mono text-[#eaeaec] leading-none">
+                                                {order.rate || 126} <span className="text-[10px] text-[#848e9c] ml-0.5">BDT</span>
                                             </div>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleTradeAction(order)}
-                                                disabled={order.status !== 'OPEN'}
-                                                className={`px-6 py-2 rounded font-bold text-[11px] uppercase transition-all ${order.status !== 'OPEN' ? 'bg-[#2b3139] text-[#848e9c]' : (order.type === 'SELL' ? 'bg-[#0ecb81] hover:bg-[#0b9e65] text-white' : 'bg-[#f6465d] hover:bg-[#c93046] text-white')}`}
-                                            >
-                                                {order.status !== 'OPEN' ? 'Taken' : (order.type === 'SELL' ? 'Buy NXS' : 'Sell NXS')}
-                                            </button>
-                                        )}
+                                            <div className="flex items-center gap-2 text-[10px]">
+                                                <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Amount</span>
+                                                <span className="text-[#eaeaec] font-mono">{order.amount.toLocaleString()} NXS</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px]">
+                                                <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Limit</span>
+                                                <span className="text-[#eaeaec] font-mono">100 - {((order.amount || 0) * (order.rate || 126)).toLocaleString('en-IN')} ৳</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end justify-between h-full gap-2">
+                                            {mode === 'my_ads' ? (
+                                                <div className="text-right">
+                                                    <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${order.status === 'OPEN' ? (order.type === 'BUY' ? 'text-[#0ecb81]' : 'text-[#f6465d]') : 'text-[#848e9c]'}`}>
+                                                        {order.type} • {order.status}
+                                                    </div>
+                                                    {order.status === 'OPEN' && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleCancelOrder(order._id); }}
+                                                            className="text-[10px] text-[#f6465d] bg-[#f6465d]/10 hover:bg-[#f6465d]/20 font-bold px-4 py-1.5 rounded transition"
+                                                        >
+                                                            CANCEL
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleTradeAction(order)}
+                                                    disabled={order.status !== 'OPEN'}
+                                                    className={`px-6 py-2 rounded font-bold text-xs uppercase transition-all ${order.status !== 'OPEN' ? 'bg-[#2b3139] text-[#848e9c]' : (order.type === 'SELL' ? 'bg-[#0ecb81] hover:bg-[#0b9e65] text-black' : 'bg-[#f6465d] hover:bg-[#c93046] text-white')}`}
+                                                >
+                                                    {order.status !== 'OPEN' ? 'Taken' : (order.type === 'SELL' ? 'Buy' : 'Sell')}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom Row: Payments */}
+                                    <div className="flex gap-1.5 items-center">
+                                        <div className="w-1 h-3 rounded-full bg-[#fcd535]"></div>
+                                        <span className="text-[10px] uppercase font-bold text-[#eaeaec]">{order.paymentMethod}</span>
                                     </div>
                                 </div>
                             ))
