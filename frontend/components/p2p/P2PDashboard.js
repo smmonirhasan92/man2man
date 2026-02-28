@@ -28,6 +28,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [activeTradeId, setActiveTradeId] = useState(null);
     const [ratingTradeId, setRatingTradeId] = useState(null);
@@ -35,11 +37,14 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const router = useRouter(); // [FIX] Initialize hook here
 
+    const [marketStats, setMarketStats] = useState({ price: 0, high: 0, low: 0, vol: 0, change: 0 });
+
     // [FIX] Use System Namespace to match Backend
     const socket = useSocket('/system');
 
     useEffect(() => {
         fetchOrders();
+        fetchStats();
 
         if (socket) {
             socket.on('p2p_alert', () => {
@@ -101,32 +106,56 @@ export default function P2PDashboard({ initialMode, onClose }) {
         };
     }, [mode, filters, socket, user]);
 
-    const fetchOrders = async () => {
-        setLoading(true);
+    const fetchStats = async () => {
+        try {
+            const res = await api.get('/p2p/summary');
+            if (res.data) setMarketStats(res.data);
+        } catch (e) { console.error("Stats API failed", e); }
+    };
+
+    const fetchOrders = async (isLoadMore = false) => {
+        const fetchPage = isLoadMore ? page + 1 : 1;
+        if (!isLoadMore) {
+            setLoading(true);
+            setHasMore(true);
+        }
+
         try {
             if (mode === 'buy' || mode === 'sell') {
-                // If Taker wants to BUY NXS -> Fetch SELL Ads. If Taker wants to SELL NXS -> Fetch BUY Ads.
                 const targetAdType = mode === 'buy' ? 'SELL' : 'BUY';
-
                 const query = new URLSearchParams({
                     type: targetAdType,
+                    page: fetchPage,
+                    limit: 10,
                     ...(filters.sort && { sort: filters.sort }),
                     ...(filters.country !== 'all' && { country: filters.country }),
                     ...(filters.paymentMethod !== 'all' && { paymentMethod: filters.paymentMethod })
                 }).toString();
 
                 const res = await api.get(`/p2p/market?${query}`);
-                setOrders(res.data);
+
+                if (isLoadMore) {
+                    setOrders(prev => [...prev, ...res.data]);
+                    setPage(fetchPage);
+                } else {
+                    setOrders(res.data);
+                    setPage(1);
+                }
+
+                if (res.data.length < 10) setHasMore(false);
+
             } else if (mode === 'my_ads') {
                 const res = await api.get('/p2p/my-orders');
                 setOrders(res.data);
+                setHasMore(false);
             } else if (mode === 'history') {
                 const res = await api.get('/p2p/my-trades');
                 setOrders(res.data);
+                setHasMore(false);
             }
         } catch (e) {
             console.error(e);
-            setOrders([]);
+            if (!isLoadMore) setOrders([]);
         }
         setLoading(false);
     };
@@ -253,7 +282,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                             <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">P2P</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-lg font-bold text-[#0ecb81]">126.00</span>
+                            <span className="text-lg font-bold text-[#0ecb81]">{marketStats.price ? marketStats.price.toFixed(2) : '---'}</span>
                             <div className={`text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 border ${userTier.color}`}>
                                 <Zap className="w-3 h-3" /> {userTier.name} FEE: {userTier.fee}
                             </div>
@@ -262,15 +291,15 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     <div className="flex gap-4 text-right">
                         <div>
                             <div className="text-[9px] text-[#848e9c] uppercase font-bold tracking-widest mb-0.5">24h High</div>
-                            <div className="text-[11px] font-mono text-[#eaeaec]">128.50</div>
+                            <div className="text-[11px] font-mono text-[#eaeaec]">{marketStats.high ? marketStats.high.toFixed(2) : '---'}</div>
                         </div>
                         <div>
                             <div className="text-[9px] text-[#848e9c] uppercase font-bold tracking-widest mb-0.5">24h Low</div>
-                            <div className="text-[11px] font-mono text-[#eaeaec]">124.00</div>
+                            <div className="text-[11px] font-mono text-[#eaeaec]">{marketStats.low ? marketStats.low.toFixed(2) : '---'}</div>
                         </div>
                         <div className="hidden sm:block">
                             <div className="text-[9px] text-[#848e9c] uppercase font-bold tracking-widest mb-0.5">24h Vol</div>
-                            <div className="text-[11px] font-mono text-[#eaeaec]">84.5K</div>
+                            <div className="text-[11px] font-mono text-[#eaeaec]">{marketStats.vol ? (marketStats.vol > 1000 ? (marketStats.vol / 1000).toFixed(1) + 'K' : marketStats.vol) : '---'}</div>
                         </div>
                     </div>
                 </div>
@@ -447,10 +476,31 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                 </div>
                             ))
                 )}
+
+                {/* Pagination Trigger */}
+                {(mode === 'buy' || mode === 'sell') && hasMore && (
+                    <div className="flex justify-center p-4">
+                        <button
+                            onClick={() => fetchOrders(true)}
+                            className="px-6 py-2 bg-[#2b3139] hover:bg-[#fcd535] hover:text-black rounded text-sm font-bold transition text-[#848e9c]"
+                        >
+                            Load More
+                        </button>
+                    </div>
+                )}
+
+                {!loading && displayOrders.length === 0 && (
+                    <div className="text-center text-[#848e9c] py-20 flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-[#181a20] flex items-center justify-center">
+                            <Search className="w-6 h-6" />
+                        </div>
+                        <p className="font-bold">No Ads Match criteria</p>
+                    </div>
+                )}
             </div>
 
             {/* Modals */}
-            {showCreateModal && <OrderCreationModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchOrders(); }} />}
+            <OrderCreationModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={fetchOrders} />
             <BuyOrderModal isOpen={buyModalConfig.isOpen} onClose={() => setBuyModalConfig({ isOpen: false, order: null })} order={buyModalConfig.order} onConfirm={confirmTrade} />
             {ratingTradeId && <RatingModal tradeId={ratingTradeId} onClose={() => setRatingTradeId(null)} onSuccess={() => setRatingTradeId(null)} />}
             <ConfirmationModal isOpen={modal.isOpen} onClose={() => setModal({ ...modal, isOpen: false })} onConfirm={modal.onConfirm} title={modal.title} message={modal.message} confirmText={modal.confirmText || 'Confirm'} />

@@ -201,7 +201,13 @@ class P2PService {
             });
         }
 
-        return filteredOrders;
+        // Native Pagination since we had to filter in memory
+        const page = parseInt(filters.page, 10) || 1;
+        const limit = parseInt(filters.limit, 10) || 20;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+
+        return filteredOrders.slice(startIndex, endIndex);
     }
 
 
@@ -663,6 +669,43 @@ class P2PService {
         await targetUser.save();
 
         return { success: true, newScore: targetUser.trustScore };
+    }
+
+    // --- MARKET SUMMARY STATS ---
+    async getMarketSummary() {
+        const _24hAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        const trades = await P2PTrade.find({
+            status: 'COMPLETED',
+            completedAt: { $gte: _24hAgo }
+        }).populate('orderId');
+
+        let totalVol = 0;
+        let prices = [];
+
+        trades.forEach(t => {
+            if (t.orderId && t.orderId.rate && !isNaN(t.orderId.rate)) {
+                prices.push(t.orderId.rate);
+            }
+            totalVol += t.amount;
+        });
+
+        if (prices.length === 0) {
+            // Default Fallback
+            return { price: 126.00, high: 126.00, low: 126.00, vol: 0, change: 0 };
+        }
+
+        const currentPrice = prices[prices.length - 1]; // Assume last trade is current price
+        const high = Math.max(...prices);
+        const low = Math.min(...prices);
+
+        return {
+            price: currentPrice,
+            high,
+            low,
+            vol: totalVol,
+            change: 0 // Optional: Compare with 48h ago for real change percentages
+        };
     }
 }
 

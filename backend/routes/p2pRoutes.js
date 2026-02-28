@@ -21,6 +21,7 @@ const adminCheck = async (req, res, next) => {
 router.get('/market', auth, P2PController.getMarket);
 router.get('/my-orders', auth, P2PController.getMyOrders);
 router.get('/my-trades', auth, P2PController.getMyTrades); // [NEW] History
+router.get('/summary', auth, P2PController.getSummary);    // [NEW] Stats
 
 // Create Ad
 router.post('/order', auth, P2PController.createOrder);

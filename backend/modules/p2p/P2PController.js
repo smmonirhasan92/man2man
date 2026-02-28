@@ -41,6 +41,16 @@ class P2PController {
         }
     }
 
+    // GET /api/p2p/summary
+    async getSummary(req, res) {
+        try {
+            const stats = await P2PService.getMarketSummary();
+            res.json(stats);
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    }
+
     // GET /api/p2p/admin/trades
     async getAdminTrades(req, res) {
         try {
