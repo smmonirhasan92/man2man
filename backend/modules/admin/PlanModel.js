@@ -10,7 +10,7 @@ const planSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ['vip', 'server', 'number'],
-        default: 'vip'
+        default: 'server'
     },
     daily_limit: {
         type: Number,

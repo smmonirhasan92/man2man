@@ -63,9 +63,13 @@ export default function USAGateway() {
         e.preventDefault();
 
         // Check Logic
-        // In a real strict app, we might verify via API, but client-side check against authService data is requested for "Simulated" 
-        // We can also verify against what we know is in the user object.
-        const actualKey = targetKey || user?.synthetic_phone || user?.user?.synthetic_phone;
+        const actualKey = targetKey;
+
+        if (!actualKey) {
+            addLog('ERROR: K_GEN_FAILED. GATEWAY OFFLINE.');
+            toast.error("Access Denied! You must purchase an active Node to connect.");
+            return;
+        }
 
         if (usaKey.trim() === actualKey) {
             setStatus('success');

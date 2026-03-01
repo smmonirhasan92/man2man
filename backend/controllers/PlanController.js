@@ -36,7 +36,7 @@ exports.seedDefaultPlans = async (req, res) => {
             // Plan 1: Starter ($8.50 USD / 1000 BDT)
             {
                 name: 'Starter Node',
-                type: 'vip',
+                type: 'server',
                 unlock_price: 8.50, // Approx 1000 BDT
                 daily_limit: 5,
                 task_reward: 0.05, // $0.05 * 5 = $0.25 (30 BDT)
@@ -48,7 +48,7 @@ exports.seedDefaultPlans = async (req, res) => {
             // Plan 2: Basic ($21 USD / 2500 BDT)
             {
                 name: 'Basic Node',
-                type: 'vip',
+                type: 'server',
                 unlock_price: 21.00,
                 daily_limit: 10,
                 task_reward: 0.07, // $0.70/day (~84 BDT)
@@ -60,7 +60,7 @@ exports.seedDefaultPlans = async (req, res) => {
             // Plan 3: Pro ($42 USD / 5000 BDT)
             {
                 name: 'Pro Node',
-                type: 'vip',
+                type: 'server',
                 unlock_price: 42.00,
                 daily_limit: 15,
                 task_reward: 0.10, // $1.50/day (~180 BDT)
@@ -72,7 +72,7 @@ exports.seedDefaultPlans = async (req, res) => {
             // Plan 4: Expert ($85 USD / 10,000 BDT)
             {
                 name: 'Expert Node',
-                type: 'vip',
+                type: 'server',
                 unlock_price: 85.00,
                 daily_limit: 25,
                 task_reward: 0.125, // $3.125/day (~375 BDT)
@@ -158,7 +158,7 @@ exports.createPlan = async (req, res) => {
             unlock_price,
             validity_days,
             features: features || [],
-            type: type || 'vip',
+            type: type || 'server',
             reward_multiplier: reward_multiplier || 1.0,
             is_active: true,
             server_id: validServerId,

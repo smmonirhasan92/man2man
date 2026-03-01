@@ -90,7 +90,7 @@ class PlanService {
                 type: 'plan_purchase',
                 amount: -plan.unlock_price,
                 status: 'completed',
-                description: `Purchased Package: ${plan.name}`,
+                description: `Purchased Server Node: ${plan.name}`,
                 adminComment: 'Auto-Debit'
             }], { session });
 

@@ -118,7 +118,7 @@ export default function GlobalMarketplace() {
                     }
                 });
 
-                router.push('/tasks');
+                router.push('/dashboard/usa-gateway');
             }
         } catch (err) {
             console.error(err);

@@ -410,13 +410,15 @@ class P2PService {
                 currency: 'NXS'
             }], { session });
 
-            // 4. Close Trade & Order
+            // 4. Close Trade
             trade.status = 'COMPLETED';
             trade.completedAt = new Date();
             trade.fee = feeAmount;
             await trade.save({ session });
 
-            await P2POrder.findByIdAndUpdate(trade.orderId, { status: 'COMPLETED' }, { session });
+            // [FIX] Removed premature order completion here.
+            // P2POrder is strictly closed/opened inside `initiateTrade` and `cancelTrade`
+            // based on the actual `amount` remaining. Do not auto-close it.
 
             // 5. Logs - [SECURITY] Made untraceable for users (no sender/receiver ID exposed)
             const transactionLogs = [
