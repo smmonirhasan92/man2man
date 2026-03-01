@@ -78,10 +78,10 @@ class PlanService {
 
             // proceed to create new one...
 
-            if (user.wallet.main_balance < plan.unlock_price) {
+            if (user.wallet.main < plan.unlock_price) {
                 throw new Error('Insufficient Main Wallet Balance.');
             }
-            user.wallet.main_balance -= plan.unlock_price;
+            user.wallet.main -= plan.unlock_price;
 
             // [FIX] Create Transaction History for Purchase
             const Transaction = require('../wallet/TransactionModel');

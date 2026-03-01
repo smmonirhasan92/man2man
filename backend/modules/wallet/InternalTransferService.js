@@ -24,14 +24,14 @@ class InternalTransferService {
             let sourceWallet, destWallet, description;
 
             if (direction === 'main_to_game') {
-                if ((user.main_balance || 0) < amount) throw new Error("Insufficient Main Balance");
-                user.main_balance -= amount;
-                user.game_balance = (user.game_balance || 0) + amount;
+                if ((user.wallet.main || 0) < amount) throw new Error("Insufficient Main Balance");
+                user.wallet.main -= amount;
+                user.wallet.game = (user.wallet.game || 0) + amount;
                 description = "Transfer to Game Wallet";
             } else if (direction === 'game_to_main') {
-                if ((user.game_balance || 0) < amount) throw new Error("Insufficient Game Balance");
-                user.game_balance -= amount;
-                user.main_balance = (user.main_balance || 0) + amount;
+                if ((user.wallet.game || 0) < amount) throw new Error("Insufficient Game Balance");
+                user.wallet.game -= amount;
+                user.wallet.main = (user.wallet.main || 0) + amount;
                 description = "Transfer to Main Wallet";
             } else {
                 throw new Error("Invalid direction");
@@ -57,8 +57,8 @@ class InternalTransferService {
 
             return {
                 success: true,
-                mainBalance: user.main_balance,
-                gameBalance: user.game_balance
+                mainBalance: user.wallet.main,
+                gameBalance: user.wallet.game
             };
 
         } catch (error) {

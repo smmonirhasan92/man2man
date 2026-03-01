@@ -16,7 +16,7 @@ exports.placeBet = async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         // Enforce Game Wallet Usage
-        if ((user.game_balance || 0) < amount) {
+        if ((user.wallet.game || 0) < amount) {
             return res.status(400).json({ message: 'Insufficient Game Balance. Please Transfer to Game Wallet.' });
         }
 
@@ -24,7 +24,7 @@ exports.placeBet = async (req, res) => {
         const betResult = await AviatorService.placeBet(userId, amount);
 
         // Deduct Game Balance
-        user.game_balance -= amount;
+        user.wallet.game -= amount;
         await user.save();
 
         // Log Game (Initial status: LOSS). Update to WIN if cashout calls.
@@ -38,7 +38,7 @@ exports.placeBet = async (req, res) => {
             multiplier: 0
         });
 
-        res.json({ message: 'Bet Placed', newBalance: user.game_balance, betId: betResult.betId });
+        res.json({ message: 'Bet Placed', newBalance: user.wallet.game, betId: betResult.betId });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
