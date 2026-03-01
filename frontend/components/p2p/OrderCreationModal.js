@@ -12,10 +12,11 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
     const [rate, setRate] = useState('126'); // Exchange Rate
     const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
 
-    if (!isOpen) return null;
     const [method, setMethod] = useState(defaultMethod);
     const [details, setDetails] = useState('');
     const [loading, setLoading] = useState(false);
+
+    if (!isOpen) return null;
 
     const getPaymentMethods = () => {
         return [
