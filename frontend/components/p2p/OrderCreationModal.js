@@ -5,12 +5,14 @@ import { X, Globe2, Zap, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
-export default function OrderCreationModal({ onClose, onSuccess }) {
+export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
     const { user } = useAuth();
     const [adMode, setAdMode] = useState('SELL'); // 'BUY' or 'SELL'
     const [amount, setAmount] = useState(''); // Max Limit
     const [rate, setRate] = useState('126'); // Exchange Rate
     const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
+
+    if (!isOpen) return null;
     const [method, setMethod] = useState(defaultMethod);
     const [details, setDetails] = useState('');
     const [loading, setLoading] = useState(false);
