@@ -230,9 +230,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
         return 'bg-[#1a2c3d] text-cyan-400 border-cyan-500/20';
     };
 
-    const displayOrders = mode === 'buy'
-        ? orders.filter(o => o.userId?.country?.toUpperCase() === userCountry)
-        : orders;
+    const displayOrders = orders;
 
     // If active trade, show Chat Room
     if (activeTradeId) {
@@ -500,7 +498,18 @@ export default function P2PDashboard({ initialMode, onClose }) {
             </div>
 
             {/* Modals */}
-            <OrderCreationModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onSuccess={fetchOrders} />
+            <OrderCreationModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={(adMode) => {
+                    setShowCreateModal(false);
+                    // If they posted a BUY ad (they want NXS, payer will send Fiat), they might want to see Sellers
+                    // If they posted a SELL ad (they want Fiat, buyer will send Fiat), they might want to see Buyers
+                    // Default to 'buy' (Marketplace list) so they aren't stuck on 'my_ads'
+                    setMode('buy');
+                    fetchOrders();
+                }}
+            />
             <BuyOrderModal isOpen={buyModalConfig.isOpen} onClose={() => setBuyModalConfig({ isOpen: false, order: null })} order={buyModalConfig.order} onConfirm={confirmTrade} />
             {ratingTradeId && <RatingModal tradeId={ratingTradeId} onClose={() => setRatingTradeId(null)} onSuccess={() => setRatingTradeId(null)} />}
             <ConfirmationModal isOpen={modal.isOpen} onClose={() => setModal({ ...modal, isOpen: false })} onConfirm={modal.onConfirm} title={modal.title} message={modal.message} confirmText={modal.confirmText || 'Confirm'} />

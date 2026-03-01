@@ -41,7 +41,7 @@ export default function OrderCreationModal({ onClose, onSuccess }) {
                 paymentDetails: details
             });
             toast.success(`${adMode === 'BUY' ? 'Buy' : 'Sell'} Ad Created Successfully!`);
-            onSuccess();
+            onSuccess(adMode);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to create ad");
         }
@@ -155,8 +155,8 @@ export default function OrderCreationModal({ onClose, onSuccess }) {
                         type="submit"
                         disabled={loading}
                         className={`w-full text-white font-black py-4 rounded-xl transition-all shadow-lg disabled:opacity-50 active:scale-95 uppercase tracking-widest ${adMode === 'BUY'
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-900/50'
-                                : 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-900/50'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-900/50'
+                            : 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-900/50'
                             }`}
                     >
                         {loading ? 'Publishing...' : `POST ${adMode} AD`}
