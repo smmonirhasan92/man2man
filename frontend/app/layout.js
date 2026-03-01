@@ -55,7 +55,7 @@ import { CurrencyProvider } from '../context/CurrencyContext';
 import { CardSkinProvider } from '../context/CardSkinContext';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import BottomNav from '../components/BottomNav';
-import ChatWidget from '../components/ChatWidget';
+import ChatWidget from '../components/ui/ChatWidget';
 import RouteChecker from '../components/RouteChecker';
 import PageTransition from '../components/PageTransition';
 import AuthGuard from '../components/AuthGuard';

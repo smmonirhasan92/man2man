@@ -135,6 +135,7 @@ app.use('/api/game', require('./routes/gameRoutes')); // [NEW] Game Routes
 app.use('/api/lottery', require('./routes/lotteryRoutes')); // [NEW] Dedicated Lottery Routes
 app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
+app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
 // app.use('/api/settings', settingsRoutes); // Cleaned
 
 // --- GLOBAL ERROR HANDLER ---
