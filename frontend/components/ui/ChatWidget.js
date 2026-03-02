@@ -30,9 +30,13 @@ export default function ChatWidget() {
         setLoading(true);
 
         try {
+            // Gemini API strict rule: History cannot start with a model response unless preceded by a user prompt.
+            // We strip out the initial hardcoded greeting if it's the only thing there.
+            const safeHistory = messages.filter((msg, idx) => !(idx === 0 && msg.role === 'model'));
+
             const res = await api.post('/chat', {
                 message: userMsg,
-                history: messages
+                history: safeHistory
             });
 
             if (res.data?.reply) {
@@ -92,8 +96,8 @@ export default function ChatWidget() {
                                     </div>
 
                                     <div className={`p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                            ? 'bg-blue-600 text-white rounded-tr-none'
-                                            : 'bg-[#1e293b] text-slate-200 border border-slate-700/50 rounded-tl-none'
+                                        ? 'bg-blue-600 text-white rounded-tr-none'
+                                        : 'bg-[#1e293b] text-slate-200 border border-slate-700/50 rounded-tl-none'
                                         }`}>
                                         {msg.content}
                                     </div>
