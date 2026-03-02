@@ -199,31 +199,7 @@ io.on('connection', (socket) => {
         // console.log(`[SOCKET] Joined Admin Dashboard`);
     });
 
-    // 2. Chat Brain (Support)
-    socket.on('chat_message', async (data) => {
-        try {
-            const SystemBrain = require('./modules/ai/SystemBrainService');
-            socket.emit('chat_typing', { status: true });
 
-            const onTokenStream = (token) => {
-                socket.emit('chat_stream', { chunk: token, sender: 'support_bot' });
-            };
-
-            const finalResponse = await SystemBrain.chat(data.message, onTokenStream);
-            socket.emit('chat_response', {
-                sender: 'support_bot',
-                text: finalResponse,
-                timestamp: new Date()
-            });
-        } catch (err) {
-            console.error('Socket AI Error:', err);
-            socket.emit('chat_response', {
-                sender: 'support_bot',
-                text: "My brain is offline temporarily, Sir.",
-                timestamp: new Date()
-            });
-        }
-    });
 
     socket.on('disconnect', () => {
         // console.log('[SOCKET] Disconnected:', socket.id);
@@ -238,6 +214,32 @@ systemNamespace.on('connection', (socket) => {
     // Allow joining user rooms in system namespace if needed
     socket.on('join_user_room', (userId) => {
         if (userId) socket.join(`user_${userId}`);
+    });
+
+    // 2. Chat Brain (Support)
+    socket.on('chat_message', async (data) => {
+        try {
+            const SystemBrain = require('./modules/ai/SystemBrainService');
+            socket.emit('chat_typing', { status: true });
+
+            const onTokenStream = (token) => {
+                socket.emit('chat_stream', { chunk: token, sender: 'support_bot' });
+            };
+
+            const finalResponse = await SystemBrain.chat(data.message, onTokenStream, socket.id);
+            socket.emit('chat_response', {
+                sender: 'support_bot',
+                text: finalResponse,
+                timestamp: new Date()
+            });
+        } catch (err) {
+            console.error('Socket AI Error:', err);
+            socket.emit('chat_response', {
+                sender: 'support_bot',
+                text: "My brain is offline temporarily, Sir.",
+                timestamp: new Date()
+            });
+        }
     });
 });
 
