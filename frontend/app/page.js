@@ -3,13 +3,26 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../services/api';
 import Link from 'next/link';
-import { Smartphone, Lock } from 'lucide-react';
+import { Smartphone, Lock, ChevronDown } from 'lucide-react';
 import AuthInput from '../components/ui/AuthInput';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
 
+// Premium Country Data with CDN Flag Images (Same as Register)
+const countries = [
+    { name: 'Bangladesh', code: '+880', flagCode: 'bd' },
+    { name: 'India', code: '+91', flagCode: 'in' },
+    { name: 'Pakistan', code: '+92', flagCode: 'pk' },
+    { name: 'United States', code: '+1', flagCode: 'us' },
+    { name: 'United Kingdom', code: '+44', flagCode: 'gb' },
+    { name: 'Canada', code: '+1', flagCode: 'ca' },
+    { name: 'UAE', code: '+971', flagCode: 'ae' }
+];
+
 export default function LoginPage() {
     const [phone, setPhone] = useState('');
+    const [countryCode, setCountryCode] = useState('+880');
+    const [showCountryList, setShowCountryList] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,7 +33,10 @@ export default function LoginPage() {
         setLoading(true);
         setError('');
         try {
-            const res = await api.post('/auth/login', { phone, password });
+            // [NEW] Format Phone Payload to include country code (stripped of leading zeros)
+            const formattedPhone = `${countryCode}${phone.replace(/^0+/, '')}`;
+
+            const res = await api.post('/auth/login', { phone: formattedPhone, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
 
@@ -40,7 +56,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex flex-col h-full min-h-screen bg-[#0A2540] relative font-sans text-slate-100 overflow-hidden">
+        <div className="flex flex-col h-full min-h-screen bg-[#0A2540] relative font-sans text-slate-100 overflow-y-auto custom-scrollbar">
             {/* Background Decoration */}
             {/* American Flag Background (Abstract / Vibe) */}
             {/* Background Decoration - Reference Image */}
@@ -87,15 +103,64 @@ export default function LoginPage() {
                     )}
 
                     <form onSubmit={handleLogin} className="space-y-6">
-                        <AuthInput
-                            icon={Smartphone}
-                            label="Phone Number"
-                            type="tel"
-                            placeholder="017..."
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            required
-                        />
+                        <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-slate-300 ml-1">Phone Number</label>
+                            <div className="flex gap-2">
+                                <div className="relative w-[35%]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCountryList(!showCountryList)}
+                                        className="w-full h-[52px] bg-black/40 border border-white/20 rounded-xl px-4 text-white font-medium flex items-center justify-between gap-2 hover:bg-black/60 hover:border-white/40 focus:border-white/60 focus:ring-1 focus:ring-white/60 transition-all outline-none"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <img
+                                                src={`https://flagcdn.com/w40/${countries.find(c => c.code === countryCode)?.flagCode || 'bd'}.png`}
+                                                alt="flag"
+                                                className="w-6 h-4 rounded-sm object-cover shadow-sm"
+                                            />
+                                            <span className="text-sm font-bold tracking-wide">{countryCode}</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showCountryList ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {showCountryList && (
+                                        <div className="absolute z-[100] top-[calc(100%+8px)] left-0 w-64 bg-[#0A2540] border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 backdrop-blur-xl">
+                                            <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                                                {countries.map(c => (
+                                                    <div
+                                                        key={c.name}
+                                                        onClick={() => {
+                                                            setCountryCode(c.code);
+                                                            setShowCountryList(false);
+                                                        }}
+                                                        className="px-4 py-3 hover:bg-white/10 cursor-pointer flex items-center gap-3 border-b border-white/5 last:border-0 transition-colors"
+                                                    >
+                                                        <img src={`https://flagcdn.com/w40/${c.flagCode}.png`} alt={c.name} className="w-6 h-4 rounded-sm shadow-sm object-cover" />
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-bold text-white">{c.name}</p>
+                                                        </div>
+                                                        <p className="text-xs font-mono font-medium text-slate-400">{c.code}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                        <Smartphone className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        placeholder="Mobile Number"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        required
+                                        className="w-full h-[52px] bg-black/40 border border-white/20 rounded-xl pl-11 pr-4 text-white placeholder-slate-500 font-medium hover:bg-black/60 hover:border-white/40 focus:bg-black/60 focus:border-white/60 focus:ring-1 focus:ring-white/60 transition-all outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
                         <AuthInput
                             icon={Lock}

@@ -310,7 +310,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full mx-auto relative">
+        <div className="flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full mx-auto relative full-screen-app">
             {/* 1. Header with Timer */}
             <div className="p-3 border-b border-[#2b3139] bg-[#181a20] flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">

@@ -68,6 +68,20 @@ body {
     height: 100vh !important;
     height: 100dvh !important;
   }
+
+  /* Full Screen App Utility - Disables Layout Padding & BottomNav */
+  body:has(.full-screen-app) .mobile-only-nav {
+    display: none !important;
+  }
+
+  body:has(.full-screen-app) main {
+    padding-bottom: 0 !important;
+    display: flex;
+    flex-direction: column;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
 }
 
 /* Utility Components (Outside of @theme) */

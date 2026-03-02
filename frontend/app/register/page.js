@@ -124,7 +124,7 @@ function RegisterForm() {
         }
     };
     return (
-        <div className="flex flex-col h-full min-h-screen bg-[#070b14] relative font-sans text-slate-100 overflow-hidden">
+        <div className="flex flex-col h-full min-h-screen bg-[#070b14] relative font-sans text-slate-100 overflow-y-auto custom-scrollbar">
             {/* Premium Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-emerald-600/10 rounded-full blur-[120px] animate-pulse"></div>

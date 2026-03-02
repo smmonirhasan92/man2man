@@ -133,7 +133,7 @@ export default function ProfilePage() {
             </div>
 
             {/* MAIN SCROLLABLE CONTENT */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 pb-32">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 pb-48">
 
                 {/* 1. HERO PROFILE SECTION (USA THEME) */}
                 <div className="relative flex flex-col items-center">
