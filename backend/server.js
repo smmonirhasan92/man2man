@@ -45,9 +45,8 @@ app.use((req, res, next) => {
 // DYNAMIC CORS origin for local development + Production Vercel
 // [FIX] Accept CLIENT_URL from Env or fallback to known domains
 const ALLOWED_ORIGINS = [
-    "https://man2man.vercel.app",
+    "https://usaaffiliatemarketing.com",
     "https://usa-affiliate.vercel.app",
-    "https://man2man-fvzfximrq-boos-projects-a58a40d0.vercel.app", // [NEW] Specific Preview URL
     "http://localhost:3000",
     process.env.CLIENT_URL, // Dynamic from Render Env
     /\.vercel\.app$/        // [FIX] Allow all Vercel Preview Deployments
@@ -158,7 +157,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: [
-            "https://man2man.vercel.app",
+            "https://usaaffiliatemarketing.com",
             "https://usa-affiliate.vercel.app",
             "http://localhost:3000",
             process.env.CLIENT_URL

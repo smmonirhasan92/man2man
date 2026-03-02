@@ -8,7 +8,7 @@ export default function ShareCard({ user, stats }) {
     const cardRef = useRef(null);
     const [loading, setLoading] = useState(false);
 
-    const referralLink = `https://man2man.com/register?ref=${user.referralCode}`;
+    const referralLink = `https://usaaffiliatemarketing.com/register?ref=${user.referralCode}`;
 
     const handleDownload = async () => {
         if (!cardRef.current) return;

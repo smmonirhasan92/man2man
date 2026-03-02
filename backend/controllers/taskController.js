@@ -371,7 +371,7 @@ exports.seedTasks = async (req, res) => {
             { title: 'Share on Twitter', url: 'https://twitter.com', duration: 10, reward_amount: 2.0, type: 'social', server_id: 'SERVER_01' },
 
             // Filler Tasks
-            { title: 'Daily Check-in', url: 'https://man2man.vercel.app', duration: 5, reward_amount: 1.0, type: 'ad_view', server_id: 'SERVER_01' },
+            { title: 'Daily Check-in', url: 'https://usaaffiliatemarketing.com', duration: 5, reward_amount: 1.0, type: 'ad_view', server_id: 'SERVER_01' },
             { title: 'View Promotion', url: 'https://netflix.com', duration: 8, reward_amount: 1.5, type: 'ad_view', server_id: 'SERVER_01' },
             { title: 'Browse Catalog', url: 'https://ebay.com', duration: 15, reward_amount: 2.2, type: 'ad_view', server_id: 'SERVER_01' }
         ];

@@ -74,8 +74,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https' as const, hostname: 'flagcdn.com' },
       { protocol: 'https' as const, hostname: 'ui-avatars.com' },
-      { protocol: 'https' as const, hostname: 'usaaffiliatemarketing.com' },
-      { protocol: 'https' as const, hostname: 'man2man-api.onrender.com' }
+      { protocol: 'https' as const, hostname: 'usaaffiliatemarketing.com' }
     ]
   },
   trailingSlash: true,

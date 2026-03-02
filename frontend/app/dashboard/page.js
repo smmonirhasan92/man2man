@@ -218,7 +218,7 @@ function DashboardContent() {
                         <Server className="w-4 h-4 text-blue-500" />
                         <Lock className="w-4 h-4 text-purple-500" />
                     </div>
-                    <p className="text-[10px] text-slate-500 font-mono">SECURED BY MAN2MAN BLOCKCHAIN</p>
+                    <p className="text-[10px] text-slate-500 font-mono">SECURED BY USA AFFILIATE BLOCKCHAIN</p>
                 </div>
 
             </main>

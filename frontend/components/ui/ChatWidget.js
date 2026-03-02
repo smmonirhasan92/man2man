@@ -8,7 +8,7 @@ export default function ChatWidget() {
     const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'model', content: "Hi there! I'm your man2man support assistant. How can I help you today? 👋" }
+        { role: 'model', content: "Hi there! I'm your USA Affiliate support assistant. How can I help you today? 👋" }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);

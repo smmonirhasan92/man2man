@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti';
 
 /**
- * Animation Manager for Man2Man PWA
+ * Animation Manager for USA Affiliate PWA
  * Handles game-like effects, sounds, and haptics.
  */
 
