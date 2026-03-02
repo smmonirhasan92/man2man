@@ -80,12 +80,12 @@ export default function LoginForm() {
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Phone Number</label>
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Smartphone className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                            <Smartphone className="h-5 w-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
                         </div>
                         <input
                             type="tel"
                             required
-                            className="bg-[#0f172a] border border-slate-700/50 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block w-full pl-11 p-3.5 placeholder-slate-600 transition-all font-bold tracking-wide"
+                            className="bg-[#131c31] border border-white/5 text-white text-sm rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 block w-full pl-11 p-4 placeholder-slate-500 transition-all font-bold tracking-wide"
                             placeholder="01xxxxxxxxx"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -97,12 +97,12 @@ export default function LoginForm() {
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Password</label>
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                            <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
                         </div>
                         <input
                             type="password"
                             required
-                            className="bg-[#0f172a] border border-slate-700/50 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block w-full pl-11 p-3.5 placeholder-slate-600 transition-all font-bold tracking-wide"
+                            className="bg-[#131c31] border border-white/5 text-white text-sm rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 block w-full pl-11 p-4 placeholder-slate-500 transition-all font-bold tracking-wide"
                             placeholder="••••••"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -113,7 +113,7 @@ export default function LoginForm() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 focus:ring-4 focus:ring-blue-800 font-bold rounded-xl text-sm px-5 py-4 text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group mt-2"
+                    className="w-full text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 focus:ring-4 focus:ring-emerald-500/30 font-bold rounded-2xl text-sm px-5 py-4 text-center flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group mt-4 hover:shadow-emerald-500/30"
                 >
                     {loading ? (
                         <>
