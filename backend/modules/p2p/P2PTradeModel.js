@@ -8,10 +8,10 @@ const P2PTradeSchema = new mongoose.Schema({
     amount: { type: Number, required: true },
 
     // Status Flow: CREATED -> PAID -> COMPLETED
-    // Dispute Flow: CREATED/PAID -> DISPUTE -> RESOLVED_BUYER/RESOLVED_SELLER
+    // Dispute Flow: CREATED/PAID -> DISPUTED -> RESOLVED_BUYER/RESOLVED_SELLER
     status: {
         type: String,
-        enum: ['CREATED', 'PAID', 'AWAITING_ADMIN', 'COMPLETED', 'CANCELLED', 'DISPUTE', 'RESOLVED_BUYER', 'RESOLVED_SELLER'],
+        enum: ['CREATED', 'PAID', 'AWAITING_ADMIN', 'COMPLETED', 'CANCELLED', 'DISPUTED', 'RESOLVED_BUYER', 'RESOLVED_SELLER'],
         default: 'CREATED',
         index: true
     },
@@ -24,6 +24,7 @@ const P2PTradeSchema = new mongoose.Schema({
     disputeRaisedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Tracks who initiated the Tribunal
 
     // Timestamps
+    expiresAt: { type: Date, required: true },
     paidAt: { type: Date },
     completedAt: { type: Date },
     disputeAt: { type: Date }

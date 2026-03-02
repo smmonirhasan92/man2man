@@ -48,6 +48,16 @@ class P2PService {
             if (order.status !== 'OPEN') throw new Error("Order is no longer available");
             if (order.userId.toString() === takerId.toString()) throw new Error("Cannot trade with your own order");
 
+            // [MVP SECURITY] Check Active Trade Limit (Anti-Spam)
+            const activeTradesCount = await P2PTrade.countDocuments({
+                buyerId: takerId,
+                status: 'CREATED'
+            }).session(session);
+
+            if (activeTradesCount >= 2) {
+                throw new Error("You have too many active unpaid trades. Please complete or cancel them first.");
+            }
+
             // Identify Roles based on Dual-Market Ad Type
             // SELL Ad = Maker(userId) wants to sell NXS. Taker(takerId) is BUYER.
             // BUY Ad = Maker(userId) wants to buy NXS. Taker(takerId) is SELLER.
@@ -79,12 +89,14 @@ class P2PService {
             }, { session });
 
             // 2. Create Trade Session
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 Minutes
             const trade = await P2PTrade.create([{
                 orderId: order._id,
                 sellerId: sellerId,
                 buyerId: buyerId,
                 amount: requestedAmount,
-                status: 'CREATED'
+                status: 'CREATED',
+                expiresAt: expiresAt
             }], { session });
 
             // 3. Log Escrow Transaction
@@ -671,6 +683,38 @@ class P2PService {
         await targetUser.save();
 
         return { success: true, newScore: targetUser.trustScore };
+    }
+
+    // --- 9. AUTO-CANCEL EXPIRED TRADES (Cron Job) ---
+    async autoCancelExpiredTrades() {
+        try {
+            const expiredTrades = await P2PTrade.find({
+                status: 'CREATED',
+                expiresAt: { $lt: new Date() }
+            });
+
+            if (expiredTrades.length === 0) return 0;
+
+            let cancelledCount = 0;
+            for (const trade of expiredTrades) {
+                try {
+                    // Reuse existing cancelTrade method correctly
+                    // Pass buyerId or sellerId to satisfy auth check inside cancelTrade
+                    await this.cancelTrade(trade.sellerId, trade._id);
+                    this.addSystemMessage(trade._id, `⏳ TRADE AUTO-CANCELLED due to inactivity. Escrow returned.`);
+                    cancelledCount++;
+                } catch (e) {
+                    console.error(`[P2P Auto-Cancel] Failed to cancel trade ${trade._id}:`, e.message);
+                }
+            }
+            if (cancelledCount > 0) {
+                console.log(`[P2P Pulse] Auto-cancelled ${cancelledCount} expired trades and released escrow.`);
+            }
+            return cancelledCount;
+        } catch (error) {
+            console.error('[P2P Service] Error in autoCancelExpiredTrades:', error);
+            return 0;
+        }
     }
 
     // --- MARKET SUMMARY STATS ---

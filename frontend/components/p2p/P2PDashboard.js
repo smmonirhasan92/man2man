@@ -377,7 +377,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                 <div key={trade._id} className="bg-[#181a20] mb-2 p-3 flex flex-col hover:bg-[#1e2329] transition group cursor-pointer" onClick={() => { setActiveTradeId(trade._id); localStorage.setItem('active_p2p_trade', trade._id); }}>
                                     <div className="flex justify-between items-center mb-2">
                                         <div className="flex items-center gap-2">
-                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : trade.status === 'DISPUTE' ? 'bg-[#f6465d]/10 text-[#f6465d]' : 'bg-[#fcd535]/10 text-[#fcd535]'}`}>
+                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : trade.status === 'CANCELLED' ? 'bg-[#2b3139] text-[#848e9c]' : trade.status === 'DISPUTED' ? 'bg-[#f6465d]/10 text-[#f6465d]' : 'bg-[#fcd535]/10 text-[#fcd535]'}`}>
                                                 {trade.status}
                                             </span>
                                             <span className="text-[10px] text-[#848e9c] font-mono">#{trade._id.substr(-6)}</span>

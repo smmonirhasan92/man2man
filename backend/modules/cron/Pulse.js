@@ -27,6 +27,10 @@ const initPulse = () => {
             // [OPTIMIZATION] Moved to Hourly to prevent Render Memory Spike
             // await ProfitGuard.audit();
 
+            // [P2P SYSTEM MVP] Auto Cancel unpaid/expired trades
+            const P2PService = require('../p2p/P2PService');
+            await P2PService.autoCancelExpiredTrades();
+
             // 3. Hourly Tasks (Check minute 0)
             const now = new Date();
 

@@ -131,14 +131,14 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     // Timer Logic
     useEffect(() => {
-        if (!trade || ['COMPLETED', 'CANCELLED', 'DISPUTE'].includes(trade.status)) {
+        if (!trade || ['COMPLETED', 'CANCELLED', 'DISPUTED'].includes(trade.status)) {
             if (trade && trade.status === 'COMPLETED') setTimeLeft('00:00');
-            else if (trade && trade.status === 'DISPUTE') setTimeLeft('PAUSED');
+            else if (trade && trade.status === 'DISPUTED') setTimeLeft('PAUSED');
             else if (trade && trade.status === 'CANCELLED') setTimeLeft('00:00');
             return;
         }
 
-        const endTime = new Date(trade.createdAt).getTime() + 15 * 60000;
+        const endTime = trade.expiresAt ? new Date(trade.expiresAt).getTime() : new Date(trade.createdAt).getTime() + 15 * 60000;
 
         const interval = setInterval(() => {
             const now = new Date().getTime();
@@ -256,7 +256,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     // ... (rest of render)
     {/* Input Area */ }
     <div className="flex gap-2 p-2">
-        {trade && !['COMPLETED', 'CANCELLED', 'DISPUTE'].includes(trade.status) && (
+        {trade && !['COMPLETED', 'CANCELLED', 'DISPUTED'].includes(trade.status) && (
             <button onClick={handleDispute} className="p-3 bg-red-900/20 rounded-lg text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white shrink-0 flex gap-2 items-center" title="Report Issue">
                 <AlertTriangle className="w-5 h-5" />
                 <span className="hidden sm:inline font-bold text-xs">Report Issue</span>
@@ -269,7 +269,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         )}
         {trade && !['COMPLETED', 'CANCELLED'].includes(trade.status) && (
             <>
-                <button onClick={handleUploadProof} disabled={trade.status === 'DISPUTE'} className={`p-3 rounded-lg ${proofUrl ? 'bg-emerald-500 text-black' : 'bg-white/5 text-slate-400'} hover:text-white relative disabled:opacity-50`}>
+                <button onClick={handleUploadProof} disabled={trade.status === 'DISPUTED'} className={`p-3 rounded-lg ${proofUrl ? 'bg-emerald-500 text-black' : 'bg-white/5 text-slate-400'} hover:text-white relative disabled:opacity-50`}>
                     <ImageIcon className="w-5 h-5" />
                     {proofUrl && <CheckCircle className="w-3 h-3 absolute top-0 right-0 text-white bg-black rounded-full" />}
                 </button>
@@ -328,7 +328,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     </div>
                     <div className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded inline-block ${trade.status === 'COMPLETED' ? 'bg-[#0ecb81] text-black' :
                         trade.status === 'PAID' ? 'bg-[#fcd535] text-black' :
-                            trade.status === 'DISPUTE' ? 'bg-[#f6465d] text-white' :
+                            trade.status === 'DISPUTED' ? 'bg-[#f6465d] text-white' :
                                 'bg-[#0ecb81]/20 text-[#0ecb81]'
                         }`}>
                         {trade.status}
@@ -372,7 +372,12 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 </div>
             )}
 
-            {trade.status === 'DISPUTE' && (
+            {/* SECURITY WARNING MVP */}
+            <div className="shrink-0 bg-red-400/10 border-b border-red-500/20 text-red-500 text-[10px] font-bold text-center py-1.5 px-3 uppercase tracking-wide">
+                ⚠️ WARNING: Never release funds before verifying payment in your own account. Admins will NEVER ask you to release funds.
+            </div>
+
+            {trade.status === 'DISPUTED' && (
                 <div className="shrink-0 bg-[#f6465d]/10 border-b border-[#f6465d]/20 text-[#f6465d] text-[10px] text-center p-2">
                     <div className="flex items-center justify-center gap-1.5 font-bold mb-0.5">
                         <AlertTriangle className="w-3 h-3" /> TRADE FROZEN BY TRIBUNAL
@@ -477,7 +482,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 {/* Input Area */}
                 <div className="flex gap-2 p-2">
                     {/* Utility Buttons */}
-                    {trade && !['COMPLETED', 'CANCELLED', 'DISPUTE'].includes(trade.status) && (
+                    {trade && !['COMPLETED', 'CANCELLED', 'DISPUTED'].includes(trade.status) && (
                         <button onClick={handleDispute} className="p-2.5 bg-[#f6465d]/10 rounded text-[#f6465d] flex-shrink-0" title="Report">
                             <AlertTriangle className="w-4 h-4" />
                         </button>
@@ -488,7 +493,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                         </button>
                     )}
                     {trade && !['COMPLETED', 'CANCELLED'].includes(trade.status) && (
-                        <button onClick={handleUploadProof} disabled={trade.status === 'DISPUTE'} className={`p-2.5 rounded ${proofUrl ? 'bg-[#0ecb81] text-black' : 'bg-[#2b3139] text-[#848e9c]'} flex-shrink-0 relative`}>
+                        <button onClick={handleUploadProof} disabled={trade.status === 'DISPUTED'} className={`p-2.5 rounded ${proofUrl ? 'bg-[#0ecb81] text-black' : 'bg-[#2b3139] text-[#848e9c]'} flex-shrink-0 relative`}>
                             <ImageIcon className="w-4 h-4" />
                             {proofUrl && <CheckCircle className="w-2.5 h-2.5 absolute top-0.5 right-0.5 bg-black text-[#0ecb81] rounded-full" />}
                         </button>
@@ -501,7 +506,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                                placeholder={trade.status === 'DISPUTE' ? "Chat active for Tribunal..." : "Type a message..."}
+                                placeholder={trade.status === 'DISPUTED' ? "Chat active for Tribunal..." : "Type a message..."}
                                 className="flex-1 bg-[#0b0e11] border border-[#2b3139] rounded px-3 py-2 text-[11px] text-[#eaeaec] outline-none focus:border-[#fcd535]"
                             />
                             <button onClick={sendMessage} className="absolute right-1 top-1 bottom-1 px-3 bg-[#fcd535] rounded-sm text-black hover:bg-[#e6c130] transition flex items-center justify-center">

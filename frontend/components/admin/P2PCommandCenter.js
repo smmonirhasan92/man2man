@@ -52,7 +52,7 @@ export default function P2PCommandCenter() {
 
             // Auto-select first awaiting trade if none selected
             if (!selectedTrade) {
-                const pending = tradeRes.data.find(t => ['AWAITING_ADMIN', 'DISPUTE'].includes(t.status));
+                const pending = tradeRes.data.find(t => ['AWAITING_ADMIN', 'DISPUTED'].includes(t.status));
                 if (pending) selectTrade(pending);
             }
         } catch (e) { console.error(e); }
@@ -121,7 +121,7 @@ export default function P2PCommandCenter() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    const pendingTrades = trades.filter(t => ['AWAITING_ADMIN', 'DISPUTE'].includes(t.status));
+    const pendingTrades = trades.filter(t => ['AWAITING_ADMIN', 'DISPUTED'].includes(t.status));
 
     return (
         <div className="h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 text-white font-sans">
@@ -182,7 +182,7 @@ export default function P2PCommandCenter() {
                                     </h3>
                                     <p className="text-slate-400 text-sm mb-4">Investigate evidence, force resolution.</p>
 
-                                    {selectedTrade.status === 'DISPUTE' && selectedTrade.disputeReason && (
+                                    {selectedTrade.status === 'DISPUTED' && selectedTrade.disputeReason && (
                                         <div className="mb-4 bg-red-950/40 border border-red-500/30 p-3 rounded-xl max-w-sm">
                                             <div className="text-[10px] uppercase font-bold text-red-400 mb-1 flex justify-between">
                                                 <span>Dispute Reason</span>
