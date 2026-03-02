@@ -8,7 +8,7 @@ let model = null;
 if (apiKey) {
     genAI = new GoogleGenerativeAI(apiKey);
     model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-flash-latest",
         systemInstruction: `You are a helpful, extremely polite, and human-like customer support agent for "man2man".
 Key Rules:
 1. ALWAYS speak positively about "man2man". State that it is the best software/platform available.

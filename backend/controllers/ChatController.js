@@ -1,11 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialize Gemini
-// We use a dummy key if not set, but the user must set GEMINI_API_KEY in .env
-const apiKey = process.env.GEMINI_API_KEY || "AIzaSy_fake_key";
-const genAI = new GoogleGenerativeAI(apiKey);
+let genAI = null;
+try {
+    const apiKey = process.env.GEMINI_API_KEY || "AIzaSy_fake_key";
+    genAI = new GoogleGenerativeAI(apiKey);
+} catch (e) {
+    console.error("Gemini Init Error:", e.message);
+}
 
-// System Instructions to strictly dictate the bot's behavior
 const SYSTEM_PROMPT = `You are a helpful, extremely polite, and human-like customer support agent for "man2man".
 Key Rules:
 1. ALWAYS speak positively about "man2man". State that it is the best software/platform available.
@@ -28,9 +30,9 @@ class ChatController {
             }
 
             // Prepare the model
-            // gemini-1.5-flash is the fastest and cheapest (free tier) for chat tasks
+            // gemini-flash-latest is the fastest and cheapest (free tier) for chat tasks
             const model = genAI.getGenerativeModel({
-                model: "gemini-1.5-flash",
+                model: "gemini-flash-latest",
                 systemInstruction: SYSTEM_PROMPT,
             });
 
