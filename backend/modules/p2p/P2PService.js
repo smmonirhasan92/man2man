@@ -312,7 +312,7 @@ class P2PService {
             const updatedSeller = await User.findById(trade.sellerId);
             SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
 
-            this.addSystemMessage(trade._id, `Trade was CANCELLED. Escrow returned to Seller.`);
+            await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `Trade was CANCELLED. Escrow returned to Seller.` });
 
             return trade;
         });
@@ -346,7 +346,7 @@ class P2PService {
         SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_mark_paid', trade);
         await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'warning', { tradeId: trade._id });
 
-        this.addSystemMessage(trade._id, `Buyer marked payment as sent. TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'}`);
+        await P2PMessage.create({ tradeId: trade._id, senderId: trade.buyerId, isSystem: true, content: `Buyer marked payment as sent. TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'}` });
 
         return trade;
     }
@@ -701,7 +701,7 @@ class P2PService {
                     // Reuse existing cancelTrade method correctly
                     // Pass buyerId or sellerId to satisfy auth check inside cancelTrade
                     await this.cancelTrade(trade.sellerId, trade._id);
-                    this.addSystemMessage(trade._id, `⏳ TRADE AUTO-CANCELLED due to inactivity. Escrow returned.`);
+                    await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `⏳ TRADE AUTO-CANCELLED due to inactivity. Escrow returned.` });
                     cancelledCount++;
                 } catch (e) {
                     console.error(`[P2P Auto-Cancel] Failed to cancel trade ${trade._id}:`, e.message);
