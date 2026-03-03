@@ -38,6 +38,7 @@ const initPulse = () => {
             // Check for draw trigger every minute (Efficiency: Low cost check)
             const LotteryService = require('../game/LotteryService');
             await LotteryService.checkDraw();
+            await LotteryService.checkWatchdog();
 
             if (now.getMinutes() === 0) {
                 // [MOVED HERE] Run Heavy Audits Hourly

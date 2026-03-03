@@ -68,7 +68,7 @@ const lotterySlotSchema = new mongoose.Schema({
 });
 
 // Middleware: Calculate targetSales from TOTAL prize pool
-lotterySlotSchema.pre('save', async function () {
+lotterySlotSchema.pre('save', async function (next) {
     if ((!this.targetSales || this.targetSales === 0) && this.prizes && this.prizes.length > 0 && this.profitMultiplier) {
         const totalPrizePool = this.prizes.reduce((sum, p) => sum + (p.amount * p.winnersCount), 0);
         this.prizeAmount = totalPrizePool; // Sync legacy field for display
@@ -87,6 +87,7 @@ lotterySlotSchema.pre('save', async function () {
     if (this.drawType === 'TIME_BASED' && this.durationMinutes && !this.endTime) {
         this.endTime = new Date(new Date().getTime() + this.durationMinutes * 60000);
     }
+    next();
 });
 
 module.exports = mongoose.model('LotterySlot', lotterySlotSchema);

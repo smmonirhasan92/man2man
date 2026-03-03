@@ -11,9 +11,9 @@ class LotteryService {
 
     constructor() {
         this.TICKET_PRICE = 20; // 20 BDT Fixed
-        // Start Automation Loop
-        setInterval(() => this.checkAutomation(), 10000); // Check every 10s
-        setInterval(() => this.checkWatchdog(), 15000); // [NEW] Watchdog every 15s to ensure persistence
+        // Start Automation Loop (DISABLED - Handled by Cron Pulse to save memory/CPU)
+        // setInterval(() => this.checkAutomation(), 10000); // Check every 10s
+        // setInterval(() => this.checkWatchdog(), 15000); // [NEW] Watchdog every 15s to ensure persistence
     }
 
     // Alias for System Pulse or Legacy Calls

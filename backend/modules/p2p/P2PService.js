@@ -696,17 +696,22 @@ class P2PService {
             if (expiredTrades.length === 0) return 0;
 
             let cancelledCount = 0;
-            for (const trade of expiredTrades) {
+            // Use Promise.allSettled to prevent one fast failing trade from hanging or slowing the loop
+            const cancelPromises = expiredTrades.map(async (trade) => {
                 try {
-                    // Reuse existing cancelTrade method correctly
-                    // Pass buyerId or sellerId to satisfy auth check inside cancelTrade
                     await this.cancelTrade(trade.sellerId, trade._id);
+                    // P2PMessage creation is not critical enough to fail the cancellation, but we still log it.
                     await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `⏳ TRADE AUTO-CANCELLED due to inactivity. Escrow returned.` });
-                    cancelledCount++;
+                    return true;
                 } catch (e) {
                     console.error(`[P2P Auto-Cancel] Failed to cancel trade ${trade._id}:`, e.message);
+                    return false;
                 }
-            }
+            });
+
+            const results = await Promise.allSettled(cancelPromises);
+            cancelledCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+
             if (cancelledCount > 0) {
                 console.log(`[P2P Pulse] Auto-cancelled ${cancelledCount} expired trades and released escrow.`);
             }
