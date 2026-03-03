@@ -69,10 +69,22 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                     console.log("⚡ Session Active: Skipping Animation");
                 }
 
-                // Start Session
+                // Start Session & Open Target Ad URL
                 try {
                     await api.post('/task/start', { taskId: task._id || task.id });
                     setStatus('counting');
+
+                    // [NEW] Open the Ad URL to register the impression for Adsterra
+                    if (task.url) {
+                        try {
+                            // Open in a new tab/window safely
+                            window.open(task.url, '_blank', 'noopener,noreferrer');
+                        } catch (popupErr) {
+                            console.warn("Pop-up blocked for Ad URL:", popupErr);
+                            // Fallback if blocked (very rare if triggered directly, but good to handle)
+                        }
+                    }
+
                 } catch (err) {
                     console.error("Task Start Error:", err);
                     setError(err.response?.data?.message || "Failed to start task session.");

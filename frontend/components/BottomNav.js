@@ -56,7 +56,7 @@ export default function BottomNav() {
             )}
 
             {/* Bottom Nav Bar */}
-            <div className={`fixed bottom-6 left-0 right-0 w-full flex justify-center z-50 pointer-events-none transition-transform duration-700 md:hidden ${isVisible ? 'translate-y-0' : 'translate-y-32'}`}>
+            <div className={`mobile-only-nav fixed bottom-6 left-0 right-0 w-full flex justify-center z-50 pointer-events-none transition-transform duration-700 md:hidden ${isVisible ? 'translate-y-0' : 'translate-y-32'}`}>
                 <div className="pointer-events-auto relative bg-[#050505]/95 backdrop-blur-2xl border border-white/10 rounded-full flex justify-between items-center px-1 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.8)] w-[92%] max-w-[400px] ring-1 ring-white/5">
 
                     {/* Glass Reflection Effect */}

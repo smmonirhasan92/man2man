@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function HistoryPage() {
     return (
-        <div className="w-full min-h-screen bg-[#050505] pb-24">
+        <div className="w-full min-h-screen bg-[#050505] pb-40">
 
             {/* Page Header */}
             <div className="pt-20 pb-6 px-6 bg-gradient-to-b from-slate-900 via-slate-900 to-transparent">

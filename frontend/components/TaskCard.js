@@ -9,9 +9,25 @@ const TaskCard = ({ taskNumber, status, onClick, isLocked, adData }) => {
     const borderColor = isCompleted ? '#00ff9d' : isLocked ? '#444' : '#00ccff';
     const shadowColor = isCompleted ? 'rgba(0, 255, 157, 0.5)' : isLocked ? 'none' : 'rgba(0, 204, 255, 0.5)';
 
+    const handleClick = () => {
+        if (isLocked || isCompleted) return;
+
+        // [NEW] Open Ad URL immediately on user interaction to bypass popup blockers
+        if (adData?.url) {
+            try {
+                window.open(adData.url, '_blank', 'noopener,noreferrer');
+            } catch (err) {
+                console.warn("Failed to open ad URL directly from card:", err);
+            }
+        }
+
+        // Proceed to open TaskPlayer
+        if (onClick) onClick();
+    };
+
     return (
         <div
-            onClick={!isLocked && !isCompleted ? onClick : null}
+            onClick={handleClick}
             className={`
                 relative h-64 rounded-3xl overflow-hidden border-2 transition-all duration-300 group
                 ${!isLocked && !isCompleted ? 'cursor-pointer hover:scale-[1.02] active:scale-95 hover:shadow-[0_0_20px_var(--shadow-color)]' : ''}

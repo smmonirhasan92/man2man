@@ -193,7 +193,7 @@ function DashboardContent() {
 
                 {/* P2P MODAL OVERLAY */}
                 {p2pMode && (
-                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
                         <div className="w-full max-w-md h-[85vh] bg-[#0a0f1e] rounded-2xl overflow-hidden shadow-2xl relative border border-white/10 flex flex-col">
                             {/* Close Button */}
                             <button
