@@ -255,6 +255,9 @@ exports.getFinancialStats = async (req, res) => {
         ]);
         const totalP2PFee = p2pFeeAgg[0]?.total || 0;
 
+        // M. Total Users
+        const totalUsers = await User.countDocuments();
+
         // Calculated Super Totals
         const totalSystemRecovery = totalServerRevenue + totalLotteryRevenue + totalP2PFee;
         const totalIncomeGiven = totalTaskIncome + totalLotteryPrizes + totalReferralBonus;
@@ -276,6 +279,7 @@ exports.getFinancialStats = async (req, res) => {
                 p2p_volume: p2pVolume
             },
             economics: {
+                totalUsers,
                 totalDeposits,
                 totalWithdraws,
                 totalServerRevenue,
