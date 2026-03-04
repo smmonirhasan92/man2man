@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../services/api'; // Use the configured API instance
 import { Lock, Smartphone, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
@@ -13,6 +13,14 @@ export default function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Load saved phone number on mount
+    useEffect(() => {
+        const savedPhone = localStorage.getItem('savedPhone');
+        if (savedPhone) {
+            setFormData(prev => ({ ...prev, phone: savedPhone }));
+        }
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,8 +43,11 @@ export default function LoginForm() {
             const { token, user } = res.data;
 
             // Store Auth Data
+            // Store Auth Data
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
+            // Remember phone for next login
+            localStorage.setItem('savedPhone', cleanPhone);
 
             setSuccess('Login Successful! Redirecting...');
 
