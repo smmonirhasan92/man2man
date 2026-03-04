@@ -61,7 +61,13 @@ export default function ChatWidget() {
 
 
     return (
-        <div className="fixed bottom-20 right-4 z-50 md:bottom-8 md:right-8">
+        <motion.div
+            drag
+            dragMomentum={false}
+            whileDrag={{ scale: 1.05, opacity: 0.9 }}
+            className="fixed bottom-20 right-4 z-[9999] md:bottom-8 md:right-8 cursor-move"
+            style={{ touchAction: 'none' }}
+        >
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -132,11 +138,13 @@ export default function ChatWidget() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                onPointerDownCapture={(e) => e.stopPropagation()} // Stop drag when typing
                                 placeholder="Type a message..."
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
                             />
                             <button
                                 onClick={handleSend}
+                                onPointerDownCapture={(e) => e.stopPropagation()}
                                 disabled={!input.trim()}
                                 className="p-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
@@ -160,6 +168,6 @@ export default function ChatWidget() {
                     <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-slate-900"></span>
                 </motion.button>
             )}
-        </div>
+        </motion.div>
     );
 }
