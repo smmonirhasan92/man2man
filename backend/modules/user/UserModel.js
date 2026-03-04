@@ -128,6 +128,7 @@ const UserSchema = new mongoose.Schema({
     // --- P2P Trust (Reputation) ---
     trustScore: { type: Number, default: 5.0 },
     ratingCount: { type: Number, default: 0 },
+    isVerifiedMerchant: { type: Boolean, default: false }, // [NEW] Admin assigned verification badge
 
 }, {
     timestamps: true,

@@ -9,6 +9,8 @@ const UserManagement = () => {
     const [loading, setLoading] = useState(false);
     const [actionUser, setActionUser] = useState(null);
     const [password, setPassword] = useState('');
+    const [filterVerified, setFilterVerified] = useState(false);
+    const [filterAdminDeposit, setFilterAdminDeposit] = useState(false);
 
     // Quick Action Menu State
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -18,13 +20,18 @@ const UserManagement = () => {
             fetchUsers();
         }, 500);
         return () => clearTimeout(delayDebounceFn);
-    }, [search]);
+    }, [search, filterVerified, filterAdminDeposit]);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const query = search ? `?search=${search}` : '';
-            const { data } = await api.get(`/admin/users${query}`);
+            let queryParams = [];
+            if (search) queryParams.push(`search=${search}`);
+            if (filterVerified) queryParams.push(`isVerified=true`);
+            if (filterAdminDeposit) queryParams.push(`hasAdminDeposit=true`);
+
+            const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+            const { data } = await api.get(`/admin/users${queryString}`);
             if (data.users) setUsers(data.users);
             else if (Array.isArray(data)) setUsers(data);
         } catch (err) {
@@ -45,6 +52,10 @@ const UserManagement = () => {
                 fetchUsers();
             } else if (type === 'promote') {
                 await api.put(`/admin/users/${actionUser._id}/promote`, { tier: payload.tier });
+                fetchUsers();
+            } else if (type === 'toggle_verification') {
+                await api.put(`/admin/user/verify-badge`, { userId: actionUser._id, isVerified: !actionUser.isVerifiedMerchant });
+                toast.success('Verification Badge Updated');
                 fetchUsers();
             }
             setActionUser(null);
@@ -70,16 +81,30 @@ const UserManagement = () => {
                     <Briefcase className="w-6 h-6" /> User Management
                 </h2>
 
-                {/* Search Bar */}
-                <div className="relative w-full md:w-96 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#D4AF37] transition-colors" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search users..."
-                        className="w-full bg-[#1A1A1A] border border-white/10 rounded-full py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                    {/* Filters */}
+                    <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                        <label className="flex items-center gap-2 cursor-pointer hover:text-[#D4AF37]">
+                            <input type="checkbox" checked={filterVerified} onChange={() => setFilterVerified(!filterVerified)} className="accent-[#D4AF37] w-4 h-4 cursor-pointer" />
+                            Verified Only
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer hover:text-[#D4AF37]">
+                            <input type="checkbox" checked={filterAdminDeposit} onChange={() => setFilterAdminDeposit(!filterAdminDeposit)} className="accent-[#D4AF37] w-4 h-4 cursor-pointer" />
+                            Admin Deposit
+                        </label>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative w-full md:w-80 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#D4AF37] transition-colors" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-full py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -104,7 +129,10 @@ const UserManagement = () => {
                             <tr key={user._id} className="hover:bg-white/[0.02] transition-colors text-sm group">
                                 <td className="p-4">
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-white text-base">{user.fullName}</span>
+                                        <span className="font-bold text-white text-base flex items-center gap-2">
+                                            {user.fullName}
+                                            {user.isVerifiedMerchant && <CheckCircle size={14} className="text-blue-500 fill-blue-500/20" />}
+                                        </span>
                                         <span className="text-xs text-slate-500 font-mono">@{user.username}</span>
                                         <span className="text-[10px] text-slate-600">{user.primary_phone}</span>
                                     </div>
@@ -163,6 +191,12 @@ const UserManagement = () => {
                                                     className="px-4 py-3 text-left hover:bg-white/5 flex items-center gap-2 text-xs font-bold text-white transition"
                                                 >
                                                     <ArrowUpRight size={14} className="text-purple-400" /> Manage Tier
+                                                </button>
+                                                <button
+                                                    onClick={() => { setActionUser(user); handleAction('toggle_verification'); setOpenMenuId(null); }}
+                                                    className="px-4 py-3 text-left hover:bg-white/5 flex items-center gap-2 text-xs font-bold text-blue-400 transition border-t border-white/10"
+                                                >
+                                                    <CheckCircle size={14} /> {user.isVerifiedMerchant ? 'Remove Verification' : 'Verify Merchant'}
                                                 </button>
                                             </div>
                                         )}

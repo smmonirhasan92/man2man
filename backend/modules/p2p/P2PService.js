@@ -153,7 +153,7 @@ class P2PService {
 
         const orders = await P2POrder.find(query).populate({
             path: 'userId',
-            select: 'username badges wallet.main trustScore ratingCount isVerified completedTrades country'
+            select: 'username badges wallet.main trustScore ratingCount isVerified isVerifiedMerchant completedTrades country'
         });
 
         // Current User Country

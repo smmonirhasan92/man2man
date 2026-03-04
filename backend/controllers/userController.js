@@ -107,10 +107,10 @@ exports.uploadProfilePhoto = async (req, res) => {
     }
 };
 
-// Get All Users (Admin) - with Search & Pagination
+// Get All Users (Admin) - with Search & Pagination & New Filters
 exports.getAllUsers = async (req, res) => {
     try {
-        const { search, page = 1, limit = 20 } = req.query;
+        const { search, page = 1, limit = 20, isVerified, hasAdminDeposit } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
 
@@ -127,6 +127,19 @@ exports.getAllUsers = async (req, res) => {
                     { synthetic_phone: searchRegex } // [FIX] Allow searching by US Phone
                 ]
             };
+        }
+
+        // [NEW] Filter by Verified Merchant
+        if (isVerified === 'true') {
+            query.isVerifiedMerchant = true;
+        }
+
+        // [NEW] Filter by Admin Deposit History
+        if (hasAdminDeposit === 'true') {
+            const Transaction = require('../modules/wallet/TransactionModel');
+            const manualDeposits = await Transaction.distinct('userId', { type: 'admin_adjustment', status: 'completed' });
+            // Merge with existing query
+            query._id = { ...query._id, $in: manualDeposits };
         }
 
         const users = await User.find(query, '-password')
@@ -148,6 +161,23 @@ exports.getAllUsers = async (req, res) => {
     } catch (err) {
         console.error("GetAllUsers Error:", err);
         res.status(500).json({ message: 'Server Error', error: err.message, stack: err.stack });
+    }
+};
+
+// Toggle Verification Badge (Admin)
+exports.toggleVerificationBadge = async (req, res) => {
+    try {
+        const { userId, isVerified } = req.body;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.isVerifiedMerchant = isVerified;
+        await user.save();
+
+        res.json({ message: isVerified ? 'Verification Badge Awarded' : 'Verification Badge Removed', user });
+    } catch (err) {
+        console.error("ToggleBadge Error:", err);
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 

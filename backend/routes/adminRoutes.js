@@ -75,6 +75,7 @@ router.post('/agent/balance', authMiddleware, adminCheck, agentController.adjust
 
 router.get('/users', authMiddleware, adminCheck, userController.getAllUsers);
 router.put('/user/role', authMiddleware, adminCheck, userController.updateUserRole);
+router.put('/user/verify-badge', authMiddleware, adminCheck, userController.toggleVerificationBadge);
 router.post('/user/verify-agent', authMiddleware, adminCheck, agentController.verifyAgent);
 router.put('/user/reset-password', authMiddleware, adminCheck, userController.adminResetPassword);
 

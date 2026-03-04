@@ -416,7 +416,11 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                         <span className="font-bold text-sm text-[#eaeaec] truncate max-w-[120px]">
                                             {order.userId?.username || `User`}
                                         </span>
-                                        {(order.userId?.isVerified || true) && <ShieldCheck className="w-3 h-3 text-[#fcd535]" />}
+                                        {order.userId?.isVerifiedMerchant && (
+                                            <div className="flex items-center justify-center bg-[#fcd535]/10 p-1 rounded">
+                                                <ShieldCheck className="w-3.5 h-3.5 text-[#fcd535]" />
+                                            </div>
+                                        )}
                                         <div className="flex gap-2 text-[10px] text-[#848e9c] ml-auto">
                                             <span>{order.userId?.completedTrades || 0} trades</span>
                                             <span>{order.userId?.trustScore || 100}%</span>
