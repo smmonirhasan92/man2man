@@ -74,9 +74,15 @@ function RegisterForm() {
         setTimeout(() => {
             const code = Math.floor(1000 + Math.random() * 9000).toString();
             setGeneratedOtp(code);
-            setIsOtpLoading(false);
             setVerificationStep('verifying');
-            setNotification({ type: 'info', message: `Your Code: ${code}` });
+            setIsOtpLoading(false);
+
+            // Wait 800ms before auto-filling it to simulate actual SMS reading
+            setTimeout(() => {
+                setUserOtp(code);
+            }, 800);
+
+            setNotification({ type: 'info', message: `Auto-Detecting SMS: ${code}` });
             setTimeout(() => setNotification(null), 10000);
         }, 1500);
     };
@@ -84,9 +90,12 @@ function RegisterForm() {
     useEffect(() => {
         if (verificationStep === 'verifying' && userOtp.length === 4) {
             if (userOtp === generatedOtp) {
-                setVerificationStep('verified');
-                setNotification({ type: 'success', message: 'Verified Successfully!' });
-                setTimeout(() => setNotification(null), 3000);
+                // Wait 1 second before hiding the populated input so the user admires the auto-fill!
+                setTimeout(() => {
+                    setVerificationStep('verified');
+                    setNotification({ type: 'success', message: 'Verified Successfully!' });
+                    setTimeout(() => setNotification(null), 3000);
+                }, 1000);
             } else {
                 setError('Incorrect Code.');
                 setUserOtp('');
