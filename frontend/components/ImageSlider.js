@@ -8,7 +8,7 @@ export default function ImageSlider() {
         {
             _id: '1',
             bgType: 'image',
-            bgValue: '/slider_1.png',
+            bgValue: 'https://images.unsplash.com/photo-1556761175-5973dc0f32d7?auto=format&fit=crop&q=80&w=1600',
             title: 'AFFILIATE POWER',
             subtitle: 'Teamwork Makes the Dream Work',
             btnText: 'Join Now',
@@ -19,7 +19,7 @@ export default function ImageSlider() {
         {
             _id: '2',
             bgType: 'image',
-            bgValue: '/slider_2.png',
+            bgValue: 'https://images.unsplash.com/photo-1580519542036-ed47f3e42d12?auto=format&fit=crop&q=80&w=1600',
             title: 'BIG BONUSES',
             subtitle: 'Work More, Earn More',
             btnText: 'Claim Reward',
@@ -30,7 +30,7 @@ export default function ImageSlider() {
         {
             _id: '3',
             bgType: 'image',
-            bgValue: '/slider_3.png',
+            bgValue: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1600',
             title: 'USA OFFICIAL',
             subtitle: 'Secure & Fast Earnings',
             btnText: 'Learn More',

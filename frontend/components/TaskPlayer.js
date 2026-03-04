@@ -238,7 +238,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                     {/* Background / Video Simulation */}
                     <div className="absolute inset-0 bg-black">
                         <img
-                            src={task.thumbnail || task.url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b"}
+                            src={task.imageUrl || task.thumbnail || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&q=80&w=800"}
                             alt="Task"
                             className={`w-full h-full object-cover ${isVideo ? 'opacity-80' : 'opacity-40'}`}
                         />

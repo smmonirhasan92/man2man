@@ -62,7 +62,7 @@ export default function LoginPage() {
             {/* Background Decoration - Reference Image */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <img
-                    src="/bg-flag.png"
+                    src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1080"
                     alt="USA Flag Background"
                     className="absolute inset-0 w-full h-full object-cover opacity-100"
                 />

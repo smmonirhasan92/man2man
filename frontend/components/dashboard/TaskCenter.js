@@ -269,10 +269,10 @@ export default function TaskCenter({ taskData }) {
                                 <div className="w-1/3 h-full bg-slate-900 relative overflow-hidden shrink-0">
                                     {/* Randomize Image for 'Car/Mobile' effect */}
                                     <img
-                                        src={index % 2 === 0
+                                        src={task.imageUrl || (index % 2 === 0
                                             ? "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=400&auto=format&fit=crop" // Mobile
                                             : "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=400&auto=format&fit=crop" // Car
-                                        }
+                                        )}
                                         alt="Task"
                                         className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                                     />
@@ -287,7 +287,7 @@ export default function TaskCenter({ taskData }) {
                                 <div className="flex-1 p-4 flex flex-col justify-between relative">
                                     <div className="flex justify-between items-start">
                                         <div className="flex flex-col">
-                                            <h3 className="font-bold text-white text-base leading-tight group-hover:text-cyan-400 transition-colors">Premium Ad Task</h3>
+                                            <h3 className="font-bold text-white text-base leading-tight group-hover:text-cyan-400 transition-colors">{task.title || 'Premium Ad Task'}</h3>
                                             <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
                                                 <DollarSign size={10} className="text-emerald-400" /> Guaranteed Revenue
                                             </p>

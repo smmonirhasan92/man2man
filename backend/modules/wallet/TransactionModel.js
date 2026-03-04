@@ -57,13 +57,12 @@ const TransactionSchema = new mongoose.Schema({
 });
 
 // [PHASE 4] Auto-generate unique Transaction ID
-TransactionSchema.pre('save', async function (next) {
+TransactionSchema.pre('save', async function () {
     if (!this.transactionId) {
         // Generate a 12-char alphanumeric uppercase ID
         const crypto = require('crypto');
         this.transactionId = 'TXN-' + crypto.randomBytes(6).toString('hex').toUpperCase();
     }
-    next();
 });
 
 // Index for getting user history quickly

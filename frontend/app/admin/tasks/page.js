@@ -296,7 +296,7 @@ export default function AdminTasksPage() {
                         <div key={ad._id || ad.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-lg transition">
                             <div className="h-48 overflow-hidden relative">
                                 <img
-                                    src={ad.imageUrl}
+                                    src={ad.imageUrl || "https://images.unsplash.com/photo-1617704548623-340376564e68?auto=format&fit=crop&q=80&w=800"}
                                     alt={ad.title}
                                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                                 />
