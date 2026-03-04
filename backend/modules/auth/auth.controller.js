@@ -35,10 +35,9 @@ exports.register = async (req, res) => {
         // 2. Generate Username
         const username = fullName.split(' ')[0].toLowerCase() + Math.floor(1000 + Math.random() * 9000);
 
-        // 3. Generate ROTATING Referral ID
+        // 3. Generate PERMANENT Referral ID
         const myReferralCode = CryptoService.generateReferralId();
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 15);
+        const expiresAt = null; // [MODIFIED] User requested permanent referral ID instead of 15 days
 
         // 4. Referral Logic
         let referrerCodeStored = null;

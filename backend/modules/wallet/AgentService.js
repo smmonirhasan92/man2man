@@ -39,6 +39,40 @@ class AgentService {
 
             if (!user) throw new Error("User not found");
 
+            // [REFERRAL ENGINE INTEGRATION: First Deposit Bonus]
+            if (!user.isReferralBonusPaid && user.referredBy) {
+                const ReferralService = require('../referral/ReferralService');
+                await ReferralService.distributeIncome(user._id, amount, 'joining', session);
+
+                const referrerDoc = await User.findOne({ referralCode: user.referredBy }).session(session);
+                if (referrerDoc) {
+                    referrerDoc.wallet.main = (referrerDoc.wallet.main || 0) + 20.00;
+                    referrerDoc.referralIncome = (referrerDoc.referralIncome || 0) + 20.00;
+                    await referrerDoc.save({ session });
+
+                    user.wallet.main = (user.wallet.main || 0) + 20.00;
+                    user.isReferralBonusPaid = true;
+                    await user.save({ session });
+
+                    await Transaction.create([{
+                        userId: referrerDoc._id,
+                        type: 'referral_bonus',
+                        amount: 20.00,
+                        status: 'completed',
+                        description: `Signup Bonus from ${user.username || 'User'} (via Agent Deposit)`,
+                        balanceAfter: referrerDoc.wallet.main
+                    }, {
+                        userId: user._id,
+                        type: 'referral_bonus',
+                        amount: 20.00,
+                        status: 'completed',
+                        description: `Welcome Bonus (Referred by ${user.referredBy})`,
+                        balanceAfter: user.wallet.main
+                    }], opts);
+                }
+            }
+
+
             // 3. Log Transactions
             // A. Agent Log
             await Transaction.create([{
