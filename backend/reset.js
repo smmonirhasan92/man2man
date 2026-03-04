@@ -12,10 +12,7 @@ async function runReset() {
     console.log("🚀 Starting Production Database Reset...");
 
     try {
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log("✅ Custom DB Connected.");
 
         // 1. Delete all users EXCEPT super_admin
