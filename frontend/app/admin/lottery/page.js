@@ -2,7 +2,6 @@
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Ticket } from 'lucide-react';
 import AdminLotteryManager from '@/components/admin/AdminLotteryManager';
-import AdminLotteryTemplates from '@/components/admin/AdminLotteryTemplates';
 
 export default function AdminLotteryPage() {
     const router = useRouter();
@@ -24,7 +23,6 @@ export default function AdminLotteryPage() {
 
             <main className="w-full max-w-full px-4 lg:px-8 py-6 relative z-10 space-y-6">
                 <AdminLotteryManager />
-                <AdminLotteryTemplates />
             </main>
         </div>
     );
