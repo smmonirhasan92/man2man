@@ -6,7 +6,7 @@ const User = require('./modules/user/UserModel');
 const Transaction = require('./modules/wallet/TransactionModel');
 const TransactionLedger = require('./modules/wallet/TransactionLedgerModel');
 const P2PTrade = require('./modules/p2p/P2PTradeModel');
-const LotteryReceipt = require('./modules/game/LotteryReceiptModel');
+const LotterySlot = require('./modules/game/LotterySlotModel');
 
 async function runReset() {
     console.log("🚀 Starting Production Database Reset...");
@@ -34,9 +34,11 @@ async function runReset() {
         const p2pDeleteRes = await P2PTrade.deleteMany({});
         console.log(`💥 Deleted ${p2pDeleteRes.deletedCount} P2P Trades.`);
 
-        // 5. Wipe ALL Lottery Receipts (Tickets)
-        const receiptDeleteRes = await LotteryReceipt.deleteMany({});
-        console.log(`💥 Deleted ${receiptDeleteRes.deletedCount} Lottery Receipts.`);
+        // 5. Clear ALL Lottery Tickets & Winners
+        const slotUpdateRes = await LotterySlot.updateMany({}, {
+            $set: { tickets: [], winners: [], currentSales: 0 }
+        });
+        console.log(`💥 Cleared Tickets from ${slotUpdateRes.modifiedCount} Lottery Slots.`);
 
         // 6. Reset Super Admin's wallet to 0 and clear referral history if needed
         const superAdmin = await User.findOne({ role: 'super_admin' });
