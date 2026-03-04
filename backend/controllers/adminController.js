@@ -170,7 +170,6 @@ exports.updateUserBalance = async (req, res) => {
 };
 
 exports.getFinancialStats = async (req, res) => {
-    // ... existing getFinancialStats code ...
     try {
         // A. Total Minted (From Ledger)
         const mintedAgg = await TransactionLedger.aggregate([
@@ -186,7 +185,6 @@ exports.getFinancialStats = async (req, res) => {
         const liabilities = (userAgg[0]?.totalMain || 0) + (userAgg[0]?.totalEscrow || 0);
 
         // C. Admin Revenue (Commission Wallet + Fees)
-        // Check Super Admin Wallet Commission
         const adminWallet = await User.findOne({ role: 'super_admin' });
         const revenue = adminWallet?.wallet?.commission || 0;
 
@@ -197,20 +195,102 @@ exports.getFinancialStats = async (req, res) => {
         ]);
         const p2pVolume = p2pAgg[0]?.volume || 0;
 
+        // ==========================================
+        // NEW AGGREGATIONS FOR SYSTEM ECONOMICS
+        // ==========================================
+
+        // E. Total System Deposits
+        const depositAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalDeposits = depositAgg[0]?.total || 0;
+
+        // F. Total System Withdrawals
+        const withdrawAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['withdraw', 'cash_out'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalWithdraws = withdrawAgg[0]?.total || 0;
+
+        // G. Total Server Purchase Revenue (Recovery)
+        const serverSalesAgg = await Transaction.aggregate([
+            { $match: { type: 'plan_purchase', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalServerRevenue = serverSalesAgg[0]?.total || 0;
+
+        // H. Total Task Income Given (Liability Generated)
+        const taskIncomeAgg = await Transaction.aggregate([
+            { $match: { type: 'task_reward', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalTaskIncome = taskIncomeAgg[0]?.total || 0;
+
+        // I. Total Lottery Sales Revenue (Recovery)
+        const lotteryBuyAgg = await Transaction.aggregate([
+            { $match: { type: 'lottery_buy', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalLotteryRevenue = lotteryBuyAgg[0]?.total || 0;
+
+        // J. Total Lottery Prizes Given (Liability Generated)
+        const lotteryWinAgg = await Transaction.aggregate([
+            { $match: { type: 'lottery_win', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalLotteryPrizes = lotteryWinAgg[0]?.total || 0;
+
+        // K. Total Referral Bonus Given (Liability Generated)
+        const refBonusAgg = await Transaction.aggregate([
+            { $match: { type: 'referral_commission', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalReferralBonus = refBonusAgg[0]?.total || 0;
+
+        // L. Total P2P Fees Collected (Recovery)
+        const p2pFeeAgg = await Transaction.aggregate([
+            { $match: { type: 'fee', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalP2PFee = p2pFeeAgg[0]?.total || 0;
+
+        // Calculated Super Totals
+        const totalSystemRecovery = totalServerRevenue + totalLotteryRevenue + totalP2PFee;
+        const totalIncomeGiven = totalTaskIncome + totalLotteryPrizes + totalReferralBonus;
+        const netSystemProfit = totalSystemRecovery - totalIncomeGiven;
+
         res.json({
             overview: {
                 total_minted: totalMinted,
                 current_liabilities: liabilities,
-                net_system_equity: totalMinted - liabilities, // Should be roughly 0 or reflect burned/fees
-                unbacked_circulation: liabilities > totalMinted ? liabilities - totalMinted : 0 // Alert if huge
+                net_system_equity: totalMinted - liabilities,
+                unbacked_circulation: liabilities > totalMinted ? liabilities - totalMinted : 0,
+                today_deposits: totalDeposits, // mapped for legacy dashboard compat
+                today_withdraws: totalWithdraws,
+                pending_deposits: 0,
+                pending_withdraws: 0
             },
             revenue: {
                 total_commission: revenue,
                 p2p_volume: p2pVolume
+            },
+            economics: {
+                totalDeposits,
+                totalWithdraws,
+                totalServerRevenue,
+                totalTaskIncome,
+                totalLotteryRevenue,
+                totalLotteryPrizes,
+                totalReferralBonus,
+                totalP2PFee,
+                totalSystemRecovery,
+                totalIncomeGiven,
+                netSystemProfit
             }
         });
     } catch (e) {
-        console.error(e);
+        console.error("Stats Failure:", e);
         res.status(500).json({ message: "Stats Failure" });
     }
 };

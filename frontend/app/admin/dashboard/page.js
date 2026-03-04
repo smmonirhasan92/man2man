@@ -38,12 +38,14 @@ export default function AdminDashboard() {
                 const finRes = await api.get('/admin/audit/financial');
                 const overview = finRes.data.overview || {};
                 const actual = finRes.data.actual || {};
+                const eco = finRes.data.economics || {};
 
                 setStats({
-                    todayDeposits: overview.today_deposits || 0,
-                    todayWithdraws: overview.today_withdraws || 0,
+                    ...eco, // spreads our new totalDeposits, totalServerRevenue, netSystemProfit, etc.
+                    todayDeposits: overview.today_deposits || eco.totalDeposits || 0,
+                    todayWithdraws: overview.today_withdraws || eco.totalWithdraws || 0,
                     totalCreated: overview.total_created || 0,
-                    totalWithdraws: overview.total_withdraws || 0,
+                    totalWithdraws: overview.total_withdraws || eco.totalWithdraws || 0,
                     userMainBalance: actual.user_main_balances || 0,
                     userGameBalance: actual.user_game_balances || 0,
                     pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0)
@@ -136,48 +138,79 @@ export default function AdminDashboard() {
                 <EcosystemTracker />
 
                 {/* 1. FINANCIAL SUMMARY CARD */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    {/* Card 1: Today's Cashflow */}
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                        <Activity className="text-blue-500" />
+                        Global System Economics
+                    </h2>
+                    {stats.pendingActions > 0 && (
+                        <Link href="/admin/transactions" className="bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold text-red-500 flex items-center gap-2 hover:bg-red-500/20 transition animate-pulse">
+                            {stats.pendingActions} Actionable Requests &rarr;
+                        </Link>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {/* Card 1: Deposits & Withdrawals */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                            <Activity className="w-20 h-20 text-emerald-500" />
-                        </div>
-                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3 text-right relative z-10">Today's Cashflow</h3>
-                        <div className="flex flex-col gap-2 relative z-10">
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3 relative z-10">Lifetime Cash Flow</h3>
+                        <div className="flex flex-col gap-2 relative z-10 mt-4">
                             <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1 rounded-md">
-                                    <ArrowLeft className="w-3 h-3 text-emerald-500 rotate-45" />
-                                    <span className="text-[10px] font-bold text-emerald-400 uppercase">In</span>
-                                </div>
-                                <span className="text-lg font-mono font-bold text-white">৳{Number(stats.todayDeposits).toLocaleString()}</span>
+                                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">TOTAL DEPOSITED</span>
+                                <span className="text-base font-mono font-bold text-white">৳{Number(stats.totalDeposits || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-1.5 bg-rose-500/10 px-2 py-1 rounded-md">
-                                    <ArrowLeft className="w-3 h-3 text-rose-500 -rotate-[135deg]" />
-                                    <span className="text-[10px] font-bold text-rose-400 uppercase">Out</span>
-                                </div>
-                                <span className="text-lg font-mono font-bold text-white">৳{Number(stats.todayWithdraws).toLocaleString()}</span>
-                            </div>
-                            {/* Net calculation small badge */}
-                            <div className="mt-1 text-right">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${(stats.todayDeposits - stats.todayWithdraws) >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                                    }`}>
-                                    Net: ৳{(stats.todayDeposits - stats.todayWithdraws).toLocaleString()}
-                                </span>
+                                <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">TOTAL WITHDRAWN</span>
+                                <span className="text-base font-mono font-bold text-white">৳{Number(stats.totalWithdraws || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Card 2: Pending Actions */}
-                    <div className="bg-[#0f0f0f] border border-white/5 p-6 rounded-2xl relative overflow-hidden group flex flex-col justify-center items-center">
-                        <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition"></div>
-                        <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2 relative z-10">Pending Requests</h3>
-                        <div className="text-5xl font-black text-white relative z-10">
-                            {stats.pendingActions}
+                    {/* Card 2: Server Revenue (Recovery) */}
+                    <div className="bg-[#0f0f0f] border border-blue-500/20 p-5 rounded-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><ShieldCheck className="w-16 h-16 text-blue-500" /></div>
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3 relative z-10">Server Revenue & Recovery</h3>
+                        <div className="text-2xl font-black text-white relative z-10">
+                            ৳{Number(stats.totalServerRevenue || 0).toLocaleString()}
                         </div>
-                        <Link href="/admin/transactions" className="mt-4 text-xs font-bold text-blue-400 hover:text-blue-300 relative z-10">
-                            View All Requests &rarr;
-                        </Link>
+                        <div className="mt-2 space-y-1">
+                            <div className="text-[10px] text-slate-400 font-mono flex justify-between"><span>+ P2P Fees:</span> <span className="text-white">৳{Number(stats.totalP2PFee || 0).toLocaleString()}</span></div>
+                            <div className="text-[10px] text-slate-400 font-mono flex justify-between"><span>+ Lottery Sales:</span> <span className="text-white">৳{Number(stats.totalLotteryRevenue || 0).toLocaleString()}</span></div>
+                        </div>
+                    </div>
+
+                    {/* Card 3: Income Given (Liability) */}
+                    <div className="bg-[#0f0f0f] border border-orange-500/20 p-5 rounded-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><AlertTriangle className="w-16 h-16 text-orange-500" /></div>
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3 relative z-10">Total Income Given</h3>
+                        <div className="text-2xl font-black text-white relative z-10">
+                            ৳{Number(stats.totalIncomeGiven || 0).toLocaleString()}
+                        </div>
+                        <div className="mt-2 space-y-1">
+                            <div className="text-[10px] text-slate-400 font-mono flex justify-between"><span>Tasks Earned:</span> <span className="text-white">৳{Number(stats.totalTaskIncome || 0).toLocaleString()}</span></div>
+                            <div className="text-[10px] text-slate-400 font-mono flex justify-between"><span>Lottery Prizes:</span> <span className="text-white">৳{Number(stats.totalLotteryPrizes || 0).toLocaleString()}</span></div>
+                            <div className="text-[10px] text-slate-400 font-mono flex justify-between"><span>Referral Bonus:</span> <span className="text-white">৳{Number(stats.totalReferralBonus || 0).toLocaleString()}</span></div>
+                        </div>
+                    </div>
+
+                    {/* Card 4: Net Profit */}
+                    <div className={`bg-[#0f0f0f] border ${(stats.netSystemProfit || 0) >= 0 ? 'border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]'} p-5 rounded-2xl relative overflow-hidden group`}>
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3 relative z-10">Net System Profit (Rev - Income)</h3>
+                        <div className="text-3xl font-black text-white relative z-10 flex items-baseline gap-1">
+                            <span className="text-sm text-slate-500">৳</span>
+                            {Number(stats.netSystemProfit || 0).toLocaleString()}
+                        </div>
+                        <div className="mt-3 text-xs w-full relative z-10">
+                            {(stats.netSystemProfit || 0) >= 0 ? (
+                                <div className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1.5 rounded text-center border border-emerald-500/20">
+                                    PROFIT / RECOVERY MODE
+                                </div>
+                            ) : (
+                                <div className="text-red-400 font-bold bg-red-500/10 px-2 py-1.5 rounded text-center border border-red-500/20 animate-pulse">
+                                    CRITICAL LIABILITY / LOSS
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
