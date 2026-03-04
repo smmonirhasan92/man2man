@@ -78,10 +78,28 @@ class PlanService {
 
             // proceed to create new one...
 
-            if (user.wallet.main < plan.unlock_price) {
-                throw new Error('Insufficient Main Wallet Balance.');
+            const purchaseBal = user.wallet.purchase || 0;
+            const mainBal = user.wallet.main || 0;
+
+            if ((purchaseBal + mainBal) < plan.unlock_price) {
+                throw new Error('Insufficient Balance. Please deposit/recharge.');
             }
-            user.wallet.main -= plan.unlock_price;
+
+            let remainingCost = plan.unlock_price;
+
+            // Deduct from Purchase Wallet First
+            if (purchaseBal >= remainingCost) {
+                user.wallet.purchase -= remainingCost;
+                remainingCost = 0;
+            } else {
+                remainingCost -= purchaseBal;
+                user.wallet.purchase = 0;
+            }
+
+            // Deduct Remainder from Main Wallet
+            if (remainingCost > 0) {
+                user.wallet.main -= remainingCost;
+            }
 
             // [FIX] Create Transaction History for Purchase
             const Transaction = require('../wallet/TransactionModel');
