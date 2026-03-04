@@ -95,16 +95,16 @@ class LotteryService {
             prizeAmount: totalPrizePool, // Legacy sync
             profitMultiplier: finalMultiplier,
             profitBuffer,
-            lockDrawUntilTargetMet,
+            lockDrawUntilTargetMet: lockDrawUntilTargetMet || false,
             targetSales,
             currentSales: 0,
             status: 'ACTIVE',
             startTime,
             endTime,
             ticketPrice, // [FIX] Save the custom price
-            drawType,
+            drawType: drawType || 'TIME_BASED',
             durationMinutes: durationMinutes, // Pass durationMinutes directly
-            targetWinnerId
+            targetWinnerId: targetWinnerId || null
         });
 
         // Broadcast New Slot

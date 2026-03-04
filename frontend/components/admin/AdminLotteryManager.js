@@ -15,15 +15,12 @@ export default function AdminLotteryManager() {
         { name: 'Grand Jackpot', amount: 5000, winnersCount: 1, id: 1 },
         { name: '2nd Prize', amount: 1000, winnersCount: 2, id: 2 }
     ]);
-    // [HYBRID] New States
-    const [drawType, setDrawType] = useState('SALES_BASED');
+    const [drawType, setDrawType] = useState('TIME_BASED');
     const [startTime, setStartTime] = useState(new Date(Date.now() + 60000).toISOString().slice(0, 16));
     const [endTime, setEndTime] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 16));
     const [ticketPrice, setTicketPrice] = useState(20);
-    const [targetWinnerId, setTargetWinnerId] = useState('');
-    const [lockDraw, setLockDraw] = useState(false);
     const [description, setDescription] = useState('');
-    const [activeTab, setActiveTab] = useState('SALES_BASED'); // 'SALES_BASED' or 'TIME_BASED'
+    const [activeTab, setActiveTab] = useState('TIME_BASED'); // Only TIME_BASED now
 
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const [manualWinnerTargets, setManualWinnerTargets] = useState({}); // Stores targetWinnerId per slot row
@@ -75,12 +72,10 @@ export default function AdminLotteryManager() {
                     const payload = {
                         prizes: prizes.map(({ name, amount, winnersCount }) => ({ name, amount, winnersCount })),
                         description,
-                        lockDrawUntilTargetMet: lockDraw,
-                        drawType,
-                        startTime: drawType === 'TIME_BASED' ? new Date(startTime).toISOString() : new Date().toISOString(),
-                        endTime: drawType === 'TIME_BASED' ? new Date(endTime).toISOString() : null,
-                        ticketPrice,
-                        targetWinnerId: targetWinnerId || undefined
+                        drawType: 'TIME_BASED',
+                        startTime: new Date(startTime).toISOString(),
+                        endTime: new Date(endTime).toISOString(),
+                        ticketPrice
                     };
 
                     if (editingSlotId) {
@@ -114,8 +109,8 @@ export default function AdminLotteryManager() {
         setEditingTierName(null);
         setPrizes([{ name: 'Grand Jackpot', amount: 5000, winnersCount: 1, id: 1 }]);
         setDescription('');
-        setDrawType(activeTab); // Sync with currently viewed tab
-        setTargetWinnerId('');
+        setDrawType('TIME_BASED');
+        setActiveTab('TIME_BASED');
     };
 
     const confirmAction = (title, message, action) => {
@@ -128,14 +123,13 @@ export default function AdminLotteryManager() {
     };
 
     const forceDraw = async (slotId) => {
-        const winnerId = manualWinnerTargets[slotId] || null;
         confirmAction(
             `FORCE DRAW for Slot ${slotId}?`,
-            winnerId ? `This will FORCE User ${winnerId} to win 1st Prize.` : "This will pick a random winner immediately.",
+            "This will pick a random winner immediately.",
             async () => {
                 setLoading(true);
                 try {
-                    await api.post('/lottery/admin/draw', { slotId, winnerId: winnerId || undefined });
+                    await api.post('/lottery/admin/draw', { slotId });
                     toast.success('Draw Started & Finalized!');
                     fetchStatus();
                 } catch (e) { toast.error(e.response?.data?.message || 'Failed'); }
@@ -216,23 +210,7 @@ export default function AdminLotteryManager() {
                 </div>
             </div>
 
-            {/* 1.5. TAB NAVIGATION */}
-            <div className="flex border-b border-white/10 mb-6 gap-6">
-                <button
-                    onClick={() => { setActiveTab('SALES_BASED'); setDrawType('SALES_BASED'); cancelEdit(); }}
-                    className={`pb-4 font-bold uppercase tracking-widest text-sm transition-colors relative ${activeTab === 'SALES_BASED' ? 'text-emerald-400' : 'text-slate-500 hover:text-white'}`}
-                >
-                    Sales-Based Draws (Volume)
-                    {activeTab === 'SALES_BASED' && <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full"></div>}
-                </button>
-                <button
-                    onClick={() => { setActiveTab('TIME_BASED'); setDrawType('TIME_BASED'); cancelEdit(); }}
-                    className={`pb-4 font-bold uppercase tracking-widest text-sm transition-colors relative ${activeTab === 'TIME_BASED' ? 'text-blue-400' : 'text-slate-500 hover:text-white'}`}
-                >
-                    Time-Based Draws (Countdown)
-                    {activeTab === 'TIME_BASED' && <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500 rounded-t-full"></div>}
-                </button>
-            </div>
+            {/* Removed TAB NAVIGATION to keep it simply Time-Based */}
 
             {/* 2. MAIN GRID: Left (Table/Slots) - Right (Controls) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -241,11 +219,10 @@ export default function AdminLotteryManager() {
                 <div className="space-y-6 lg:col-span-8">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Target className={activeTab === 'SALES_BASED' ? 'text-emerald-500' : 'text-blue-500'} />
-                            {activeTab === 'SALES_BASED' ? 'Live Sales Objectives' : 'Live Countdowns'}
+                            Live Countdowns
                         </h2>
                         <div className="flex gap-2">
-                            {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).length > 0 && (
+                            {activeSlots.filter(s => s.drawType === 'TIME_BASED').length > 0 && (
                                 <button onClick={nukeAll} className="px-3 py-1 bg-red-600/20 text-red-500 border border-red-600/50 rounded-lg hover:bg-red-600 hover:text-white transition text-xs font-bold uppercase flex items-center gap-1">
                                     <AlertTriangle className="w-3 h-3" /> Nuke All
                                 </button>
@@ -261,16 +238,16 @@ export default function AdminLotteryManager() {
                                 <tr>
                                     <th className="p-4">Slot</th>
                                     <th className="p-4">Prize Pool</th>
-                                    <th className="p-4 w-1/3">Progress / Timer</th>
+                                    <th className="p-4 w-1/3">Draw Time</th>
                                     <th className="p-4">Status</th>
                                     <th className="p-4 text-right">Control</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
 
-                                {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).length === 0 ? (
-                                    <tr><td colSpan="5" className="p-12 text-center opacity-30">No Active {activeTab === 'SALES_BASED' ? 'Sales' : 'Time'} Lotteries</td></tr>
-                                ) : activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).map((slot, idx) => {
+                                {activeSlots.filter(s => s.drawType === 'TIME_BASED').length === 0 ? (
+                                    <tr><td colSpan="5" className="p-12 text-center opacity-30">No Active Time Lotteries! Create one on the right.</td></tr>
+                                ) : activeSlots.filter(s => s.drawType === 'TIME_BASED').map((slot, idx) => {
                                     // Simplified Financials
                                     const totalPayout = slot.prizeAmount || slot.jackpot || 0;
 
@@ -299,26 +276,11 @@ export default function AdminLotteryManager() {
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                {/* DYNAMIC PROGRESS / TIMER */}
-                                                {slot.drawType === 'TIME_BASED' ? (
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Time Remaining</span>
-                                                        <span className="text-blue-400 font-mono font-bold">{new Date(slot.endTime).toLocaleString()}</span>
-                                                        <span className="text-[10px] text-slate-500 mt-1 whitespace-nowrap">Target Sales: ৳{slot.targetSales?.toLocaleString()}</span>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="flex justify-between text-[10px] mb-1">
-                                                            <span className="text-emerald-400 font-mono">৳{(slot.currentSales || 0).toLocaleString()}</span>
-                                                            <span className="text-slate-500 font-mono">/ {slot.targetSales?.toLocaleString()} NXS Target</span>
-                                                        </div>
-                                                        <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-white/5">
-                                                            <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 relative" style={{ width: `${slot.progress}%` }}>
-                                                                <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-white opacity-50 shadow-[0_0_10px_white]"></div>
-                                                            </div>
-                                                        </div>
-                                                    </>
-                                                )}
+                                                {/* TIME BASED DISPLAY */}
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Draw Execution Date</span>
+                                                    <span className="text-blue-400 font-mono font-bold text-sm bg-blue-500/10 px-2 py-1 rounded w-fit">{new Date(slot.endTime).toLocaleString()}</span>
+                                                </div>
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex flex-col gap-2">
@@ -351,27 +313,16 @@ export default function AdminLotteryManager() {
                                                 </div>
                                             </td>
                                             <td className="p-4 text-right">
-                                                <div className="flex flex-col items-end gap-2 opacity-50 group-hover:opacity-100 transition">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Secret Winner ID"
-                                                        value={manualWinnerTargets[slot.slotId] || ''}
-                                                        onChange={(e) => setManualWinnerTargets({ ...manualWinnerTargets, [slot.slotId]: e.target.value })}
-                                                        className="w-32 bg-black/50 border border-white/10 rounded px-2 py-1 text-[10px] text-red-400 font-mono focus:border-red-500 transition-colors"
-                                                        title="Force a specific user ID to win 1st Prize."
-                                                    />
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => forceDraw(slot.slotId)}
-                                                            disabled={slot.lockDrawUntilTargetMet && slot.progress < 100}
-                                                            className={`p-2 rounded transition ${slot.lockDrawUntilTargetMet && slot.progress < 100 ? 'text-slate-600 cursor-not-allowed' : 'hover:bg-blue-500/20 text-blue-400'}`}
-                                                            title={slot.lockDrawUntilTargetMet && slot.progress < 100 ? "Target Not Met" : "Execute Draw"}
-                                                        >
-                                                            <Play className="w-4 h-4" />
-                                                        </button>
-                                                        <button onClick={() => startEdit(slot)} className="p-2 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/50 text-blue-200 rounded transition" title="Edit Prizes"><Zap className="w-4 h-4" /></button>
-                                                        <button onClick={() => deleteSlot(slot.slotId)} className="p-2 hover:bg-red-500/20 text-red-400 rounded"><Trash className="w-4 h-4" /></button>
-                                                    </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => forceDraw(slot.slotId)}
+                                                        className="p-2 rounded transition hover:bg-blue-500/20 text-blue-400"
+                                                        title="Execute Draw Immediately"
+                                                    >
+                                                        <Play className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => startEdit(slot)} className="p-2 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/50 text-blue-200 rounded transition" title="Edit Prizes"><Zap className="w-4 h-4" /></button>
+                                                    <button onClick={() => deleteSlot(slot.slotId)} className="p-2 hover:bg-red-500/20 text-red-400 rounded"><Trash className="w-4 h-4" /></button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -383,7 +334,7 @@ export default function AdminLotteryManager() {
 
                     {/* MOBILE CARD VIEW (Visible only on < lg) */}
                     <div className="lg:hidden space-y-4">
-                        {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).map(slot => (
+                        {activeSlots.filter(s => s.drawType === 'TIME_BASED').map(slot => (
                             <div key={slot.slotId} className="bg-[#111] p-4 rounded-xl border border-white/10 space-y-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
@@ -398,22 +349,10 @@ export default function AdminLotteryManager() {
                                     <span className="text-[10px] bg-white/5 px-2 py-1 rounded border border-white/10">{slot.status}</span>
                                 </div>
 
-                                {slot.drawType === 'TIME_BASED' ? (
-                                    <div className="space-y-1">
-                                        <div className="text-xs text-slate-500">Ends At</div>
-                                        <div className="text-blue-400 font-mono">{new Date(slot.endTime).toLocaleString()}</div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between text-xs text-slate-500">
-                                            <span>Progress</span>
-                                            <span className="text-white">{Math.round(slot.progress)}%</span>
-                                        </div>
-                                        <div className="w-full bg-black h-2 rounded-full overflow-hidden">
-                                            <div className="h-full bg-emerald-500" style={{ width: `${slot.progress}%` }}></div>
-                                        </div>
-                                    </div>
-                                )}
+                                <div className="space-y-1">
+                                    <div className="text-xs text-slate-500">Draws At</div>
+                                    <div className="text-blue-400 font-mono">{new Date(slot.endTime).toLocaleString()}</div>
+                                </div>
 
                                 <div className="grid grid-cols-2 gap-3 pt-2">
                                     <button onClick={() => forceDraw(slot.slotId)} className="bg-blue-600/20 text-blue-400 py-3 rounded-lg font-bold text-sm flex justify-center gap-2"><Play className="w-4 h-4" /> Force Draw</button>
@@ -444,7 +383,7 @@ export default function AdminLotteryManager() {
                                     }}
                                 >
                                     <option value="">-- Select Target Lottery Slot --</option>
-                                    {activeSlots.filter(s => s.drawType === activeTab || (activeTab === 'SALES_BASED' && !s.drawType)).map(s => (
+                                    {activeSlots.filter(s => s.drawType === 'TIME_BASED').map(s => (
                                         <option key={s.slotId} value={s.slotId}>
                                             {s.tier} (#{s.slotId.substr(-4)}) - {s.status}
                                         </option>
@@ -458,36 +397,18 @@ export default function AdminLotteryManager() {
 
                         <div className="space-y-4">
                             {/* [HYBRID] Draw Settings */}
-                            <div className="bg-white/5 p-4 rounded-lg border border-white/5 space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="text-xs text-slate-500 uppercase">Draw Mechanism</label>
-                                    <div className="w-full bg-black/50 border border-white/10 rounded p-3 text-xs text-white opacity-80 mt-1 cursor-not-allowed">
-                                        {activeTab === 'SALES_BASED' ? '✅ Target Sales Based (Closes when 100% Volume Met)' : '✅ Strict Time Based (Closes on Timer Expiry)'}
-                                    </div>
+                                    <label className="text-xs text-slate-500 uppercase font-bold text-blue-400 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" /> Draw Date & Time
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={endTime}
+                                        onChange={(e) => setEndTime(e.target.value)}
+                                        className="w-full bg-black/50 border border-blue-500/50 focus:border-blue-400 rounded-lg p-3 text-sm text-blue-300 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.1)]"
+                                    />
                                 </div>
-
-                                {drawType === 'TIME_BASED' && (
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-xs text-slate-500 uppercase">Start Time</label>
-                                            <input
-                                                type="datetime-local"
-                                                value={startTime}
-                                                onChange={(e) => setStartTime(e.target.value)}
-                                                className="w-full bg-black/50 border border-blue-500/30 focus:border-blue-500 rounded p-2 text-xs text-blue-400 mt-1"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-slate-500 uppercase">End Time</label>
-                                            <input
-                                                type="datetime-local"
-                                                value={endTime}
-                                                onChange={(e) => setEndTime(e.target.value)}
-                                                className="w-full bg-black/50 border border-red-500/30 focus:border-red-500 rounded p-2 text-xs text-red-400 mt-1"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
 
                                 <div>
                                     <label className="text-xs text-slate-500 uppercase">Ticket Price (TK)</label>
@@ -499,22 +420,8 @@ export default function AdminLotteryManager() {
                                         min="1"
                                     />
                                 </div>
-
-                                <div>
-                                    <label className="text-xs text-slate-500 uppercase flex justify-between items-center">
-                                        <span>Secret Target Winner ID</span>
-                                        <span className="text-[9px] bg-red-500/20 text-red-500 px-1 rounded">OPTIONAL</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. 64a8v9... (Mongo User ID)"
-                                        value={targetWinnerId}
-                                        onChange={(e) => setTargetWinnerId(e.target.value)}
-                                        className="w-full bg-black/50 border border-red-500/30 focus:border-red-500 rounded p-2 text-xs text-red-400 mt-1 font-mono transition-colors"
-                                    />
-                                    {targetWinnerId && <p className="text-[10px] text-red-500 mt-1">⚠️ IMPORTANT: This user will be forced to win 1st Prize if they buy a ticket.</p>}
-                                </div>
                             </div>
+
 
                             {/* Manual Editor */}
                             <div className="space-y-2">
@@ -529,34 +436,24 @@ export default function AdminLotteryManager() {
                                 <button onClick={addPrizeTier} className="w-full py-2 border border-dashed border-white/20 text-slate-500 text-xs rounded hover:bg-white/5">+ Add Prize Tier</button>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-white/5 p-3 rounded-lg cursor-pointer" onClick={() => setLockDraw(!lockDraw)}>
-                                <div className={`w-10 h-6 rounded-full relative transition ${lockDraw ? 'bg-emerald-500' : 'bg-slate-700'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${lockDraw ? 'left-5' : 'left-1'}`}></div>
-                                </div>
-                                <div>
-                                    <div className="text-xs font-bold text-white">Loss Protection</div>
-                                    <div className="text-[10px] text-slate-400">Lock Draw until Target Met</div>
-                                </div>
-                            </div>
+                        </div>
 
-                            <div className="pt-4 border-t border-white/10">
-                                <div className="flex justify-between items-center bg-black/40 p-3 rounded-lg border border-white/5 mb-4">
-                                    <span className="text-slate-400 text-xs">Total Prize Amount:</span>
-                                    <span className="text-yellow-500 font-bold font-mono">{totalPrizeBudget.toLocaleString()} TK</span>
-                                </div>
-                                <button
-                                    onClick={createLottery}
-                                    disabled={loading}
-                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
-                                >
-                                    {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-                                    {editingSlotId ? 'Update Active Slot' : 'Launch Lottery'}
-                                </button>
+                        <div className="pt-4 border-t border-white/10">
+                            <div className="flex justify-between items-center bg-black/40 p-3 rounded-lg border border-white/5 mb-4">
+                                <span className="text-slate-400 text-xs">Total Prize Amount:</span>
+                                <span className="text-yellow-500 font-bold font-mono">{totalPrizeBudget.toLocaleString()} TK</span>
                             </div>
+                            <button
+                                onClick={createLottery}
+                                disabled={loading}
+                                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-xl transition flex items-center justify-center gap-2"
+                            >
+                                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
+                                {editingSlotId ? 'Update Active Slot' : 'Launch Lottery'}
+                            </button>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     );
