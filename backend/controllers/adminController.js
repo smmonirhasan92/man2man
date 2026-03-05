@@ -494,3 +494,59 @@ exports.getEconomyBalanceSheet = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch economy stats" });
     }
 };
+
+// [ADMIN] Get Full User Profile Details
+exports.getUserDetails = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+            .select('+ipAddress +lastLogin +deviceId +lastIp +status +loyaltyScore +promotionalStatus')
+            .populate('referredBy', 'fullName phone')
+            .lean();
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Calculate total deposits and withdrawals for this user
+        const deposits = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'deposit', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+
+        const withdrawals = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'withdraw', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+
+        user.financials = {
+            totalDeposited: deposits[0]?.total || 0,
+            totalWithdrawn: withdrawals[0]?.total || 0
+        };
+
+        res.json(user);
+    } catch (err) {
+        console.error("Get User Details Error:", err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+// [ADMIN] Change User Access Status (Freeze/Block)
+exports.updateUserStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['active', 'restricted', 'blocked'].includes(status)) {
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        res.json({ message: `User status updated to ${status}`, user });
+    } catch (err) {
+        console.error("Update User Status Error:", err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};

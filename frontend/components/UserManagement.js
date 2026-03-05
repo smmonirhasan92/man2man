@@ -5,6 +5,7 @@ import { KeyRound, LineChart, Search, Wallet, Shield, RefreshCw, MapPin, Monitor
 import USCIcon from './ui/USCIcon';
 import GameStatsModal from './admin/GameStatsModal';
 import RoleDropdown from './admin/RoleDropdown';
+import UserProfileModal from './admin/UserProfileModal';
 import toast from 'react-hot-toast';
 
 export default function UserManagement() {
@@ -24,6 +25,7 @@ export default function UserManagement() {
     const [newPassword, setNewPassword] = useState('');
 
     const [statsModal, setStatsModal] = useState({ show: false, userId: null, username: '' });
+    const [profileModal, setProfileModal] = useState({ show: false, userId: null });
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -241,6 +243,13 @@ export default function UserManagement() {
                                             />
                                         </div>
                                         <button
+                                            onClick={() => setProfileModal({ show: true, userId: user.id })}
+                                            className="px-3 py-2 bg-indigo-500/20 text-indigo-400 hover:text-white hover:bg-indigo-500 rounded-lg text-xs font-bold uppercase transition shadow-lg shadow-indigo-500/10"
+                                            title="View Full Profile & Status"
+                                        >
+                                            Profile
+                                        </button>
+                                        <button
                                             onClick={() => setResetModal({ show: true, userId: user.id, username: user.fullName })}
                                             className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition"
                                             title="Reset Password"
@@ -361,6 +370,14 @@ export default function UserManagement() {
                 onClose={() => setStatsModal({ show: false, userId: null, username: '' })}
                 userId={statsModal.userId}
                 username={statsModal.username}
+            />
+
+            {/* User Profile Modal */}
+            <UserProfileModal
+                isOpen={profileModal.show}
+                onClose={() => setProfileModal({ show: false, userId: null })}
+                userId={profileModal.userId}
+                onStatusUpdate={fetchUsers}
             />
         </div>
     );

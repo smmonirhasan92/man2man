@@ -63,6 +63,7 @@ exports.getGlobalSettings = async (req, res) => {
             'cash_out_commission_percent',
             'usd_to_bdt_rate', 'usd_to_inr_rate',
             'p2p_market_min', 'p2p_market_max',
+            'referral_tiers', // [NEW] Dynamic JSON Array for Promotional Tiers
             // [GAME LOGIC SETTINGS]
             'house_edge', 'min_bet', 'max_bet', 'streak_threshold', 'streak_multiplier',
             'global_profit_margin', 'game_status'
@@ -81,6 +82,14 @@ exports.getGlobalSettings = async (req, res) => {
         if (!settings.usd_to_bdt_rate) settings.usd_to_bdt_rate = 126;
         if (!settings.usd_to_inr_rate) settings.usd_to_inr_rate = 89;
 
+        // Default Referral Tiers if none exist
+        if (!settings.referral_tiers) {
+            settings.referral_tiers = JSON.stringify([
+                { level: 1, name: "Silver", targetReferrals: 50, bonusAmount: 5 },
+                { level: 2, name: "Gold", targetReferrals: 100, bonusAmount: 15 }
+            ]);
+        }
+
         res.json(settings);
     } catch (err) {
         console.error(err);
@@ -97,6 +106,7 @@ exports.updateGlobalSettings = async (req, res) => {
             'cash_out_commission_percent',
             'usd_to_bdt_rate', 'usd_to_inr_rate',
             'p2p_market_min', 'p2p_market_max',
+            'referral_tiers', // [NEW] Dynamic JSON Array for Promotional Tiers
             // [GAME LOGIC SETTINGS]
             'house_edge', 'min_bet', 'max_bet', 'streak_threshold', 'streak_multiplier',
             'global_profit_margin', 'game_status'
@@ -104,7 +114,11 @@ exports.updateGlobalSettings = async (req, res) => {
 
         for (const key of fields) {
             if (req.body[key] !== undefined) {
-                await setVal(key, req.body[key]);
+                let valueToSave = req.body[key];
+                if (key === 'referral_tiers' && typeof valueToSave === 'object') {
+                    valueToSave = JSON.stringify(valueToSave);
+                }
+                await setVal(key, valueToSave);
             }
         }
         res.json({ message: 'Global Settings Updated' });

@@ -85,8 +85,8 @@ router.put('/user/reset-password', authMiddleware, adminCheck, userController.ad
 // router.post('/deposit-settings', authMiddleware, adminCheck, gameController.updateDepositSettings);
 
 // User Management (Admin)
-// router.get('/user/:id', authMiddleware, adminCheck, adminController.getUserDetails);
-// router.patch('/user/:id/status', authMiddleware, adminCheck, adminController.updateUserStatus);
+router.get('/user/:id', authMiddleware, adminCheck, adminController.getUserDetails);
+router.patch('/user/:id/status', authMiddleware, adminCheck, adminController.updateUserStatus);
 // router.patch('/user/:id/whitelist', authMiddleware, adminCheck, adminController.toggleUserWhitelist);
 router.post('/user/:id/balance', authMiddleware, adminCheck, adminController.updateUserBalance);
 // router.get('/user/:id/plans', authMiddleware, adminCheck, adminController.getUserPlans);

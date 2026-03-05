@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import Link from 'next/link';
-import { Save, Settings, DollarSign, Activity, ArrowLeft, TrendingUp } from 'lucide-react';
+import { Save, Settings, DollarSign, Activity, ArrowLeft, TrendingUp, Plus, Trash2 } from 'lucide-react';
 
 export default function GlobalSettingsPage() {
     const [settings, setSettings] = useState({
@@ -11,15 +11,12 @@ export default function GlobalSettingsPage() {
         min_withdraw_amount: '',
         referral_bonus_amount: '',
         referral_reward_currency: 'income',
-        silver_requirement: '',
-        gold_requirement: '',
-        platinum_requirement: '',
-        diamond_requirement: '',
         cash_out_commission_percent: '',
         p2p_market_min: '',
         p2p_market_max: '',
         usd_to_bdt_rate: '',
-        usd_to_inr_rate: ''
+        usd_to_inr_rate: '',
+        referral_tiers: []
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -32,7 +29,15 @@ export default function GlobalSettingsPage() {
     const fetchSettings = async () => {
         try {
             const res = await api.get('/admin/settings/global');
-            setSettings(res.data);
+            const data = res.data;
+            if (typeof data.referral_tiers === 'string') {
+                try {
+                    data.referral_tiers = JSON.parse(data.referral_tiers);
+                } catch (e) {
+                    data.referral_tiers = [];
+                }
+            }
+            setSettings(data);
             setLoading(false);
         } catch (err) {
             console.error(err);
@@ -53,6 +58,26 @@ export default function GlobalSettingsPage() {
             setSaving(false);
             setTimeout(() => setMessage(''), 3000);
         }
+    };
+
+    const handleAddTier = () => {
+        setSettings(prev => ({
+            ...prev,
+            referral_tiers: [...(prev.referral_tiers || []), { level: (prev.referral_tiers?.length || 0) + 1, name: '', targetReferrals: 0, bonusAmount: 0 }]
+        }));
+    };
+
+    const handleUpdateTier = (index, field, value) => {
+        const newTiers = [...settings.referral_tiers];
+        newTiers[index][field] = value;
+        setSettings({ ...settings, referral_tiers: newTiers });
+    };
+
+    const handleRemoveTier = (index) => {
+        const newTiers = settings.referral_tiers.filter((_, i) => i !== index);
+        // re-index levels to maintain order
+        newTiers.forEach((t, i) => t.level = i + 1);
+        setSettings({ ...settings, referral_tiers: newTiers });
     };
 
     return (
@@ -200,54 +225,71 @@ export default function GlobalSettingsPage() {
 
                     {/* Tier & Auto-Promotion Section */}
                     <div className="mb-8">
-                        <h2 className="text-lg font-bold text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
-                            <Activity className="w-5 h-5" /> Auto-Promotion Rules
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Silver Tier Target (Invites)</label>
-                                <input
-                                    type="number"
-                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={settings.silver_requirement}
-                                    onChange={e => setSettings({ ...settings, silver_requirement: e.target.value })}
-                                    required
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Invites needed to become Silver.</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Gold Tier Target (Invites)</label>
-                                <input
-                                    type="number"
-                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={settings.gold_requirement}
-                                    onChange={e => setSettings({ ...settings, gold_requirement: e.target.value })}
-                                    required
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Invites needed to become Gold.</p>
-                            </div>
+                        <div className="flex items-center justify-between border-b pb-2 mb-4">
+                            <h2 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+                                <Activity className="w-5 h-5" /> Referral Promotional Tiers
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={handleAddTier}
+                                className="flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-200 transition shadow-sm"
+                            >
+                                <Plus className="w-4 h-4" /> Add Tier
+                            </button>
+                        </div>
 
-                            {/* New Tiers: Platinum & Diamond */}
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Platinum Tier Target (Invites)</label>
-                                <input
-                                    type="number"
-                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={settings.platinum_requirement}
-                                    onChange={e => setSettings({ ...settings, platinum_requirement: e.target.value })}
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Invites needed to become Platinum.</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Diamond Tier Target (Invites)</label>
-                                <input
-                                    type="number"
-                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={settings.diamond_requirement}
-                                    onChange={e => setSettings({ ...settings, diamond_requirement: e.target.value })}
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Invites needed to become Diamond.</p>
-                            </div>
+                        <div className="space-y-4">
+                            {(settings.referral_tiers || []).map((tier, index) => (
+                                <div key={index} className="flex flex-col md:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 items-start md:items-center relative group shadow-sm transition-all hover:border-indigo-300">
+                                    <div className="w-full md:w-1/3">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Tier Name</label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-2.5 bg-white rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800"
+                                            placeholder="e.g. Gold"
+                                            value={tier.name}
+                                            onChange={e => handleUpdateTier(index, 'name', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="w-full md:w-1/3">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Target Referrals</label>
+                                        <input
+                                            type="number"
+                                            className="w-full p-2.5 bg-white rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-slate-800"
+                                            value={tier.targetReferrals}
+                                            onChange={e => handleUpdateTier(index, 'targetReferrals', parseInt(e.target.value) || 0)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="w-full md:w-1/3">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Bonus Reward (BDT)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="w-full p-2.5 bg-white rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-emerald-600 font-black"
+                                            value={tier.bonusAmount}
+                                            onChange={e => handleUpdateTier(index, 'bonusAmount', parseFloat(e.target.value) || 0)}
+                                            required
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveTier(index)}
+                                        className="absolute -top-3 -right-3 md:top-auto md:right-0 md:relative p-2 bg-white text-red-500 border border-red-200 rounded-full hover:bg-red-500 hover:text-white hover:border-red-500 transition shadow-sm md:ml-2"
+                                        title="Remove Tier"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                            {(!settings.referral_tiers || settings.referral_tiers.length === 0) && (
+                                <div className="text-center p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl">
+                                    <Activity className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                    <p className="text-slate-500 font-medium">No promotional tiers created.</p>
+                                    <p className="text-sm text-slate-400">Click "Add Tier" to start rewarding your top inviters.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

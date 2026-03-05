@@ -1,0 +1,8 @@
+App: man2man-backend
+Cwd: /var/www/man2man/backend
+Exec: /var/www/man2man/backend/server.js
+--
+App: man2man-frontend
+Cwd: /var/www/man2man/frontend
+Exec: /var/www/man2man/frontend/node_modules/next/dist/bin/next
+--

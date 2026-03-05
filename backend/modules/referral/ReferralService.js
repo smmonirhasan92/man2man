@@ -25,6 +25,79 @@ class ReferralService {
             const currentUser = await User.findById(userId).session(session);
             let uplineCode = currentUser.referredBy;
 
+            // --- [NEW] ONE-TIME FIXED REFERRAL BONUS & PROMOTIONAL TIER UPGRADES ---
+            if (uplineCode && !currentUser.isReferralBonusPaid) {
+                const directUpline = await User.findOne({ referralCode: uplineCode }).session(session);
+                if (directUpline) {
+                    // 1. Activate referral count (User officially bought a plan)
+                    directUpline.referralCount = (directUpline.referralCount || 0) + 1;
+
+                    // 2. Fetch Global Settings for Bonuses & Tiers
+                    const sysSettings = await SystemSetting.find({
+                        key: { $in: ['referral_bonus_amount', 'referral_tiers', 'referral_reward_currency'] }
+                    }).session(session);
+
+                    const getSet = (key, def) => {
+                        const s = sysSettings.find(s => s.key === key);
+                        return s ? s.value : def;
+                    };
+
+                    const bonusAmount = parseFloat(getSet('referral_bonus_amount', '0'));
+                    const rewardCurrency = getSet('referral_reward_currency', 'income') || 'income';
+
+                    // 3. Payout Fixed Per-Invite Bonus
+                    if (bonusAmount > 0) {
+                        directUpline.wallet[rewardCurrency] = (directUpline.wallet[rewardCurrency] || 0) + bonusAmount;
+                        if (rewardCurrency === 'income') directUpline.referralIncome = (directUpline.referralIncome || 0) + bonusAmount;
+
+                        await Transaction.create([{
+                            userId: directUpline._id,
+                            type: 'referral_commission',
+                            amount: bonusAmount,
+                            status: 'completed',
+                            description: `Fixed Referral Bonus from ${currentUser.username}`,
+                            metadata: { sourceUser: userId }
+                        }], { session });
+                    }
+
+                    // 4. Check & Award Promotional Tier Upgrades
+                    try {
+                        let tiers = JSON.parse(getSet('referral_tiers', '[]'));
+                        if (Array.isArray(tiers) && tiers.length > 0) {
+                            for (const tier of tiers) {
+                                // If they EXACTLY hit the target, award the tier bonus once
+                                if (directUpline.referralCount === tier.targetReferrals && tier.bonusAmount > 0) {
+                                    // Promotional Tier bonuses go to the Main Wallet as per requirement
+                                    directUpline.wallet.main = (directUpline.wallet.main || 0) + tier.bonusAmount;
+
+                                    // Mark as Promoted for Admin visibility
+                                    if (directUpline.taskData) directUpline.taskData.promotionalStatus = 'promoted';
+
+                                    await Transaction.create([{
+                                        userId: directUpline._id,
+                                        type: 'referral_commission',
+                                        amount: tier.bonusAmount,
+                                        status: 'completed',
+                                        description: `🏆 ${tier.name} Tier Promotion Bonus!`,
+                                        metadata: { tierName: tier.name, target: tier.targetReferrals }
+                                    }], { session });
+
+                                    console.log(`🚀 Tier Upgrade: ${directUpline.username} achieved ${tier.name}! Awarded ৳${tier.bonusAmount}`);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Invalid referral_tiers JSON in DB', e);
+                    }
+
+                    await directUpline.save({ session });
+                    currentUser.isReferralBonusPaid = true;
+                    await currentUser.save({ session });
+                    console.log(`[Referral] User ${currentUser.username} officially counted. Direct Upline active referrals: ${directUpline.referralCount}`);
+                }
+            }
+            // -------------------------------------------------------------------------
+
             const rates = ReferralService.PLAN_COMMISSION_RATES;
             let totalDistributed = 0;
 
