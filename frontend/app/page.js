@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../services/api';
 import Link from 'next/link';
-import { Smartphone, Lock, ChevronDown } from 'lucide-react';
+import { Smartphone, Lock, ChevronDown, Eye, EyeOff, UserPlus } from 'lucide-react';
 import AuthInput from '../components/ui/AuthInput';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
@@ -24,9 +24,18 @@ export default function LoginPage() {
     const [countryCode, setCountryCode] = useState('+880');
     const [showCountryList, setShowCountryList] = useState(false);
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    // Load saved phone number on mount
+    useEffect(() => {
+        const savedPhone = localStorage.getItem('remembered_phone');
+        if (savedPhone) {
+            setPhone(savedPhone);
+        }
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -39,6 +48,8 @@ export default function LoginPage() {
             const res = await api.post('/auth/login', { phone: formattedPhone, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
+            // Save phone number for automatic pre-fill next time
+            localStorage.setItem('remembered_phone', phone);
 
             const adminRoles = ['admin', 'super_admin', 'employee_admin'];
 
@@ -162,15 +173,26 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <AuthInput
-                            icon={Lock}
-                            label="Password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        {/* Password Field with Eye Toggle within the form */}
+                        <div className="relative">
+                            <AuthInput
+                                icon={Lock}
+                                label="Password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-[38px] text-slate-400 hover:text-white transition cursor-pointer"
+                                tabIndex="-1"
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
+                        </div>
 
                         <div className="pt-4">
                             <Button
@@ -194,10 +216,12 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                <div className="mt-10 text-center text-sm font-medium">
-                    <span className="text-slate-500">Don't have an account?</span>{' '}
-                    <Link href="/register" className="text-[#EF4444] font-bold hover:text-red-700 transition inline-flex items-center gap-1 group">
-                        Create Account <span className="group-hover:translate-x-1 transition-transform">→</span>
+                <div className="mt-8 text-center flex flex-col items-center gap-4 animate-in slide-in-from-bottom-10 duration-700 delay-300">
+                    <p className="text-slate-400 font-medium">New to USA Afiliat?</p>
+                    <Link href="/register" className="group flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black text-lg px-8 py-4 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all hover:scale-105 active:scale-95">
+                        <UserPlus className="w-6 h-6" />
+                        <span>CREATE NEW ACCOUNT</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </Link>
                 </div>
 
