@@ -15,6 +15,7 @@ export default function GlobalMarketplace() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(null);
+    const [settings, setSettings] = useState({ usd_to_bdt_rate: 126, usd_to_inr_rate: 89 });
 
     // Animation States
     const [provisioning, setProvisioning] = useState(false);
@@ -33,10 +34,14 @@ export default function GlobalMarketplace() {
         try {
             const [plansRes, userData] = await Promise.all([
                 api.get('/plan'),
-                authService.getCurrentUser()
+                authService.getCurrentUser(),
+                api.get('/admin/settings/public').catch(() => ({ data: { usd_to_bdt_rate: 126, usd_to_inr_rate: 89 } }))
             ]);
             setPlans(plansRes.data.plans || plansRes.data);
             setUser(userData);
+            if (settingsRes && settingsRes.data) {
+                setSettings(prev => ({ ...prev, ...settingsRes.data }));
+            }
         } catch (err) {
             console.error(err);
             toast.error("Failed to load marketplace.");
@@ -55,12 +60,22 @@ export default function GlobalMarketplace() {
         setTargetCountry(country);
         setProvisioningType(isNumber ? 'number' : 'server');
 
-        // 2. Pricing & Validation
-        const price = plan.price || 500.00; // Use plan price
+        // Pricing & Validation based on Country
+        const baseBdtPrice = plan.price || 500.00;
+        const usdPrice = plan.price_usd || (baseBdtPrice / 120);
+
+        const isIndianUser = user?.country?.toLowerCase().includes('india') || user?.country?.includes('+91') || user?.country?.toLowerCase() === 'in';
+
+        const localRate = isIndianUser ? (settings.usd_to_inr_rate || 89) : (settings.usd_to_bdt_rate || 126);
+        const localCurrencySymbol = isIndianUser ? '₹' : '৳';
+
+        // Final effective local price
+        const price = Math.round(usdPrice * localRate);
+
         const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
 
         if (totalBalance < price) {
-            toast.error(`Insufficient Funds. Required: $${(price / 120).toFixed(2)} / ৳${price}`);
+            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${localCurrencySymbol}${price}`);
             router.push('/p2p');
             return;
         }
@@ -189,10 +204,15 @@ export default function GlobalMarketplace() {
                             const accentColor = isIreland ? 'emerald' : isUK ? 'purple' : 'blue';
                             const borderColor = isIreland ? 'border-emerald-500/30' : isUK ? 'border-purple-500/30' : 'border-blue-500/30';
 
-                            // Pricing Display
-                            // USD First Logic
+                            // USD First Logic & Local Currency Logic
                             const monthlyCostBDT = plan.unlock_price || plan.price || 500;
-                            const usdPrice = plan.price_usd || (monthlyCostBDT / 120).toFixed(2);
+                            const usdPriceRaw = plan.price_usd || (monthlyCostBDT / 120);
+                            const usdPrice = usdPriceRaw.toFixed(2);
+
+                            const isIndianUser = user?.country?.toLowerCase().includes('india') || user?.country?.includes('+91') || user?.country?.toLowerCase() === 'in';
+                            const localRate = isIndianUser ? (settings.usd_to_inr_rate || 89) : (settings.usd_to_bdt_rate || 126);
+                            const localCurrencySymbol = isIndianUser ? '₹' : '৳';
+                            const localPrice = Math.round(usdPriceRaw * localRate);
 
                             // [35-DAY CYCLE LOGIC]
                             const cycleDays = plan.validity_days || 35;
@@ -241,13 +261,16 @@ export default function GlobalMarketplace() {
                                         {/* Name */}
                                         <h3 className="text-base font-bold text-white mb-1 uppercase tracking-wide">{plan.name}</h3>
 
-                                        {/* USD Main Price */}
+                                        {/* USD Main Price & Local Equivalent */}
                                         <div className="flex flex-col items-center mb-4">
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-3xl font-black text-white">${usdPrice}</span>
                                                 <span className="text-sm text-slate-500 font-medium">USD</span>
                                             </div>
-                                            <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full mt-1">{cycleDays} Day Cycle</span>
+                                            <div className="text-xs text-emerald-400 font-bold mt-1 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                                                {localCurrencySymbol} {localPrice.toLocaleString()} {isIndianUser ? 'INR' : 'BDT'}
+                                            </div>
+                                            <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full mt-2">{cycleDays} Day Cycle</span>
                                         </div>
 
                                         {/* KEY METRICS GRID (USD) */}

@@ -58,8 +58,7 @@ router.post('/settings/global', authMiddleware, adminCheck, settingsController.u
 // System Settings (Maintenance, etc)
 // router.get('/settings/system', authMiddleware, adminCheck, settingsController.getSystemSettings);
 // router.post('/settings/system', authMiddleware, adminCheck, settingsController.updateSystemSettings);
-router.get('/settings/public', (req, res) => res.json({ message: "Settings Public Placeholder" }));
-// adminController.getPublicSettings
+router.get('/settings/public', settingsController.getPublicSettings);
 
 // System Health & Logs
 const adminModuleController = require('../modules/admin/AdminController');

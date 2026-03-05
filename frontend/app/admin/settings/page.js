@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import Link from 'next/link';
-import { Save, Settings, DollarSign, Activity, ArrowLeft } from 'lucide-react';
+import { Save, Settings, DollarSign, Activity, ArrowLeft, TrendingUp } from 'lucide-react';
 
 export default function GlobalSettingsPage() {
     const [settings, setSettings] = useState({
@@ -15,7 +15,11 @@ export default function GlobalSettingsPage() {
         gold_requirement: '',
         platinum_requirement: '',
         diamond_requirement: '',
-        cash_out_commission_percent: ''
+        cash_out_commission_percent: '',
+        p2p_market_min: '',
+        p2p_market_max: '',
+        usd_to_bdt_rate: '',
+        usd_to_inr_rate: ''
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -128,6 +132,68 @@ export default function GlobalSettingsPage() {
                                     required
                                 />
                                 <p className="text-xs text-slate-400 mt-1">Extra profit % given to Agent when they process a Cash Out.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* P2P Market Controls Section */}
+                    <div className="mb-8">
+                        <h2 className="text-lg font-bold text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5" /> P2P Market Controls
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Minimum Price (BDT)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={settings.p2p_market_min}
+                                    onChange={e => setSettings({ ...settings, p2p_market_min: e.target.value })}
+                                />
+                                <p className="text-xs text-slate-400 mt-1">The lowest simulated value for the P2P random chart.</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Maximum Price (BDT)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={settings.p2p_market_max}
+                                    onChange={e => setSettings({ ...settings, p2p_market_max: e.target.value })}
+                                />
+                                <p className="text-xs text-slate-400 mt-1">The highest simulated value for the P2P random chart.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Currency & Exchange Rates Section */}
+                    <div className="mb-8">
+                        <h2 className="text-lg font-bold text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
+                            <DollarSign className="w-5 h-5" /> Currency & Exchange Rates
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">USD to BDT Rate (৳)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={settings.usd_to_bdt_rate}
+                                    onChange={e => setSettings({ ...settings, usd_to_bdt_rate: e.target.value })}
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Exchange rate applied for Bangladeshi users.</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">USD to INR Rate (₹)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={settings.usd_to_inr_rate}
+                                    onChange={e => setSettings({ ...settings, usd_to_inr_rate: e.target.value })}
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Exchange rate applied for Indian users.</p>
                             </div>
                         </div>
                     </div>

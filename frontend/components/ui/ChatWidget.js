@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -52,7 +53,13 @@ export default function ChatWidget() {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-50">
+        <motion.div
+            drag
+            dragConstraints={{ top: -600, left: -300, right: 0, bottom: 0 }}
+            dragElastic={0.1}
+            whileDrag={{ scale: 1.02 }}
+            className="fixed bottom-20 right-4 z-[9999] touch-none"
+        >
             {/* Floating Action Button */}
             {!isOpen && (
                 <button
@@ -129,11 +136,13 @@ export default function ChatWidget() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') handleSend(e); }}
+                            onPointerDownCapture={e => e.stopPropagation()} // Prevent drag while typing
                             placeholder="Type your message..."
                             className="flex-1 bg-[#1e293b] border border-slate-700/50 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
                         />
                         <button
                             onClick={handleSend}
+                            onPointerDownCapture={e => e.stopPropagation()} // Prevent drag when clicking send
                             disabled={!input.trim() || loading}
                             className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                         >
@@ -142,6 +151,6 @@ export default function ChatWidget() {
                     </div>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 }

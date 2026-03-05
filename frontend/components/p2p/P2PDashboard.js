@@ -12,6 +12,7 @@ import RatingModal from './RatingModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import toast from 'react-hot-toast';
 import { P2PSkeleton } from '../ui/SkeletonLoader';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 
 
 export default function P2PDashboard({ initialMode, onClose }) {
@@ -302,6 +303,43 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     </div>
                 </div>
             </div>
+
+            {/* Price Chart */}
+            {(mode === 'buy' || mode === 'sell' || mode === 'history') && marketStats?.chartData && marketStats.chartData.length > 0 && (
+                <div className="bg-[#181a20] border-b border-[#2b3139] px-2 py-4 h-[140px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={marketStats.chartData}>
+                            <defs>
+                                <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#0ecb81" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#0ecb81" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <YAxis
+                                domain={[marketStats.minBoundary || 'dataMin', marketStats.maxBoundary || 'dataMax']}
+                                hide
+                            />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', fontSize: '10px', color: '#848e9c' }}
+                                itemStyle={{ color: '#0ecb81', fontWeight: 'bold' }}
+                                labelStyle={{ color: '#eaeaec', marginBottom: '4px' }}
+                                formatter={(value) => [`${value} ৳`, 'Price']}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="price"
+                                stroke="#0ecb81"
+                                strokeWidth={2}
+                                fillOpacity={1}
+                                fill="url(#colorPrice)"
+                                isAnimationActive={true}
+                                animationDuration={1500}
+                                animationEasing="ease-in-out"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
 
             {/* Sleek Tabs */}
             <div className="flex bg-[#181a20] px-3 overflow-x-auto scrollbar-none border-b border-[#2b3139]">

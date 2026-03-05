@@ -7,6 +7,8 @@ const Transaction = require('../wallet/TransactionModel');
 const TransactionHelper = require('../common/TransactionHelper');
 const SocketService = require('../common/SocketService');
 const NotificationService = require('../notification/NotificationService');
+const systemEvents = require('../../utils/events');
+const SystemSetting = require('../settings/SystemSettingModel');
 const bcrypt = require('bcryptjs');
 
 class P2PService {
@@ -104,7 +106,7 @@ class P2PService {
                 userId: sellerId,
                 amount: -requestedAmount,
                 type: 'admin_debit',
-                description: `P2P Sell Escrow Locked (Trade #${trade[0]._id})`,
+                description: `P2P Sell Escrow Locked(Trade #${trade[0]._id})`,
                 source: 'transaction',
                 status: 'completed',
                 currency: 'NXS'
@@ -124,14 +126,14 @@ class P2PService {
             return trade[0];
         }).then(async (trade) => {
             // Notify System & Users out of session
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_start', trade);
+            SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_trade_start', trade);
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
             await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id });
 
             // Because Seller's balance changed, the UserModel pre/post save hook WILL NOT fire from findByIdAndUpdate.
             // So we manually broadcast the new balance to the global market or just personal room.
             const updatedSeller = await User.findById(trade.sellerId);
-            SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
+            SocketService.broadcast(`user_${trade.sellerId} `, `balance_update`, updatedSeller.wallet);
 
             return trade;
         });
@@ -243,7 +245,7 @@ class P2PService {
                 userId,
                 amount: order.amount,
                 type: 'admin_credit',
-                description: `P2P Sell Order Cancelled (Refund)`,
+                description: `P2P Sell Order Cancelled(Refund)`,
                 source: 'transaction', // [HISTORY FIX]
                 status: 'completed'
             }], { session });
@@ -281,7 +283,7 @@ class P2PService {
                 userId: trade.sellerId,
                 amount: trade.amount,
                 type: 'admin_credit',
-                description: `P2P Escrow Released (Trade #${trade._id} Cancelled)`,
+                description: `P2P Escrow Released(Trade #${trade._id} Cancelled)`,
                 source: 'transaction',
                 status: 'completed',
                 currency: 'NXS'
@@ -306,13 +308,13 @@ class P2PService {
             return trade;
         }).then(async (trade) => {
             // Notify System & Users out of session
-            SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade); // 'completed' acts as terminal state to update UI
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
+            SocketService.broadcast(`user_${trade.buyerId} `, 'p2p_completed', trade); // 'completed' acts as terminal state to update UI
+            SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_completed', trade);
 
             const updatedSeller = await User.findById(trade.sellerId);
-            SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
+            SocketService.broadcast(`user_${trade.sellerId} `, `balance_update`, updatedSeller.wallet);
 
-            await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `Trade was CANCELLED. Escrow returned to Seller.` });
+            await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `Trade was CANCELLED.Escrow returned to Seller.` });
 
             return trade;
         });
@@ -343,10 +345,10 @@ class P2PService {
         await trade.save();
 
         // Notify Seller
-        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_mark_paid', trade);
-        await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'warning', { tradeId: trade._id });
+        SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_mark_paid', trade);
+        await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID.Verify TxID: ${txId || 'N/A'} `, 'warning', { tradeId: trade._id });
 
-        await P2PMessage.create({ tradeId: trade._id, senderId: trade.buyerId, isSystem: true, content: `Buyer marked payment as sent. TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'}` });
+        await P2PMessage.create({ tradeId: trade._id, senderId: trade.buyerId, isSystem: true, content: `Buyer marked payment as sent.TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'} ` });
 
         return trade;
     }
@@ -371,7 +373,7 @@ class P2PService {
         }
 
         // [CHANGE] "Seamless" Logic: Trust Seller -> Execute Transfer Immediately
-        console.log(`[P2P] Seller ${userId} confirmed receipt with valid PIN. Releasing funds...`);
+        console.log(`[P2P] Seller ${userId} confirmed receipt with valid PIN.Releasing funds...`);
 
         // We call adminApproveRelease passing 'SYSTEM_AUTO' as adminId (system action)
         return await this.adminApproveRelease('SYSTEM_AUTO', tradeId);
@@ -416,7 +418,7 @@ class P2PService {
                 userId: trade.sellerId, // Tagged to seller for tracking source
                 amount: -feeAmount,
                 type: 'fee', // This links exactly to the Ecosystem Tracker
-                description: `P2P Trade Burn Fee (2%)`,
+                description: `P2P Trade Burn Fee(2 %)`,
                 source: 'system',
                 status: 'completed',
                 currency: 'NXS'
@@ -458,7 +460,7 @@ class P2PService {
                     userId: adminId,
                     amount: feeAmount,
                     type: 'admin_commission',
-                    description: `P2P Fee from Trade ${trade._id}`,
+                    description: `P2P Fee from Trade ${trade._id} `,
                     source: 'income',
                     status: 'completed'
                 });
@@ -468,14 +470,14 @@ class P2PService {
 
             return trade;
         }).then(async (trade) => {
-            SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade);
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
+            SocketService.broadcast(`user_${trade.buyerId} `, 'p2p_completed', trade);
+            SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_completed', trade);
 
             // [FIX] Force Wallet Refresh UI
-            SocketService.broadcast(`user_${trade.buyerId}`, 'wallet:update', { type: 'p2p_buy', amount: trade.amount });
-            SocketService.broadcast(`user_${trade.sellerId}`, 'wallet:update', { type: 'p2p_sell', amount: -trade.amount });
+            SocketService.broadcast(`user_${trade.buyerId} `, 'wallet:update', { type: 'p2p_buy', amount: trade.amount });
+            SocketService.broadcast(`user_${trade.sellerId} `, 'wallet:update', { type: 'p2p_sell', amount: -trade.amount });
 
-            this.addSystemMessage(trade._id, `Trade Approved by Admin. Fee: ${trade.fee} NXS deducted.`);
+            this.addSystemMessage(trade._id, `Trade Approved by Admin.Fee: ${trade.fee} NXS deducted.`);
             return trade;
         });
     }
@@ -493,8 +495,8 @@ class P2PService {
         const trade = await P2PTrade.findById(tradeId);
 
         // Broadcast to both users
-        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_message', msg);
-        SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_message', msg);
+        SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_message', msg);
+        SocketService.broadcast(`user_${trade.buyerId} `, 'p2p_message', msg);
 
         return msg;
     }
@@ -518,8 +520,8 @@ class P2PService {
             type: 'SYSTEM'
         });
 
-        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_message', msg);
-        SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_message', msg);
+        SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_message', msg);
+        SocketService.broadcast(`user_${trade.buyerId} `, 'p2p_message', msg);
     }
 
 
@@ -585,12 +587,12 @@ class P2PService {
         await P2POrder.findByIdAndUpdate(trade.orderId, { status: 'DISPUTE' });
 
         const reporterRole = trade.sellerId.toString() === userId.toString() ? 'Seller' : 'Buyer';
-        this.addSystemMessage(trade._id, `⚠️ Trade put on HOLD. ${reporterRole} reported an issue: "${reason}". Admin will review this chat shortly.`);
+        this.addSystemMessage(trade._id, `⚠️ Trade put on HOLD.${reporterRole} reported an issue: "${reason}".Admin will review this chat shortly.`);
 
         // Broadcast
-        SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_trade_dispute', trade);
-        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_dispute', trade);
-        SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'DISPUTE_RAISED', message: `P2P Dispute: Trade #${trade._id}`, tradeId: trade._id });
+        SocketService.broadcast(`user_${trade.buyerId} `, 'p2p_trade_dispute', trade);
+        SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_trade_dispute', trade);
+        SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'DISPUTE_RAISED', message: `P2P Dispute: Trade #${trade._id} `, tradeId: trade._id });
 
         return trade;
     }
@@ -635,9 +637,9 @@ class P2PService {
             await P2POrder.findByIdAndUpdate(trade.orderId, { status: trade.status }, { session });
 
             // Notify Both
-            const msg = `Admin resolved dispute: ${resolution === 'RELEASE_TO_BUYER' ? 'Funds released to Buyer' : 'Funds refunded to Seller'}`;
-            SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade);
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
+            const msg = `Admin resolved dispute: ${resolution === 'RELEASE_TO_BUYER' ? 'Funds released to Buyer' : 'Funds refunded to Seller'} `;
+            SocketService.broadcast(`user_${trade.buyerId} `, 'p2p_completed', trade);
+            SocketService.broadcast(`user_${trade.sellerId} `, 'p2p_completed', trade);
             await NotificationService.send(trade.buyerId, msg, 'info');
             await NotificationService.send(trade.sellerId, msg, 'info');
 
@@ -701,10 +703,10 @@ class P2PService {
                 try {
                     await this.cancelTrade(trade.sellerId, trade._id);
                     // P2PMessage creation is not critical enough to fail the cancellation, but we still log it.
-                    await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `⏳ TRADE AUTO-CANCELLED due to inactivity. Escrow returned.` });
+                    await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `⏳ TRADE AUTO - CANCELLED due to inactivity.Escrow returned.` });
                     return true;
                 } catch (e) {
-                    console.error(`[P2P Auto-Cancel] Failed to cancel trade ${trade._id}:`, e.message);
+                    console.error(`[P2P Auto - Cancel] Failed to cancel trade ${trade._id}: `, e.message);
                     return false;
                 }
             });
@@ -713,7 +715,7 @@ class P2PService {
             cancelledCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
 
             if (cancelledCount > 0) {
-                console.log(`[P2P Pulse] Auto-cancelled ${cancelledCount} expired trades and released escrow.`);
+                console.log(`[P2P Pulse]Auto - cancelled ${cancelledCount} expired trades and released escrow.`);
             }
             return cancelledCount;
         } catch (error) {
@@ -724,38 +726,65 @@ class P2PService {
 
     // --- MARKET SUMMARY STATS ---
     async getMarketSummary() {
-        const _24hAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        // 1. Fetch Admin-configured limits for the P2P chart
+        let p2pMin = 120;
+        let p2pMax = 135;
+        try {
+            const minSetting = await SystemSetting.findOne({ key: 'p2p_market_min' });
+            if (minSetting && minSetting.value) p2pMin = parseFloat(minSetting.value);
 
-        const trades = await P2PTrade.find({
-            status: 'COMPLETED',
-            completedAt: { $gte: _24hAgo }
-        }).populate('orderId');
-
-        let totalVol = 0;
-        let prices = [];
-
-        trades.forEach(t => {
-            if (t.orderId && t.orderId.rate && !isNaN(t.orderId.rate)) {
-                prices.push(t.orderId.rate);
-            }
-            totalVol += t.amount;
-        });
-
-        if (prices.length === 0) {
-            // Default Fallback
-            return { price: 126.00, high: 126.00, low: 126.00, vol: 0, change: 0 };
+            const maxSetting = await SystemSetting.findOne({ key: 'p2p_market_max' });
+            if (maxSetting && maxSetting.value) p2pMax = parseFloat(maxSetting.value);
+        } catch (e) {
+            console.error("Failed to load p2p market limits", e);
         }
 
-        const currentPrice = prices[prices.length - 1]; // Assume last trade is current price
-        const high = Math.max(...prices);
-        const low = Math.min(...prices);
+        const min = p2pMin || 120;
+        const max = p2pMax || 135;
+
+        // 2. Generate 24 data points that fluctuate between min and max
+        // Use a seeded approach based on current hour to prevent wild swings on every single page load, creating a smooth animation effect.
+        const now = new Date();
+        const hourSeed = now.getHours();
+        const minuteSeed = now.getMinutes() / 60; // Adds slow variation within the hour
+
+        let chartData = [];
+        let currentPrice = min + ((max - min) / 2); // Start in middle
+
+        for (let i = 24; i >= 0; i--) {
+            // Pseudo-random walk combining sine and cosine waves for natural-looking peaks/valleys
+            const pseudoRand = Math.sin((hourSeed + minuteSeed) + i * 1.5) * Math.cos((hourSeed * 0.5) - i);
+
+            let volatility = (max - min) * 0.15; // Max 15% jump of the total range per interval
+
+            currentPrice += pseudoRand * volatility;
+
+            // Hard Boundary enforcement to guarantee prices NEVER exceed Admin limits
+            if (currentPrice > max) currentPrice = max - Math.abs(pseudoRand * volatility);
+            if (currentPrice < min) currentPrice = min + Math.abs(pseudoRand * volatility);
+
+            chartData.push({
+                time: `${i === 0 ? 'Now' : 24 - i + 'h'} `,
+                price: parseFloat(currentPrice.toFixed(2))
+            });
+        }
+
+        const latestPrice = chartData[chartData.length - 1].price;
+        const highestPrice = Math.max(...chartData.map(d => d.price));
+        const lowestPrice = Math.min(...chartData.map(d => d.price));
+
+        // Fake Volume that also changes based on the time of day
+        const fakeVolume = Math.floor(15000 + (Math.sin(hourSeed) * 5000));
 
         return {
-            price: currentPrice,
-            high,
-            low,
-            vol: totalVol,
-            change: 0 // Optional: Compare with 48h ago for real change percentages
+            price: latestPrice,
+            high: highestPrice,
+            low: lowestPrice,
+            vol: fakeVolume,
+            change: 0,
+            chartData: chartData,
+            minBoundary: min, // Send boundaries back so frontend chart Y-axis scales perfectly
+            maxBoundary: max
         };
     }
 }

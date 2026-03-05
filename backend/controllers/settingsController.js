@@ -61,6 +61,8 @@ exports.getGlobalSettings = async (req, res) => {
             'silver_requirement', 'gold_requirement',
             'task_base_reward', 'daily_task_limit',
             'cash_out_commission_percent',
+            'usd_to_bdt_rate', 'usd_to_inr_rate',
+            'p2p_market_min', 'p2p_market_max',
             // [GAME LOGIC SETTINGS]
             'house_edge', 'min_bet', 'max_bet', 'streak_threshold', 'streak_multiplier',
             'global_profit_margin', 'game_status'
@@ -74,6 +76,10 @@ exports.getGlobalSettings = async (req, res) => {
         // Defaults if missing (to match legacy behavior)
         if (!settings.task_base_reward) settings.task_base_reward = 5.00;
         if (!settings.daily_task_limit) settings.daily_task_limit = 10;
+        if (!settings.p2p_market_min) settings.p2p_market_min = 120;
+        if (!settings.p2p_market_max) settings.p2p_market_max = 135;
+        if (!settings.usd_to_bdt_rate) settings.usd_to_bdt_rate = 126;
+        if (!settings.usd_to_inr_rate) settings.usd_to_inr_rate = 89;
 
         res.json(settings);
     } catch (err) {
@@ -89,6 +95,8 @@ exports.updateGlobalSettings = async (req, res) => {
             'silver_requirement', 'gold_requirement',
             'task_base_reward', 'daily_task_limit',
             'cash_out_commission_percent',
+            'usd_to_bdt_rate', 'usd_to_inr_rate',
+            'p2p_market_min', 'p2p_market_max',
             // [GAME LOGIC SETTINGS]
             'house_edge', 'min_bet', 'max_bet', 'streak_threshold', 'streak_multiplier',
             'global_profit_margin', 'game_status'
