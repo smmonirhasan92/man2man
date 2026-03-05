@@ -113,3 +113,22 @@ exports.updateGlobalSettings = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+exports.getPublicSettings = async (req, res) => {
+    try {
+        const usd_to_bdt_rate = await getVal('usd_to_bdt_rate') || 126;
+        const usd_to_inr_rate = await getVal('usd_to_inr_rate') || 89;
+        const p2p_market_min = await getVal('p2p_market_min') || 120;
+        const p2p_market_max = await getVal('p2p_market_max') || 135;
+
+        res.json({
+            usd_to_bdt_rate: parseFloat(usd_to_bdt_rate),
+            usd_to_inr_rate: parseFloat(usd_to_inr_rate),
+            p2p_market_min: parseFloat(p2p_market_min),
+            p2p_market_max: parseFloat(p2p_market_max)
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
