@@ -199,7 +199,7 @@ export default function ElementalRiches() {
                         <div className="bg-slate-900/90 backdrop-blur-xl p-8 rounded-2xl border border-yellow-500/50 animate-bounce shadow-[0_0_100px_rgba(234,179,8,0.3)] text-center scale-150 transform">
                             <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-widest">Victory</h2>
                             <div className="text-5xl font-black text-white mt-2 font-mono shadow-black drop-shadow-xl">
-                                ৳{state.lastWin.toFixed(2)}
+                                ${state.lastWin.toFixed(2)}
                             </div>
                         </div>
                     </div>

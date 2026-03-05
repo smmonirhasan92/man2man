@@ -86,7 +86,7 @@ export default function AgentTasksPage() {
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${task.type === 'send_money' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}>
                                     {task.type.replace('_', ' ')}
                                 </span>
-                                <span className="text-2xl font-black text-slate-800 tracking-tight">৳{Math.abs(task.amount)}</span>
+                                <span className="text-2xl font-black text-slate-800 tracking-tight">${Math.abs(task.amount)}</span>
                             </div>
 
                             <div className="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100">

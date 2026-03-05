@@ -127,7 +127,7 @@ export default function AgentsPage() {
                             <div className="flex flex-col gap-3">
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Stock</p>
-                                    <p className="text-3xl font-black text-slate-800 tracking-tight">৳{agent.Wallet?.balance || 0}</p>
+                                    <p className="text-3xl font-black text-slate-800 tracking-tight">${agent.Wallet?.balance || 0}</p>
                                     <button
                                         onClick={() => openBalanceModal(agent)}
                                         className="absolute top-4 right-4 text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-full font-bold transition border border-indigo-100"
@@ -139,15 +139,15 @@ export default function AgentsPage() {
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="bg-emerald-50/50 p-2 rounded-lg border border-emerald-100 text-center">
                                         <p className="text-[9px] font-bold text-emerald-400 uppercase">Profit</p>
-                                        <p className="font-bold text-emerald-700 text-sm">৳{Number(agent.totalEarnings || 0).toLocaleString()}</p>
+                                        <p className="font-bold text-emerald-700 text-sm">${Number(agent.totalEarnings || 0).toLocaleString()}</p>
                                     </div>
                                     <div className="bg-blue-50/50 p-2 rounded-lg border border-blue-100 text-center">
                                         <p className="text-[9px] font-bold text-blue-400 uppercase">Cash In</p>
-                                        <p className="font-bold text-blue-700 text-sm">৳{Number(agent.totalDeposits || 0).toLocaleString()}</p>
+                                        <p className="font-bold text-blue-700 text-sm">${Number(agent.totalDeposits || 0).toLocaleString()}</p>
                                     </div>
                                     <div className="bg-rose-50/50 p-2 rounded-lg border border-rose-100 text-center">
                                         <p className="text-[9px] font-bold text-rose-400 uppercase">Cash Out</p>
-                                        <p className="font-bold text-rose-700 text-sm">৳{Number(agent.totalWithdraws || 0).toLocaleString()}</p>
+                                        <p className="font-bold text-rose-700 text-sm">${Number(agent.totalWithdraws || 0).toLocaleString()}</p>
                                     </div>
                                 </div>
 

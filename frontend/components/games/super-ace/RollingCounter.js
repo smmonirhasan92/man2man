@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 
-export default function RollingCounter({ value, prefix = '৳', duration = 1000 }) {
+export default function RollingCounter({ value, prefix = '$', duration = 1000 }) {
     const [displayValue, setDisplayValue] = useState(value);
     const startValue = useRef(value);
     const startTime = useRef(null);

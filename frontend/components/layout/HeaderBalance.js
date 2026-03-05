@@ -7,8 +7,8 @@ export default function HeaderBalance({ balance }) {
     // State: 0 = Hidden, 1 = USD (Default)
     const [viewState, setViewState] = useState(0);
 
-    const rawBalance = parseFloat(balance || 0); // Always BDT (e.g. 10000)
-    const rate = 120; // 1 USD = 120 BDT
+    const rawBalance = parseFloat(balance || 0); // Always USD (e.g. 10000)
+    const rate = 120; // 1 USD = 120 USD
 
     const handleToggle = (e) => {
         e.stopPropagation(); // Prevent deposit click

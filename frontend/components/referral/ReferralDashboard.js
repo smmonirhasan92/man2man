@@ -108,7 +108,7 @@ export default function ReferralDashboard() {
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <p className="text-indigo-300 text-sm font-medium mb-1">Total Commission Earned</p>
-                        <h1 className="text-4xl font-bold text-white">৳{data.stats.totalEarnings?.toFixed(2) || '0.00'}</h1>
+                        <h1 className="text-4xl font-bold text-white">${data.stats.totalEarnings?.toFixed(2) || '0.00'}</h1>
                     </div>
 
                     <div className="flex gap-3 w-full md:w-auto">
@@ -255,7 +255,7 @@ export default function ReferralDashboard() {
                                                 {member.status}
                                             </span>
                                             <p className="text-[10px] text-slate-500 mt-1">
-                                                Comm: ৳{member.commission?.toFixed(2) || '0.00'}
+                                                Comm: ${member.commission?.toFixed(2) || '0.00'}
                                             </p>
                                         </div>
                                     </div>
@@ -293,7 +293,7 @@ export default function ReferralDashboard() {
                                         </p>
                                         <div className="flex gap-3 text-[10px] text-slate-400">
                                             <span>👥 {user.referralCount} Members</span>
-                                            <span>💰 ৳{user.referralIncome?.toFixed(0)}</span>
+                                            <span>💰 ${user.referralIncome?.toFixed(0)}</span>
                                         </div>
                                     </div>
                                 </div>

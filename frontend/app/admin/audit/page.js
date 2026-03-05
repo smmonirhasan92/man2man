@@ -88,7 +88,7 @@ export default function AuditPage() {
                         <p className="font-medium opacity-90">{health?.message || 'No status available'}</p>
                         {(health?.discrepancy || 0) !== 0 && (
                             <p className="text-sm mt-2 font-mono bg-white/50 inline-block px-3 py-1 rounded-lg">
-                                Discrepancy Amount: ৳{health?.discrepancy}
+                                Discrepancy Amount: ${health?.discrepancy}
                             </p>
                         )}
                     </div>
@@ -107,17 +107,17 @@ export default function AuditPage() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
                             <span className="text-slate-500 text-sm font-medium">Total Deposits</span>
-                            <span className="text-lg font-bold text-slate-700">৳{authorized.total_deposits?.toLocaleString() || '0'}</span>
+                            <span className="text-lg font-bold text-slate-700">${authorized.total_deposits?.toLocaleString() || '0'}</span>
                         </div>
                         <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
                             <span className="text-slate-500 text-sm font-medium">Net Game Money Created</span>
                             <span className={`text-lg font-bold ${(authorized.net_game_creation || 0) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                {(authorized.net_game_creation || 0) >= 0 ? '+' : ''}৳{authorized.net_game_creation?.toLocaleString() || '0'}
+                                {(authorized.net_game_creation || 0) >= 0 ? '+' : ''}${authorized.net_game_creation?.toLocaleString() || '0'}
                             </span>
                         </div>
                         <div className="pt-4 border-t border-slate-100 mt-4 flex justify-between items-center">
                             <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Authorized</span>
-                            <span className="text-2xl font-black text-indigo-600">৳{authorized.total_supply?.toLocaleString() || '0'}</span>
+                            <span className="text-2xl font-black text-indigo-600">${authorized.total_supply?.toLocaleString() || '0'}</span>
                         </div>
                     </div>
                 </div>
@@ -133,15 +133,15 @@ export default function AuditPage() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
                             <span className="text-slate-500 text-sm font-medium">Main Wallet Balances</span>
-                            <span className="text-lg font-bold text-slate-700">৳{actual.user_main_balances?.toLocaleString() || '0'}</span>
+                            <span className="text-lg font-bold text-slate-700">${actual.user_main_balances?.toLocaleString() || '0'}</span>
                         </div>
                         <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
                             <span className="text-slate-500 text-sm font-medium">Game Wallet Balances</span>
-                            <span className="text-lg font-bold text-slate-700">৳{actual.user_game_balances?.toLocaleString() || '0'}</span>
+                            <span className="text-lg font-bold text-slate-700">${actual.user_game_balances?.toLocaleString() || '0'}</span>
                         </div>
                         <div className="pt-4 border-t border-slate-100 mt-4 flex justify-between items-center">
                             <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Liability</span>
-                            <span className="text-2xl font-black text-pink-600">৳{actual.total_liability?.toLocaleString() || '0'}</span>
+                            <span className="text-2xl font-black text-pink-600">${actual.total_liability?.toLocaleString() || '0'}</span>
                         </div>
                     </div>
                 </div>
@@ -159,7 +159,7 @@ export default function AuditPage() {
                         <p className="text-slate-400 text-sm max-w-sm">Total value of money moving through the system (P2P Transfers).</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-4xl font-black text-emerald-400 tracking-tight">৳{volume.p2p_transfers?.toLocaleString() || '0'}</p>
+                        <p className="text-4xl font-black text-emerald-400 tracking-tight">${volume.p2p_transfers?.toLocaleString() || '0'}</p>
                         <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Total Transferred</p>
                     </div>
                 </div>

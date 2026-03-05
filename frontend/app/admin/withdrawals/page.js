@@ -98,7 +98,7 @@ export default function AdminWithdrawals() {
 
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-800">৳ {Math.abs(req.amount).toLocaleString()}</h3>
+                                    <h3 className="font-bold text-lg text-slate-800">$ {Math.abs(req.amount).toLocaleString()}</h3>
                                     <p className="text-sm text-gray-500 flex items-center gap-1">
                                         <Wallet className="w-3 h-3" /> {req.description}
                                     </p>
@@ -108,7 +108,7 @@ export default function AdminWithdrawals() {
                                             {req.metadata?.deliveryTime || '24h'}
                                         </span>
                                         <span className="text-[10px] bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-700 font-bold border border-emerald-200">
-                                            Net: ৳ {(Math.abs(req.amount) - (req.fee || 0)).toLocaleString()}
+                                            Net: $ {(Math.abs(req.amount) - (req.fee || 0)).toLocaleString()}
                                         </span>
                                     </div>
                                 </div>

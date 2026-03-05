@@ -31,7 +31,7 @@ const GameControls = ({
             <div className="mb-8">
                 <div className="flex justify-between text-sm font-bold text-slate-500 mb-3">
                     <span>Bet Amount</span>
-                    <span className="text-[#0056D2]">৳{betAmount}</span>
+                    <span className="text-[#0056D2]">${betAmount}</span>
                 </div>
                 <input
                     type="range"
@@ -62,7 +62,7 @@ const GameControls = ({
                 variant={gameState === 'flipping' ? 'ghost' : 'primary'}
                 className="w-full text-lg py-5 shadow-xl"
             >
-                {gameState === 'flipping' ? 'WAIT...' : `FLIP FOR ৳${betAmount * 2}`}
+                {gameState === 'flipping' ? 'WAIT...' : `FLIP FOR $${betAmount * 2}`}
             </Button>
         </Card>
     );

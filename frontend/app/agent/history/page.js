@@ -173,7 +173,7 @@ export default function AgentHistoryPage() {
                                                     : 'text-white'
                                             }`}>
                                             {trx.type === 'commission' || trx.type === 'admin_credit' || (trx.type === 'send_money') ? '+' : (trx.type === 'admin_debit' ? '-' : '')}
-                                            ৳{Math.abs(trx.amount)}
+                                            ${Math.abs(trx.amount)}
                                         </p>
                                         <StatusBadge status={trx.status} />
                                     </div>

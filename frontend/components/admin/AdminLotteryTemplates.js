@@ -8,16 +8,16 @@ import ConfirmationModal from '../ui/ConfirmationModal';
 export default function AdminLotteryTemplates() {
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
     const TEMPLATES = [
-        { id: '1M', label: '1 MIN FLASH', duration: '1 Min', price: '15 TK', color: 'red' },
-        { id: '5M', label: '5 MIN QUICK', duration: '5 Mins', price: '25 TK', color: 'orange' },
-        { id: '15M', label: '15 MIN POWER', duration: '15 Mins', price: '30 TK', color: 'yellow' },
-        { id: '30M', label: '30 MIN SUPER', duration: '30 Mins', price: '35 TK', color: 'lime' },
-        { id: '60M', label: 'HOURLY JACKPOT', duration: '60 Mins', price: '45 TK', color: 'green' },
-        { id: '3H', label: '3 HOUR MEGA', duration: '3 Hours', price: '55 TK', color: 'emerald' },
-        { id: '6H', label: '6 HOUR GIGA', duration: '6 Hours', price: '75 TK', color: 'teal' },
-        { id: '12H', label: '12 HOUR ROYAL', duration: '12 Hours', price: '85 TK', color: 'cyan' },
-        { id: '24H', label: 'DAILY GRAND', duration: '24 Hours', price: '$1 (120 TK)', color: 'blue' },
-        { id: '7D', label: 'WEEKLY WEALTH', duration: '7 Days', price: '$2 (240 TK)', color: 'purple' },
+        { id: '1M', label: '1 MIN FLASH', duration: '1 Min', price: '15 USD', color: 'red' },
+        { id: '5M', label: '5 MIN QUICK', duration: '5 Mins', price: '25 USD', color: 'orange' },
+        { id: '15M', label: '15 MIN POWER', duration: '15 Mins', price: '30 USD', color: 'yellow' },
+        { id: '30M', label: '30 MIN SUPER', duration: '30 Mins', price: '35 USD', color: 'lime' },
+        { id: '60M', label: 'HOURLY JACKPOT', duration: '60 Mins', price: '45 USD', color: 'green' },
+        { id: '3H', label: '3 HOUR MEGA', duration: '3 Hours', price: '55 USD', color: 'emerald' },
+        { id: '6H', label: '6 HOUR GIGA', duration: '6 Hours', price: '75 USD', color: 'teal' },
+        { id: '12H', label: '12 HOUR ROYAL', duration: '12 Hours', price: '85 USD', color: 'cyan' },
+        { id: '24H', label: 'DAILY GRAND', duration: '24 Hours', price: '$1 (120 USD)', color: 'blue' },
+        { id: '7D', label: 'WEEKLY WEALTH', duration: '7 Days', price: '$2 (240 USD)', color: 'purple' },
     ];
 
     const deployTemplate = (t) => {

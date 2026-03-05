@@ -58,12 +58,12 @@ export function NotificationProvider({ children }) {
         socket.on('wallet:update', (data) => {
             // Show Premium Toast
             if (data.type === 'withdrawal_completed') {
-                toast.success(`Withdrawal Approved: ৳${data.amount}`, {
+                toast.success(`Withdrawal Approved: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #064e3b, #065f46)' },
                     icon: '💸'
                 });
             } else if (data.type === 'deposit_received') {
-                toast.success(`Deposit Received: ৳${data.amount}`, {
+                toast.success(`Deposit Received: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #1e3a8a, #172554)' },
                     icon: '💎'
                 });

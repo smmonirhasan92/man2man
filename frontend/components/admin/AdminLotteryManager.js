@@ -65,7 +65,7 @@ export default function AdminLotteryManager() {
     const createLottery = async () => {
         confirmAction(
             editingSlotId ? 'Update Lottery?' : 'Launch Lottery?',
-            `Total Budget: ${totalPrizeBudget} TK`,
+            `Total Budget: ${totalPrizeBudget} USD`,
             async () => {
                 setLoading(true);
                 try {
@@ -205,7 +205,7 @@ export default function AdminLotteryManager() {
                         <Crown className="w-4 h-4 text-yellow-500" /> Total Live Revenue
                     </h3>
                     <div className="text-3xl font-black text-white relative z-10 text-right">
-                        {(activeSlots.reduce((acc, s) => acc + (s.currentSales || 0), 0)).toLocaleString()} <span className="text-sm text-yellow-500">BDT</span>
+                        {(activeSlots.reduce((acc, s) => acc + (s.currentSales || 0), 0)).toLocaleString()} <span className="text-sm text-yellow-500">USD</span>
                     </div>
                 </div>
             </div>
@@ -271,7 +271,7 @@ export default function AdminLotteryManager() {
                                                 <div className="space-y-1 text-xs">
                                                     <div className="flex items-center gap-2">
                                                         <Trophy className="w-3 h-3 text-yellow-500" />
-                                                        <span className="text-yellow-500 font-mono font-bold text-sm">৳{totalPayout.toLocaleString()}</span>
+                                                        <span className="text-yellow-500 font-mono font-bold text-sm">${totalPayout.toLocaleString()}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -343,7 +343,7 @@ export default function AdminLotteryManager() {
                                         </div>
                                         <div>
                                             <div className="font-bold text-white text-lg">{slot.tier} DRAW</div>
-                                            <div className="text-yellow-500 font-mono font-bold">{slot.jackpot.toLocaleString()} TK</div>
+                                            <div className="text-yellow-500 font-mono font-bold">{slot.jackpot.toLocaleString()} USD</div>
                                         </div>
                                     </div>
                                     <span className="text-[10px] bg-white/5 px-2 py-1 rounded border border-white/10">{slot.status}</span>
@@ -411,7 +411,7 @@ export default function AdminLotteryManager() {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs text-slate-500 uppercase">Ticket Price (TK)</label>
+                                    <label className="text-xs text-slate-500 uppercase">Ticket Price (USD)</label>
                                     <input
                                         type="number"
                                         value={ticketPrice}
@@ -425,12 +425,13 @@ export default function AdminLotteryManager() {
 
                             {/* Manual Editor */}
                             <div className="space-y-2">
-                                <label className="text-xs text-slate-500 uppercase">Prize Structure</label>
+                                <label className="text-xs text-slate-500 uppercase">Prize Structure (Amount | Winners | Name)</label>
                                 {prizes.map((p, i) => (
                                     <div key={p.id || i} className="flex gap-2">
-                                        <input value={p.amount} onChange={e => updatePrize(p.id, 'amount', e.target.value)} className="w-20 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-yellow-500 font-mono" />
-                                        <input value={p.name} onChange={e => updatePrize(p.id, 'name', e.target.value)} className="flex-1 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" />
-                                        <button onClick={() => removePrizeTier(p.id)} className="text-red-500 hover:text-red-400"><Trash className="w-3 h-3" /></button>
+                                        <input type="number" value={p.amount} onChange={e => updatePrize(p.id, 'amount', e.target.value)} className="w-20 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-yellow-500 font-mono" placeholder="$" />
+                                        <input type="number" value={p.winnersCount} onChange={e => updatePrize(p.id, 'winnersCount', e.target.value)} className="w-16 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-blue-400 font-mono text-center" title="Number of Winners" min="1" />
+                                        <input value={p.name} onChange={e => updatePrize(p.id, 'name', e.target.value)} className="flex-1 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" placeholder="Prize Name" />
+                                        <button onClick={() => removePrizeTier(p.id)} className="text-red-500 hover:text-red-400"><Trash className="w-4 h-4" /></button>
                                     </div>
                                 ))}
                                 <button onClick={addPrizeTier} className="w-full py-2 border border-dashed border-white/20 text-slate-500 text-xs rounded hover:bg-white/5">+ Add Prize Tier</button>
@@ -441,7 +442,7 @@ export default function AdminLotteryManager() {
                         <div className="pt-4 border-t border-white/10">
                             <div className="flex justify-between items-center bg-black/40 p-3 rounded-lg border border-white/5 mb-4">
                                 <span className="text-slate-400 text-xs">Total Prize Amount:</span>
-                                <span className="text-yellow-500 font-bold font-mono">{totalPrizeBudget.toLocaleString()} TK</span>
+                                <span className="text-yellow-500 font-bold font-mono">{totalPrizeBudget.toLocaleString()} USD</span>
                             </div>
                             <button
                                 onClick={createLottery}

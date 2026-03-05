@@ -153,7 +153,7 @@ export default function AdDemoPage() {
                                             <p className="text-xs text-gray-500 mt-1">Duration: {task.duration}s • Type: {task.type}</p>
                                         </div>
                                         <div className="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm font-mono font-bold">
-                                            +{task.reward} BDT
+                                            +{task.reward} USD
                                         </div>
                                     </button>
                                 )) : (

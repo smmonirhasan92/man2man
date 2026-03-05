@@ -94,7 +94,7 @@ const PlayerSeat = ({ player, position, isTurn, isActive, shouldReveal }) => {
                         {player.name}
                     </div>
                     <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-yellow-400 font-mono text-[10px] px-2 py-0.5 rounded-b-sm border border-slate-600 min-w-[60px] text-center shadow-inner">
-                        ৳{player.balance}
+                        ${player.balance}
                     </div>
                 </div>
             </div>

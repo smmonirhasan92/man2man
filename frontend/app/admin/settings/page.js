@@ -168,7 +168,7 @@ export default function GlobalSettingsPage() {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Minimum Price (BDT)</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Minimum Price (USD)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -179,7 +179,7 @@ export default function GlobalSettingsPage() {
                                 <p className="text-xs text-slate-400 mt-1">The lowest simulated value for the P2P random chart.</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Maximum Price (BDT)</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Maximum Price (USD)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -199,7 +199,7 @@ export default function GlobalSettingsPage() {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">USD to BDT Rate (৳)</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">USD to USD Rate ($)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -263,7 +263,7 @@ export default function GlobalSettingsPage() {
                                         />
                                     </div>
                                     <div className="w-full md:w-1/3">
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Bonus Reward (BDT)</label>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Bonus Reward (USD)</label>
                                         <input
                                             type="number"
                                             step="0.01"

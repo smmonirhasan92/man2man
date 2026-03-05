@@ -354,10 +354,10 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-[10px] text-[#848e9c]">1 NXS = {trade.orderId.rate || 126} BDT</div>
+                                <div className="text-[10px] text-[#848e9c]">1 NXS = {trade.orderId.rate || 126} USD</div>
                                 <div className="text-[10px] text-[#848e9c] mt-1">Total Amount</div>
                                 <div className="text-xl font-black text-[#0ecb81] leading-none">
-                                    {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} <span className="text-[10px]">BDT</span>
+                                    {(trade.amount * (trade.orderId.rate || 126)).toLocaleString('en-IN')} <span className="text-[10px]">USD</span>
                                 </div>
                             </div>
                         </div>

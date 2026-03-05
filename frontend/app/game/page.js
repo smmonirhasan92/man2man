@@ -50,7 +50,7 @@ export default function GamePage() {
                 </div>
                 <div onClick={() => setShowTransfer(true)} className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full cursor-pointer border border-slate-200 hover:border-[#0056D2] transition-colors">
                     <Gamepad2 className="w-4 h-4 text-[#0056D2]" />
-                    <span className="font-mono font-bold text-slate-700">৳{Number(gameBalance).toFixed(0)}</span>
+                    <span className="font-mono font-bold text-slate-700">${Number(gameBalance).toFixed(0)}</span>
                     <Plus className="w-4 h-4 bg-[#0056D2] text-white rounded-full p-0.5" />
                 </div>
             </div>

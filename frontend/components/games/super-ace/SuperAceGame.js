@@ -126,7 +126,7 @@ export default function SuperAceGame() {
                 // Check Lock First
                 if (data.vault?.trappedAmount > 0) {
                     play('error'); // Trapped sound
-                    setGameLog({ message: `LOCKED ৳${data.vault.trappedAmount}`, type: 'warning' });
+                    setGameLog({ message: `LOCKED $${data.vault.trappedAmount}`, type: 'warning' });
                     toast("BIG WIN TRAPPED IN VAULT!", { icon: '🔒', style: { borderRadius: '10px', background: '#333', color: '#ffd700' } });
                     spawnFloat("TRAPPED!", 'damage');
                 } else {
@@ -134,8 +134,8 @@ export default function SuperAceGame() {
                     else play('win', 0.6);
 
                     setWinInfo({ total: data.totalWin, lastWin: data.totalWin });
-                    setGameLog({ message: `Win ৳${data.totalWin.toFixed(2)}`, type: 'win' });
-                    spawnFloat(`+৳${data.totalWin.toFixed(0)}`, 'win');
+                    setGameLog({ message: `Win $${data.totalWin.toFixed(2)}`, type: 'win' });
+                    spawnFloat(`+$${data.totalWin.toFixed(0)}`, 'win');
                 }
             } else {
                 play('lose', 0.4);
@@ -149,7 +149,7 @@ export default function SuperAceGame() {
 
             // Check Release
             if (data.vault?.wasReleased) {
-                toast.success(`VAULT UNLOCKED! ৳${data.vault.releasedAmount}`, { icon: '🔓' });
+                toast.success(`VAULT UNLOCKED! $${data.vault.releasedAmount}`, { icon: '🔓' });
                 spawnFloat("UNLOCKED!", 'win');
             }
 
@@ -284,7 +284,7 @@ export default function SuperAceGame() {
                             </div>
                             {winInfo.lastWin > 0 && (
                                 <div className="text-5xl font-black text-white font-mono drop-shadow-md">
-                                    ৳{winInfo.lastWin.toFixed(2)}
+                                    ${winInfo.lastWin.toFixed(2)}
                                 </div>
                             )}
                         </div>

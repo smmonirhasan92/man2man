@@ -50,7 +50,7 @@ export default function LiveVaultTracker() {
                 )}
             </div>
             <div className="text-2xl font-black text-white tracking-tight flex items-baseline gap-1">
-                <span className="text-sm text-slate-500">৳</span>
+                <span className="text-sm text-slate-500">$</span>
                 {amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="w-full h-1 bg-slate-800 mt-3 rounded-full overflow-hidden">

@@ -146,7 +146,7 @@ export default function AdminPlansPage() {
                                             {plan.daily_limit} Limit
                                         </span>
                                         <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium">
-                                            ৳{plan.task_reward} /Task
+                                            ${plan.task_reward} /Task
                                         </span>
                                         <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">
                                             {plan.validity_days} Days
@@ -158,14 +158,14 @@ export default function AdminPlansPage() {
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-400 mt-2">
-                                        Max Earn: ৳{(plan.daily_limit * (plan.task_reward * (plan.reward_multiplier || 1)) * plan.validity_days).toFixed(0)}
+                                        Max Earn: ${(plan.daily_limit * (plan.task_reward * (plan.reward_multiplier || 1)) * plan.validity_days).toFixed(0)}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="text-right">
                                 <div className="text-xl font-bold text-slate-900">
-                                    {plan.unlock_price > 0 ? `৳${plan.unlock_price}` : 'Free'}
+                                    {plan.unlock_price > 0 ? `$${plan.unlock_price}` : 'Free'}
                                 </div>
                                 <div className="flex gap-2 mt-4 justify-end">
                                     <button
@@ -222,7 +222,7 @@ export default function AdminPlansPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase">Reward (৳)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase">Reward ($)</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -257,7 +257,7 @@ export default function AdminPlansPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase">Price (৳)</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Price ($)</label>
                                 <input
                                     type="number"
                                     step="0.01"

@@ -81,7 +81,7 @@ export default function MobileRechargePage() {
                 <div className="mb-6 rounded-2xl border border-white/10 p-4 bg-[#1f2937]/50 backdrop-blur-md flex justify-between items-center">
                     <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Available Balance</p>
-                        <h2 className="text-2xl font-black text-white">৳ {Number(balance).toLocaleString()}</h2>
+                        <h2 className="text-2xl font-black text-white">$ {Number(balance).toLocaleString()}</h2>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
                         <Smartphone className="w-5 h-5" />
@@ -159,7 +159,7 @@ export default function MobileRechargePage() {
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}
                                     />
-                                    <span className="absolute left-4 top-4 text-slate-500 font-bold">৳</span>
+                                    <span className="absolute left-4 top-4 text-slate-500 font-bold">$</span>
                                 </div>
                             </div>
 

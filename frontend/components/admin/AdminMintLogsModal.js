@@ -104,7 +104,7 @@ export default function AdminMintLogsModal({ onClose }) {
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className={`text-sm font-mono font-black ${isCredit ? 'text-blue-400' : 'text-red-400'}`}>
-                                                        {isCredit ? '+' : ''}{log.amount.toLocaleString()} ৳
+                                                        {isCredit ? '+' : ''}{log.amount.toLocaleString()} $
                                                     </div>
                                                     <div className="text-[10px] text-slate-500 flex items-center justify-end gap-1 mt-0.5">
                                                         {log.balanceBefore} <ArrowRightLeft size={8} /> {log.balanceAfter}

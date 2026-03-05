@@ -81,11 +81,11 @@ export default function GameControlPanel() {
 
                 {/* Bet Limits */}
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Min Bet (৳)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Min Bet ($)</label>
                     <input type="number" name="min_bet" value={settings.min_bet} onChange={handleChange} className="w-full p-2 border rounded-lg bg-slate-50" />
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Max Bet (৳)</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Max Bet ($)</label>
                     <input type="number" name="max_bet" value={settings.max_bet} onChange={handleChange} className="w-full p-2 border rounded-lg bg-slate-50" />
                 </div>
 

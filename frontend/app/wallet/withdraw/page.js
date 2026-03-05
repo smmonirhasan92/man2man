@@ -48,7 +48,7 @@ export default function WithdrawalPage() {
 
                 {/* Slim Elegant Typography for Balance */}
                 <div className="flex items-start justify-center gap-1 mt-2">
-                    <span className="text-2xl font-thin text-zinc-500 mt-1">৳</span>
+                    <span className="text-2xl font-thin text-zinc-500 mt-1">$</span>
                     <span className="text-6xl font-thin text-white tracking-tighter">
                         {balance.main ? balance.main.toLocaleString() : '0'}
                     </span>

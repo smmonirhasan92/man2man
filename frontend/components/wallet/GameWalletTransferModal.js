@@ -113,7 +113,7 @@ export default function GameWalletTransferModal({ isOpen, onClose }) {
                                     {mode === 'DEPOSIT' ? 'From: Main Wallet' : (mode === 'WITHDRAW' ? 'From: Game Wallet' : 'From: Income Wallet')}
                                 </p>
                                 <p className="text-lg font-bold text-white">
-                                    ৳{mode === 'INCOME' ? (user?.wallet?.income || 0).toLocaleString() : (mode === 'DEPOSIT' ? (user?.wallet_balance || 0).toLocaleString() : (user?.game_balance || 0).toLocaleString())}
+                                    ${mode === 'INCOME' ? (user?.wallet?.income || 0).toLocaleString() : (mode === 'DEPOSIT' ? (user?.wallet_balance || 0).toLocaleString() : (user?.game_balance || 0).toLocaleString())}
                                 </p>
                             </div>
                             <div className={`p-3 rounded-xl border transition-colors bg-slate-950 border-white/5`}>
@@ -130,7 +130,7 @@ export default function GameWalletTransferModal({ isOpen, onClose }) {
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-400 uppercase">Amount to Transfer</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-3.5 text-slate-500 font-bold">৳</span>
+                                <span className="absolute left-4 top-3.5 text-slate-500 font-bold">$</span>
                                 <input
                                     type="number"
                                     value={amount}

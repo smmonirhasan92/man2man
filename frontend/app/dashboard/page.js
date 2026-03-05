@@ -247,12 +247,12 @@ function BalanceDisplay({ user }) {
             <div className="flex items-center gap-4 pt-4 border-t border-white/5">
                 <div className="flex-1">
                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Deposit / User</p>
-                    <p className="text-sm font-bold text-white">৳{rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-bold text-white">${rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="w-px h-8 bg-white/10"></div>
                 <div className="flex-1 text-right">
                     <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mb-1">Total Income</p>
-                    <p className="text-sm font-bold text-white">৳{income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-bold text-white">${income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 </div>
             </div>
         </div>

@@ -64,7 +64,7 @@ export default function LoadPurchasePage() {
             <div className="p-6 flex-1 overflow-y-auto">
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white text-center mb-8 shadow-lg shadow-indigo-200">
                     <p className="text-indigo-100 text-sm font-medium mb-1">Available Main Balance</p>
-                    <h2 className="text-4xl font-bold">৳{mainBalance.toFixed(2)}</h2>
+                    <h2 className="text-4xl font-bold">${mainBalance.toFixed(2)}</h2>
                 </div>
 
                 {msg && (

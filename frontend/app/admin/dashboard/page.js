@@ -137,35 +137,35 @@ export default function AdminDashboard() {
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <Wallet className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">User Wallets</h3>
-                        <div className="text-2xl font-black text-white">৳{Number(stats.currentLiabilities || 0).toLocaleString()}</div>
+                        <div className="text-2xl font-black text-white">${Number(stats.currentLiabilities || 0).toLocaleString()}</div>
                     </div>
 
                     {/* 3. Total Deposits */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <TrendingUp className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Deposits</h3>
-                        <div className="text-2xl font-black text-white">৳{Number(stats.totalDeposits || 0).toLocaleString()}</div>
+                        <div className="text-2xl font-black text-white">${Number(stats.totalDeposits || 0).toLocaleString()}</div>
                     </div>
 
                     {/* 4. Total Withdrawals */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <ArrowLeft className="w-8 h-8 text-rose-500 mx-auto mb-2 -rotate-[135deg]" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Withdrawals</h3>
-                        <div className="text-2xl font-black text-white">৳{Number(stats.totalWithdraws || 0).toLocaleString()}</div>
+                        <div className="text-2xl font-black text-white">${Number(stats.totalWithdraws || 0).toLocaleString()}</div>
                     </div>
 
                     {/* 5. Server Sales */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <ShieldCheck className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Server Sales</h3>
-                        <div className="text-2xl font-black text-white">৳{Number(stats.totalServerRevenue || 0).toLocaleString()}</div>
+                        <div className="text-2xl font-black text-white">${Number(stats.totalServerRevenue || 0).toLocaleString()}</div>
                     </div>
 
                     {/* 6. Task Earnings */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <Activity className="w-8 h-8 text-cyan-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Task Earnings</h3>
-                        <div className="text-2xl font-black text-white">৳{Number(stats.totalTaskIncome || 0).toLocaleString()}</div>
+                        <div className="text-2xl font-black text-white">${Number(stats.totalTaskIncome || 0).toLocaleString()}</div>
                     </div>
                 </div>
 

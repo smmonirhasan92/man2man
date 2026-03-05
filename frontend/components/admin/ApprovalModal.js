@@ -28,7 +28,7 @@ export default function ApprovalModal({
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Bonus Amount</label>
                         <div className="relative">
-                            <span className="absolute left-4 top-3.5 text-slate-400 font-bold">৳</span>
+                            <span className="absolute left-4 top-3.5 text-slate-400 font-bold">$</span>
                             <input
                                 type="number"
                                 className="w-full bg-slate-50 border border-slate-200 p-3 pl-8 rounded-xl text-slate-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none font-bold transition-all"

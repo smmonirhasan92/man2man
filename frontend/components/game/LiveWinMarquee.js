@@ -46,7 +46,7 @@ export default function LiveWinMarquee() {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-slate-400 font-bold leading-none">{win.user} just won</span>
-                            <span className="text-sm font-black text-yellow-400 leading-none">৳{win.amount}</span>
+                            <span className="text-sm font-black text-yellow-400 leading-none">${win.amount}</span>
                         </div>
                     </motion.div>
                 ))}

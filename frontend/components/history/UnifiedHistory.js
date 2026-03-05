@@ -52,12 +52,12 @@ export default function UnifiedHistory() {
     const getCurrency = (item) => {
         // [FIXED] Explicit Currency Handling (Check Metadata too)
         if (item.currency === 'USD' || item.metadata?.currency === 'USD') return '$';
-        if (item.currency === 'BDT' || item.metadata?.currency === 'BDT' || item.currency === 'NXS') return 'NXS';
+        if (item.currency === 'USD' || item.metadata?.currency === 'USD' || item.currency === 'NXS') return 'NXS';
 
         // Inference based on Context
         if (item.type === 'task_reward' || item.source === 'income' || item.type === 'referral_commission') return '$';
 
-        // Transfer Logic: Deductions from Income are USD, Additions to Main are BDT
+        // Transfer Logic: Deductions from Income are USD, Additions to Main are USD
         if (item.description && item.description.includes('Income')) {
             if (item.amount < 0) return '$'; // Debit from Income
             return 'NXS'; // Credit to Main

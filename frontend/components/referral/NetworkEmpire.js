@@ -115,7 +115,7 @@ export default function NetworkEmpire({ isOpen, onClose }) {
                                             <div className="flex items-center gap-4 z-10">
                                                 <div className="text-right">
                                                     <p className="text-xs text-slate-400 font-medium">Earnings</p>
-                                                    <p className="text-yellow-400 font-mono font-bold">৳{level.earnings?.toFixed(0)}</p>
+                                                    <p className="text-yellow-400 font-mono font-bold">${level.earnings?.toFixed(0)}</p>
                                                 </div>
 
                                                 {/* Circular Meter (Mini) */}

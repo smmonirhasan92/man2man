@@ -140,13 +140,13 @@ const UserManagement = () => {
 
                                 {/* 3-Wallet Columns */}
                                 <td className="p-4 text-right font-mono text-emerald-400 font-bold bg-emerald-500/5">
-                                    ৳{(user.wallet?.main || 0).toLocaleString()}
+                                    ${(user.wallet?.main || 0).toLocaleString()}
                                 </td>
                                 <td className="p-4 text-right font-mono text-yellow-500 font-bold bg-yellow-500/5">
-                                    ৳{(user.wallet?.game || 0).toLocaleString()}
+                                    ${(user.wallet?.game || 0).toLocaleString()}
                                 </td>
                                 <td className="p-4 text-right font-mono text-purple-400 font-bold bg-purple-500/5">
-                                    ৳{(user.wallet?.income || 0).toLocaleString()}
+                                    ${(user.wallet?.income || 0).toLocaleString()}
                                 </td>
 
                                 <td className="p-4 text-center">

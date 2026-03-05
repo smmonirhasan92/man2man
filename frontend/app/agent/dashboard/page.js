@@ -127,7 +127,7 @@ export default function AgentDashboard() {
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <p className="text-emerald-100 text-sm font-medium mb-1 tracking-wide">Available Stock</p>
                         <h2 className="text-4xl font-black text-white mb-4 tracking-tight drop-shadow-lg">
-                            ৳{Number(stats.currentBalance || 0).toLocaleString()}
+                            ${Number(stats.currentBalance || 0).toLocaleString()}
                         </h2>
 
                         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full">
@@ -220,7 +220,7 @@ export default function AgentDashboard() {
                                             </div>
                                             <div className="text-right">
                                                 <p className={`text-lg font-black ${trx.type === 'withdraw' ? 'text-rose-400' : 'text-blue-400'}`}>
-                                                    ৳{Math.abs(trx.amount)}
+                                                    ${Math.abs(trx.amount)}
                                                 </p>
                                                 <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded uppercase mt-1 ${trx.type === 'withdraw' ? 'bg-rose-500/10 text-rose-400' : 'bg-blue-500/10 text-blue-400'
                                                     }`}>

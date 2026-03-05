@@ -288,7 +288,7 @@ export default function UserManagement() {
 
                         <form onSubmit={handleBalanceUpdate} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Amount (BDT)</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Amount (USD)</label>
                                 <input
                                     type="number"
                                     required

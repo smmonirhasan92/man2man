@@ -33,7 +33,7 @@ export default function TurnoverTracker({ required, completed }) {
 
                 {!isUnlocked && (
                     <div className="mt-1 text-right">
-                        <span className="text-[9px] text-white/50">Play ৳{remaining.toFixed(0)} more to unlock</span>
+                        <span className="text-[9px] text-white/50">Play ${remaining.toFixed(0)} more to unlock</span>
                     </div>
                 )}
             </div>

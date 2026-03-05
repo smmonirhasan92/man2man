@@ -170,7 +170,7 @@ export default function SuperAceProGame() {
                 }
 
                 if (data.vault?.wasReleased) {
-                    toast.success(`VAULT UNLOCKED: ৳${data.vault.releasedAmount}`, { icon: '🔓', style: { background: '#064e3b', color: '#34d399' } });
+                    toast.success(`VAULT UNLOCKED: $${data.vault.releasedAmount}`, { icon: '🔓', style: { background: '#064e3b', color: '#34d399' } });
                 }
 
             }, turboMode ? 200 : 400);
@@ -237,7 +237,7 @@ export default function SuperAceProGame() {
                     <div className="text-right">
                         <div className="text-[10px] text-slate-500 uppercase tracking-widest">Balance</div>
                         <div className="font-mono text-xl text-cyan-400 leading-none">
-                            ৳<RollingCounter value={user?.wallet?.game || 0} />
+                            $<RollingCounter value={user?.wallet?.game || 0} />
                         </div>
                     </div>
                 </div>

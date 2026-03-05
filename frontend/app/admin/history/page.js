@@ -172,7 +172,7 @@ function HistoryContent() {
                                         <div className="flex justify-between items-center p-3 bg-slate-50/80 rounded-xl border border-slate-100">
                                             <span className="text-xs text-slate-500 font-medium">Amount</span>
                                             <span className={`font-mono font-bold text-base ${isCredit ? 'text-emerald-600' : 'text-slate-700'}`}>
-                                                {isCredit ? '+' : ''}{parseFloat(trx.amount).toFixed(2)} ৳
+                                                {isCredit ? '+' : ''}{parseFloat(trx.amount).toFixed(2)} $
                                             </span>
                                         </div>
 

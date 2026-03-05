@@ -88,7 +88,7 @@ export default function TasksPage() {
                 <div className="flex gap-4">
                     <div className="bg-white/10 p-3 rounded-xl flex-1 backdrop-blur-sm">
                         <div className="text-xs text-slate-400 uppercase font-bold">Today's Earnings</div>
-                        <div className="text-xl font-bold">{(userStats?.tasksCompleted * parseFloat(userStats?.rewardPerTask)).toFixed(2)} ৳</div>
+                        <div className="text-xl font-bold">{(userStats?.tasksCompleted * parseFloat(userStats?.rewardPerTask)).toFixed(2)} $</div>
                     </div>
                     <div className="bg-white/10 p-3 rounded-xl flex-1 backdrop-blur-sm">
                         <div className="text-xs text-slate-400 uppercase font-bold">Tasks Done</div>
@@ -117,7 +117,7 @@ export default function TasksPage() {
                                 disabled={claiming}
                                 className="w-full bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-200"
                             >
-                                {claiming ? 'Claiming...' : 'Claim Reward ৳'}
+                                {claiming ? 'Claiming...' : 'Claim Reward $'}
                             </Button>
                         )}
 
@@ -140,7 +140,7 @@ export default function TasksPage() {
                                 <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                                     <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{task.duration}s</span>
                                     <span>•</span>
-                                    <span className="text-green-600 font-bold">+{task.reward} ৳</span>
+                                    <span className="text-green-600 font-bold">+{task.reward} $</span>
                                 </div>
                             </div>
                         </div>

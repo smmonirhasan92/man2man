@@ -30,7 +30,7 @@ export default function WinMessageOverlay({ winAmount, isBigWin }) {
                         </h2>
 
                         <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-bold text-white">৳</span>
+                            <span className="text-2xl font-bold text-white">$</span>
                             <span className={`text-6xl font-black text-white drop-shadow-md ${isBigWin ? 'animate-bounce' : ''}`}>
                                 {winAmount.toFixed(2)}
                             </span>

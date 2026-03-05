@@ -170,23 +170,23 @@ export default function SuperAceReborn() {
                     // LOSS: Fast Red Flash & Damage Text
                     setFlashRed(true);
                     setTimeout(() => setFlashRed(false), 300);
-                    spawnFloat(`-৳${bet}`, 'damage');
+                    spawnFloat(`-$${bet}`, 'damage');
                 } else {
                     // Check if Trapped
                     if (data.vault?.trappedAmount > 0) {
-                        spawnFloat(`🔒 TRAPPED ৳${data.vault.trappedAmount}`, 'damage'); // Trapped logic
+                        spawnFloat(`🔒 TRAPPED $${data.vault.trappedAmount}`, 'damage'); // Trapped logic
                         toast("BIG WIN SECURED IN VAULT!", {
                             icon: '🔒',
                             style: { borderRadius: '10px', background: '#333', color: '#ffd700', border: '1px solid #ffd700' }
                         });
                     } else if (data.win > 0) {
-                        spawnFloat(`+৳${data.win}`, 'win');
+                        spawnFloat(`+$${data.win}`, 'win');
                     }
                 }
 
                 // Check Release
                 if (data.vault?.wasReleased) {
-                    toast.success(`VAULT UNLOCKED! ৳${data.vault.releasedAmount} RELEASED!`, {
+                    toast.success(`VAULT UNLOCKED! $${data.vault.releasedAmount} RELEASED!`, {
                         duration: 5000,
                         icon: '🔓',
                         style: { background: '#064e3b', color: '#fff', border: '1px solid #34d399' }
@@ -303,7 +303,7 @@ export default function SuperAceReborn() {
                                 <>
                                     <h2 className="text-4xl font-black text-yellow-400 uppercase tracking-widest animate-pulse">🌟 BIG WIN 🌟</h2>
                                     <div className="text-6xl font-black text-white mt-4 font-mono drop-shadow-[0_4px_0_#ca8a04]">
-                                        ৳{state.lastWin.toFixed(2)}
+                                        ${state.lastWin.toFixed(2)}
                                     </div>
                                 </>
                             ) : (

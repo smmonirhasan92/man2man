@@ -277,7 +277,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 <div className="flex items-end justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-2xl font-black text-[#eaeaec]">NXS / BDT</h2>
+                            <h2 className="text-2xl font-black text-[#eaeaec]">NXS / USD</h2>
                             <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">P2P</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
@@ -323,7 +323,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                 contentStyle={{ backgroundColor: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', fontSize: '10px', color: '#848e9c' }}
                                 itemStyle={{ color: '#0ecb81', fontWeight: 'bold' }}
                                 labelStyle={{ color: '#eaeaec', marginBottom: '4px' }}
-                                formatter={(value) => [`${value} ৳`, 'Price']}
+                                formatter={(value) => [`${value} $`, 'Price']}
                             />
                             <Area
                                 type="monotone"
@@ -430,7 +430,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                                 {trade.amount} NXS
                                             </div>
                                             <div className="text-[10px] text-[#848e9c] mt-0.5">
-                                                {(trade.amount * (trade.orderId?.rate || 126)).toLocaleString('en-IN')} BDT
+                                                {(trade.amount * (trade.orderId?.rate || 126)).toLocaleString('en-IN')} USD
                                             </div>
                                         </div>
                                         <div className="text-right flex items-center gap-2 text-[#848e9c] group-hover:text-[#eaeaec] transition">
@@ -469,7 +469,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex flex-col gap-1.5">
                                             <div className="text-lg font-black font-mono text-[#eaeaec] leading-none">
-                                                {order.rate || 126} <span className="text-[10px] text-[#848e9c] ml-0.5">BDT</span>
+                                                {order.rate || 126} <span className="text-[10px] text-[#848e9c] ml-0.5">USD</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Amount</span>
@@ -477,7 +477,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Limit</span>
-                                                <span className="text-[#eaeaec] font-mono">100 - {((order.amount || 0) * (order.rate || 126)).toLocaleString('en-IN')} ৳</span>
+                                                <span className="text-[#eaeaec] font-mono">100 - {((order.amount || 0) * (order.rate || 126)).toLocaleString('en-IN')} $</span>
                                             </div>
                                         </div>
 

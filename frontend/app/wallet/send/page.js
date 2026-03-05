@@ -100,7 +100,7 @@ export default function SendMoneyPage() {
                         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-center focus-within:ring-4 focus-within:ring-pink-500/10 transition-all">
                             <label className="block text-xs font-bold text-pink-500 uppercase tracking-widest mb-4">Amount to Send</label>
                             <div className="flex items-center justify-center">
-                                <span className="text-4xl font-black text-slate-300 mr-2">৳</span>
+                                <span className="text-4xl font-black text-slate-300 mr-2">$</span>
                                 <input
                                     type="number"
                                     className="w-48 text-5xl font-black text-slate-800 outline-none placeholder:text-slate-200 text-center bg-transparent"
@@ -148,7 +148,7 @@ export default function SendMoneyPage() {
                     {/* Summary Line */}
                     <div className="flex justify-between items-center mb-8 px-4 text-sm text-slate-500">
                         <span>Total Charge</span>
-                        <span className="font-bold text-slate-800">৳0.00</span>
+                        <span className="font-bold text-slate-800">$0.00</span>
                     </div>
 
                     <TapToConfirmButton

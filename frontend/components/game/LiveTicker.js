@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { Trophy, TrendingUp, Zap } from 'lucide-react';
 
 const FAKE_WINS = [
-    { user: 'S***akib', amount: '৳5,200', game: 'Mines', type: 'big' },
-    { user: 'R***him', amount: '৳1,500', game: 'Ludo', type: 'normal' },
-    { user: 'K***arin', amount: '৳12,000', game: 'Super Ace', type: 'mega' },
-    { user: 'T***anvir', amount: '৳800', game: 'Aviator', type: 'normal' },
-    { user: 'Admin', amount: '৳25,000', game: 'Jackpot', type: 'jackpot' },
+    { user: 'S***akib', amount: '$5,200', game: 'Mines', type: 'big' },
+    { user: 'R***him', amount: '$1,500', game: 'Ludo', type: 'normal' },
+    { user: 'K***arin', amount: '$12,000', game: 'Super Ace', type: 'mega' },
+    { user: 'T***anvir', amount: '$800', game: 'Aviator', type: 'normal' },
+    { user: 'Admin', amount: '$25,000', game: 'Jackpot', type: 'jackpot' },
 ];
 
 export default function LiveTicker() {

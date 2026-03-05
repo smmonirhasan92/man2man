@@ -39,7 +39,7 @@ export default function TransactionCard({
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm ${trx.type === 'add_money' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>
                             {trx.type.replace('_', ' ')}
                         </span>
-                        <span className="text-xl font-black text-slate-800 tracking-tight">৳{trx.amount}</span>
+                        <span className="text-xl font-black text-slate-800 tracking-tight">${trx.amount}</span>
                     </div>
                 </div>
             </div>

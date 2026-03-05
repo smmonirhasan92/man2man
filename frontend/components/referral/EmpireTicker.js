@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 const MOCK_EVENTS = [
-    "L2 member earned ৳500 commission! 🚀",
+    "L2 member earned $500 commission! 🚀",
     "L5 just recruited a new agent! 👥",
     "L10 activity detected! Empire expanding... 🌍",
     "L1 member hit 'Recruiter' badge! 🎖️"

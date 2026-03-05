@@ -101,7 +101,7 @@ export default function AdminRequestsPage() {
 
                                 <div className="bg-gray-50 p-3 rounded-xl mb-4 flex justify-between items-center">
                                     <span className="text-gray-500 text-sm">Amount Requested</span>
-                                    <span className="font-bold text-lg text-pink-600">৳ {req.amount}</span>
+                                    <span className="font-bold text-lg text-pink-600">$ {req.amount}</span>
                                 </div>
 
                                 {req.proofImage && (

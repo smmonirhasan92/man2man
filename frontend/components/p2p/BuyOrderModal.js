@@ -50,7 +50,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
                         <div className="flex flex-col gap-3 relative z-10">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-slate-400 font-medium">Exchange Rate</span>
-                                <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">1 NXS = {rate} BDT</span>
+                                <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">1 NXS = {rate} USD</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-slate-400 font-medium">Seller's Balance</span>

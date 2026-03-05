@@ -39,7 +39,7 @@ export default function TurnoverDashboard() {
                 <div className="bg-slate-800 p-4 rounded-lg border-l-4 border-yellow-500">
                     <div className="text-slate-400 text-sm uppercase">Pending Turnover</div>
                     <div className="text-3xl font-mono text-yellow-500 font-bold">
-                        BDT {stats.totalTurnoverPending.toLocaleString()}
+                        USD {stats.totalTurnoverPending.toLocaleString()}
                     </div>
                     <div className="text-xs text-yellow-500/50 mt-1">Locked Capital</div>
                 </div>
@@ -48,7 +48,7 @@ export default function TurnoverDashboard() {
                 <div className="bg-slate-800 p-4 rounded-lg border-l-4 border-green-500">
                     <div className="text-slate-400 text-sm uppercase">Completed Turnover</div>
                     <div className="text-3xl font-mono text-green-500 font-bold">
-                        BDT {stats.totalTurnoverCompleted.toLocaleString()}
+                        USD {stats.totalTurnoverCompleted.toLocaleString()}
                     </div>
                     <div className="text-xs text-green-500/50 mt-1">Released Capital</div>
                 </div>

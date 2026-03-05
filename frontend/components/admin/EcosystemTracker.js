@@ -54,7 +54,7 @@ export default function EcosystemTracker() {
                         <AlertTriangle size={12} className="text-red-400" /> Today's Liability Generated
                     </h3>
                     <div className="text-3xl font-black text-white tracking-tight relative z-10">
-                        <span className="text-sm text-slate-500 font-normal">৳</span>
+                        <span className="text-sm text-slate-500 font-normal">$</span>
                         {today_generation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     <p className="text-[10px] text-slate-400 mt-2 font-mono relative z-10">
@@ -71,7 +71,7 @@ export default function EcosystemTracker() {
                         <ShieldCheck size={12} className="text-emerald-400" /> Today's Ecosystem Recovery
                     </h3>
                     <div className="text-3xl font-black text-white tracking-tight relative z-10">
-                        <span className="text-sm text-slate-500 font-normal">৳</span>
+                        <span className="text-sm text-slate-500 font-normal">$</span>
                         {today_recovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     <p className="text-[10px] text-slate-400 mt-2 font-mono relative z-10">
@@ -91,7 +91,7 @@ export default function EcosystemTracker() {
                         <span className={`text-xl ${today_net > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                             {today_net > 0 ? '+' : ''}
                         </span>
-                        <span className="text-sm text-slate-500 font-normal">৳</span>
+                        <span className="text-sm text-slate-500 font-normal">$</span>
                         {today_net.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     <div className="mt-3 relative z-10">
@@ -120,8 +120,8 @@ export default function EcosystemTracker() {
                         return (
                             <div key={idx} className="flex flex-col items-center justify-end h-full gap-1 group relative">
                                 <div className="absolute bottom-full mb-2 bg-slate-800 text-white text-[10px] p-2 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-20 pointer-events-none">
-                                    <div className="text-red-400">Generated: ৳{day.generated}</div>
-                                    <div className="text-emerald-400">Burned: ৳{day.burned}</div>
+                                    <div className="text-red-400">Generated: ${day.generated}</div>
+                                    <div className="text-emerald-400">Burned: ${day.burned}</div>
                                 </div>
                                 <div className="flex gap-1 w-full justify-center items-end flex-1">
                                     {/* Generated Bar */}

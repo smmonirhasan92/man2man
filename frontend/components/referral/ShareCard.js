@@ -64,7 +64,7 @@ export default function ShareCard({ user, stats }) {
                     {/* Earnings Tag */}
                     <div className="bg-slate-800/50 backdrop-blur-sm p-3 rounded-xl border border-white/5 text-center">
                         <p className="text-xs text-slate-400 mb-1">Total Earnings</p>
-                        <p className="text-xl font-bold text-emerald-400">৳{stats.totalEarnings?.toFixed(2) || '0.00'}</p>
+                        <p className="text-xl font-bold text-emerald-400">${stats.totalEarnings?.toFixed(2) || '0.00'}</p>
                     </div>
 
                     {/* Footer / QR */}

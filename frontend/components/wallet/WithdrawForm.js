@@ -30,15 +30,15 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
         deliveryTime: '24h' // Default
     });
 
-    // Determine Receive Amount (Approx conversion logic if needed, or just 1:1 for BDT)
-    // Assuming Input is USD for this "Elegant" view? Or BDT?
-    // User asked: "Display USD balance... Input amount... Receive Amount (BDT)..."
+    // Determine Receive Amount (Approx conversion logic if needed, or just 1:1 for USD)
+    // Assuming Input is USD for this "Elegant" view? Or USD?
+    // User asked: "Display USD balance... Input amount... Receive Amount (USD)..."
     // Implies Input is in USD.
-    // Input is now directly in BDT as per user request
+    // Input is now directly in USD as per user request
 
     // Main Wallet Balance Only
-    // Assuming 'balance' prop is the Main Wallet Balance in BDT.
-    // We can display it as USD for the "Elegant" look if needed, or BDT.
+    // Assuming 'balance' prop is the Main Wallet Balance in USD.
+    // We can display it as USD for the "Elegant" look if needed, or USD.
 
     const receiveAmount = form.amount ? parseFloat(form.amount).toLocaleString() : '0';
 
@@ -47,7 +47,7 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
 
         const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        // Input is already in BDT
+        // Input is already in USD
         const bdtValue = parseFloat(form.amount);
 
         onSubmit({
@@ -95,7 +95,7 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
             {/* 2. Minimal Input */}
             <div className="w-full relative group text-center">
                 <div className="relative inline-block">
-                    <span className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 pr-4 text-3xl font-thin text-zinc-600">৳</span>
+                    <span className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 pr-4 text-3xl font-thin text-zinc-600">$</span>
                     <input
                         type="number"
                         value={form.amount}
@@ -110,7 +110,7 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
                 <div className="mt-6 flex flex-col items-center gap-1">
                     <div className="text-sm font-medium text-zinc-500 flex items-center justify-center gap-2">
                         <span>Receive approx</span>
-                        <span className="text-emerald-400/80">৳ {receiveAmount}</span>
+                        <span className="text-emerald-400/80">$ {receiveAmount}</span>
                     </div>
                     {/* Fee Label */}
                     <span className="text-[10px] text-zinc-700 font-mono tracking-wide">

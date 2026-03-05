@@ -27,7 +27,7 @@ const SLIDES = [
     {
         id: 3,
         title: "P2P FINANCE LIVE",
-        subtitle: "Instant USDT/BDT Withdrawals",
+        subtitle: "Instant USDT/USD Withdrawals",
         bg: "from-emerald-900 to-[#062c19]",
         icon: Zap,
         stats: "0% FEE TODAY",

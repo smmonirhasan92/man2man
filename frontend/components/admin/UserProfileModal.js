@@ -100,11 +100,11 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                             </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/5">
                                 <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Total Deposited</p>
-                                <p className="text-xl font-black text-emerald-400">৳{profile.financials?.totalDeposited || 0}</p>
+                                <p className="text-xl font-black text-emerald-400">${profile.financials?.totalDeposited || 0}</p>
                             </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/5">
                                 <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Total Withdrawn</p>
-                                <p className="text-xl font-black text-rose-400">৳{profile.financials?.totalWithdrawn || 0}</p>
+                                <p className="text-xl font-black text-rose-400">${profile.financials?.totalWithdrawn || 0}</p>
                             </div>
                         </div>
 

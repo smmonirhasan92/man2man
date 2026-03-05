@@ -9,14 +9,14 @@ export function CurrencyProvider({ children }) {
     const [currency, setCurrency] = useState('USD');
     const [rates, setRates] = useState({
         USD: 1,
-        BDT: 1 // [FIX] Disabled BDT conversion. 1 Unit = $1 USD.
+        USD: 1 // [FIX] Disabled USD conversion. 1 Unit = $1 USD.
     });
 
     useEffect(() => {
         // Force USD preference
         localStorage.setItem('currencyMode', 'USD');
         setCurrency('USD');
-        setRates({ USD: 1, BDT: 1 });
+        setRates({ USD: 1, USD: 1 });
     }, []);
 
     const toggleCurrency = () => {

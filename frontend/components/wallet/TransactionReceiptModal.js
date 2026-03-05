@@ -62,7 +62,7 @@ export default function TransactionReceiptModal({ isOpen, onClose, data }) {
                                         <span className="font-mono text-slate-700 font-bold">${(amount - fees.totalFee).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs text-slate-500">
-                                        <span>Rate (USD→BDT)</span>
+                                        <span>Rate (USD→USD)</span>
                                         <span className="font-mono text-slate-700">x {fees.conversionRate}</span>
                                     </div>
                                 </div>
@@ -71,7 +71,7 @@ export default function TransactionReceiptModal({ isOpen, onClose, data }) {
                             <div className="flex justify-between items-center pt-2 border-t-2 border-slate-800 border-dashed">
                                 <span className="text-slate-900 font-black uppercase text-sm">Amount Credited</span>
                                 <span className="font-black text-emerald-600 text-xl font-mono">
-                                    {fees?.conversionRate ? '৳' : '$'}{netAmount?.toFixed(2)}
+                                    {fees?.conversionRate ? '$' : '$'}{netAmount?.toFixed(2)}
                                 </span>
                             </div>
                         </div>

@@ -63,7 +63,7 @@ export default function AgentDashboard() {
                     <div className="relative z-10 text-center">
                         <p className="text-emerald-100 text-sm font-medium mb-1">Your Stock Balance</p>
                         <h2 className="text-4xl font-black text-white mb-2">
-                            ৳{Number(stats.currentBalance).toLocaleString()}
+                            ${Number(stats.currentBalance).toLocaleString()}
                         </h2>
                         <div className="flex justify-center gap-2 items-center text-xs text-emerald-100/80">
                             <Wallet className="w-3 h-3" />
@@ -77,7 +77,7 @@ export default function AgentDashboard() {
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between">
                         <div>
                             <p className="text-slate-400 text-xs">Total Commission Earned</p>
-                            <h3 className="text-xl font-bold text-emerald-400">৳{Number(stats.totalEarnings).toLocaleString()}</h3>
+                            <h3 className="text-xl font-bold text-emerald-400">${Number(stats.totalEarnings).toLocaleString()}</h3>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
                             <ArrowUpRight className="w-5 h-5 text-emerald-400" />
@@ -111,7 +111,7 @@ export default function AgentDashboard() {
                                         <p className="text-xs text-slate-500">{trx.User?.phone}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-black text-slate-800">৳{Math.abs(trx.amount)}</p>
+                                        <p className="text-lg font-black text-slate-800">${Math.abs(trx.amount)}</p>
                                         <p className="text-xs text-slate-400">
                                             {new Date(trx.createdAt).toLocaleTimeString()}
                                         </p>

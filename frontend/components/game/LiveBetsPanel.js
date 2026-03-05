@@ -51,7 +51,7 @@ export default function LiveBetsPanel() {
                             {bet.name}
                         </div>
                         <div className="flex flex-col items-end">
-                            <span className="font-mono text-slate-200">৳{bet.amount}</span>
+                            <span className="font-mono text-slate-200">${bet.amount}</span>
                             {bet.win && <span className="text-green-400 font-bold">{bet.multiplier}x</span>}
                         </div>
                     </div>

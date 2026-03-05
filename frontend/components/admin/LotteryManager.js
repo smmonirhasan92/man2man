@@ -84,7 +84,7 @@ export default function LotteryManager() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-400">Prize Amount (BDT)</label>
+                            <label className="text-xs text-slate-400">Prize Amount (USD)</label>
                             <input className="bg-slate-900 border border-slate-700 p-3 rounded-lg w-full focus:border-emerald-500 outline-none"
                                 type="number" placeholder="e.g. 10000"
                                 value={prizeAmount}
@@ -100,8 +100,8 @@ export default function LotteryManager() {
                     </div>
 
                     <div className="bg-slate-900/50 p-3 rounded text-xs text-slate-400 flex justify-between">
-                        <span>Target Sales: ৳{prizeAmount ? prizeAmount * multiplier : 0}</span>
-                        <span>Profit: ৳{prizeAmount ? (prizeAmount * multiplier) - prizeAmount : 0}</span>
+                        <span>Target Sales: ${prizeAmount ? prizeAmount * multiplier : 0}</span>
+                        <span>Profit: ${prizeAmount ? (prizeAmount * multiplier) - prizeAmount : 0}</span>
                     </div>
 
                     <button
@@ -121,8 +121,8 @@ export default function LotteryManager() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div>
                             <h4 className="text-slate-400 text-xs uppercase tracking-widest">Current Jackpot</h4>
-                            <div className="text-4xl font-black text-yellow-400">৳{activeSlot.jackpot}</div>
-                            <div className="text-xs text-slate-500 mt-1">Target Sales: ৳{activeSlot.targetSales}</div>
+                            <div className="text-4xl font-black text-yellow-400">${activeSlot.jackpot}</div>
+                            <div className="text-xs text-slate-500 mt-1">Target Sales: ${activeSlot.targetSales}</div>
                         </div>
 
                         <div className="flex-1 w-full">
@@ -134,7 +134,7 @@ export default function LotteryManager() {
                                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500" style={{ width: `${activeSlot.progress}%` }}></div>
                             </div>
                             <div className="text-center text-[10px] text-slate-500 mt-1">
-                                Current Sales: ৳{activeSlot.currentSales}
+                                Current Sales: ${activeSlot.currentSales}
                             </div>
                         </div>
 
@@ -158,7 +158,7 @@ export default function LotteryManager() {
                             <p className="text-xs text-slate-500">{new Date(lot.date).toLocaleString()}</p>
                         </div>
                         <div className="text-emerald-400 font-mono font-bold">
-                            +৳{lot.amount}
+                            +${lot.amount}
                         </div>
                     </div>
                 ))}

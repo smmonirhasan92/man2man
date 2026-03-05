@@ -30,7 +30,7 @@ export default function ServerCard({ plan, onRent }) {
     const profitTier = plan.features.find(f => f.includes("Profit Tier"))?.split(": ")[1] || "Standard";
     const recovery = plan.features.find(f => f.includes("Capital Recovery"))?.split(": ")[1] || "16 Days";
 
-    // Currency Formatting (Exact user requirement: $10.50 / ৳1266.83)
+    // Currency Formatting (Exact user requirement: $10.50 / $1266.83)
     const usdPrice = (plan.unlock_price / 120.65).toFixed(2);
     const bdtPrice = plan.unlock_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -64,7 +64,7 @@ export default function ServerCard({ plan, onRent }) {
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Monthly Rent</span>
                     <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-3xl font-black text-white leading-none">${usdPrice}</span>
-                        <span className="text-lg text-slate-500 font-medium">/ ৳{bdtPrice}</span>
+                        <span className="text-lg text-slate-500 font-medium">/ ${bdtPrice}</span>
                     </div>
                 </div>
 

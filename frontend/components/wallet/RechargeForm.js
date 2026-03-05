@@ -127,7 +127,7 @@ export default function RechargeForm({ settings, onSubmit, loading, activeTab })
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                         />
-                        <span className="absolute left-3 top-3 text-slate-500 font-bold">৳</span>
+                        <span className="absolute left-3 top-3 text-slate-500 font-bold">$</span>
                     </div>
                 </div>
 

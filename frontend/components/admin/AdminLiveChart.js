@@ -52,7 +52,7 @@ export default function AdminLiveChart({ initialData }) {
                     {payload.map((entry, index) => (
                         <div key={index} className="flex justify-between gap-4 font-bold" style={{ color: entry.color }}>
                             <span className="uppercase">{entry.name}:</span>
-                            <span>৳{entry.value.toLocaleString()}</span>
+                            <span>${entry.value.toLocaleString()}</span>
                         </div>
                     ))}
                 </div>

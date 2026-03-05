@@ -64,7 +64,7 @@ export default function GameCenter() {
                         <div>
                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Main Balance</p>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-cyan-400 font-medium">৳</span>
+                                <span className="text-cyan-400 font-medium">$</span>
                                 <h2 className="text-lg font-black text-white leading-none">
                                     {loading ? '...' : Number(user?.wallet_balance || 0).toFixed(2)}
                                 </h2>
@@ -76,7 +76,7 @@ export default function GameCenter() {
                         <div className="text-right">
                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Game Wallet</p>
                             <div className="flex items-baseline gap-1 justify-end">
-                                <span className="text-purple-400 font-medium">৳</span>
+                                <span className="text-purple-400 font-medium">$</span>
                                 <h2 className="text-lg font-black text-white leading-none">
                                     {loading ? '...' : Number(user?.game_balance || 0).toFixed(2)}
                                 </h2>

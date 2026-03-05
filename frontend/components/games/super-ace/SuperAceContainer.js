@@ -117,7 +117,7 @@ export default function SuperAceContainer() {
                     <div className="flex items-center gap-2 bg-black/60 rounded-full px-4 py-1.5 border border-[#FFD700]/30 shadow-inner backdrop-blur-md">
                         <div className="flex flex-col items-end leading-none">
                             <span className="text-[10px] text-[#FFD700] font-bold uppercase tracking-widest">Quick Wallet</span>
-                            <span className="text-sm font-black text-white">৳{(user?.game_balance || 0).toLocaleString()}</span>
+                            <span className="text-sm font-black text-white">${(user?.game_balance || 0).toLocaleString()}</span>
                         </div>
                         {/* Quick Deposit Button if Low Balance */}
                         {(user?.game_balance || 0) < bet && (
@@ -226,7 +226,7 @@ export default function SuperAceContainer() {
                         <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total Bet</div>
                         <div className="flex items-center gap-2 bg-black/40 rounded-xl p-1">
                             <button onClick={() => setBet(Math.max(10, bet - 10))} className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 text-white font-bold">-</button>
-                            <div className="flex-1 text-center font-black text-xl text-[#FFD700]">৳{bet}</div>
+                            <div className="flex-1 text-center font-black text-xl text-[#FFD700]">${bet}</div>
                             <button onClick={() => setBet(bet + 10)} className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 text-white font-bold">+</button>
                         </div>
                     </div>

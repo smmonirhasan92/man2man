@@ -11,7 +11,7 @@ export default function CurrencyToggle() {
         >
             <span className={currency === 'USD' ? 'text-green-400' : 'text-slate-400'}>$</span>
             <span className="w-px h-3 bg-white/20 mx-0.5"></span>
-            <span className={currency === 'BDT' ? 'text-green-400' : 'text-slate-400'}>৳</span>
+            <span className={currency === 'USD' ? 'text-green-400' : 'text-slate-400'}>$</span>
         </button>
     );
 }

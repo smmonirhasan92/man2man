@@ -64,7 +64,7 @@ const VaultWidget = ({ lockedAmount, requiredTurnover, completedTurnover, isSpin
                     <span className={`font-bold text-sm tracking-widest uppercase ${isSpinLock ? 'text-red-400' : 'text-yellow-400'}`}>
                         {isSpinLock ? 'WIN LOCKED' : 'Vault Locked'}
                     </span>
-                    <span className="text-white font-mono font-bold text-sm">৳{safeLocked.toFixed(2)}</span>
+                    <span className="text-white font-mono font-bold text-sm">${safeLocked.toFixed(2)}</span>
                 </div>
 
                 {/* Progress Bar */}
@@ -90,7 +90,7 @@ const VaultWidget = ({ lockedAmount, requiredTurnover, completedTurnover, isSpin
                             {remainingSpins} SPINS TO UNLOCK
                         </span>
                     ) : (
-                        <span>TARGET: ৳{(safeReq - safeComp).toFixed(0)} LEFT</span>
+                        <span>TARGET: ${(safeReq - safeComp).toFixed(0)} LEFT</span>
                     )}
                 </div>
             </div>

@@ -71,7 +71,7 @@ export default function AdminSettlementsPage() {
                                 </div>
 
                                 <div className="flex flex-col items-end gap-2">
-                                    <span className="text-2xl font-black text-slate-800">৳{Math.abs(parseFloat(trx.amount))}</span>
+                                    <span className="text-2xl font-black text-slate-800">${Math.abs(parseFloat(trx.amount))}</span>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleAction(trx.id, 'rejected')}

@@ -177,7 +177,7 @@ export default function FruitsAdventure() {
                         <div className="bg-black/80 backdrop-blur-xl p-8 rounded-2xl border border-orange-500/50 animate-bounce shadow-[0_0_100px_rgba(249,115,22,0.3)] text-center scale-150 transform">
                             <h2 className="text-3xl font-black text-orange-400 uppercase tracking-widest">Sweet!</h2>
                             <div className="text-5xl font-black text-white mt-2 font-mono drop-shadow-xl">
-                                ৳{state.lastWin.toFixed(2)}
+                                ${state.lastWin.toFixed(2)}
                             </div>
                         </div>
                     </div>

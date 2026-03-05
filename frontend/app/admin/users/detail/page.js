@@ -188,7 +188,7 @@ function UserDetailContent() {
                     <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100 mb-4">
                         <div>
                             <div className="text-xs text-emerald-600 font-bold uppercase">Main Balance</div>
-                            <div className="text-2xl font-black text-emerald-800">৳{user.wallet?.main?.toFixed(2) || '0.00'}</div>
+                            <div className="text-2xl font-black text-emerald-800">${user.wallet?.main?.toFixed(2) || '0.00'}</div>
                         </div>
                         <button
                             onClick={() => setBalanceModal(true)}
@@ -201,15 +201,15 @@ function UserDetailContent() {
                     <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="p-2 bg-slate-50 rounded-xl">
                             <div className="text-[10px] text-slate-400">Income</div>
-                            <div className="font-bold">৳{user.wallet?.income?.toFixed(2)}</div>
+                            <div className="font-bold">${user.wallet?.income?.toFixed(2)}</div>
                         </div>
                         <div className="p-2 bg-slate-50 rounded-xl">
                             <div className="text-[10px] text-slate-400">Game</div>
-                            <div className="font-bold">৳{user.wallet?.game?.toFixed(2)}</div>
+                            <div className="font-bold">${user.wallet?.game?.toFixed(2)}</div>
                         </div>
                         <div className="p-2 bg-slate-50 rounded-xl">
                             <div className="text-[10px] text-slate-400">Purchase</div>
-                            <div className="font-bold">৳{user.wallet?.purchase?.toFixed(2)}</div>
+                            <div className="font-bold">${user.wallet?.purchase?.toFixed(2)}</div>
                         </div>
                     </div>
                 </div>

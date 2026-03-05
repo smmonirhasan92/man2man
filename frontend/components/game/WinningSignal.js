@@ -44,7 +44,7 @@ export default function WinningSignal({ totalWin }) {
             >
                 <div className="bg-black/80 backdrop-blur-xl px-8 py-4 rounded-3xl border-2 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.4)] flex flex-col items-center">
                     <span className="text-yellow-400 text-xs font-bold uppercase tracking-widest mb-1">Total Win</span>
-                    <span className="text-4xl font-black text-white">৳{totalWin.toFixed(2)}</span>
+                    <span className="text-4xl font-black text-white">${totalWin.toFixed(2)}</span>
                 </div>
             </motion.div>
         </div>
