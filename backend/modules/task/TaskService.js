@@ -346,21 +346,27 @@ class TaskService {
                 userUpd.taskData.tasksCompletedToday = 0;
             }
 
+            // [NEW P2P MARKETING LOGIC] Zero-Liability Task Commission
+            // System deducts 5% of the earned task reward to distribute to 5 uplines.
+            // Earner receives 95% of the task reward.
+            const DEDUCTION_PERCENT = 5.0; // 5% total distribution
+            const systemDeductionAmount = (rewardAmount * DEDUCTION_PERCENT) / 100;
+            const earnerNetIncome = rewardAmount - systemDeductionAmount;
+
             console.log(`[TaskService] Pre-Reward Wallet:`, userUpd.wallet);
             userUpd.taskData.tasksCompletedToday += 1;
             userUpd.taskData.lastTaskDate = now;
 
             if (userUpd.wallet.income === undefined || isNaN(userUpd.wallet.income)) userUpd.wallet.income = 0;
-            userUpd.wallet.income += rewardAmount;
-            console.log(`[TaskService] Post-Reward Wallet Income: ${userUpd.wallet.income} (Reward: ${rewardAmount})`);
+
+            // Earner receives the 95% NET amount
+            userUpd.wallet.income += earnerNetIncome;
+            console.log(`[TaskService] Post-Reward Wallet Income: ${userUpd.wallet.income} (Gross: ${rewardAmount}, Net: ${earnerNetIncome})`);
 
             // Clear current task session
             userUpd.taskData.currentTask = { taskId: null, startTime: null };
 
             // [SYNC] Update Plan Usage in User Model (Global Tracker)
-            // Note: We already updated UserPlan.tasksCompletedToday above
-            // [FIX] REMOVED DUPLICATE INCREMENT (userUpd.taskData.tasksCompletedToday already incremented)
-            // userUpd.taskData.tasksCompletedToday += 1; // Global count
             userUpd.taskData.lastTaskDate = new Date();
 
             await userUpd.save({ session });
@@ -369,14 +375,25 @@ class TaskService {
             await Transaction.create([{
                 userId,
                 type: 'task_reward',
-                amount: rewardAmount,
+                amount: earnerNetIncome, // Log the actual 95% received
                 status: 'completed',
                 description: `Task Completed`,
-                balanceAfter: userUpd.wallet.income
+                balanceAfter: userUpd.wallet.income,
+                metadata: { grossReward: rewardAmount, deducedP2P: systemDeductionAmount }
             }], { session });
 
+            // [P2P DISTRIBUTION] Distribute the deducted 5% to the 5 Uplines
+            console.log(`[TaskService] Distributing $${systemDeductionAmount} (5%) up the referral chain for User: ${userId}`);
+            // Note: ReferralService.distributeIncome internally calculates percentages based on the ORIGINAL gross amount.
+            // Since PLAN_COMMISSION_RATES is [2.0, 1.0, 1.0, 0.5, 0.5] (total 5%), passing the GROSS rewardAmount is correct.
+            let p2pDistributed = 0;
+            try {
+                const p2pRes = await this.ReferralService.distributeIncome(userUpd.referredBy, rewardAmount, 'p2p_task_commission', session);
+                p2pDistributed = p2pRes.distributed;
+            } catch (e) { console.error("[TaskService P2P Dist Error]", e); }
+
             // Notify User
-            await NotificationService.send(userId, `✅ Task Reward: +$${rewardAmount.toFixed(4)}`, 'success');
+            await NotificationService.send(userId, `✅ Task Reward: +$${earnerNetIncome.toFixed(4)}`, 'success');
 
             // [SOCKET] Real-time Balance Update
             const SocketService = require('../common/SocketService');
