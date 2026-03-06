@@ -16,7 +16,10 @@ const countries = [
     { name: 'United States', code: '+1', flagCode: 'us' },
     { name: 'United Kingdom', code: '+44', flagCode: 'gb' },
     { name: 'Canada', code: '+1', flagCode: 'ca' },
-    { name: 'UAE', code: '+971', flagCode: 'ae' }
+    { name: 'UAE', code: '+971', flagCode: 'ae' },
+    { name: 'Saudi Arabia', code: '+966', flagCode: 'sa' },
+    { name: 'Malaysia', code: '+60', flagCode: 'my' },
+    { name: 'Singapore', code: '+65', flagCode: 'sg' }
 ];
 
 export default function LoginPage() {
