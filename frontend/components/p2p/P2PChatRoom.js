@@ -10,7 +10,7 @@ import VisualGuide from '../ui/VisualGuide';
 
 export default function P2PChatRoom({ tradeId, onBack }) {
     const { user } = useAuth();
-    const socket = useSocket();
+    const socket = useSocket('/system'); // [FIX] Listen on the /system namespace
     const [trade, setTrade] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -310,7 +310,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full mx-auto relative full-screen-app">
+        <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
             {/* 1. Header with Timer */}
             <div className="p-3 border-b border-[#2b3139] bg-[#181a20] flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                         </div>
                     );
                 })}
-                <div ref={scrollRef} />
+                <div ref={scrollRef} className="h-4 shrink-0" />
             </div>
 
             {/* 3. Action Bar (Fixed at bottom) */}
