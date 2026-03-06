@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Camera, Save, User, LogOut, History, Wallet, Lock, Copy, Sparkles, Trophy } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import ImageCropper from '../../components/profile/ImageCropper';
-import TransactionLedger from '../../components/history/TransactionLedger';
+import ReferralNetworkUI from '../../components/profile/ReferralNetworkUI';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
@@ -328,14 +328,9 @@ export default function ProfilePage() {
                     </button>
                 </form>
 
-                {/* LEDGER SECTION */}
-                <div className="pt-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <History className="w-4 h-4 text-slate-500" />
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Transaction History</h3>
-                    </div>
-                    {/* Glassmorphism Container handled inside TransactionLedger default styles */}
-                    <TransactionLedger />
+                {/* REFERRAL NETWORK EMPIRE */}
+                <div className="pt-4 pb-2">
+                    <ReferralNetworkUI />
                 </div>
 
                 {/* LOGOUT */}

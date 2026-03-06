@@ -285,3 +285,56 @@ exports.getMyReferrals = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// [NEW] Visual Referral Network (5 Levels Deep)
+exports.getNetworkSummary = async (req, res) => {
+    try {
+        const userId = req.user.user.id;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const networkCounts = {
+            level1: 0,
+            level2: 0,
+            level3: 0,
+            level4: 0,
+            level5: 0
+        };
+
+        // Helper to fetch descendant counts up to max depth
+        const getDescendants = async (referralCodes, currentDepth, maxDepth = 5) => {
+            if (currentDepth > maxDepth || !referralCodes || referralCodes.length === 0) return;
+
+            // Find all users who were referred by the current batch of referral codes
+            const usersAtThisLevel = await User.find({ referredBy: { $in: referralCodes } }).select('referralCode');
+
+            if (usersAtThisLevel.length > 0) {
+                // Update specific level count
+                networkCounts[`level${currentDepth}`] += usersAtThisLevel.length;
+
+                // Extract their codes to search the next level
+                const nextLevelCodes = usersAtThisLevel.map(u => u.referralCode).filter(code => code);
+
+                await getDescendants(nextLevelCodes, currentDepth + 1, maxDepth);
+            }
+        };
+
+        if (user.referralCode) {
+            // Start tracing from the current user's referral code into Level 1
+            await getDescendants([user.referralCode], 1, 5);
+        }
+
+        const totalNetworkSize = networkCounts.level1 + networkCounts.level2 + networkCounts.level3 + networkCounts.level4 + networkCounts.level5;
+
+        res.json({
+            success: true,
+            totalNetworkSize,
+            levelCounts: networkCounts,
+            username: user.username
+        });
+
+    } catch (err) {
+        console.error("[Referral Network Summary Error]:", err);
+        res.status(500).json({ message: 'Failed to generate network summary.' });
+    }
+};

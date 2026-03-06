@@ -12,5 +12,6 @@ router.put('/change-password', authMiddleware, userController.changePassword);
 router.get('/plans', authMiddleware, userController.getAccountPlans);
 router.post('/upgrade-tier', authMiddleware, userController.upgradeAccountTier);
 router.get('/referrals', authMiddleware, userController.getMyReferrals);
+router.get('/network-summary', authMiddleware, userController.getNetworkSummary); // [NEW] 5-Level Network API
 
 module.exports = router;
