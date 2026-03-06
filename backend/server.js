@@ -11,6 +11,7 @@ const path = require('path');
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
+app.set('trust proxy', 1); // Trust first Hostinger proxy to properly identify User IPs for rate limiter
 app.disable('x-powered-by'); // Hide Tech Stack
 
 // [DEBUG] Request Tracer - Log EVERYTHING
