@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { PlayCircle, CheckCircle, Clock, Shield, Zap, Info, X } from 'lucide-react';
+import { PlayCircle, CheckCircle, Clock, Shield, Zap, Info, X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import confetti from 'canvas-confetti';
@@ -19,6 +19,10 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
     const [error, setError] = useState(null);
     const FULL_DASH_ARRAY = 283; // 2 * PI * 45
     const [dashOffset, setDashOffset] = useState(0);
+
+    // [New] Interactive Review States
+    const [rating, setRating] = useState(0);
+    const [hoveredRating, setHoveredRating] = useState(0);
 
     // [New] Review Text Generator
     const [reviewText, setReviewText] = useState("");
@@ -106,7 +110,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                     if (nextTime <= 0) {
                         clearInterval(timer);
                         clearInterval(heartbeatInterval);
-                        setStatus('ready');
+                        setStatus('reviewing'); // [FIX] Emulate Ad Verification step
                         return 0;
                     }
                     return nextTime;
@@ -240,9 +244,9 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                         <img
                             src={task.imageUrl || task.thumbnail || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&q=80&w=800"}
                             alt="Task"
-                            className={`w-full h-full object-cover ${isVideo ? 'opacity-80' : 'opacity-40'}`}
+                            className="w-full h-full object-cover opacity-100"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-slate-900/60"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent"></div>
 
                         {/* Video UI Overlay */}
                         {isVideo && (
@@ -337,25 +341,50 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                             <p className="text-blue-400 text-xs font-mono animate-pulse">WATCHING ADVERTISEMENT...</p>
                         )}
 
-                        {/* CLAIM BUTTON */}
+                        {/* CORPORATE SPONSOR REVIEW */}
                         <AnimatePresence>
-                            {status === 'ready' && (
+                            {(status === 'reviewing' || status === 'claiming') && (
                                 <motion.div
                                     initial={{ scale: 0.8, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    className="w-full"
+                                    className="w-full flex flex-col items-center bg-slate-800/90 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl"
                                 >
+                                    <h3 className="text-white font-black text-lg mb-1 tracking-wide">SPONSOR REVIEW</h3>
+                                    <p className="text-slate-400 text-[10px] uppercase tracking-widest text-center mb-5">Rate Experience to Unlock Reward</p>
+
+                                    <div className="flex gap-2 mb-6">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                onMouseEnter={() => setHoveredRating(star)}
+                                                onMouseLeave={() => setHoveredRating(0)}
+                                                onClick={() => setRating(star)}
+                                                className="transition-transform hover:scale-125 focus:outline-none"
+                                            >
+                                                <Star
+                                                    className={`w-10 h-10 ${star <= (hoveredRating || rating) ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]' : 'text-slate-600'}`}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+
                                     <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={{ scale: rating > 0 && status !== 'claiming' ? 1.02 : 1 }}
+                                        whileTap={{ scale: rating > 0 && status !== 'claiming' ? 0.95 : 1 }}
                                         onClick={handleClaim}
-                                        className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl font-black text-white text-lg uppercase tracking-wider shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center justify-center gap-3 relative overflow-hidden group"
+                                        disabled={rating === 0 || status === 'claiming'}
+                                        className={`w-full py-4 rounded-xl font-black text-white text-md uppercase tracking-wider flex items-center justify-center gap-3 transition-all duration-300 ${rating > 0
+                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_25px_rgba(16,185,129,0.5)]'
+                                                : 'bg-slate-700/50 text-slate-500 cursor-not-allowed border border-slate-600/50'
+                                            }`}
                                     >
-                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 backdrop-blur-sm"></div>
-                                        <CheckCircle className="w-6 h-6 fill-white/20" />
-                                        <span>Claim Reward</span>
+                                        {status === 'claiming' ? (
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <CheckCircle className={`w-5 h-5 ${rating > 0 ? 'fill-white/20' : ''}`} />
+                                        )}
+                                        <span>{status === 'claiming' ? 'Verifying Review...' : 'Submit & Claim'}</span>
                                     </motion.button>
-                                    <p className="text-center text-slate-500 text-xs mt-4">Verified by USA Affiliate Network</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
