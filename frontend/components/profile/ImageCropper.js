@@ -33,14 +33,6 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }) {
 
     return (
         <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
-            <div className="absolute top-0 w-full p-4 flex justify-between z-10 bg-gradient-to-b from-black/80 to-transparent">
-                <button onClick={onCancel} className="bg-white/10 p-2 rounded-full text-white hover:bg-white/20">
-                    <X className="w-6 h-6" />
-                </button>
-                <button onClick={showCroppedImage} className="bg-cyan-500 p-2 rounded-full text-white hover:bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-                    <Check className="w-6 h-6" />
-                </button>
-            </div>
 
             <div className="relative w-full h-[70vh] bg-black">
                 <Cropper
@@ -66,8 +58,17 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }) {
                     step={0.1}
                     aria-labelledby="Zoom"
                     onChange={(e) => setZoom(e.target.value)}
-                    className="w-full accent-cyan-400 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-cyan-400 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer mb-8"
                 />
+
+                <div className="flex gap-4">
+                    <button onClick={onCancel} className="flex-1 py-4 bg-slate-800 border border-slate-600 text-slate-300 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-slate-700 transition">
+                        Cancel
+                    </button>
+                    <button onClick={showCroppedImage} className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-black uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-[1.02] active:scale-[0.98] transition">
+                        Select Picture
+                    </button>
+                </div>
             </div>
         </div>
     );
