@@ -10,7 +10,7 @@ const P2POrderSchema = new mongoose.Schema({
 
     paymentMethod: {
         type: String,
-        enum: ['bkash', 'nagad', 'rocket', 'bank'],
+        enum: ['bkash', 'nagad', 'rocket', 'bank', 'binance', 'gpay', 'phonepe', 'paytm'],
         required: true
     },
     paymentDetails: { type: String, required: true }, // Encrypted or Hidden until match ideally, but simple string for now
