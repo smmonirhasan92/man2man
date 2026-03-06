@@ -137,7 +137,7 @@ export function NotificationProvider({ children }) {
             socket.off('wallet:update');
             socket.off('config:update');
         };
-    }, [socket, refreshUser]);
+    }, [socket]); // [FIX] Removed refreshUser from dependency array to prevent infinite loop
 
     // Custom Styles for Premium Feel
     const premiumStyle = {

@@ -53,17 +53,20 @@ exports.subscribePush = async (req, res) => {
         const subscription = req.body;
 
         const User = require('../user/UserModel');
-        const user = await User.findById(userId);
 
-        if (user) {
-            if (!user.pushSubscriptions) user.pushSubscriptions = [];
-            // Remove existing duplicate endpoint
-            user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== subscription.endpoint);
-            user.pushSubscriptions.push(subscription);
-            await user.save();
-            return res.status(201).json({ message: "Subscribed successfully." });
-        }
-        res.status(404).json({ error: "User not found" });
+        // Atomically remove old subscription for this endpoint (if it exists)
+        await User.updateOne(
+            { _id: userId },
+            { $pull: { pushSubscriptions: { endpoint: subscription.endpoint } } }
+        );
+
+        // Atomically push the new subscription
+        await User.updateOne(
+            { _id: userId },
+            { $push: { pushSubscriptions: subscription } }
+        );
+
+        return res.status(201).json({ message: "Subscribed successfully." });
     } catch (err) {
         console.error("Push Subscription Error", err);
         res.status(500).json({ error: "Server error" });
