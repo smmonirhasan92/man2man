@@ -13,49 +13,8 @@ export async function middleware(request) {
 
     if (isExcluded) return NextResponse.next();
 
-    // 2. Fetch Maintenance Status
-    try {
-        // Build API URL. Middleware runs on Edge, so localhost might be tricky if not defined.
-        // Assuming NEXT_PUBLIC_API_URL is set in environment. 
-        // [FORCE FIX] Hardcoded Production URL (New Deployment)
-        // [FIX] Use Environment Variable for Dynamic Backend URL
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        console.log(`[Middleware] Checking API Health: ${apiUrl}`);
-
-        // Proceed to maintenance check directly
-
-
-        // Timeout to prevent blocking
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1000); // 1s timeout
-
-        const res = await fetch(`${apiUrl}/api/admin/settings/public`, {
-            signal: controller.signal,
-            next: { revalidate: 60 } // Cache for 60s to reduce load
-        });
-        clearTimeout(timeoutId);
-
-        if (res.ok) {
-            const data = await res.json();
-            // Structure: { maintenance: { isActive: true, message: "..." } }
-            // or if we returned flattened: { maintenance: boolean } - check adminController
-
-            // Controller returns: { maintenance: { isActive: boolean, ... } } directly as the value of the key 'maintenance'
-            // Wait, adminController.getPublicSettings returns { maintenance: ...value }.
-            // Value is what was stored. If value is { isActive: true }, then data.maintenance.isActive.
-
-            const maintenance = data.maintenance;
-            const isActive = maintenance?.isActive === true || maintenance === true; // Handle object or bool
-
-            if (isActive) {
-                return NextResponse.rewrite(new URL('/maintenance', request.url));
-            }
-        }
-    } catch (err) {
-        // If API fails, default to allowing access (Fail Open) to avoid locking out accidentally
-        console.error("Middleware Maintenance Check Failed:", err);
-    }
-
+    // 2. Removed Maintenance Fetch because Edge middleware hitting the backend on EVERY asset causes DDOS and triggers rate-limiting.
+    // Maintenance mode should be handled via static rewrite or Client-side context if needed for MVP.
     return NextResponse.next();
 }
 
