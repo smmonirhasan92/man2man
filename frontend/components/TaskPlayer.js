@@ -27,16 +27,20 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
     // [New] Review Text Generator
     const [reviewText, setReviewText] = useState("");
     useEffect(() => {
-        if (task.type === 'review') {
-            const reviews = [
-                "Amazing quality, totally worth it!",
-                "Fast shipping and great customer service.",
-                "Exactly what I was looking for, highly recommend.",
-                "Five stars! Will buy again.",
-                "Premium experience, very satisfied."
-            ];
-            setReviewText(reviews[Math.floor(Math.random() * reviews.length)]);
-        }
+        // [FIX] Always generate a random positive review to show next to the rating
+        const reviews = [
+            "Amazing quality, totally worth it!",
+            "Fast shipping and great customer service.",
+            "Exactly what I was looking for, highly recommend.",
+            "Five stars! Will buy again.",
+            "Premium experience, very satisfied.",
+            "Great platform, smooth transaction.",
+            "Very fast and reliable! 100% trusted.",
+            "Exceeded my expectations, great support.",
+            "Best service I've used so far.",
+            "Absolutely fantastic, no complaints!"
+        ];
+        setReviewText(reviews[Math.floor(Math.random() * reviews.length)]);
     }, [task]);
 
     // [NEW] Connection Animation Steps
@@ -261,14 +265,6 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                     {/* Center Interaction Area */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 pt-20">
 
-                        {/* REVIEW TEXT (Only for Reviews) */}
-                        {isReview && (
-                            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 mb-6 w-full text-center">
-                                <p className="text-[10px] text-slate-400 mb-2 uppercase tracking-wide">Copy this review</p>
-                                <p className="text-sm font-bold text-white italic">"{reviewText}"</p>
-                            </div>
-                        )}
-
                         {/* TIMER CIRCLE */}
                         <AnimatePresence mode='wait'>
                             {(status === 'counting' || status === 'initializing') && (
@@ -350,7 +346,13 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                                     className="w-full flex flex-col items-center bg-slate-800/90 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl"
                                 >
                                     <h3 className="text-white font-black text-lg mb-1 tracking-wide">SPONSOR REVIEW</h3>
-                                    <p className="text-slate-400 text-[10px] uppercase tracking-widest text-center mb-5">Rate Experience to Unlock Reward</p>
+                                    <p className="text-slate-400 text-[10px] uppercase tracking-widest text-center mb-4">Rate Experience to Unlock Reward</p>
+
+                                    {/* Random auto-generated comment to submit */}
+                                    <div className="bg-slate-900/50 w-full p-3 rounded-xl border border-emerald-500/20 mb-5 relative group">
+                                        <div className="absolute -top-2 left-3 bg-emerald-500 text-[8px] font-bold text-slate-900 px-2 py-0.5 rounded-sm uppercase tracking-widest shadow-sm">Auto-Comment</div>
+                                        <p className="text-emerald-300 text-sm font-medium italic text-center leading-tight">"{reviewText}"</p>
+                                    </div>
 
                                     <div className="flex gap-2 mb-6">
                                         {[1, 2, 3, 4, 5].map((star) => (
@@ -374,8 +376,8 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                                         onClick={handleClaim}
                                         disabled={rating === 0 || status === 'claiming'}
                                         className={`w-full py-4 rounded-xl font-black text-white text-md uppercase tracking-wider flex items-center justify-center gap-3 transition-all duration-300 ${rating > 0
-                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_25px_rgba(16,185,129,0.5)]'
-                                                : 'bg-slate-700/50 text-slate-500 cursor-not-allowed border border-slate-600/50'
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_25px_rgba(16,185,129,0.5)]'
+                                            : 'bg-slate-700/50 text-slate-500 cursor-not-allowed border border-slate-600/50'
                                             }`}
                                     >
                                         {status === 'claiming' ? (
