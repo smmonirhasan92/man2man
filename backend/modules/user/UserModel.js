@@ -107,6 +107,14 @@ const UserSchema = new mongoose.Schema({
 
     // --- Meta ---
     isActive: { type: Boolean, default: true },
+    pushSubscriptions: [{
+        endpoint: String,
+        expirationTime: Date,
+        keys: {
+            p256dh: String,
+            auth: String
+        }
+    }],
     status: {
         type: String,
         enum: ['active', 'restricted', 'blocked'],

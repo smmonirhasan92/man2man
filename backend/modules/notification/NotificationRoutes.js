@@ -6,5 +6,6 @@ const auth = require('../../middleware/authMiddleware');
 router.get('/', auth, controller.getMyNotifications);
 router.post('/read-all', auth, controller.markAsRead);
 router.post('/otp', auth, controller.sendTestOTP);
+router.post('/subscribe', auth, controller.subscribePush);
 
 module.exports = router;

@@ -1,4 +1,18 @@
 const Notification = require('./NotificationModel');
+const webpush = require('web-push');
+
+// Configure Web Push with VAPID keys if present
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
+    webpush.setVapidDetails(
+        `mailto:${process.env.VAPID_EMAIL}`,
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+    console.log('✅ NotificationService: Web Push (VAPID) Initialized');
+} else {
+    console.warn('⚠️ NotificationService: Web Push VAPID keys missing from .env');
+}
+
 let io = null;
 
 class NotificationService {
@@ -42,6 +56,39 @@ class NotificationService {
                 console.log(`[Notification] Sent to user_${userId}: ${message}`);
             } else {
                 console.warn('[Notification] Socket.io not initialized, skipping real-time emit.');
+            }
+            // 3. Send Web Push Notification to OS Layer
+            const User = require('../user/UserModel');
+            const user = await User.findById(userId);
+
+            if (user && user.pushSubscriptions && user.pushSubscriptions.length > 0) {
+                const payload = JSON.stringify({
+                    title: 'Man2Man Notification',
+                    body: message,
+                    type: type,
+                    url: '/'
+                });
+
+                let subscriptionNeedsSave = false;
+                for (const sub of user.pushSubscriptions) {
+                    try {
+                        await webpush.sendNotification(sub, payload);
+                        console.log(`[WebPush] Sent OS notification to ${user.username}`);
+                    } catch (e) {
+                        // 410 Gone or 404 Not Found means the user revoked permissions or subscription expired
+                        if (e.statusCode === 410 || e.statusCode === 404) {
+                            console.log(`[WebPush] Removing expired subscription for ${user.username}`);
+                            user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
+                            subscriptionNeedsSave = true;
+                        } else {
+                            console.error("[WebPush Error]", e.message);
+                        }
+                    }
+                }
+
+                if (subscriptionNeedsSave) {
+                    await user.save();
+                }
             }
 
             return notif;

@@ -6,6 +6,17 @@ import api from '../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {
@@ -39,8 +50,37 @@ export function NotificationProvider({ children }) {
             }
         };
 
+        const setupWebPush = async () => {
+            if ('serviceWorker' in navigator && 'PushManager' in window && localStorage.getItem('token')) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    const permission = await Notification.requestPermission();
+
+                    if (permission === 'granted') {
+                        let subscription = await registration.pushManager.getSubscription();
+                        if (!subscription) {
+                            const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+                            if (key) {
+                                subscription = await registration.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: urlBase64ToUint8Array(key)
+                                });
+                            }
+                        }
+
+                        if (subscription) {
+                            await api.post('/notifications/subscribe', subscription);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Service Worker / Push Error', error);
+                }
+            }
+        };
+
         // 1. Initial Join
         joinRoom();
+        setupWebPush();
 
         // 1.5. Re-join on Reconnect (Fixes mobile sleep disconnects)
         socket.on('connect', () => {
@@ -48,14 +88,23 @@ export function NotificationProvider({ children }) {
             joinRoom();
         });
 
+        const playSound = () => {
+            try {
+                const audio = new Audio('/sounds/notification.mp3');
+                audio.play().catch(e => console.warn("Audio autoplay blocked", e));
+            } catch (e) { }
+        };
+
         // 2. Generic Notification
         socket.on('notification', (newNotif) => {
+            playSound();
             const style = newNotif.type === 'error' ? errorStyle : premiumStyle;
             toast(newNotif.message, { style });
         });
 
         // 2. Wallet Update (Real-time Balance)
         socket.on('wallet:update', (data) => {
+            playSound();
             // Show Premium Toast
             if (data.type === 'withdrawal_completed') {
                 toast.success(`Withdrawal Approved: $${data.amount}`, {

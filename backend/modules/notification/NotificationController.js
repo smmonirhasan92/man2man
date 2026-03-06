@@ -46,3 +46,26 @@ exports.sendTestOTP = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+exports.subscribePush = async (req, res) => {
+    try {
+        const userId = req.user.user.id;
+        const subscription = req.body;
+
+        const User = require('../user/UserModel');
+        const user = await User.findById(userId);
+
+        if (user) {
+            if (!user.pushSubscriptions) user.pushSubscriptions = [];
+            // Remove existing duplicate endpoint
+            user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== subscription.endpoint);
+            user.pushSubscriptions.push(subscription);
+            await user.save();
+            return res.status(201).json({ message: "Subscribed successfully." });
+        }
+        res.status(404).json({ error: "User not found" });
+    } catch (err) {
+        console.error("Push Subscription Error", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
