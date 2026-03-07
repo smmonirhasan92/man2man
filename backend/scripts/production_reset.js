@@ -1,13 +1,9 @@
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const mongoose = require('mongoose');
 const User = require('../modules/user/UserModel');
 const Transaction = require('../modules/wallet/TransactionModel');
-const Withdrawal = require('../modules/wallet/WithdrawalModel');
-const Deposit = require('../modules/wallet/DepositModel');
 const P2POrder = require('../modules/p2p/P2POrderModel');
-const P2PAd = require('../modules/p2p/P2PAdModel');
-const LotteryTicket = require('../modules/game/LotteryTicketModel');
-const TaskHistory = require('../modules/task/TaskHistoryModel');
 const Notification = require('../modules/notification/NotificationModel');
 
 async function resetSystem() {
@@ -35,35 +31,20 @@ async function resetSystem() {
         const txDeleted = (await Transaction.deleteMany({})).deletedCount;
         console.log(`🗑️ Deleted Transactions: ${txDeleted}`);
 
-        // 4. Delete Withdrawals & Deposits
-        try {
-            const wdDeleted = (await Withdrawal.deleteMany({})).deletedCount;
-            const depDeleted = (await Deposit.deleteMany({})).deletedCount;
-            console.log(`🗑️ Deleted Withdrawals: ${wdDeleted}`);
-            console.log(`🗑️ Deleted Deposits: ${depDeleted}`);
-        } catch (e) { console.log('Notice: Withdrawal/Deposit model skip if not exist'); }
+        // 4. Delete Withdrawals & Deposits (Merged into Transactions)
+        console.log(`Notice: Withdrawals and Deposits are now managed within Transactions.`);
 
-        // 5. Delete P2P Orders & Ads
+        // 5. Delete P2P Orders
         try {
             const p2pOrderDeleted = (await P2POrder.deleteMany({})).deletedCount;
-            const p2pAdDeleted = (await P2PAd.deleteMany({})).deletedCount;
             console.log(`🗑️ Deleted P2P Orders: ${p2pOrderDeleted}`);
-            console.log(`🗑️ Deleted P2P Ads: ${p2pAdDeleted}`);
         } catch (e) { console.log('Notice: P2P skip'); }
 
-        // 6. Delete Lottery Tickets (Keep LotterySlots/Draws)
-        try {
-            const ticketDeleted = (await LotteryTicket.deleteMany({})).deletedCount;
-            console.log(`🗑️ Deleted Lottery Tickets: ${ticketDeleted}`);
-        } catch (e) {
-            console.log('Notice: LotteryTicket skip');
-        }
+        // 6. Delete Lottery Tickets
+        console.log('Notice: LotteryTicket model deprecated.');
 
-        // 7. Delete Task Histories (Keep Task Templates)
-        try {
-            const taskHistDeleted = (await TaskHistory.deleteMany({})).deletedCount;
-            console.log(`🗑️ Deleted User Task Histories: ${taskHistDeleted}`);
-        } catch (e) { console.log('Notice: TaskHistory skip'); }
+        // 7. Delete Task Histories
+        console.log('Notice: TaskHistory model deprecated.');
 
         // 8. Delete Notifications
         try {

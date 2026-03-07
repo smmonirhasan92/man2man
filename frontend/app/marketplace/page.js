@@ -61,16 +61,13 @@ export default function GlobalMarketplace() {
         setProvisioningType(isNumber ? 'number' : 'server');
 
         // Pricing & Validation based on Country
-        const baseBdtPrice = plan.price || 500.00;
-        const usdPrice = plan.price_usd || (baseBdtPrice / 120);
-
-        // Final effective NXS cost
-        const nxsCost = baseBdtPrice;
+        const nxsCost = plan.unlock_price || 1000;
+        const usdPrice = nxsCost / 50;
 
         const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
 
         if (totalBalance < nxsCost) {
-            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${nxsCost} NXS`);
+            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${nxsCost.toLocaleString()} NXS`);
             router.push('/p2p');
             return;
         }
@@ -200,12 +197,9 @@ export default function GlobalMarketplace() {
                             const borderColor = isIreland ? 'border-emerald-500/30' : isUK ? 'border-purple-500/30' : 'border-blue-500/30';
 
                             // USD First Logic & Local Currency Logic
-                            const monthlyCostBDT = plan.unlock_price || plan.price || 500;
-                            const usdPriceRaw = plan.price_usd || (monthlyCostBDT / 120);
+                            const nxsCost = plan.unlock_price || 1000;
+                            const usdPriceRaw = nxsCost / 50;
                             const usdPrice = usdPriceRaw.toFixed(2);
-
-                            // NXS Cost is basically the BDT cost because 1 NXS = 1 BDT in our system logic
-                            const nxsCost = monthlyCostBDT;
 
                             // [35-DAY CYCLE LOGIC]
                             const cycleDays = plan.validity_days || 35;
@@ -217,7 +211,7 @@ export default function GlobalMarketplace() {
                             const estRevenueHighUSD = (parseFloat(usdPrice) * roiHigh).toFixed(2);
 
                             // Tier Logic for Tasks
-                            const taskCount = plan.daily_limit || (monthlyCostBDT >= 10000 ? 7 : monthlyCostBDT >= 5000 ? 10 : 15);
+                            const taskCount = plan.daily_limit || (nxsCost >= 10000 ? 7 : nxsCost >= 5000 ? 10 : 15);
                             const planTypeLabel = plan.type === 'vip' ? 'VIP NODE' : (isIreland ? 'PREMIUM' : isUK ? 'ENTERPRISE' : 'STANDARD');
 
                             return (

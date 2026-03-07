@@ -14,8 +14,6 @@ export default function GlobalSettingsPage() {
         cash_out_commission_percent: '',
         p2p_market_min: '',
         p2p_market_max: '',
-        usd_to_bdt_rate: '',
-        usd_to_inr_rate: '',
         referral_tiers: []
     });
     const [loading, setLoading] = useState(true);
@@ -192,36 +190,6 @@ export default function GlobalSettingsPage() {
                         </div>
                     </div>
 
-                    {/* Currency & Exchange Rates Section */}
-                    <div className="mb-8">
-                        <h2 className="text-lg font-bold text-slate-700 border-b pb-2 mb-4 flex items-center gap-2">
-                            <DollarSign className="w-5 h-5" /> Currency & Exchange Rates
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">USD to USD Rate ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={settings.usd_to_bdt_rate}
-                                    onChange={e => setSettings({ ...settings, usd_to_bdt_rate: e.target.value })}
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Exchange rate applied for Bangladeshi users.</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">USD to INR Rate (₹)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
-                                    value={settings.usd_to_inr_rate}
-                                    onChange={e => setSettings({ ...settings, usd_to_inr_rate: e.target.value })}
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Exchange rate applied for Indian users.</p>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Tier & Auto-Promotion Section */}
                     <div className="mb-8">

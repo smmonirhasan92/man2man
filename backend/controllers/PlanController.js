@@ -33,73 +33,73 @@ exports.seedDefaultPlans = async (req, res) => {
         // [USER REQUEST] 6 Organized Plans (1k - 25k BDT)
         // Ensure server_id is 'SERVER_01' so tasks are visible for all.
         const plans = [
-            // Plan 1: Starter ($8.50 USD / 1000 BDT)
+            // Plan 1: Starter ($8.50 USD = 425 NXS)
             {
                 name: 'Starter Node',
                 type: 'server',
-                unlock_price: 8.50, // Approx 1000 BDT
+                unlock_price: 425, // 8.50 * 50
                 daily_limit: 5,
-                task_reward: 0.05, // $0.05 * 5 = $0.25 (30 BDT)
+                task_reward: 2.5, // $0.05 * 50
                 validity_days: 45,
                 is_active: true,
                 server_id: 'SERVER_01',
                 features: ['Basic Task Access', 'Daily Payout', 'Email Support']
             },
-            // Plan 2: Basic ($21 USD / 2500 BDT)
+            // Plan 2: Basic ($21 USD = 1050 NXS)
             {
                 name: 'Basic Node',
                 type: 'server',
-                unlock_price: 21.00,
+                unlock_price: 1050, // 21.00 * 50
                 daily_limit: 10,
-                task_reward: 0.07, // $0.70/day (~84 BDT)
+                task_reward: 3.5, // $0.07 * 50
                 validity_days: 45,
                 is_active: true,
                 server_id: 'SERVER_01',
                 features: ['Standard Access', 'Faster Withdrawals', 'Basic Badge']
             },
-            // Plan 3: Pro ($42 USD / 5000 BDT)
+            // Plan 3: Pro ($42 USD = 2100 NXS)
             {
                 name: 'Pro Node',
                 type: 'server',
-                unlock_price: 42.00,
+                unlock_price: 2100, // 42.00 * 50
                 daily_limit: 15,
-                task_reward: 0.10, // $1.50/day (~180 BDT)
+                task_reward: 5.0, // $0.10 * 50
                 validity_days: 60,
                 is_active: true,
                 server_id: 'SERVER_01',
                 features: ['Priority Access', 'Silver Badge', '24/7 Support']
             },
-            // Plan 4: Expert ($85 USD / 10,000 BDT)
+            // Plan 4: Expert ($85 USD = 4250 NXS)
             {
                 name: 'Expert Node',
                 type: 'server',
-                unlock_price: 85.00,
+                unlock_price: 4250, // 85.00 * 50
                 daily_limit: 25,
-                task_reward: 0.125, // $3.125/day (~375 BDT)
+                task_reward: 6.25, // $0.125 * 50
                 validity_days: 60,
                 is_active: true,
                 server_id: 'SERVER_01',
                 features: ['High Speed', 'Gold Badge', 'Dedicated Manager']
             },
-            // Plan 5: Elite ($125 USD / 15,000 BDT)
+            // Plan 5: Elite ($125 USD = 6250 NXS)
             {
                 name: 'Elite Server',
                 type: 'server',
-                unlock_price: 125.00,
+                unlock_price: 6250, // 125.00 * 50
                 daily_limit: 40,
-                task_reward: 0.15, // $6.00/day (~720 BDT)
+                task_reward: 7.5, // $0.15 * 50
                 validity_days: 75,
                 is_active: true,
                 server_id: 'SERVER_01',
                 features: ['Dedicated IP', 'Platinum Badge', 'Zero Fees']
             },
-            // Plan 6: Master ($210 USD / 25,000 BDT)
+            // Plan 6: Master ($210 USD = 10500 NXS)
             {
                 name: 'Master Server',
                 type: 'server',
-                unlock_price: 210.00,
+                unlock_price: 10500, // 210.00 * 50
                 daily_limit: 60,
-                task_reward: 0.20, // $12.00/day (~1440 BDT)
+                task_reward: 10.0, // $0.20 * 50
                 validity_days: 90,
                 is_active: true,
                 server_id: 'SERVER_01',

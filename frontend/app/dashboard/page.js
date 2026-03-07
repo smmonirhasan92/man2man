@@ -156,7 +156,7 @@ function DashboardContent() {
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform">
                             <Plus className="w-4 h-4" strokeWidth={3} />
                         </div>
-                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Deposit</span>
+                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Buy NXS</span>
                     </button>
 
                     <button onClick={() => setP2pMode('sell')} className="bg-[#0f1f33] border border-red-500/30 p-3 rounded-xl flex items-center justify-center gap-3 hover:bg-[#132840] hover:border-red-500/60 transition shadow-lg group relative overflow-hidden">
@@ -164,7 +164,7 @@ function DashboardContent() {
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-110 transition-transform">
                             <ArrowDownLeft className="w-4 h-4" strokeWidth={3} />
                         </div>
-                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Withdraw</span>
+                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Sell NXS</span>
                     </button>
                 </div>
 
@@ -239,14 +239,14 @@ function BalanceDisplay({ user }) {
             {/* Subtle premium decoration instead of heavy glassmorphism */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">Total Main Balance</p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">App Balance</p>
             <h1 className="text-4xl font-black text-white tracking-tight mb-5 flex items-center gap-1">
                 <span className="text-emerald-400 text-3xl">$</span>{usdTotal}
             </h1>
 
             <div className="flex items-center gap-4 pt-4 border-t border-white/5">
                 <div className="flex-1">
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Deposit / User</p>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Purchased NXS</p>
                     <p className="text-sm font-bold text-white">${rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="w-px h-8 bg-white/10"></div>

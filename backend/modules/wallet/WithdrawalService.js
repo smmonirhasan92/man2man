@@ -28,7 +28,7 @@ class WithdrawalService {
                 }
             }
 
-            if (amount < 100) throw new Error("Minimum withdrawal is 100 BDT"); // BDT
+            if (amount < 50) throw new Error("Minimum withdrawal is 50 NXS ($1.00 USD)");
 
             const fee = 0; // Fee is 0 on withdrawal execution
 

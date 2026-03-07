@@ -47,12 +47,13 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
 
         const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        // Input is already in USD
-        const bdtValue = parseFloat(form.amount);
+        // Input is already in USD, convert to NXS for backend
+        const usdValue = parseFloat(form.amount);
+        const nxsAmount = usdValue * 50;
 
         onSubmit({
             ...form,
-            amount: bdtValue,
+            amount: nxsAmount,
             idempotencyKey
         });
     };
@@ -136,7 +137,7 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
                 disabled={loading || !form.amount || !form.accountDetails}
                 className="group relative px-8 py-4 bg-zinc-100 text-black rounded-full font-bold text-sm tracking-widest uppercase hover:px-10 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all disabled:opacity-20 disabled:hover:px-8 disabled:cursor-not-allowed"
             >
-                {loading ? 'Processing...' : 'Withdraw Funds'}
+                {loading ? 'Processing...' : 'Sell NXS'}
             </button>
 
         </form>

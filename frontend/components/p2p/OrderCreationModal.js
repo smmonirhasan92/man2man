@@ -9,7 +9,7 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
     const { user } = useAuth();
     const [adMode, setAdMode] = useState('SELL'); // 'BUY' or 'SELL'
     const [amount, setAmount] = useState(''); // Max Limit
-    const [rate, setRate] = useState('126'); // Exchange Rate
+    const [rate, setRate] = useState('120'); // Exchange Rate
     const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
 
     const [method, setMethod] = useState(defaultMethod);
@@ -94,15 +94,15 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Exchange Rate</label>
+                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Exchange Rate (per 1 USD)</label>
                             <div className="relative">
-                                <span className={`absolute left-3 top-1/2 -translate-y-1/2 font-bold ${adMode === 'BUY' ? 'text-blue-500/50' : 'text-emerald-500/50'}`}>1 = </span>
+                                <span className={`absolute left-3 top-1/2 -translate-y-1/2 font-bold ${adMode === 'BUY' ? 'text-blue-500/50' : 'text-emerald-500/50'}`}>1 USD = </span>
                                 <input
                                     type="number"
                                     value={rate}
                                     onChange={e => setRate(e.target.value)}
-                                    className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 pl-8 font-black focus:outline-none transition ${adMode === 'BUY' ? 'text-blue-400 focus:border-blue-500' : 'text-emerald-400 focus:border-emerald-500'}`}
-                                    placeholder="126"
+                                    className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 pl-16 font-black focus:outline-none transition ${adMode === 'BUY' ? 'text-blue-400 focus:border-blue-500' : 'text-emerald-400 focus:border-emerald-500'}`}
+                                    placeholder="120"
                                 />
                             </div>
                         </div>

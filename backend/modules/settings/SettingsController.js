@@ -7,13 +7,12 @@ exports.getPublicSettings = async (req, res) => {
         const defaults = {
             site_name: 'USA Affiliate',
             currency_symbol: 'NXS',
-            usd_to_bdt_rate: 110,
             maintenance_mode: false
         };
 
         // Fetch all relevant settings
         const settingsDocs = await SystemSetting.find({
-            key: { $in: ['site_name', 'currency_symbol', 'usd_to_bdt_rate', 'maintenance_mode'] }
+            key: { $in: ['site_name', 'currency_symbol', 'maintenance_mode'] }
         });
 
         // Reduce to object

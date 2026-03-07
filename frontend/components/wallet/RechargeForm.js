@@ -138,7 +138,7 @@ export default function RechargeForm({ settings, onSubmit, loading, activeTab })
                 onConfirm={handleSubmit}
                 isLoading={loading}
                 color="blue"
-                initialLabel="Confirm Deposit 🇺🇸"
+                initialLabel="Buy NXS 🇺🇸"
                 confirmingLabel="Verifying..."
                 className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-red-600 text-white font-black text-lg uppercase tracking-wider shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 transition-all hover:brightness-110 border border-white/20"
             />
