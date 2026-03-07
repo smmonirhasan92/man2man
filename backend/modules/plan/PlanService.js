@@ -141,8 +141,8 @@ class PlanService {
                 syntheticPhone: syntheticPhone
             }], { session });
 
-            // [HYBRID] Pass USD Price to Referral System for USD Income
-            await this.ReferralService.distributePlanCommission(user._id, plan.price_usd || (plan.unlock_price / 120.65), plan.name, session);
+            // Emit Pure NXS Pricing to Referral System (1:1 ecosystem compatibility)
+            await this.ReferralService.distributePlanCommission(user._id, plan.unlock_price, plan.name, session);
 
             return userPlan[0];
         });

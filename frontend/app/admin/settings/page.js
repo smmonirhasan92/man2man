@@ -111,7 +111,7 @@ export default function GlobalSettingsPage() {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Min Withdraw Amount</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">Min Withdraw Amount (NXS)</label>
                                 <input
                                     type="number"
                                     className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"
@@ -121,7 +121,7 @@ export default function GlobalSettingsPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Referral Bonus (Fixed Amount)</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">Referral Bonus (NXS)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -166,7 +166,7 @@ export default function GlobalSettingsPage() {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Minimum Price (USD)</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Minimum Price (NXS)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -177,7 +177,7 @@ export default function GlobalSettingsPage() {
                                 <p className="text-xs text-slate-400 mt-1">The lowest simulated value for the P2P random chart.</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Maximum Price (USD)</label>
+                                <label className="block text-sm font-bold text-slate-600 mb-2">P2P Chart Maximum Price (NXS)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -231,7 +231,7 @@ export default function GlobalSettingsPage() {
                                         />
                                     </div>
                                     <div className="w-full md:w-1/3">
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Bonus Reward (USD)</label>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">Bonus Reward (NXS)</label>
                                         <input
                                             type="number"
                                             step="0.01"

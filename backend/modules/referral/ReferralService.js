@@ -82,7 +82,7 @@ class ReferralService {
                                         metadata: { tierName: tier.name, target: tier.targetReferrals }
                                     }], { session });
 
-                                    console.log(`🚀 Tier Upgrade: ${directUpline.username} achieved ${tier.name}! Awarded ৳${tier.bonusAmount}`);
+                                    console.log(`🚀 Tier Upgrade: ${directUpline.username} achieved ${tier.name}! Awarded ${tier.bonusAmount} NXS`);
                                 }
                             }
                         }
