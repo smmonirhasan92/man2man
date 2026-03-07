@@ -64,18 +64,13 @@ export default function GlobalMarketplace() {
         const baseBdtPrice = plan.price || 500.00;
         const usdPrice = plan.price_usd || (baseBdtPrice / 120);
 
-        const isIndianUser = user?.country?.toLowerCase().includes('india') || user?.country?.includes('+91') || user?.country?.toLowerCase() === 'in';
-
-        const localRate = isIndianUser ? (settings.usd_to_inr_rate || 89) : (settings.usd_to_bdt_rate || 126);
-        const localCurrencySymbol = isIndianUser ? '₹' : '$';
-
-        // Final effective local price
-        const price = Math.round(usdPrice * localRate);
+        // Final effective NXS cost
+        const nxsCost = baseBdtPrice;
 
         const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
 
-        if (totalBalance < price) {
-            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${localCurrencySymbol}${price}`);
+        if (totalBalance < nxsCost) {
+            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${nxsCost} NXS`);
             router.push('/p2p');
             return;
         }
@@ -209,10 +204,8 @@ export default function GlobalMarketplace() {
                             const usdPriceRaw = plan.price_usd || (monthlyCostBDT / 120);
                             const usdPrice = usdPriceRaw.toFixed(2);
 
-                            const isIndianUser = user?.country?.toLowerCase().includes('india') || user?.country?.includes('+91') || user?.country?.toLowerCase() === 'in';
-                            const localRate = isIndianUser ? (settings.usd_to_inr_rate || 89) : (settings.usd_to_bdt_rate || 126);
-                            const localCurrencySymbol = isIndianUser ? '₹' : '৳';
-                            const localPrice = Math.round(usdPriceRaw * localRate);
+                            // NXS Cost is basically the BDT cost because 1 NXS = 1 BDT in our system logic
+                            const nxsCost = monthlyCostBDT;
 
                             // [35-DAY CYCLE LOGIC]
                             const cycleDays = plan.validity_days || 35;
@@ -268,7 +261,7 @@ export default function GlobalMarketplace() {
                                                 <span className="text-sm text-slate-500 font-medium">USD</span>
                                             </div>
                                             <div className="text-xs text-emerald-400 font-bold mt-1 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                                                {localCurrencySymbol} {localPrice.toLocaleString()} {isIndianUser ? 'INR' : 'BDT'}
+                                                {nxsCost.toLocaleString()} NXS
                                             </div>
                                             <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full mt-2">{cycleDays} Day Cycle</span>
                                         </div>
