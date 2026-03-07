@@ -211,7 +211,7 @@ export default function GlobalMarketplace() {
 
                             const isIndianUser = user?.country?.toLowerCase().includes('india') || user?.country?.includes('+91') || user?.country?.toLowerCase() === 'in';
                             const localRate = isIndianUser ? (settings.usd_to_inr_rate || 89) : (settings.usd_to_bdt_rate || 126);
-                            const localCurrencySymbol = isIndianUser ? '₹' : '$';
+                            const localCurrencySymbol = isIndianUser ? '₹' : '৳';
                             const localPrice = Math.round(usdPriceRaw * localRate);
 
                             // [35-DAY CYCLE LOGIC]
@@ -268,7 +268,7 @@ export default function GlobalMarketplace() {
                                                 <span className="text-sm text-slate-500 font-medium">USD</span>
                                             </div>
                                             <div className="text-xs text-emerald-400 font-bold mt-1 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                                                {localCurrencySymbol} {localPrice.toLocaleString()} {isIndianUser ? 'INR' : 'USD'}
+                                                {localCurrencySymbol} {localPrice.toLocaleString()} {isIndianUser ? 'INR' : 'BDT'}
                                             </div>
                                             <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full mt-2">{cycleDays} Day Cycle</span>
                                         </div>
