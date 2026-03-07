@@ -48,11 +48,6 @@ class WalletService {
 
     // Generic Transfer Method (Internal Use or specific flows)
     static async transferFunds(userId, amount, fromWallet, toWallet, description) {
-        // STRICT POLICY: Game Wallet can ONLY receive funds from Main Wallet (BDT)
-        // Block Income, Purchase, Agent, or any other source.
-        if ((toWallet === 'game' || toWallet === 'wallet.game') && (fromWallet !== 'main' && fromWallet !== 'wallet.main')) {
-            throw new Error('Game Wallet can only receive funds from Main Wallet. Direct transfers from other wallets are restricted.');
-        }
 
         const TransactionHelper = require('../common/TransactionHelper');
         return await TransactionHelper.runTransaction(async (session) => {
