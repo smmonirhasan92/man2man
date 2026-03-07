@@ -131,7 +131,7 @@ app.use('/api/agent', agentRoutes);
 app.use('/api/plan', require('./modules/plan/PlanRoutes')); // Cleaned
 app.use('/api/history', require('./routes/historyRoutes')); // Cleaned
 app.use('/api/notifications', require('./modules/notification/NotificationRoutes')); // [NEW] OTP Inbox
-app.use('/api/game', require('./routes/gameRoutes')); // [NEW] Game Routes
+// Game routes removed per Feature Purge
 app.use('/api/lottery', require('./routes/lotteryRoutes')); // [NEW] Dedicated Lottery Routes
 app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route

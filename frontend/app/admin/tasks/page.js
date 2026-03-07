@@ -335,28 +335,27 @@ export default function AdminTasksPage() {
                                 </div>
                             </div>
                         </div>
-                        </div>
-            ))}
+                    ))}
 
-            {ads.length === 0 && (
-                <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                    <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-500 font-medium">No Ads Found</p>
-                    <p className="text-sm text-slate-400">Click "Add New Ad" to create one.</p>
+                    {ads.length === 0 && (
+                        <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                            <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                            <p className="text-slate-500 font-medium">No Ads Found</p>
+                            <p className="text-sm text-slate-400">Click "Add New Ad" to create one.</p>
+                        </div>
+                    )}
                 </div>
             )}
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
-    )
-}
-{/* Confirmation Modal */ }
-<ConfirmationModal
-    isOpen={confirmModal.isOpen}
-    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-    onConfirm={confirmModal.onConfirm}
-    title={confirmModal.title}
-    message={confirmModal.message}
-    confirmText={confirmModal.confirmText}
-/>
-        </div >
     );
 }

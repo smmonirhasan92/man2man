@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const protect = require('../middleware/authMiddleware'); // Verify path!
-const LotteryService = require('../modules/game/LotteryService');
+const LotteryService = require('../modules/lottery/LotteryService');
 
 // Public: Get Active Lottery Status
 router.get('/active', async (req, res) => {

@@ -21,28 +21,26 @@ const TransactionLedgerSchema = new mongoose.Schema({
 });
 
 // CRITICAL: Integrity Check Pre-Save
-// TransactionLedgerSchema.pre('save', function (next) {
-//     // 1. Calculate Expected Result
-//     // If credit: before + amount - fee = after
-//     // If debit: before - amount - fee = after
-//     // However, amount can be signed or unsigned. Let's assume 'amount' is the signed change.
-//     // If amount is +100, fee is 2. Net change +98.
-//     // If amount is -100, fee is 2. Net change -102? Or is fee separate?
+TransactionLedgerSchema.pre('save', function (next) {
+    // 1. Calculate Expected Result
+    // balanceAfter = balanceBefore + amount (signed) - fee (always positive deduction if applicable)
 
-//     // Let's standardise: 
-//     // balanceAfter = balanceBefore + amount (signed) - fee (always positive deduction if applicable)
+    // Convert to strict floats
+    const beforeBal = parseFloat(parseFloat(this.balanceBefore).toFixed(4));
+    const amt = parseFloat(parseFloat(this.amount).toFixed(4));
+    const txFee = parseFloat(parseFloat(this.fee).toFixed(4));
 
-//     // const expectedAfter = Number((this.balanceBefore + this.amount - this.fee).toFixed(4));
-//     // const actualAfter = Number(this.balanceAfter.toFixed(4));
+    const expectedAfter = parseFloat((beforeBal + amt - txFee).toFixed(4));
+    const actualAfter = parseFloat(parseFloat(this.balanceAfter).toFixed(4));
 
-//     // if (Math.abs(expectedAfter - actualAfter) > 0.0001) {
-//     //     const err = new Error(`LEDGER INTEGRITY FAILURE: ${this.userId}. Before: ${this.balanceBefore}, Amount: ${this.amount}, Fee: ${this.fee}, Expected: ${expectedAfter}, Actual: ${this.balanceAfter}`);
-//     //     console.error(err.message);
-//     //     return next(err);
-//     // }
+    // Ensure tight mathematical balance (0.0005 epsilon to account for 4-decimal casting)
+    if (Math.abs(expectedAfter - actualAfter) > 0.0005) {
+        const err = new Error(`LEDGER INTEGRITY FAILURE: ${this.userId}. Before: ${beforeBal}, Amount: ${amt}, Fee: ${txFee}, Expected: ${expectedAfter}, Actual: ${actualAfter}`);
+        console.error(err.message);
+        return next(err);
+    }
 
-//     // next();
-//     next();
-// });
+    next();
+});
 
 module.exports = mongoose.model('TransactionLedger', TransactionLedgerSchema);

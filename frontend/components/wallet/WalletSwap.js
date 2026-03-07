@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, Loader2, Gamepad2, Wallet, DollarSign } from 'lucide-react';
+import { ArrowRight, Loader2, Wallet } from 'lucide-react';
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
 import TransactionReceiptModal from './TransactionReceiptModal';
@@ -9,32 +9,18 @@ export default function WalletSwap({ user, onSuccess }) {
     const { formatMoney } = useCurrency();
     const [loading, setLoading] = useState(false);
     const [amount, setAmount] = useState('');
-    const [direction, setDirection] = useState('main_to_game'); // 'main_to_game' | 'game_to_main' | 'income_to_main'
-    const [receipt, setReceipt] = useState(null); // Receipt Data
+    const [receipt, setReceipt] = useState(null);
 
     const handleSwap = async () => {
         if (!amount || parseFloat(amount) <= 0) return;
         setLoading(true);
         try {
-            // [MODIFIED] Route Selection based on updated direction logic
-            let endpoint = '/wallet/swap';
-
-            if (direction === 'income_to_main') {
-                endpoint = '/wallet/transfer/main'; // Income to Main
-            }
-
-            let response;
-            if (direction === 'income_to_main') {
-                response = await api.post('/wallet/transfer/main', { amount });
-            } else {
-                response = await api.post('/wallet/swap', { direction, amount });
-            }
+            const response = await api.post('/wallet/transfer/main', { amount });
 
             onSuccess(); // Refresh user data
             setAmount('');
 
-            // If Income -> Main, show Detailed Receipt
-            if (direction === 'income_to_main' && response.data.receipt) {
+            if (response.data.receipt) {
                 setReceipt(response.data.receipt);
             } else {
                 toast.success('Transfer Successful');
@@ -48,68 +34,43 @@ export default function WalletSwap({ user, onSuccess }) {
         }
     };
 
-    const isMainToGame = direction === 'main_to_game';
-    const isIncomeToMain = direction === 'income_to_main';
-
-    const getSourceWallet = () => {
-        if (isIncomeToMain) return 'Income Wallet';
-        return isMainToGame ? 'Main Wallet' : 'Game Wallet';
-    };
-
-    const getDestWallet = () => {
-        if (isIncomeToMain) return 'Main Wallet';
-        return isMainToGame ? 'Game Wallet' : 'Main Wallet';
-    };
-
-    const getSourceBalance = () => {
-        // [FIX] Prioritize 'user.wallet.income' because Header Display uses it and it works.
-        // Fallback to normalized prop if needed. Use || to skip 0 values if alternative exists.
-        if (isIncomeToMain) return user?.wallet?.income || user?.income_balance || 0;
-        return isMainToGame ? (user?.wallet_balance ?? user?.w_dat?.m_v ?? 0) : (user?.game_balance ?? user?.w_dat?.g_v ?? 0);
-    };
-
-    const cycleDirection = () => {
-        if (direction === 'main_to_game') setDirection('game_to_main');
-        else if (direction === 'game_to_main') setDirection('income_to_main');
-        else setDirection('main_to_game');
-    };
+    const incomeBalance = user?.wallet?.income || user?.income_balance || 0;
 
     return (
         <div className="w-full px-6 mb-3">
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-3 border border-white/10 shadow-xl backdrop-blur-md">
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <ArrowRightLeft className="w-4 h-4 text-cyan-400" /> Wallet Bridge
+                        <Wallet className="w-4 h-4 text-cyan-400" /> Internal Transfer
                     </h3>
-                    <button
-                        onClick={cycleDirection}
-                        className="text-[10px] font-bold text-cyan-400 uppercase bg-cyan-900/30 px-2 py-1 rounded hover:bg-cyan-900/50 transition-colors"
-                    >
-                        Switch: {isIncomeToMain ? 'Income → Main' : (isMainToGame ? 'Main → Game' : 'Game → Main')}
-                    </button>
+                    <span className="text-[10px] font-bold text-cyan-400 uppercase bg-cyan-900/30 px-2 py-1 rounded">
+                        Income → Main
+                    </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3 relative">
                     {/* From */}
-                    <div className={`flex-1 p-2 rounded-xl border ${isIncomeToMain ? 'border-green-500/30 bg-green-500/5' : (isMainToGame ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-cyan-500/30 bg-cyan-500/5')} transition-all`}>
+                    <div className="flex-1 p-2 rounded-xl border border-green-500/30 bg-green-500/5 transition-all">
                         <div className="text-[9px] text-slate-400 uppercase font-bold flex items-center gap-1 mb-0.5">
-                            From: {getSourceWallet()}
+                            From: Income Wallet
                         </div>
                         <div className="text-xs font-bold text-white leading-none">
-                            {isIncomeToMain ? '$' : 'NXS '}
-                            {Number(getSourceBalance()).toFixed(2)}
+                            NXS {Number(incomeBalance).toFixed(2)}
                         </div>
                     </div>
 
                     {/* Arrow */}
-                    <div className="bg-slate-700 rounded-full p-1 border border-slate-600 z-10 transition-transform duration-300 hover:rotate-180 cursor-pointer flex-shrink-0" onClick={cycleDirection}>
-                        <ArrowRightLeft className="w-3 h-3 text-slate-300" />
+                    <div className="bg-slate-700 rounded-full p-1 border border-slate-600 z-10 flex-shrink-0">
+                        <ArrowRight className="w-3 h-3 text-slate-300" />
                     </div>
 
                     {/* To */}
-                    <div className={`flex-1 p-2 rounded-xl border ${isIncomeToMain ? 'border-yellow-500/30 bg-yellow-500/5' : (!isMainToGame ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-cyan-500/30 bg-cyan-500/5')} transition-all text-right`}>
+                    <div className="flex-1 p-2 rounded-xl border border-yellow-500/30 bg-yellow-500/5 transition-all text-right">
                         <div className="text-[9px] text-slate-400 uppercase font-bold flex items-center justify-end gap-1 mb-0.5">
-                            To: {getDestWallet()}
+                            To: Main Wallet
+                        </div>
+                        <div className="text-xs font-bold text-white leading-none mt-1 uppercase text-slate-500">
+                            Ready
                         </div>
                     </div>
                 </div>
@@ -117,7 +78,7 @@ export default function WalletSwap({ user, onSuccess }) {
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono text-[10px] tracking-widest mt-[0.5px]">
-                            {isIncomeToMain ? '$' : 'NXS'}
+                            NXS
                         </span>
                         <input
                             type="number"
@@ -138,13 +99,11 @@ export default function WalletSwap({ user, onSuccess }) {
                 </div>
 
                 {/* Fee Warning */}
-                {isIncomeToMain && (
-                    <div className="mt-3 text-center">
-                        <p className="text-[10px] text-amber-500/80 font-medium tracking-wide">
-                            ⚠️ A 3% Exchange Fee applies to transfers from Income to Main Wallet.
-                        </p>
-                    </div>
-                )}
+                <div className="mt-3 text-center">
+                    <p className="text-[10px] text-amber-500/80 font-medium tracking-wide">
+                        ⚠️ A 3% Exchange Fee applies to Internal Transfers.
+                    </p>
+                </div>
             </div>
 
             <TransactionReceiptModal

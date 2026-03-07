@@ -54,8 +54,7 @@ const UserSchema = new mongoose.Schema({
         income: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
         purchase: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
         main: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // Renamed from main_balance
-        game: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
-        game_locked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [TURNOVER TRAP] Locked Winnings
+        // Game wallets removed per "No Games" policy constraint
         escrow_locked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [P2P SAFE] Held funds during trade
         agent: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
         commission: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [ADMIN/AGENT] Fee Earnings

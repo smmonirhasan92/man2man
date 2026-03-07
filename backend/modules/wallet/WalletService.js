@@ -13,7 +13,7 @@ class WalletService {
     static getDBKey(walletType) {
         const map = {
             'main': 'wallet.main',
-            'game': 'wallet.game',
+            // 'game': 'wallet.game', removed
             'income': 'wallet.income',
             'purchase': 'wallet.purchase',
             'agent': 'wallet.agent'
@@ -28,12 +28,11 @@ class WalletService {
             income_balance: user.wallet.income || 0,
             purchase_balance: user.wallet.purchase || 0,
             wallet_balance: user.wallet.main || 0, // Ensure consistency
-            game_balance: user.wallet.game || 0,
-            game_locked: user.wallet.game_locked || 0, // [TURNOVER TRAP]
+            // game_balance and game_locked removed
             // [SYNC] Frontend Obfuscated Access
             w_dat: {
                 m_v: user.wallet.main || 0,
-                g_v: user.wallet.game || 0,
+                // g_v removed
                 i_v: user.wallet.income || 0,
                 p_v: user.wallet.purchase || 0
             }
@@ -51,19 +50,11 @@ class WalletService {
 
         const TransactionHelper = require('../common/TransactionHelper');
         return await TransactionHelper.runTransaction(async (session) => {
-            const amt = parseFloat(amount);
-            if (isNaN(amt) || amt <= 0) throw new Error('Invalid Amount');
+            const rawAmt = parseFloat(amount);
+            if (isNaN(rawAmt) || rawAmt <= 0) throw new Error('Invalid Amount');
+            const amt = parseFloat(rawAmt.toFixed(4));
 
-            // [TURNOVER TRAP CHECK]
-            if (fromWallet === 'game' || fromWallet === 'wallet.game') {
-                const userCheck = await User.findById(userId).select('wallet.game wallet.game_locked').session(session);
-                const locked = userCheck.wallet.game_locked || 0;
-                const available = (userCheck.wallet.game || 0) - locked;
-
-                if (amt > available) {
-                    throw new Error(`Funds Locked! Unlocked: ${available.toFixed(2)}. Locked: ${locked.toFixed(2)}. Spin more to unlock.`);
-                }
-            }
+            // [TURNOVER TRAP CHECK] - Removed for Game Purge
 
             // Fee Logic: Apply 3% Fee ONLY for Income -> Main
             let fee = 0;
@@ -178,7 +169,9 @@ class WalletService {
     static async deductBalance(userId, amount, walletType = 'main', reason = 'Operation') {
         const TransactionHelper = require('../common/TransactionHelper');
         return await TransactionHelper.runTransaction(async (session) => {
-            const amt = parseFloat(amount);
+            const rawAmt = parseFloat(amount);
+            if (isNaN(rawAmt) || rawAmt <= 0) throw new Error('Invalid Deduction Amount');
+            const amt = parseFloat(rawAmt.toFixed(4));
             const dbKey = WalletService.getDBKey(walletType);
 
             // Fetch Before
@@ -229,7 +222,9 @@ class WalletService {
     static async addBalance(userId, amount, walletType = 'main', reason = 'Operation') {
         const TransactionHelper = require('../common/TransactionHelper');
         return await TransactionHelper.runTransaction(async (session) => {
-            const amt = parseFloat(amount);
+            const rawAmt = parseFloat(amount);
+            if (isNaN(rawAmt) || rawAmt <= 0) throw new Error('Invalid Add Amount');
+            const amt = parseFloat(rawAmt.toFixed(4));
             const dbKey = WalletService.getDBKey(walletType);
 
             const checkUser = await User.findById(userId).select(dbKey).session(session);

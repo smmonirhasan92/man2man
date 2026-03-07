@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { authService } from '../../services/authService';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
@@ -340,7 +341,6 @@ function USAGatewayCard({ user }) {
             localStorage.setItem('active_server_phone', targetPlan.syntheticPhone);
             localStorage.setItem('usa_connected', 'true');
 
-            const toast = require('react-hot-toast').default;
             toast.success(`Secure Connection: ${targetPlan.syntheticPhone}`, {
                 style: { background: '#064E3B', color: '#fff', border: '1px solid #10B981' },
                 icon: '🔒',
@@ -348,7 +348,6 @@ function USAGatewayCard({ user }) {
             });
             setTimeout(() => window.location.reload(), 1500);
         } else {
-            const toast = require('react-hot-toast').default;
             toast.error("Node Not Found.", {
                 style: { background: '#7F1D1D', color: '#fff', border: '1px solid #EF4444' }
             });

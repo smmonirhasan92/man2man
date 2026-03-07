@@ -114,10 +114,11 @@ exports.updateUserBalance = async (req, res) => {
             throw new Error("User not found");
         }
 
-        const adjustment = type === 'debit' ? -Number(amount) : Number(amount);
+        const fixedAmount = parseFloat(parseFloat(amount).toFixed(4));
+        const adjustment = type === 'debit' ? -fixedAmount : fixedAmount;
         if (!user.wallet) user.wallet = { main: 0, escrow_locked: 0, commission: 0 };
         const balBefore = user.wallet.main || 0;
-        const balAfter = balBefore + adjustment;
+        const balAfter = parseFloat((balBefore + adjustment).toFixed(4));
 
         if (balAfter < 0) {
             throw new Error("Insufficient Funds for Debit");

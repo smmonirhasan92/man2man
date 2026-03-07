@@ -3,7 +3,6 @@ import Link from 'next/link';
 import api from '../services/api';
 import { KeyRound, LineChart, Search, Wallet, Shield, RefreshCw, MapPin, Monitor, Plus, Minus } from 'lucide-react';
 import USCIcon from './ui/USCIcon';
-import GameStatsModal from './admin/GameStatsModal';
 import RoleDropdown from './admin/RoleDropdown';
 import UserProfileModal from './admin/UserProfileModal';
 import toast from 'react-hot-toast';
@@ -256,13 +255,6 @@ export default function UserManagement() {
                                         >
                                             <KeyRound className="w-5 h-5" />
                                         </button>
-                                        <button
-                                            onClick={() => setStatsModal({ show: true, userId: user.id, username: user.fullName })}
-                                            className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition"
-                                            title="View Stats"
-                                        >
-                                            <LineChart className="w-5 h-5" />
-                                        </button>
                                     </div>
                                 </div>
 
@@ -363,14 +355,6 @@ export default function UserManagement() {
                     </div>
                 </div>
             )}
-
-            {/* Game Stats Modal */}
-            <GameStatsModal
-                isOpen={statsModal.show}
-                onClose={() => setStatsModal({ show: false, userId: null, username: '' })}
-                userId={statsModal.userId}
-                username={statsModal.username}
-            />
 
             {/* User Profile Modal */}
             <UserProfileModal

@@ -209,15 +209,8 @@ class LotteryService {
             const lockBuffer = 60000; // Standard 60s Lock for ALL tiers (including 1M now)
 
             if (timeLeft < lockBuffer) {
-                // [LOG] Late Attempt for Admin Analysis
-                await GameLog.create({
-                    userId: userId,
-                    gameType: 'lottery',
-                    gameId: slot._id,
-                    betAmount: 0,
-                    status: 'loss', // Mark as failed
-                    details: { reason: 'LATE_ATTEMPT', timeRemaining: timeLeft, tier: slot.tier }
-                });
+                // [LOG] Late Attempt for Admin Analysis (GameLog removed)
+                console.warn(`Late Ticket Attempt: User ${userId} for Slot ${slot._id}`);
                 throw new Error("Draw Locked. Final Pulse Calculation...");
             }
         }
@@ -287,7 +280,7 @@ class LotteryService {
                 // User update
                 io.to(`user_${userId}`).emit('wallet_update', {
                     main: result.user.wallet.main,
-                    game: result.user.wallet.game
+                    income: result.user.wallet.income // Broadcast income safely
                 });
                 // Global Slot Update (Filtered by Tier implicitly by ID, but clients need to update correct tab)
                 io.emit('LOTTERY_UPDATE', this._formatSlotData(result.slot));
@@ -413,9 +406,9 @@ class LotteryService {
                             continue; // Skip crediting this winner
                         }
 
-                        // Credit Win
+                        // Credit Win directly to Main Wallet
                         await User.findByIdAndUpdate(winnerId, {
-                            $inc: { 'wallet.game': tier.amount }
+                            $inc: { 'wallet.main': tier.amount }
                         }, { session });
 
                         // Log Transaction
@@ -546,9 +539,9 @@ class LotteryService {
                 const firstPrize = prizeTiers[0];
                 const manualWinAmount = firstPrize.amount;
 
-                // Credit Manual Winner
+                // Credit Manual Winner to Main Wallet
                 await User.findByIdAndUpdate(winnerId, {
-                    $inc: { 'wallet.game': manualWinAmount }
+                    $inc: { 'wallet.main': manualWinAmount }
                 }, { session });
 
                 winners.push({
@@ -577,9 +570,9 @@ class LotteryService {
                         const winTicket = ticketPool.pop();
                         const randomWinnerId = winTicket.userId._id || winTicket.userId;
 
-                        // Credit Random Winner
+                        // Credit Random Winner to Main Wallet
                         await User.findByIdAndUpdate(randomWinnerId, {
-                            $inc: { 'wallet.game': tier.amount }
+                            $inc: { 'wallet.main': tier.amount }
                         }, { session });
 
                         winners.push({
