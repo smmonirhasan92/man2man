@@ -32,10 +32,6 @@ const TaskAdSchema = new mongoose.Schema({
         options: [String],
         correct_answer: String // Optional, if we want to grade it
     }],
-    reward_amount: {
-        type: Number,
-        required: true
-    },
     proof_requirements: {
         type: String, // Instructions for review/reply tasks
         trim: true

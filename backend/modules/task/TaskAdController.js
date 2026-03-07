@@ -13,16 +13,11 @@ exports.getTaskAds = async (req, res) => {
 
 exports.createTaskAd = async (req, res) => {
     try {
-        const { title, url, imageUrl, duration, reward_amount, priority, type } = req.body;
+        const { title, url, imageUrl, duration, priority, type } = req.body;
 
         // Basic Validation
-        if (!title || !url || !duration || !reward_amount) {
+        if (!title || !url || !duration) {
             return res.status(400).json({ message: 'Please fill all required fields.' });
-        }
-
-        // [FIX] Prevent "15 seconds -> $15" error
-        if (parseFloat(reward_amount) > 10.00) {
-            return res.status(400).json({ message: 'Maximum Task Reward is $10.00. Did you mean $0.15?' });
         }
         if (parseInt(duration) <= 0) {
             return res.status(400).json({ message: 'Duration must be positive.' });
@@ -33,7 +28,6 @@ exports.createTaskAd = async (req, res) => {
             url,
             imageUrl,
             duration: parseInt(duration),
-            reward_amount: parseFloat(reward_amount),
             priority: parseInt(priority) || 0,
             type: type || 'ad_view',
             server_id: req.body.server_id || 'SERVER_01' // [NEW] Pass server_id

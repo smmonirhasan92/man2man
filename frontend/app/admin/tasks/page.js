@@ -19,7 +19,6 @@ export default function AdminTasksPage() {
         title: '',
         imageUrl: '',
         url: '',
-        reward_amount: '',
         duration: 15,
         type: 'ad_view',
         priority: 0,
@@ -80,7 +79,7 @@ export default function AdminTasksPage() {
                 setMessage('Task Ad Created Successfully!');
             }
 
-            setFormData({ title: '', imageUrl: '', url: '', reward_amount: '', duration: 15, type: 'ad_view', priority: 0, valid_plan_id: '' });
+            setFormData({ title: '', imageUrl: '', url: '', duration: 15, type: 'ad_view', priority: 0, valid_plan_id: '' });
             setEditId(null); // Reset
             setShowForm(false);
             fetchAds();
@@ -126,7 +125,7 @@ export default function AdminTasksPage() {
                     </div>
                 </div>
                 <button
-                    onClick={() => { setShowForm(!showForm); setEditId(null); setFormData({ title: '', imageUrl: '', url: '', reward_amount: '', duration: 15, type: 'ad_view', priority: 0, valid_plan_id: '' }); }}
+                    onClick={() => { setShowForm(!showForm); setEditId(null); setFormData({ title: '', imageUrl: '', url: '', duration: 15, type: 'ad_view', priority: 0, valid_plan_id: '' }); }}
                     className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
                 >
                     {showForm ? <X size={20} /> : <Plus size={20} />}
@@ -187,19 +186,7 @@ export default function AdminTasksPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">USD Reward ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.0001"
-                                    value={formData.reward_amount}
-                                    onChange={(e) => setFormData({ ...formData, reward_amount: e.target.value })}
-                                    className="w-full text-slate-900 bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500 font-mono placeholder-slate-400"
-                                    placeholder="0.50"
-                                    required
-                                />
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Duration (Sec)</label>
                                 <input
@@ -307,69 +294,69 @@ export default function AdminTasksPage() {
                             <div className="p-4">
                                 <h3 className="font-bold text-lg text-slate-800 mb-1 truncate">{ad.title}</h3>
                                 <div className="flex gap-2 mb-3">
-                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">${ad.reward_amount}</span>
                                     <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-mono">{ad.duration}s</span>
                                     <span className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-xs uppercase">{ad.type}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-t border-slate-50 pt-3">
-                                    <a
-                                        href={ad.url}
-                                        target="_blank"
-                                        className="text-indigo-500 text-sm font-bold flex items-center gap-1 hover:underline"
+                            </div>
+                            <div className="flex justify-between items-center border-t border-slate-50 pt-3">
+                                <a
+                                    href={ad.url}
+                                    target="_blank"
+                                    className="text-indigo-500 text-sm font-bold flex items-center gap-1 hover:underline"
+                                >
+                                    <ExternalLink className="w-4 h-4" /> Link
+                                </a>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setFormData({
+                                                title: ad.title,
+                                                imageUrl: ad.imageUrl || '',
+                                                url: ad.url,
+                                                duration: ad.duration,
+                                                type: ad.type,
+                                                priority: ad.priority,
+                                                valid_plan_id: (ad.valid_plans && ad.valid_plans.length > 0) ? ad.valid_plans[0] : ''
+                                            });
+                                            setEditId(ad._id || ad.id);
+                                            setShowForm(true);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="text-amber-400 hover:text-amber-600 p-2 hover:bg-amber-50 rounded-lg transition"
                                     >
-                                        <ExternalLink className="w-4 h-4" /> Link
-                                    </a>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => {
-                                                setFormData({
-                                                    title: ad.title,
-                                                    imageUrl: ad.imageUrl || '',
-                                                    url: ad.url,
-                                                    reward_amount: ad.reward_amount,
-                                                    duration: ad.duration,
-                                                    type: ad.type,
-                                                    priority: ad.priority,
-                                                    valid_plan_id: (ad.valid_plans && ad.valid_plans.length > 0) ? ad.valid_plans[0] : ''
-                                                });
-                                                setEditId(ad._id || ad.id);
-                                                setShowForm(true);
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }}
-                                            className="text-amber-400 hover:text-amber-600 p-2 hover:bg-amber-50 rounded-lg transition"
-                                        >
-                                            <Pencil className="w-5 h-5" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(ad._id || ad.id)}
-                                            className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
-                                    </div>
+                                        <Pencil className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(ad._id || ad.id)}
+                                        className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    ))}
-
-                    {ads.length === 0 && (
-                        <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                            <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                            <p className="text-slate-500 font-medium">No Ads Found</p>
-                            <p className="text-sm text-slate-400">Click "Add New Ad" to create one.</p>
                         </div>
-                    )}
+            ))}
+
+            {ads.length === 0 && (
+                <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                    <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                    <p className="text-slate-500 font-medium">No Ads Found</p>
+                    <p className="text-sm text-slate-400">Click "Add New Ad" to create one.</p>
                 </div>
             )}
-            {/* Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={confirmModal.isOpen}
-                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                onConfirm={confirmModal.onConfirm}
-                title={confirmModal.title}
-                message={confirmModal.message}
-                confirmText={confirmModal.confirmText}
-            />
         </div>
+    )
+}
+{/* Confirmation Modal */ }
+<ConfirmationModal
+    isOpen={confirmModal.isOpen}
+    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+    onConfirm={confirmModal.onConfirm}
+    title={confirmModal.title}
+    message={confirmModal.message}
+    confirmText={confirmModal.confirmText}
+/>
+        </div >
     );
 }
