@@ -14,7 +14,7 @@ const bcrypt = require('bcryptjs');
 class P2PService {
 
     // --- 1. CREATE P2P AD (BUY or SELL Listing) ---
-    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL') {
+    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL', fiatCurrency = 'USD') {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
         const user = await User.findById(userId);
@@ -32,6 +32,7 @@ class P2PService {
             type, // 'BUY' or 'SELL'
             amount, // Max Limit setting
             rate,
+            fiatCurrency,
             paymentMethod,
             paymentDetails,
             status: 'OPEN'

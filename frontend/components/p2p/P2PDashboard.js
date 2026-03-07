@@ -430,7 +430,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                                 {trade.amount} NXS
                                             </div>
                                             <div className="text-[10px] text-[#848e9c] mt-0.5">
-                                                Total: {((trade.amount / 50) * (trade.orderId?.rate || 120)).toLocaleString('en-IN')} Local Unit
+                                                Total: {((trade.amount / 50) * (trade.orderId?.rate || 120)).toLocaleString('en-IN')} {trade.orderId?.fiatCurrency || 'Local Unit'}
                                             </div>
                                         </div>
                                         <div className="text-right flex items-center gap-2 text-[#848e9c] group-hover:text-[#eaeaec] transition">
@@ -469,7 +469,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex flex-col gap-1.5">
                                             <div className="text-lg font-black font-mono text-[#eaeaec] leading-none">
-                                                {order.rate || 120} <span className="text-[10px] text-[#848e9c] ml-0.5">/ USD</span>
+                                                {order.rate || 120} <span className="text-[10px] text-[#848e9c] ml-0.5">{order.fiatCurrency || 'USD'} / USD</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Amount</span>
@@ -477,7 +477,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Fiat Vol</span>
-                                                <span className="text-[#eaeaec] font-mono">{(((order.amount || 0) / 50) * (order.rate || 120)).toLocaleString('en-IN')} Limit</span>
+                                                <span className="text-[#eaeaec] font-mono">{(((order.amount || 0) / 50) * (order.rate || 120)).toLocaleString('en-IN')} {order.fiatCurrency || 'USD'}</span>
                                             </div>
                                         </div>
 

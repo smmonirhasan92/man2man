@@ -7,6 +7,7 @@ const P2POrderSchema = new mongoose.Schema({
     amount: { type: Number, required: true }, // The maximum available limit when the order was created
     rate: { type: Number, required: true, default: 126, index: true }, // Exchange rate: e.g., 1 NXS = 126 BDT
     currency: { type: String, default: 'NXS' },
+    fiatCurrency: { type: String, default: 'USD' },
 
     paymentMethod: {
         type: String,

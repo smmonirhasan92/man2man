@@ -5,9 +5,9 @@ class P2PController {
     // POST /api/p2p/order (Renamed from sell)
     async createOrder(req, res) {
         try {
-            const { amount, paymentMethod, paymentDetails, rate, type } = req.body;
+            const { amount, paymentMethod, paymentDetails, rate, type, fiatCurrency } = req.body;
             // Only Super Admins should be able to create isInstant true orders, handle securely if needed later. Defaulting to false for users.
-            const order = await P2PService.createOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate, type || 'SELL');
+            const order = await P2PService.createOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate, type || 'SELL', fiatCurrency || 'USD');
             res.json({ success: true, order });
         } catch (e) {
             res.status(400).json({ message: e.message });
