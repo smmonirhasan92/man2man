@@ -32,7 +32,7 @@ export default function GlobalMarketplace() {
 
     const fetchData = async () => {
         try {
-            const [plansRes, userData] = await Promise.all([
+            const [plansRes, userData, settingsRes] = await Promise.all([
                 api.get('/plan'),
                 authService.getCurrentUser(),
                 api.get('/admin/settings/public').catch(() => ({ data: { usd_to_bdt_rate: 126, usd_to_inr_rate: 89 } }))
