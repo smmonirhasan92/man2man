@@ -1,0 +1,204 @@
+[TAILING] Tailing last 100 lines for [0] process (change the value with --lines option)
+/root/.pm2/logs/man2man-backend-error.log last 100 lines:
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2759,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2767 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2767,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2769 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2769,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2772 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2772,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2798 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2798,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2808 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2808,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2814 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2814,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2826 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2826,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2831 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2831,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2853 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2853,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2870 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2870,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2879 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2879,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+0|man2man- | Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 2883 modifiedPaths "pushSubscriptions"
+0|man2man- |     at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+0|man2man- |     at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+0|man2man- |     at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+0|man2man- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+0|man2man- |   version: 2883,
+0|man2man- |   modifiedPaths: [ 'pushSubscriptions' ]
+0|man2man- | }
+
+/root/.pm2/logs/man2man-backend-out.log last 100 lines:
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] POST /api/notifications/subscribe
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] POST /api/notifications/subscribe
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [SOCKET] Client connected to /system namespace: _-Y0123gHUMGu95AAAAZ
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] POST /api/notifications/subscribe
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] POST /api/notifications/subscribe
+0|man2man- | [SOCKET] Client connected to /system namespace: r5rrYbIeQ3FrsbztAAAb
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [SOCKET] Client connected to /system namespace: 0pCmht-v_3-UzG2hAAAd
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/admin/users?search=
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/admin/users?search=
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [SOCKET] Client connected to /system namespace: yP8WcLwqbnEv5k8GAAAf
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/admin/users?search=
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/admin/users?search=
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [SOCKET] Client connected to /system namespace: Sc3U9QmrCdmDPKroAAAh
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | [TRACER] POST /api/auth/login
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] POST /api/auth/login

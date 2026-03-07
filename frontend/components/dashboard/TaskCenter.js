@@ -214,7 +214,7 @@ export default function TaskCenter({ taskData }) {
                         </div>
                     </div>
                     <div className="text-right">
-                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">Earnings</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">NXS Mined</span>
                         <div className="text-lg font-mono font-bold text-green-400">${Number(earnings).toFixed(4)}</div>
                     </div>
                 </div>
@@ -289,7 +289,7 @@ export default function TaskCenter({ taskData }) {
                                         <div className="flex flex-col">
                                             <h3 className="font-bold text-white text-base leading-tight group-hover:text-cyan-400 transition-colors">{task.title || 'Premium Ad Task'}</h3>
                                             <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                                <DollarSign size={10} className="text-emerald-400" /> Guaranteed Revenue
+                                                <Zap size={10} className="text-emerald-400" /> Network Ad Drop
                                             </p>
                                         </div>
                                         <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300">

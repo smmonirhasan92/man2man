@@ -216,7 +216,7 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                     <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 mb-2">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-bold text-yellow-500 flex items-center gap-1"><Settings size={12} className="text-yellow-500" /> My Referral Link</span>
-                            <span className="text-[10px] text-slate-500">Earn Commissions</span>
+                            <span className="text-[10px] text-slate-500">Expand Network</span>
                         </div>
                         <div className="flex items-center gap-2 bg-black/40 p-2 rounded-lg border border-white/5 cursor-pointer active:scale-95 transition group"
                             onClick={() => handleCopy(`https://usaaffiliatemarketing.com/register?ref=${user?.referralCode}`, 'Referral Link Copied!')}>

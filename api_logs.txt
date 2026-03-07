@@ -1,0 +1,203 @@
+==> /root/.pm2/logs/man2man-backend-out.log <==
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/auth/me
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/auth/me
+[TRACER] GET /api/auth/me
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/auth/me
+[TRACER] GET /api/auth/me
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/auth/me
+[TRACER] GET /api/auth/me
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/auth/me
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[SOCKET] Client connected to /system namespace: Crn9MkYIe-poWqqSAAAX
+[TRACER] GET /api/auth/me
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/auth/me
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] GET /api/admin/settings/public
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] GET /api/admin/settings/public
+[TRACER] POST /api/auth/login
+[TRACER] Host: usaaffiliatemarketing.com
+[RAW_REQ] POST /api/auth/login
+[LOTTERY_AUTO] Logic Timer Expired for TIER_10M (Slot 69aa7abc80fdd2072528969c). Triggering Draw.
+[LOTTERY] Draw Started for Slot 69aa7abc80fdd2072528969c. Spinning Drum...
+[LOTTERY] Finalizing Draw for Slot 69aa7abc80fdd2072528969c
+[TX_TRACE] Starting Session...
+[TX_TRACE] Session Started & Transaction Begin. ID: [object Object]
+[TX_TRACE] Ending Session [object Object]...
+[TX_TRACE] Session [object Object] Ended.
+[LOTTERY] Draw Complete. 0 Winners.
+[WATCHDOG] Critical Alert! No Active Slot for TIER_10M. Force Creating...
+
+==> /root/.pm2/logs/man2man-backend-error.log <==
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 928,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 933 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 933,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 938 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 938,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 952 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 952,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 956 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 956,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 972 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 972,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 980 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 980,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 1005 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 1005,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 1005 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 1005,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 1028 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 1028,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 1039 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 1039,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 1040 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 1040,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}
+Push Subscription Error VersionError: No matching document found for id "69aa6fa1d4cefcef6a8592d2" version 1043 modifiedPaths "pushSubscriptions"
+    at generateVersionError (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:537:10)
+    at model.save (/var/www/man2man/backend/node_modules/mongoose/lib/model.js:595:28)
+    at exports.subscribePush (/var/www/man2man/backend/modules/notification/NotificationController.js:63:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  version: 1043,
+  modifiedPaths: [ 'pushSubscriptions' ]
+}

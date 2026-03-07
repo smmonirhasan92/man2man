@@ -230,7 +230,7 @@ export default function GlobalMarketplace() {
                                             {planTypeLabel}
                                         </div>
                                         <div className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-900/50 border border-emerald-500/30">
-                                            PROFIT SHARE: 70%
+                                            NETWORK REWARDS: 70%
                                         </div>
                                     </div>
 
@@ -269,11 +269,11 @@ export default function GlobalMarketplace() {
                                         {/* KEY METRICS GRID (USD) */}
                                         <div className="grid grid-cols-2 gap-2 w-full mb-6">
                                             <div className="bg-[#0a192f] p-2 rounded border border-white/5">
-                                                <p className="text-[9px] text-slate-500 uppercase">Est. Header Revenue</p>
+                                                <p className="text-[9px] text-slate-500 uppercase">Est. Node Rewards</p>
                                                 <p className={`font-bold text-${accentColor}-400 text-sm`}>${estRevenueLowUSD} - ${estRevenueHighUSD}</p>
                                             </div>
                                             <div className="bg-[#0a192f] p-2 rounded border border-white/5">
-                                                <p className="text-[9px] text-slate-500 uppercase">Total Profit</p>
+                                                <p className="text-[9px] text-slate-500 uppercase">Network Yield</p>
                                                 <p className="font-bold text-white text-sm">{(roiLow * 100).toFixed(0)}% - {(roiHigh * 100).toFixed(0)}%</p>
                                             </div>
                                         </div>

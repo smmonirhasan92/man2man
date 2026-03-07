@@ -40,7 +40,7 @@ export default function DisclaimerModal({ isOpen, onClose, onAccept, plan, isWar
                         <div className="bg-slate-800/50 p-4 rounded-xl border border-white/5">
                             <p className="text-sm font-medium text-slate-300 leading-relaxed">
                                 You are engaging in a <span className="text-white font-bold">cloud-infrastructure rental</span>.
-                                Earnings are strictly performance-based and <span className="text-red-400 font-bold">non-guaranteed</span>.
+                                NXS Rewards are strictly performance-based and <span className="text-red-400 font-bold">non-guaranteed</span>.
                             </p>
                         </div>
                     )}

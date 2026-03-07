@@ -98,7 +98,7 @@ export default function LoginPage() {
                     </h1>
                     <p className="text-slate-500 mt-2 text-sm font-semibold tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                        Premium Secure Earnings
+                        Decentralized Node Network
                     </p>
                 </div>
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
                     {/* Top Red Line for "Flag" accent */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-[#EF4444]"></div>
 
-                    <h2 className="text-2xl font-black mb-8 text-center text-white drop-shadow-md">Welcome Back</h2>
+                    <h2 className="text-2xl font-black mb-8 text-center text-white drop-shadow-md">Access Terminal</h2>
 
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold flex items-center border border-red-100 shadow-sm">
