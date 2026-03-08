@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const User = require('../../modules/user/UserModel');
+const User = require('../user/UserModel');
 const Transaction = require('../../modules/wallet/TransactionModel');
 const PlanService = require('../plan/PlanService');
 const { runTransaction } = require('../common/TransactionHelper');
