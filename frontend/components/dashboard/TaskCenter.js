@@ -217,7 +217,7 @@ export default function TaskCenter({ taskData }) {
                     </div>
                     <div className="text-right">
                         <span className="text-[10px] text-slate-400 uppercase tracking-wider">NXS Mined</span>
-                        <div className="text-lg font-mono font-bold text-green-400">${Number(earnings).toFixed(4)}</div>
+                        <div className="text-lg font-mono font-bold text-green-400">{Number(earnings).toFixed(4)} NXS</div>
                     </div>
                 </div>
                 <div className="relative z-10">

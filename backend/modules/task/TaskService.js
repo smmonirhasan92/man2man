@@ -342,7 +342,7 @@ class TaskService {
             } catch (e) { console.error("[TaskService P2P Dist Error]", e); }
 
             // Notify User
-            await NotificationService.send(userId, `✅ Task Reward: +$${earnerNetIncome.toFixed(4)}`, 'success');
+            await NotificationService.send(userId, `✅ Task Reward: +${earnerNetIncome.toFixed(4)} NXS`, 'success');
 
             // [SOCKET] Real-time Balance Update
             const SocketService = require('../common/SocketService');

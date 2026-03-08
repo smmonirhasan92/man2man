@@ -405,7 +405,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                                     <h3 className="text-2xl font-black text-white text-center">AWESOME!</h3>
                                     {claimResult?.rewardAmount ? (
                                         <p className="text-emerald-400 font-black text-xl text-center mt-1">
-                                            +${Number(claimResult.rewardAmount).toFixed(4)}
+                                            +{Number(claimResult.rewardAmount).toFixed(4)} NXS
                                         </p>
                                     ) : (
                                         <p className="text-emerald-400 font-bold text-center">Reward Credited Successfully</p>
