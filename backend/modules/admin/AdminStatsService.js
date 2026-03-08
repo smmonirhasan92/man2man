@@ -1,6 +1,5 @@
 const User = require('../user/UserModel');
 const Transaction = require('../wallet/TransactionModel');
-const GameLog = require('../game/GameLogModel');
 
 class AdminStatsService {
 
@@ -55,18 +54,6 @@ class AdminStatsService {
                 if (t._id === 'withdraw' || t._id === 'withdraw_money') todayWithdraw += t.total;
             });
 
-            // 4. Game Performance (Aviator)
-            // Last 100 rounds Avg Multiplier
-            const recentGames = await GameLog.find({ gameId: 'aviator' })
-                .sort({ createdAt: -1 })
-                .limit(50)
-                .select('multiplier crashPoint');
-
-            // Calculate pseudo-RTP based on recent crash points (Simple avg)
-            let sumMult = 0;
-            recentGames.forEach(g => sumMult += (g.crashPoint || 0));
-            const avgMult = recentGames.length ? (sumMult / recentGames.length) : 0;
-
             return {
                 users: {
                     total: totalUsers,
@@ -79,8 +66,8 @@ class AdminStatsService {
                     todayWithdraw: todayWithdraw.toFixed(2)
                 },
                 game: {
-                    aviatorAvgMult: avgMult.toFixed(2),
-                    totalRounds: await GameLog.countDocuments({ gameId: 'aviator' })
+                    aviatorAvgMult: "0.00",
+                    totalRounds: 0
                 }
             };
 
