@@ -21,7 +21,7 @@ const TransactionLedgerSchema = new mongoose.Schema({
 });
 
 // CRITICAL: Integrity Check Pre-Save
-TransactionLedgerSchema.pre('save', function (next) {
+TransactionLedgerSchema.pre('save', function () {
     // 1. Calculate Expected Result
     // balanceAfter = balanceBefore + amount (signed) - fee (always positive deduction if applicable)
 
@@ -35,12 +35,8 @@ TransactionLedgerSchema.pre('save', function (next) {
 
     // Ensure tight mathematical balance (0.0005 epsilon to account for 4-decimal casting)
     if (Math.abs(expectedAfter - actualAfter) > 0.0005) {
-        const err = new Error(`LEDGER INTEGRITY FAILURE: ${this.userId}. Before: ${beforeBal}, Amount: ${amt}, Fee: ${txFee}, Expected: ${expectedAfter}, Actual: ${actualAfter}`);
-        console.error(err.message);
-        return next(err);
+        throw new Error(`LEDGER INTEGRITY FAILURE: ${this.userId}. Before: ${beforeBal}, Amount: ${amt}, Fee: ${txFee}, Expected: ${expectedAfter}, Actual: ${actualAfter}`);
     }
-
-    next();
 });
 
 module.exports = mongoose.model('TransactionLedger', TransactionLedgerSchema);
