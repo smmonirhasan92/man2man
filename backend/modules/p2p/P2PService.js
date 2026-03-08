@@ -17,9 +17,21 @@ class P2PService {
     async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL', fiatCurrency = 'USD') {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
-        // [AUTO-BOUNDARY] Prevent Extreme Rates (Dynamic System Values later)
-        if (rate < 110 || rate > 135) {
-            throw new Error(`The exchange rate must be between 110 BDT and 135 BDT per USD to protect the marketplace.`);
+        // [AUTO-BOUNDARY] Dynamic Rate Limits for Large Transactions
+        if (amount >= 50) {
+            const standardRate = 126; // System base rate
+            const maxVariance = 4; // Maximum allowed difference (+/-)
+            const minRate = standardRate - maxVariance;
+            const maxRate = standardRate + maxVariance;
+
+            if (rate < minRate || rate > maxRate) {
+                throw new Error(`For orders of 50 NXS or more, the exchange rate must be strictly between ${minRate} BDT and ${maxRate} BDT.`);
+            }
+        } else {
+            // Basic fallback for smaller orders (to prevent absolute madness like 5000)
+            if (rate < 100 || rate > 150) {
+                throw new Error(`The exchange rate must be between 100 BDT and 150 BDT to protect the marketplace.`);
+            }
         }
 
         const user = await User.findById(userId);

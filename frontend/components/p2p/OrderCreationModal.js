@@ -139,6 +139,12 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                         </div>
                     </div>
 
+                    {amount >= 50 && fiatCurrency === 'BDT' && (
+                        <div className="px-2 text-[9px] text-[#fcd535] font-bold tracking-widest leading-relaxed">
+                            ⚠️ Orders 50 NXS or above are restricted to a <strong className="text-white">+/- 4 BDT</strong> variance from the standard 126 BDT rate (Max 130, Min 122).
+                        </div>
+                    )}
+
                     <div className="space-y-1">
                         <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
                             {adMode === 'BUY' ? 'I will pay via' : 'Receive fiat via'}
