@@ -1,54 +1,70 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../../../services/api';
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, Reply, CheckCircle, Search, RefreshCw, Send } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Reply, CheckCircle, Search, RefreshCw, Send, CheckCircle2, Ticket, LifeBuoy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSupportPage() {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [replyingTo, setReplyingTo] = useState(null);
+    const [activeTicket, setActiveTicket] = useState(null);
     const [replyMessage, setReplyMessage] = useState('');
     const [sending, setSending] = useState(false);
-    const [filter, setFilter] = useState('all'); // all, pending, replied
+    const [filter, setFilter] = useState('all'); // all, open, answered, closed
+
+    const chatEndRef = useRef(null);
 
     useEffect(() => {
         fetchTickets();
+
+        // Auto-refresh interval for live tickets 
+        const interval = setInterval(() => {
+            fetchTickets(false);
+        }, 15000); // 15s polling
+
+        return () => clearInterval(interval);
     }, []);
 
-    const fetchTickets = async () => {
-        setLoading(true);
+    useEffect(() => {
+        if (activeTicket) {
+            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [activeTicket?.messages]);
+
+    const fetchTickets = async (showLoad = true) => {
+        if (showLoad) setLoading(true);
         try {
             const res = await api.get('/support/all');
             setTickets(res.data);
+
+            // Sync active ticket
+            if (activeTicket) {
+                const updated = res.data.find(t => t._id === activeTicket._id);
+                if (updated) setActiveTicket(updated);
+            }
         } catch (err) {
             console.error(err);
         } finally {
-            setLoading(false);
+            if (showLoad) setLoading(false);
         }
     };
 
     const handleReply = async (e) => {
         e.preventDefault();
-        if (!replyingTo || !replyMessage) return;
+        if (!activeTicket || !replyMessage.trim()) return;
 
         setSending(true);
         try {
-            await api.post('/support/reply', {
-                messageId: replyingTo.id,
+            const res = await api.post('/support/reply', {
+                messageId: activeTicket._id,
                 reply: replyMessage
             });
 
-            // Update local state without full reload
-            setTickets(tickets.map(t =>
-                t.id === replyingTo.id
-                    ? { ...t, status: 'replied', adminReply: replyMessage }
-                    : t
-            ));
-
-            setReplyingTo(null);
+            // Optimistically update
+            setActiveTicket(res.data.support);
             setReplyMessage('');
+            fetchTickets(false);
         } catch (err) {
             toast.error('Failed to send reply');
         } finally {
@@ -85,124 +101,164 @@ export default function AdminSupportPage() {
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
+            <div className="max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-6 h-[calc(100vh-100px)]">
 
-                {/* Filters */}
-                <div className="flex gap-2">
-                    {['all', 'pending', 'replied'].map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold capitalize transition ${filter === f
-                                ? 'bg-slate-800 text-white shadow-lg'
-                                : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
-                                }`}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                </div>
+                {/* Left Side: Tickets List */}
+                <div className={`w-full ${activeTicket ? 'hidden md:flex md:w-1/3' : 'md:w-1/3'} flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative`}>
 
-                {/* Tickets List */}
-                {loading && tickets.length === 0 ? (
-                    <div className="space-y-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="h-32 bg-white rounded-2xl animate-pulse"></div>
+                    {/* Filters */}
+                    <div className="p-4 border-b border-slate-100 bg-slate-50 flex gap-2 overflow-x-auto scrollbar-hide shrink-0">
+                        {['all', 'open', 'answered', 'closed'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition flex-shrink-0 ${filter === f
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                                    : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {f}
+                            </button>
                         ))}
                     </div>
-                ) : filteredTickets.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
-                        <MessageSquare className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-400 font-bold">No tickets found</p>
+
+                    {/* List */}
+                    <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
+                        {loading && tickets.length === 0 ? (
+                            <div className="space-y-2 p-2">
+                                {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-50 rounded-xl animate-pulse"></div>)}
+                            </div>
+                        ) : filteredTickets.length === 0 ? (
+                            <div className="text-center py-20">
+                                <MessageSquare className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                                <p className="text-slate-400 font-bold text-sm">No tickets found</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-1">
+                                {filteredTickets.map(ticket => (
+                                    <div
+                                        key={ticket._id}
+                                        onClick={() => setActiveTicket(ticket)}
+                                        className={`p-4 rounded-xl cursor-pointer transition border-l-4 ${activeTicket?._id === ticket._id ? 'bg-indigo-50 border-indigo-600' : 'bg-white border-transparent hover:bg-slate-50 border-b border-b-slate-100'}`}
+                                    >
+                                        <div className="flex justify-between items-start mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-amber-500 animate-pulse' : ticket.status === 'answered' ? 'bg-green-500' : 'bg-slate-300'}`}></span>
+                                                <span className="text-[10px] font-bold text-slate-700">{ticket.userId?.fullName || 'User'}</span>
+                                            </div>
+                                            <span className="text-[9px] text-slate-400 font-medium">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <h3 className="font-bold text-slate-800 text-xs mb-1 line-clamp-1">{ticket.subject}</h3>
+                                        <p className="text-[10px] text-slate-500 line-clamp-1">
+                                            {ticket.messages && ticket.messages.length > 0 ? ticket.messages[ticket.messages.length - 1].text : ticket.message}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="space-y-4">
-                        {filteredTickets.map(ticket => (
-                            <div key={ticket.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`w-2 h-2 rounded-full ${ticket.status === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></span>
-                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{ticket.status}</span>
-                                            <span className="text-xs text-slate-300">• {new Date(ticket.createdAt).toLocaleString()}</span>
-                                        </div>
-                                        <h3 className="font-bold text-slate-800 text-lg">{ticket.subject}</h3>
-                                    </div>
-                                    {ticket.status === 'replied' ? (
-                                        <div className="bg-green-50 text-green-600 p-2 rounded-full">
-                                            <CheckCircle className="w-5 h-5" />
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => setReplyingTo(ticket)}
-                                            className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-indigo-100 transition"
-                                        >
-                                            <Reply className="w-4 h-4" /> Reply
-                                        </button>
-                                    )}
-                                </div>
+                </div>
 
-                                <div className="bg-slate-50 p-4 rounded-xl mb-4 border border-slate-100">
-                                    <div className="flex justify-between text-xs text-slate-400 mb-2">
-                                        <span className="font-bold text-slate-600">{ticket.User?.fullName}</span>
-                                        <span>{ticket.User?.phone}</span>
-                                    </div>
-                                    <p className="text-slate-700 text-sm leading-relaxed">{ticket.message}</p>
-                                </div>
+                {/* Right Side: Active Chat Window */}
+                <div className={`w-full ${!activeTicket ? 'hidden md:flex md:items-center md:justify-center md:w-2/3 md:bg-white md:rounded-2xl md:border md:border-slate-200' : 'flex flex-col md:w-2/3 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'}`}>
 
-                                {ticket.adminReply && (
-                                    <div className="pl-4 border-l-2 border-green-200 bg-green-50/50 p-3 rounded-r-xl">
-                                        <p className="text-xs font-bold text-green-700 mb-1">Admin Reply:</p>
-                                        <p className="text-sm text-slate-700">{ticket.adminReply}</p>
+                    {!activeTicket ? (
+                        <div className="text-center">
+                            <Ticket className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                            <h2 className="text-lg font-bold text-slate-400">Select a Ticket to Reply</h2>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Chat Header */}
+                            <div className="p-4 border-b border-slate-100 bg-white flex items-center gap-4 shrink-0">
+                                <button className="md:hidden p-2 bg-slate-50 rounded-full" onClick={() => setActiveTicket(null)}>
+                                    <ArrowLeft className="w-5 h-5 text-slate-700" />
+                                </button>
+                                <div>
+                                    <h2 className="font-bold text-slate-800 text-sm">{activeTicket.subject}</h2>
+                                    <p className="text-xs text-slate-500 flex items-center gap-2">
+                                        {activeTicket.userId?.fullName} <span className="text-slate-300">•</span> {activeTicket.userId?.phone}
+                                    </p>
+                                </div>
+                                <div className="ml-auto">
+                                    <span className={`px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold uppercase ${activeTicket.status === 'open' ? 'text-amber-600' : 'text-green-600'}`}>
+                                        {activeTicket.status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Messages Container */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                                {activeTicket.messages?.map((msg, idx) => {
+                                    const isAdmin = msg.senderRole === 'admin';
+                                    return (
+                                        <div key={idx} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                                            {!isAdmin && (
+                                                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center mr-2 flex-shrink-0 mt-auto mb-1">
+                                                    <span className="text-xs font-bold text-slate-600">U</span>
+                                                </div>
+                                            )}
+                                            <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${isAdmin ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-200' : 'bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm'}`}>
+                                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                                                <div className={`text-[9px] mt-1.5 font-medium flex items-center justify-end gap-1 ${isAdmin ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {isAdmin && <CheckCircle2 className="w-3 h-3" />}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {/* Legacy String Fallbacks */}
+                                {(activeTicket.message && !activeTicket.messages?.length) && (
+                                    <div className="flex justify-start">
+                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center mr-2 flex-shrink-0 mt-auto mb-1">
+                                            <span className="text-xs font-bold text-slate-600">U</span>
+                                        </div>
+                                        <div className="max-w-[75%] rounded-2xl px-4 py-3 bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm">
+                                            <p className="text-sm">{activeTicket.message}</p>
+                                        </div>
                                     </div>
                                 )}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Reply Modal */}
-            {replyingTo && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-                    <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <div>
-                                <h3 className="font-bold text-lg text-slate-800">Reply to Ticket</h3>
-                                <p className="text-xs text-slate-500">Replying to <span className="font-bold text-slate-700">{replyingTo.User?.fullName}</span></p>
-                            </div>
-                            <button onClick={() => setReplyingTo(null)} className="p-2 hover:bg-slate-200 rounded-full transition text-slate-500">
-                                <span className="sr-only">Close</span>
-                                ✕
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleReply} className="p-6">
-                            <div className="bg-indigo-50 p-4 rounded-xl mb-6">
-                                <p className="text-xs font-bold text-indigo-400 uppercase mb-1">User's Message</p>
-                                <p className="text-sm text-slate-700 line-clamp-3 italic">"{replyingTo.message}"</p>
+                                {(activeTicket.adminReply && !activeTicket.messages?.length) && (
+                                    <div className="flex justify-end">
+                                        <div className="max-w-[75%] rounded-2xl px-4 py-3 bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-200">
+                                            <p className="text-sm">{activeTicket.adminReply}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={chatEndRef} />
                             </div>
 
-                            <label className="block text-sm font-bold text-slate-700 mb-2">Your Reply</label>
-                            <textarea
-                                value={replyMessage}
-                                onChange={(e) => setReplyMessage(e.target.value)}
-                                placeholder="Type your response here..."
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl h-32 resize-none focus:ring-2 focus:ring-indigo-500/20 outline-none font-medium mb-6"
-                                required
-                            ></textarea>
-
-                            <button
-                                type="submit"
-                                disabled={sending}
-                                className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition flex items-center justify-center gap-2 disabled:opacity-70"
-                            >
-                                {sending ? 'Sending...' : <><Send className="w-4 h-4" /> Send Reply</>}
-                            </button>
-                        </form>
-                    </div>
+                            {/* Chat Input */}
+                            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
+                                <form onSubmit={handleReply} className="flex gap-2 relative">
+                                    <textarea
+                                        value={replyMessage}
+                                        onChange={(e) => setReplyMessage(e.target.value)}
+                                        placeholder="Type an official response..."
+                                        className="w-full pl-5 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-2xl h-14 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium text-sm text-slate-800"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleReply(e);
+                                            }
+                                        }}
+                                    ></textarea>
+                                    <button
+                                        type="submit"
+                                        disabled={!replyMessage.trim() || sending}
+                                        className="absolute right-2 top-2 bottom-2 aspect-square bg-indigo-600 text-white rounded-xl flex items-center justify-center transition hover:bg-indigo-700 active:scale-95 disabled:bg-slate-300"
+                                    >
+                                        {sending ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-4 h-4 ml-0.5" />}
+                                    </button>
+                                </form>
+                                <p className="text-[9px] text-slate-400 mt-2 text-center font-medium">Press Enter to send, Shift+Enter for new line.</p>
+                            </div>
+                        </>
+                    )}
                 </div>
-            )}
+
+            </div>
         </div>
     );
 }

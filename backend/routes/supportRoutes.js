@@ -12,6 +12,8 @@ r.get('/my-messages', authMiddleware, supportController.getUserMessages);
 
 // Admin Routes
 r.get('/all', authMiddleware, roleMiddleware(['super_admin', 'employee_admin']), supportController.getAllMessages);
-r.post('/reply', authMiddleware, roleMiddleware(['super_admin', 'employee_admin']), supportController.replyToMessage);
+
+// Thread Routes (Dual-Use)
+r.post('/reply', authMiddleware, supportController.replyToMessage);
 
 module.exports = r;

@@ -1,70 +1,82 @@
 const SupportMessage = require('../modules/support/SupportMessageModel');
 const { User } = require('../modules/user/UserModel');
 
-// Send Message (User)
+// Create New Ticket (User)
 exports.sendMessage = async (req, res) => {
     try {
         const { subject, message } = req.body;
-        const userId = req.user.user.id;
+        const userId = req.user.user.id; // From middleware
 
-        const newMessage = await SupportMessage.create({
+        const newTicket = await SupportMessage.create({
             userId,
             subject,
-            message,
-            status: 'pending'
+            messages: [{
+                senderId: userId,
+                senderRole: 'user',
+                text: message
+            }],
+            status: 'open'
         });
 
-        res.status(201).json({ message: 'Message sent successfully', support: newMessage });
+        res.status(201).json({ message: 'Ticket created successfully', support: newTicket });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// Get User Messages (User History)
+// Get User Tickets (User History)
 exports.getUserMessages = async (req, res) => {
     try {
         const userId = req.user.user.id;
-        const messages = await SupportMessage.findAll({
-            where: { userId },
-            order: [['createdAt', 'DESC']]
-        });
-        res.json(messages);
+        const tickets = await SupportMessage.find({ userId }).sort({ createdAt: -1 });
+        res.json(tickets);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// Reply to Message (Admin)
+// Reply to Ticket (Admin & User)
 exports.replyToMessage = async (req, res) => {
     try {
         const { messageId, reply } = req.body;
 
-        const supportMessage = await SupportMessage.findByPk(messageId);
-        if (!supportMessage) {
-            return res.status(404).json({ message: 'Message not found' });
+        // Detect sender from middleware if possible, else determine role
+        const senderId = req.user?.user?._id || req.user?.user?.id;
+        const role = req.user?.user?.role;
+        const isUser = (role === 'user');
+
+        const ticket = await SupportMessage.findById(messageId);
+        if (!ticket) {
+            return res.status(404).json({ message: 'Ticket not found' });
         }
 
-        supportMessage.adminReply = reply;
-        supportMessage.status = 'replied';
-        await supportMessage.save();
+        ticket.messages.push({
+            senderId,
+            senderRole: isUser ? 'user' : 'admin',
+            text: reply
+        });
 
-        res.json({ message: 'Reply sent successfully', support: supportMessage });
+        // Toggle Status mapping
+        ticket.status = isUser ? 'open' : 'answered';
+
+        await ticket.save();
+
+        res.json({ message: 'Reply sent successfully', support: ticket });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// Get All Messages (Admin)
+// Get All Tickets (Admin)
 exports.getAllMessages = async (req, res) => {
     try {
-        const messages = await SupportMessage.findAll({
-            include: [{ model: User, attributes: ['fullName', 'phone'] }],
-            order: [['createdAt', 'DESC']]
-        });
-        res.json(messages);
+        const tickets = await SupportMessage.find()
+            .populate('userId', 'fullName phone')
+            .sort({ createdAt: -1 });
+        res.json(tickets);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
