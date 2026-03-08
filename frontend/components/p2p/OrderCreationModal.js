@@ -129,14 +129,23 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Total Amount</label>
+                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Total NXS Amount</label>
                             <input
                                 type="number"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white font-bold outline-none transition ${adMode === 'BUY' ? 'focus:border-blue-500' : 'focus:border-emerald-500'}`}
-                                placeholder="e.g. 500 NXS"
+                                placeholder="e.g. 50"
                             />
+                            {/* LIVE CALCULATION DISPLAY */}
+                            {amount && rate && (
+                                <div className="mt-2 p-2 bg-slate-800/50 rounded-lg flex justify-between items-center border border-white/5 shadow-inner">
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Fiat Value:</span>
+                                    <span className="text-sm font-black text-white">
+                                        {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{fiatCurrency}</span>
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -176,8 +185,8 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                     </div>
 
                     {adMode === 'SELL' && (
-                        <div className="px-2 text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest">
-                            *Ensure your selling amount meets your package's minimum threshold ($5 default).*
+                        <div className="px-2 text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">
+                            *Ensure your selling amount meets your package's minimum threshold (e.g. 250 NXS).*
                         </div>
                     )}
 
