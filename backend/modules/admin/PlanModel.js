@@ -16,6 +16,10 @@ const planSchema = new mongoose.Schema({
         type: Number,
         default: 5
     },
+    min_withdrawal: {
+        type: Number,
+        default: 5 // Default $5 minimum threshold
+    },
     task_reward: {
         type: Number,
         default: 2.0

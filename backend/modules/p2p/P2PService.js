@@ -24,6 +24,26 @@ class P2PService {
         if (type === 'SELL') {
             if (user.wallet.main <= 0) throw new Error("Your Main Balance is zero. Cannot list a SELL Ad.");
             if (user.wallet.main < amount) throw new Error("Your limit cannot exceed your current Main Balance.");
+
+            // --- DYNAMIC MINIMUM WITHDRAWAL THRESHOLD ---
+            const PlanService = require('../plan/PlanService');
+            const activePlans = await PlanService.getActivePlans(userId);
+            let minWithdrawalUsd = 5; // System Default: $5
+
+            if (activePlans && activePlans.length > 0) {
+                const Plan = require('../../modules/admin/PlanModel');
+                const planDetails = await Plan.findById(activePlans[0].planId);
+                if (planDetails && planDetails.min_withdrawal) {
+                    minWithdrawalUsd = planDetails.min_withdrawal;
+                }
+            }
+
+            // Assuming 50 NXS = 1 USD in this ecosystem
+            const minWithdrawalNxs = minWithdrawalUsd * 50;
+
+            if (amount < minWithdrawalNxs) {
+                throw new Error(`Minimum P2P Sell limit is ${minWithdrawalNxs} NXS ($${minWithdrawalUsd} USD) based on your current package.`);
+            }
         }
 
         // Create Order (Listing)

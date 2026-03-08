@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { useSocket } from '../../hooks/useSocket';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotification } from '../../hooks/useNotification';
 import { Send, Clock, AlertTriangle, CheckCircle, Upload, Shield, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../ui/ConfirmationModal';
@@ -17,6 +18,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     const [loading, setLoading] = useState(true);
     const scrollRef = useRef(null);
     const [timeLeft, setTimeLeft] = useState('15:00');
+    const { permission, requestPermission, notify } = useNotification();
 
     // [SECURITY] PIN & Modal State
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -73,7 +75,9 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     return [...prev, msg];
                 });
                 scrollToBottom();
-                playDing();
+                if (msg.sender !== user?.id) {
+                    playDing();
+                }
             }
         });
 
@@ -82,6 +86,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (updatedTrade._id === tradeId) {
                 setTrade(updatedTrade);
                 toast('Buyer marked as PAID', { icon: '💸' });
+                notify('Trade Updated', 'The buyer has marked the payment as PAID.');
             }
         });
 
@@ -89,6 +94,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (updatedTrade._id === tradeId) {
                 setTrade(updatedTrade);
                 toast.success('Trade Completed!');
+                notify('Trade Complete', 'The P2P Trade has been finalized and crypto released.');
             }
         });
 
@@ -96,6 +102,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (updatedTrade._id === tradeId) {
                 setTrade(updatedTrade);
                 toast.error('Trade Frozen by Tribunal.');
+                notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.');
             }
         });
 
@@ -162,8 +169,10 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     const playDing = () => {
-        const audio = new Audio('/sounds/ding.mp3'); // Ensure this file exists or use dummy
-        audio.play().catch(() => { });
+        // [NOTIFICATION API INTEGRATION]
+        // Triggers BOTH sound AND a native device push notification 
+        // using the Custom Hook created in `frontend/hooks/useNotification.js`
+        notify('New P2P Message', 'You have received a new message in your trade.');
     };
 
     const sendMessage = async () => {
@@ -311,6 +320,15 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
+
+            {/* Notification Permission Banner */}
+            {permission === 'default' && (
+                <div className="bg-[#fcd535] text-black px-4 py-2 flex justify-between items-center text-xs font-bold shrink-0">
+                    <span>Enable Notifications for instant P2P updates!</span>
+                    <button onClick={requestPermission} className="bg-black text-white px-3 py-1 rounded">Enable</button>
+                </div>
+            )}
+
             {/* 1. Header with Timer */}
             <div className="p-3 border-b border-[#2b3139] bg-[#181a20] flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">

@@ -1,0 +1,145 @@
+﻿Connecting to VPS (76.13.244.202)...
+Authenticated automatically! Force-syncing repo and deploying...
+HEAD is now at dbbf884 fix(backend): Resolve hanging mongoose hooks and aggressive intervals
+
+> postinstall
+> cd backend && npm install
+
+
+up to date, audited 389 packages in 911ms
+
+73 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (2 moderate, 6 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+up to date, audited 51 packages in 2s
+
+8 packages are looking for funding
+  run `npm fund` for details
+
+1 high severity vulnerability
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> frontend@0.1.1 build
+> next build --webpack
+
+   Γû▓ Next.js 16.0.8 (webpack)
+   - Environments: .env.production
+
+   Creating an optimized production build ...
+ Γ£ô (pwa) Compiling for server...
+ Γ£ô (pwa) Compiling for server...
+ Γ£ô (pwa) Compiling for client (static)...
+ Γùï (pwa) Service worker: /var/www/man2man/frontend/public/sw.js
+ Γùï (pwa)   URL: /sw.js
+ Γùï (pwa)   Scope: /
+ Γùï (pwa) Custom runtimeCaching array found, using it instead of the default one.
+ Γ£ô Compiled successfully in 9.0s
+   Skipping validation of types
+   Collecting page data using 1 worker ...
+   Generating static pages using 1 worker (0/71) ...
+≡ƒÜÇ API CLIENT INITIALIZED. Target: https://usaaffiliatemarketing.com/api
+   Generating static pages using 1 worker (17/71) 
+   Generating static pages using 1 worker (35/71) 
+   Generating static pages using 1 worker (53/71) 
+ Γ£ô Generating static pages using 1 worker (71/71) in 1972.6ms
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ Γùï /ad-demo
+Γö£ Γùï /admin
+Γö£ Γùï /admin/ads
+Γö£ Γùï /admin/agents
+Γö£ Γùï /admin/agents/settlements
+Γö£ Γùï /admin/audit
+Γö£ Γùï /admin/dashboard
+Γö£ Γùï /admin/deposit-settings
+Γö£ Γùï /admin/history
+Γö£ Γùï /admin/logs
+Γö£ Γùï /admin/lottery
+Γö£ Γùï /admin/p2p
+Γö£ Γùï /admin/p2p-control
+Γö£ Γùï /admin/plans
+Γö£ Γùï /admin/requests
+Γö£ Γùï /admin/settings
+Γö£ Γùï /admin/support
+Γö£ Γùï /admin/tasks
+Γö£ Γùï /admin/tracking
+Γö£ Γùï /admin/transactions
+Γö£ Γùï /admin/users
+Γö£ Γùï /admin/users/detail
+Γö£ Γùï /admin/withdrawals
+Γö£ Γùï /agent
+Γö£ Γùï /agent/dashboard
+Γö£ Γùï /agent/history
+Γö£ Γùï /agent/tasks
+Γö£ Γùï /agent/withdraw
+Γö£ Γùï /dashboard
+Γö£ Γùï /dashboard/lottery
+Γö£ Γùï /dashboard/usa-gateway
+Γö£ Γùï /game
+Γö£ Γùï /game-center
+Γö£ ΓùÅ /game/[theme]
+Γöé Γö£ /game/royale
+Γöé Γö£ /game/classic
+Γöé Γö£ /game/gems
+Γöé Γöö [+4 more paths]
+Γö£ Γùï /game/super-ace
+Γö£ Γùï /game/super-ace-classic
+Γö£ Γùï /game/super-ace-pro
+Γö£ Γùï /game/super-ace-reborn
+Γö£ Γùï /gaming-zone
+Γö£ Γùï /history
+Γö£ Γùï /invite
+Γö£ Γùï /login
+Γö£ Γùï /lottery
+Γö£ Γùï /maintenance
+Γö£ Γùï /marketplace
+Γö£ Γùï /member
+Γö£ Γùï /p2p
+Γö£ Γùï /profile
+Γö£ Γùï /referrals
+Γö£ Γùï /register
+Γö£ Γùï /servers
+Γö£ Γùï /support
+Γö£ Γùï /tasks
+Γö£ Γùï /tasks/ads
+Γö£ Γùï /tasks/work
+Γö£ Γùï /wallet/history
+Γö£ Γùï /wallet/load-purchase
+Γö£ Γùï /wallet/mobile-recharge
+Γö£ Γùï /wallet/recharge
+Γö£ Γùï /wallet/send
+Γöö Γùï /wallet/withdraw
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)  prerendered as static content
+ΓùÅ  (SSG)     prerendered as static HTML (uses generateStaticParams)
+
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 1, 2 ])
+[PM2] [man2man-backend](1) Γ£ô
+[PM2] [man2man-frontend](2) Γ£ô
+ΓöîΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé id Γöé name                Γöé namespace   Γöé version Γöé mode    Γöé pid      Γöé uptime Γöé Γå║    Γöé status    Γöé cpu      Γöé mem      Γöé user     Γöé watching Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé 1  Γöé man2man-backend     Γöé default     Γöé 1.0.0   Γöé fork    Γöé 141335   Γöé 0s     Γöé 93   Γöé online    Γöé 0%       Γöé 56.5mb   Γöé root     Γöé disabled Γöé
+Γöé 2  Γöé man2man-frontend    Γöé default     Γöé 16.0.8  Γöé fork    Γöé 141347   Γöé 0s     Γöé 166  Γöé online    Γöé 0%       Γöé 12.9mb   Γöé root     Γöé disabled Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Deployment stream closed. Exit Code: 0

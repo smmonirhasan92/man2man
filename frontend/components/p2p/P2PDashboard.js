@@ -8,6 +8,7 @@ import P2PChatRoom from './P2PChatRoom';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '../../hooks/useSocket';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotification } from '../../hooks/useNotification';
 import RatingModal from './RatingModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import toast from 'react-hot-toast';
@@ -37,6 +38,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const [buyModalConfig, setBuyModalConfig] = useState({ isOpen: false, order: null });
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const router = useRouter(); // [FIX] Initialize hook here
+    const { permission, requestPermission, notify } = useNotification();
 
     const [marketStats, setMarketStats] = useState({ price: 0, high: 0, low: 0, vol: 0, change: 0 });
 
@@ -250,6 +252,15 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
     return (
         <div className="min-h-screen bg-[#0b0e11] text-[#eaeaec] font-sans pb-24 overflow-x-hidden">
+
+            {/* Notification Permission Banner */}
+            {permission === 'default' && (
+                <div className="bg-[#fcd535] text-black px-4 py-2 flex justify-between items-center text-xs font-bold w-full top-0 left-0 z-50">
+                    <span>Enable Push Notifications for Trade Alerts!</span>
+                    <button onClick={requestPermission} className="bg-black text-white px-3 py-1 rounded">Enable</button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex justify-between items-center p-4 bg-[#181a20] border-b border-[#2b3139]">
                 <div className="flex items-center gap-3">

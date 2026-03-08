@@ -28,7 +28,25 @@ class WithdrawalService {
                 }
             }
 
-            if (amount < 50) throw new Error("Minimum withdrawal is 50 NXS ($1.00 USD)");
+            // --- DYNAMIC MINIMUM WITHDRAWAL THRESHOLD ---
+            const PlanService = require('../plan/PlanService');
+            const activePlans = await PlanService.getActivePlans(userId);
+            let minWithdrawalUsd = 5; // System Default: $5
+
+            if (activePlans && activePlans.length > 0) {
+                const Plan = require('../../modules/admin/PlanModel');
+                const planDetails = await Plan.findById(activePlans[0].planId).setOptions(opts);
+                if (planDetails && planDetails.min_withdrawal) {
+                    minWithdrawalUsd = planDetails.min_withdrawal;
+                }
+            }
+
+            // Assuming 50 NXS = 1 USD in this platform (as per hardcoded hint "50 NXS ($1.00 USD)")
+            const minWithdrawalNxs = minWithdrawalUsd * 50;
+
+            if (amount < minWithdrawalNxs) {
+                throw new Error(`Minimum withdrawal limit is ${minWithdrawalNxs} NXS ($${minWithdrawalUsd} USD) based on your current package.`);
+            }
 
             const fee = 0; // Fee is 0 on withdrawal execution
 
