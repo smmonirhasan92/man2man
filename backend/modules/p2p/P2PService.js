@@ -17,6 +17,11 @@ class P2PService {
     async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL', fiatCurrency = 'USD') {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
+        // [AUTO-BOUNDARY] Prevent Extreme Rates (Dynamic System Values later)
+        if (rate < 110 || rate > 135) {
+            throw new Error(`The exchange rate must be between 110 BDT and 135 BDT per USD to protect the marketplace.`);
+        }
+
         const user = await User.findById(userId);
         if (!user) throw new Error("User not found");
 
@@ -245,7 +250,53 @@ class P2PService {
         return filteredOrders.slice(startIndex, endIndex);
     }
 
+    // --- ADMIN: GET ALL LIVE ORDERS ---
+    async getAdminOrders(filters = {}) {
+        let query = { status: 'OPEN' }; // Only show active ads
 
+        if (filters.type) {
+            query.type = filters.type;
+        }
+
+        const orders = await P2POrder.find(query).populate({
+            path: 'userId',
+            select: 'username wallet.main trustScore isVerified isVerifiedMerchant completedTrades country'
+        });
+
+        // Sorting Logic
+        if (filters.sort) {
+            orders.sort((a, b) => {
+                if (filters.sort === 'lowest') return a.rate - b.rate;
+                if (filters.sort === 'highest') return b.rate - a.rate;
+                return new Date(b.createdAt) - new Date(a.createdAt); // default newest
+            });
+        } else {
+            // Default newest first
+            orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        return orders;
+    }
+
+    // --- ADMIN: FORCE DELETE ORDER & REFUND ESCROW ---
+    async adminDeleteOrder(orderId) {
+        return await TransactionHelper.runTransaction(async (session) => {
+            const order = await P2POrder.findById(orderId).session(session);
+            if (!order) throw new Error("Order not found");
+            if (order.status !== 'OPEN') throw new Error("Only active OPEN orders can be deleted by admin.");
+
+            // Update Order
+            order.status = 'CANCELLED';
+            await order.save({ session });
+
+            // Since it's an OPEN order, the seller's initial balance wasn't locked HERE. 
+            // In this specific P2P setup, sellers list ads using their MAIN balance directly without upfront locking. 
+            // Upfront locking only occurs when a buyer INITIATES a trade (`initiateTrade` -> `wallet.escrow_locked`).
+            // So we just need to forcefully cancel the listing. No wallet changes needed for OPEN orders.
+
+            return order;
+        });
+    }
 
     // --- 2. CANCEL SELL ORDER (Refunds Escrow) ---
     async cancelOrder(userId, orderId) {

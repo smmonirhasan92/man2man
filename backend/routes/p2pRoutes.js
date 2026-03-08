@@ -43,6 +43,8 @@ router.get('/trade/:id/chat', auth, P2PController.getChat);
 
 // Admin Actions
 router.get('/admin/trades', auth, adminCheck, P2PController.getAdminTrades);
+router.get('/admin/orders', auth, adminCheck, P2PController.getAdminOrders); // [NEW] Read all ads
+router.delete('/admin/orders/:id', auth, adminCheck, P2PController.adminDeleteOrder); // [NEW] Delete ad
 router.post('/admin/resolve', auth, adminCheck, P2PController.resolveDispute);
 router.post('/admin/approve', auth, adminCheck, P2PController.adminApprove);
 

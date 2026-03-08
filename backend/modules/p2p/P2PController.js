@@ -61,6 +61,31 @@ class P2PController {
         }
     }
 
+    // GET /api/p2p/admin/orders
+    async getAdminOrders(req, res) {
+        try {
+            // Advanced Filtering and Sorting Parameters
+            const filters = {
+                type: req.query.type,
+                sort: req.query.sort, // 'lowest', 'highest'
+            };
+            const orders = await P2PService.getAdminOrders(filters);
+            res.json(orders);
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    }
+
+    // DELETE /api/p2p/admin/orders/:id
+    async adminDeleteOrder(req, res) {
+        try {
+            const order = await P2PService.adminDeleteOrder(req.params.id);
+            res.json({ success: true, order });
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
+
     // GET /api/p2p/my-orders
     async getMyOrders(req, res) {
         try {
