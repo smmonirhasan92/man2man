@@ -58,55 +58,71 @@ class TaskService {
      * Generates a secure session for the task.
      */
     async startTask(userId, taskId, usaKey) {
-        // 1. Check if user exists
-        const user = await User.findById(userId);
-        if (!user) throw new Error('User not found.');
+        console.log(`[TaskService.startTask] Init userId=${userId}, taskId=${taskId}, usaKey=${usaKey}`);
+        try {
+            // 1. Check if user exists
+            const user = await User.findById(userId);
+            if (!user) {
+                console.error(`[TaskService.startTask] Error: User not found`);
+                throw new Error('User not found.');
+            }
 
-        // 2. Initial Validation (Plan & Limits)
-        const PlanService = require('../plan/PlanService');
-        const UserPlan = require('../plan/UserPlanModel');
+            // 2. Initial Validation (Plan & Limits)
+            const PlanService = require('../plan/PlanService');
+            const UserPlan = require('../plan/UserPlanModel');
 
-        let activePlan = null;
-        if (usaKey) {
-            const cleanKey = usaKey.trim();
-            activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanKey, status: 'active' });
+            let activePlan = null;
+            if (usaKey) {
+                const cleanKey = usaKey.trim();
+                activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanKey, status: 'active' });
+                console.log(`[TaskService.startTask] Lookup activePlan: ${activePlan ? activePlan._id : 'null'}`);
+            }
+
+            let dailyLimit = 0;
+            let completedToday = 0;
+
+            if (activePlan) {
+                dailyLimit = activePlan.dailyLimit || (await PlanService.getUserDailyLimit(userId, activePlan._id));
+                const planLastDate = activePlan.last_earning_date ? new Date(activePlan.last_earning_date) : new Date(0);
+                const now = new Date();
+                const planIsToday = planLastDate.getDate() === now.getDate() && planLastDate.getMonth() === now.getMonth();
+                completedToday = planIsToday ? (activePlan.tasksCompletedToday || 0) : 0;
+                console.log(`[TaskService.startTask] Active Plan Limits: done=${completedToday}, limit=${dailyLimit}`);
+            } else {
+                // Legacy Global
+                dailyLimit = await PlanService.getUserDailyLimit(userId);
+                const now = new Date();
+                const lastDate = (user.taskData && user.taskData.lastTaskDate) ? new Date(user.taskData.lastTaskDate) : new Date(0);
+                const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
+                completedToday = (isToday && user.taskData) ? user.taskData.tasksCompletedToday : 0;
+                console.log(`[TaskService.startTask] Legacy Plan Limits: done=${completedToday}, limit=${dailyLimit}`);
+            }
+
+            if (completedToday >= dailyLimit) {
+                console.error(`[TaskService.startTask] Check failed: Daily limit reached for this server.`);
+                throw new Error(`Daily limit reached for this server.`);
+            }
+
+            console.log(`[TaskService.startTask] Check passed. Setting task session...`);
+            // 3. Set Start Token in DB
+            // We persist this to prevent stateless hacking (claiming without starting)
+            if (!user.taskData) user.taskData = {};
+            user.taskData.currentTask = {
+                taskId: taskId,
+                startTime: new Date()
+            };
+            await user.save();
+            console.log(`[TaskService.startTask] Task Session Set. Successful return.`);
+
+            return {
+                message: "Task Started",
+                startTime: new Date(),
+                taskId
+            };
+        } catch (error) {
+            console.error(`[TaskService.startTask] FATAL ERROR: `, error);
+            throw error;
         }
-
-        let dailyLimit = 0;
-        let completedToday = 0;
-
-        if (activePlan) {
-            dailyLimit = activePlan.dailyLimit || (await PlanService.getUserDailyLimit(userId, activePlan._id));
-            const planLastDate = activePlan.last_earning_date ? new Date(activePlan.last_earning_date) : new Date(0);
-            const now = new Date();
-            const planIsToday = planLastDate.getDate() === now.getDate() && planLastDate.getMonth() === now.getMonth();
-            completedToday = planIsToday ? (activePlan.tasksCompletedToday || 0) : 0;
-        } else {
-            // Legacy Global
-            dailyLimit = await PlanService.getUserDailyLimit(userId);
-            const now = new Date();
-            const lastDate = user.taskData.lastTaskDate ? new Date(user.taskData.lastTaskDate) : new Date(0);
-            const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
-            completedToday = isToday ? user.taskData.tasksCompletedToday : 0;
-        }
-
-        if (completedToday >= dailyLimit) {
-            throw new Error(`Daily limit reached for this server.`);
-        }
-
-        // 3. Set Start Token in DB
-        // We persist this to prevent stateless hacking (claiming without starting)
-        user.taskData.currentTask = {
-            taskId: taskId,
-            startTime: now
-        };
-        await user.save();
-
-        return {
-            message: "Task Started",
-            startTime: now,
-            taskId
-        };
     }
 
     /**
