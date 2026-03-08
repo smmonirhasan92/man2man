@@ -58,9 +58,10 @@ class PlanService {
             if (!plan) throw new Error('Plan not found.');
             if (!plan.is_active) throw new Error('Plan is deprecated.');
 
-            // [MODIFIED] Single Active Server Enforcement
-            // Terminate ALL other sessions/servers immediately.
-            // User can only have ONE active "Connection".
+            /* 
+            // [MODIFIED] Multi-Server Support Enablement
+            // Previously, purchasing a new server auto-terminated all existing sessions.
+            // This restriction has been lifted per user requirement to allow multiple concurrent nodes.
             const existingActive = await UserPlan.updateMany(
                 { userId, status: { $in: ['active', 'provisioning'] } },
                 {
@@ -75,6 +76,7 @@ class PlanService {
             if (existingActive.modifiedCount > 0) {
                 console.log(`[PlanService] Auto-Terminated ${existingActive.modifiedCount} previous sessions for User ${userId}`);
             }
+            */
 
             // proceed to create new one...
 
