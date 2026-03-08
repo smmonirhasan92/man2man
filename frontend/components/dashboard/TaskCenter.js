@@ -42,6 +42,7 @@ export default function TaskCenter({ taskData }) {
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [verifyInput, setVerifyInput] = useState('');
     const [verifiedSession, setVerifiedSession] = useState(false);
+    const [serverName, setServerName] = useState('Network Node');
 
     // [NEW] Dynamic Task List
     const [tasksList, setTasksList] = useState([]);
@@ -56,6 +57,7 @@ export default function TaskCenter({ taskData }) {
             if (lastVerified === today) {
                 setVerifiedSession(true);
             }
+            setServerName(localStorage.getItem('active_server_name') || 'Network Node');
         }
     }, []);
 
@@ -287,7 +289,9 @@ export default function TaskCenter({ taskData }) {
                                 <div className="flex-1 p-4 flex flex-col justify-between relative">
                                     <div className="flex justify-between items-start">
                                         <div className="flex flex-col">
-                                            <h3 className="font-bold text-white text-base leading-tight group-hover:text-cyan-400 transition-colors">{task.title || 'Premium Ad Task'}</h3>
+                                            <h3 className="font-bold text-white text-base leading-tight group-hover:text-cyan-400 transition-colors">
+                                                {serverName} - Task #{task.uniqueIndex + 1}
+                                            </h3>
                                             <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
                                                 <Zap size={10} className="text-emerald-400" /> Network Ad Drop
                                             </p>
