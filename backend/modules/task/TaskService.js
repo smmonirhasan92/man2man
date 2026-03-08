@@ -449,7 +449,7 @@ class TaskService {
      * Execute the spin, award random 1-3 NXS.
      */
     async executeDailySpin(userId) {
-        return await TransactionHelper.runTransaction(async (session) => {
+        return await runTransaction(async (session) => {
             const user = await User.findById(userId).session(session);
             if (!user) throw new Error("User not found");
 
