@@ -88,7 +88,7 @@ const UserSchema = new mongoose.Schema({
         tasksCompletedToday: { type: Number, default: 0 },
         accountTier: { type: String, default: 'Starter' },
         currentTask: {
-            taskId: String,
+            taskId: { type: String },
             startTime: Date
         },
         // Promotion & Target Tracking
