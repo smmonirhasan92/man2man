@@ -57,8 +57,8 @@ class TaskService {
      * Step 1: Start Task
      * Generates a secure session for the task.
      */
-    async startTask(userId, taskId, usaKey) {
-        console.log(`[TaskService.startTask] Init userId=${userId}, taskId=${taskId}, usaKey=${usaKey}`);
+    async startTask(userId, taskId, usaKey, serverId) {
+        console.log(`[TaskService.startTask] Init userId=${userId}, taskId=${taskId}, usaKey=${usaKey}, serverId=${serverId}`);
         try {
             // 1. Check if user exists
             const user = await User.findById(userId);
@@ -72,9 +72,15 @@ class TaskService {
             const UserPlan = require('../plan/UserPlanModel');
 
             let activePlan = null;
-            if (usaKey) {
-                const cleanKey = usaKey.trim();
-                activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanKey, status: 'active' });
+            if (serverId || usaKey) {
+                const cleanKey = usaKey ? usaKey.trim() : null;
+                let query = { userId, status: 'active' };
+                if (serverId && serverId !== 'undefined') {
+                    query._id = serverId;
+                } else if (cleanKey && cleanKey !== 'undefined') {
+                    query.syntheticPhone = cleanKey;
+                }
+                activePlan = await UserPlan.findOne(query);
                 console.log(`[TaskService.startTask] Lookup activePlan: ${activePlan ? activePlan._id : 'null'}`);
             }
 

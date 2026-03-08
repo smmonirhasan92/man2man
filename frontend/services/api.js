@@ -33,11 +33,16 @@ api.interceptors.request.use(
             config.headers['Authorization'] = `Bearer ${token}`;
         }
 
-        // [NEW] Attach Active Server Key for Multi-Server Logic
+        // [NEW] Attach Active Server ID & Key for Multi-Server Logic
         const usaKey = localStorage.getItem('active_server_phone');
-        if (usaKey) {
+        if (usaKey && usaKey !== 'undefined' && usaKey !== 'null') {
             config.headers['x-usa-key'] = usaKey;       // For Task Processing/Legacy
             config.headers['x-usa-identity'] = usaKey;  // For Session/Rate Guard
+        }
+
+        const serverId = localStorage.getItem('active_server_id');
+        if (serverId && serverId !== 'undefined' && serverId !== 'null') {
+            config.headers['x-server-id'] = serverId;
         }
 
         // [BUG FIX] Aggressive Cache Busting for Next.js App Router (Stale Data Issue)

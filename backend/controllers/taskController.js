@@ -60,14 +60,22 @@ exports.getTaskStatus = async (req, res) => {
 
         let rewardPerTask = 0;
         let sessionLimit = 0; // [NEW] Session Specific Limit
+        const serverIdHeader = req.headers['x-server-id'];
 
-        if (identityHeader) {
-            const cleanIdentity = identityHeader.trim();
+        if (serverIdHeader || identityHeader) {
+            const cleanIdentity = identityHeader ? identityHeader.trim() : null;
             const Plan = require('../modules/admin/PlanModel');
             const UserPlan = require('../modules/plan/UserPlanModel'); // lazy load
 
-            // Find the specific plan for this identity
-            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanIdentity, status: 'active' });
+            // Find the specific plan for this identity prioritizing serverId
+            let query = { userId, status: 'active' };
+            if (serverIdHeader && serverIdHeader !== 'undefined') {
+                query._id = serverIdHeader;
+            } else if (cleanIdentity && cleanIdentity !== 'undefined') {
+                query.syntheticPhone = cleanIdentity;
+            }
+
+            const activePlan = await UserPlan.findOne(query);
 
             if (activePlan) {
                 // Get Session Specific Limit
@@ -155,17 +163,26 @@ exports.getTasks = async (req, res) => {
         // Fetch available tasks (Context Aware)
         // DYNAMIC SESSION:
         const identityHeader = req.headers['x-usa-identity'];
+        const serverIdHeader = req.headers['x-server-id'];
         let planId = null;
         let isV2 = false;
 
-        if (identityHeader) {
-            const cleanIdentity = identityHeader.trim();
+        if (serverIdHeader || identityHeader) {
+            const cleanIdentity = identityHeader ? identityHeader.trim() : null;
             const UserPlan = require('../modules/plan/UserPlanModel');
-            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanIdentity, status: 'active' });
+
+            let query = { userId, status: 'active' };
+            if (serverIdHeader && serverIdHeader !== 'undefined') {
+                query._id = serverIdHeader;
+            } else if (cleanIdentity && cleanIdentity !== 'undefined') {
+                query.syntheticPhone = cleanIdentity;
+            }
+
+            const activePlan = await UserPlan.findOne(query);
             if (activePlan) {
                 planId = activePlan.planId;
                 isV2 = await isV2Plan(userId, planId); // Check V2
-                console.log(`[DEBUG] TaskController: Resolved PlanID=${planId} (V2=${isV2}) for Identity=${identityHeader}`);
+                console.log(`[DEBUG] TaskController: Resolved PlanID=${planId} (V2=${isV2}) for Identity=${identityHeader || serverIdHeader}`);
             }
         }
 
@@ -215,8 +232,9 @@ exports.startTask = async (req, res) => {
         const userId = req.user.id || (req.user.user && req.user.user.id);
         const { taskId } = req.body;
         const usaKey = req.headers['x-usa-identity'] || req.headers['x-usa-key'];
+        const serverId = req.headers['x-server-id'];
 
-        const result = await TaskService.startTask(userId, taskId, usaKey);
+        const result = await TaskService.startTask(userId, taskId, usaKey, serverId);
         res.json(result);
 
     } catch (err) {
@@ -232,15 +250,22 @@ exports.verifyConnection = async (req, res) => {
 
         // Verify User Ownership
         const UserPlan = require('../modules/plan/UserPlanModel'); // lazy load
-        const validPlan = await UserPlan.findOne({
+
+        let query = {
             userId,
             _id: planId,
-            syntheticPhone: syntheticPhone,
             status: 'active'
-        });
+        };
+
+        // Only enforce phone strict match if it's a generated number, ignore placeholders
+        if (syntheticPhone && syntheticPhone !== 'Generating...' && syntheticPhone !== 'undefined' && syntheticPhone !== 'null') {
+            query.syntheticPhone = syntheticPhone;
+        }
+
+        const validPlan = await UserPlan.findOne(query);
 
         if (!validPlan) {
-            return res.status(403).json({ message: "Verification Failed: Plan not active or number mismatch." });
+            return res.status(403).json({ message: "Verification Failed: Plan not active or ownership mismatch." });
         }
 
         // [OPTIONAL] Log the login event
