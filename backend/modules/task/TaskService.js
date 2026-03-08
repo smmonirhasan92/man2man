@@ -369,7 +369,7 @@ class TaskService {
                 newBalance: userUpd.wallet.income,
                 tasksToday: userUpd.taskData.tasksCompletedToday,
                 limit: dailyLimit,
-                rewardAmount: rewardAmount // [NEW] Return explicit amount
+                rewardAmount: earnerNetIncome // [FIX] Return explicit net amount so frontend popup matches DB
             };
         });
     }
