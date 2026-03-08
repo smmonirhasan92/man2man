@@ -90,7 +90,14 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                         <div className="text-[10px] text-white/70 leading-relaxed font-bold">
                             {adMode === 'BUY'
                                 ? "You are posting an Ad to BUY NXS from other users. You must send them fiat currency to their provided accounts."
-                                : "You are posting an Ad to SELL NXS. Your Wallet Balance must cover the limit. Escrow locks funds only when a trade starts."}
+                                : `You are posting an Ad to SELL NXS. Your Wallet Balance must cover the limit. Minimum transaction limits based on your active package apply.`}
+                        </div>
+                    </div>
+
+                    <div className="bg-[#111] p-3 rounded-xl border border-white/10 flex items-start gap-2">
+                        <span className="text-yellow-500 text-base leading-none">💡</span>
+                        <div className="text-[10px] text-slate-300 font-bold leading-relaxed">
+                            <span className="text-white">Exchange Rate Setup:</span> Set the rate in your local currency per 1 USD (e.g., 126 BDT). Buyers/Sellers will use this rate to calculate fiat payments.
                         </div>
                     </div>
 
@@ -166,6 +173,12 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                             A <strong className="text-red-400">2% System Burn Fee</strong> is deducted from the Seller when the trade is successfully completed.
                         </div>
                     </div>
+
+                    {adMode === 'SELL' && (
+                        <div className="px-2 text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                            *Ensure your selling amount meets your package's minimum threshold ($5 default).*
+                        </div>
+                    )}
 
                     <button
                         type="submit"

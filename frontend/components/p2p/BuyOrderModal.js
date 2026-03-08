@@ -64,6 +64,12 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
                         </div>
                     </div>
 
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl mb-4 text-center">
+                        <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-wide">
+                            <span className="text-yellow-500 text-sm">💡</span> Note: NXS is pegged to USD. The P2P Exchange Rate determines how much local currency (e.g., BDT) you pay per USD.
+                        </p>
+                    </div>
+
                     <form onSubmit={handleSubmit}>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
                             Amount to Buy

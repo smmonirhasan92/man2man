@@ -244,6 +244,19 @@ exports.getMe = async (req, res) => {
         userData.account_tier = user.taskData?.accountTier || 'Starter';
         userData.referral_code = user.referralCode;
         userData.kycStatus = user.kycStatus;
+
+        // --- NEW: Expose Dynamic Minimum Withdrawal Threshold (Appended AFTER Cache) ---
+        const activePlans = await PlanService.getActivePlans(userId);
+        let minWithdrawalUsd = 5; // Global Default: $5
+        if (activePlans && activePlans.length > 0) {
+            const Plan = require('../admin/PlanModel');
+            const planDetails = await Plan.findById(activePlans[0].planId);
+            if (planDetails && planDetails.min_withdrawal) {
+                minWithdrawalUsd = planDetails.min_withdrawal;
+            }
+        }
+        userData.min_withdrawal_usd = minWithdrawalUsd; // Append to response
+
         userData.id = user._id;
 
         res.json(userData);

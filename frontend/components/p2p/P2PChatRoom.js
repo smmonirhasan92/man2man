@@ -498,10 +498,9 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                             {proofUrl && <CheckCircle className="w-2.5 h-2.5 absolute top-0.5 right-0.5 bg-black text-[#0ecb81] rounded-full" />}
                         </button>
                     )}
-
                     {/* Chat Input */}
                     {trade.status !== 'COMPLETED' && trade.status !== 'CANCELLED' && (
-                        <div className="flex gap-2 flex-1 relative">
+                        <div className="flex gap-2 flex-1 relative pb-safe">
                             <input
                                 value={input}
                                 onChange={e => setInput(e.target.value)}

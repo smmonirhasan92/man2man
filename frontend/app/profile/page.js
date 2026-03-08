@@ -165,11 +165,18 @@ export default function ProfilePage() {
                     </h2>
                     <p className="text-blue-400 text-sm font-bold tracking-widest uppercase">@{user.username}</p>
 
-                    <div className="mt-4 flex items-center gap-2 bg-gradient-to-r from-blue-900/50 to-red-900/50 border border-white/10 px-6 py-2 rounded-full shadow-inner">
-                        <Trophy className={`w-4 h-4 ${user.account_tier === 'Diamond' ? 'text-blue-400' : 'text-yellow-400'}`} />
-                        <span className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-1">
-                            {user.account_tier || 'Standard Member'} <span className="text-red-500">★</span>
-                        </span>
+                    <div className="mt-4 flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-900/50 to-red-900/50 border border-white/10 px-6 py-2 rounded-full shadow-inner">
+                            <Trophy className={`w-4 h-4 ${user.account_tier === 'Diamond' ? 'text-blue-400' : 'text-yellow-400'}`} />
+                            <span className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-1">
+                                {user.account_tier || 'Standard Member'} <span className="text-red-500">★</span>
+                            </span>
+                        </div>
+                        {user.min_withdrawal_usd && (
+                            <div className="text-[10px] font-bold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-full border border-white/10 shadow-sm backdrop-blur-sm">
+                                Minimum Transaction Limit: <span className="text-emerald-400">${user.min_withdrawal_usd}</span> ({(user.min_withdrawal_usd * 50).toFixed(0)} NXS)
+                            </div>
+                        )}
                     </div>
                 </div>
 
