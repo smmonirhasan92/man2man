@@ -1,7 +1,6 @@
 const cron = require('node-cron');
 const logger = require('../../utils/logger');
 const mongoose = require('mongoose');
-const ProfitGuard = require('../game/ProfitGuard');
 
 // const JackpotService = require('../bonus/JackpotService');
 
@@ -42,7 +41,7 @@ const initPulse = () => {
 
             if (now.getMinutes() === 0) {
                 // [MOVED HERE] Run Heavy Audits Hourly
-                await ProfitGuard.audit();
+                // await ProfitGuard.audit();
 
                 // await JackpotService.drawHourlyJackpot();
 
