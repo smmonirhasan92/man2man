@@ -111,7 +111,6 @@ export default function RootLayout({ children }) {
 
 
                                 <PWAInstallPrompt />
-                                <ChatWidget />
                                 <NotificationPopup />
                                 {/* Premium Toasts */}
                                 <Toaster
