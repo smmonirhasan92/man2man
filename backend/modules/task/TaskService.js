@@ -12,95 +12,44 @@ class TaskService {
     }
 
     /**
-     * Get Available Tasks (Session Filtered)
+     * Get Available Tasks (Global Randomized Pool)
      */
     async getAvailableTasks(userId, planId = null) {
+        if (!planId) return [];
+
         const TaskAd = require('./TaskAdModel');
-        let query = { is_active: true };
+        const Plan = require('../../modules/admin/PlanModel');
 
-        // [LOGIC] Strict Plan-Based Filtering
-        // If a planId is active (Secure Session), ONLY show matches.
-        // If 'valid_plans' is empty, it's considered "Global" (optional) OR we could hide it.
-        // User requested: "Do NOT show global tasks or tasks from other inactive servers."
-
-        if (planId) {
-            // [OPTIMIZED] Strict Plan-Based Filtering via Query
-            // We use the 'valid_plans' field to only fetch relevant tasks from DB
-            let planIdObj = planId;
-            try {
-                planIdObj = new mongoose.Types.ObjectId(planId);
-            } catch (e) {
-                console.error("Invalid ObjectId:", planId);
-                return [];
-            }
-
-            console.log(`[DEBUG] TaskService: DB Query Filter for PlanID: ${planId}`);
-
-            // [MODIFIED] STRICT Server-Based Filtering
-            // 1. Fetch Plan Details to get its Server ID
-            const Plan = require('../../modules/admin/PlanModel');
-            const planDetails = await Plan.findById(planIdObj);
-
-            if (!planDetails) {
-                console.log("[TaskService] Access Denied: Invalid Plan ID");
-                return [];
-            }
-
-            const targetServerId = planDetails.server_id || 'SERVER_01';
-            console.log(`[TaskService] Routing to Server Group: ${targetServerId}`);
-
-            // [REDIS] Check Cache
-            const redisConfig = require('../../config/redis');
-            const cacheKey = `tasks_server_${targetServerId}`;
-            let filteredTasks = null;
-
-            if (redisConfig.client.isOpen) {
-                try {
-                    const cached = await redisConfig.client.get(cacheKey);
-                    if (cached) {
-                        filteredTasks = JSON.parse(cached);
-                        console.log(`[TaskService] Redis Cache Hit: ${cacheKey}`);
-                    }
-                } catch (e) {
-                    console.warn("Redis Get Error:", e.message);
-                }
-            }
-
-            if (!filteredTasks) {
-                // 2. Fetch Tasks for this SPECIFIC Server Group
-                filteredTasks = await TaskAd.find({
-                    is_active: true,
-                    server_id: targetServerId // STRICT MATCH
-                }).sort({ priority: -1 });
-
-                // [REDIS] Store Cache
-                if (redisConfig.client.isOpen) {
-                    try {
-                        await redisConfig.client.set(cacheKey, JSON.stringify(filteredTasks), { EX: 3600 });
-                        console.log(`[TaskService] Redis Cache Set: ${cacheKey}`);
-                    } catch (e) {
-                        console.warn("Redis Set Error:", e.message);
-                    }
-                }
-            }
-
-            if (planDetails.daily_limit > 0) {
-                console.log(`[DEBUG] Plan Limit: ${planDetails.daily_limit}. Available: ${filteredTasks.length}`);
-                if (filteredTasks.length > planDetails.daily_limit) {
-                    return filteredTasks.slice(0, planDetails.daily_limit);
-                }
-            }
-
-            console.log(`[DEBUG] TaskService: Found Match=${filteredTasks.length}`);
-            return filteredTasks;
-        } else {
-            console.log(`[DEBUG] TaskService: No planId provided. Returning empty.`);
+        let planIdObj;
+        try {
+            planIdObj = new mongoose.Types.ObjectId(planId);
+        } catch (e) {
             return [];
         }
 
-        // Unreachable due to if/else returns above, but keeping for safety structure if needed later
-        // const tasks = await TaskAd.find(query).sort({ priority: -1 });
-        // return tasks;
+        const planDetails = await Plan.findById(planIdObj);
+        if (!planDetails) {
+            return [];
+        }
+
+        const dailyLimit = planDetails.daily_limit || 0;
+        if (dailyLimit <= 0) return [];
+
+        // Fetch all active ads globally, independent of server group
+        let globalAds = await TaskAd.find({ is_active: true });
+
+        // If no ads exist, return empty
+        if (!globalAds || globalAds.length === 0) {
+            return [];
+        }
+
+        // Shuffle the ads to randomize what the user sees
+        const shuffledAds = globalAds.sort(() => 0.5 - Math.random());
+
+        // Trim the pool to match the user's daily limit
+        const allocatedAds = shuffledAds.slice(0, dailyLimit);
+
+        return allocatedAds;
     }
 
 

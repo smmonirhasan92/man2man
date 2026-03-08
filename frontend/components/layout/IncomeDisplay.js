@@ -1,8 +1,9 @@
 import React from 'react';
 
 export default function IncomeDisplay({ amount }) {
-    // Strict USD Display
-    const displayValue = `$${Number(amount || 0).toFixed(2)}`;
+    // Convert NXS to USD strictly for display (1 NXS = $0.02)
+    const convertedToUsd = (Number(amount || 0) * 0.02);
+    const displayValue = `$${convertedToUsd.toFixed(2)}`;
 
     return (
         <div className="flex flex-col items-end mr-1">

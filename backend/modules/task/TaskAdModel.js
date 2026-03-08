@@ -18,10 +18,6 @@ const TaskAdSchema = new mongoose.Schema({
         type: Number, // in seconds
         required: true
     },
-    priority: {
-        type: Number,
-        default: 0 // Higher shows first
-    },
     type: {
         type: String,
         enum: ['ad_view', 'video', 'review', 'social', 'bulk'],
@@ -36,17 +32,6 @@ const TaskAdSchema = new mongoose.Schema({
         type: String, // Instructions for review/reply tasks
         trim: true
     },
-    // [NEW] Strict Task Separation
-    server_id: {
-        type: String,
-        required: true,
-        default: 'SERVER_01',
-        index: true
-    },
-    valid_plans: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Plan'
-    }],
     is_active: {
         type: Boolean,
         default: true

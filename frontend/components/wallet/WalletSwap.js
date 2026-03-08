@@ -55,7 +55,10 @@ export default function WalletSwap({ user, onSuccess }) {
                             From: Income Wallet
                         </div>
                         <div className="text-xs font-bold text-white leading-none">
-                            NXS {Number(incomeBalance).toFixed(2)}
+                            ${(Number(incomeBalance) * 0.02).toFixed(2)} USD
+                        </div>
+                        <div className="text-[8px] text-slate-500 font-mono mt-0.5">
+                            ({Number(incomeBalance).toFixed(2)} NXS)
                         </div>
                     </div>
 
@@ -78,15 +81,20 @@ export default function WalletSwap({ user, onSuccess }) {
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono text-[10px] tracking-widest mt-[0.5px]">
-                            NXS
+                            NXS Amount:
                         </span>
                         <input
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Amount"
-                            className="w-full h-full bg-slate-950/50 border border-slate-700 rounded-xl pl-[42px] pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
+                            placeholder="0"
+                            className="w-full h-full bg-slate-950/50 border border-slate-700 rounded-xl pl-[80px] pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
                         />
+                        {amount > 0 && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 font-bold font-mono text-[10px]">
+                                = ${(Number(amount) * 0.02).toFixed(2)}
+                            </div>
+                        )}
                     </div>
                     {/* Action Button */}
                     <button

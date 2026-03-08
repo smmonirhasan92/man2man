@@ -20,32 +20,14 @@ export default function AdminTasksPage() {
         imageUrl: '',
         url: '',
         duration: 15,
-        type: 'ad_view',
-        priority: 0,
-        valid_plan_id: '',
-        server_id: 'SERVER_01' // [NEW] Default
+        type: 'ad_view'
     });
-
-    // [FIX] Define Server Options
-    const serverOptions = Array.from({ length: 10 }, (_, i) => `SERVER_${String(i + 1).padStart(2, '0')}`);
-
-
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState('');
 
     useEffect(() => {
         fetchAds();
-        fetchPlans();
     }, []);
-
-    const fetchPlans = async () => {
-        try {
-            const res = await api.get('/admin/tiers');
-            setPlans(res.data || []);
-        } catch (err) {
-            console.error("Failed to load plans", err);
-        }
-    };
 
     const fetchAds = async () => {
         try {
@@ -62,14 +44,7 @@ export default function AdminTasksPage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            // Convert single ID to array for backend
             const payload = { ...formData };
-            if (payload.valid_plan_id) {
-                payload.valid_plans = [payload.valid_plan_id];
-            } else {
-                payload.valid_plans = []; // Global
-            }
-            delete payload.valid_plan_id; // Clean up
 
             if (editId) {
                 await api.put(`/admin/task-ad/${editId}`, payload);
@@ -79,7 +54,7 @@ export default function AdminTasksPage() {
                 setMessage('Task Ad Created Successfully!');
             }
 
-            setFormData({ title: '', imageUrl: '', url: '', duration: 15, type: 'ad_view', priority: 0, valid_plan_id: '' });
+            setFormData({ title: '', imageUrl: '', url: '', duration: 15, type: 'ad_view' });
             setEditId(null); // Reset
             setShowForm(false);
             fetchAds();
@@ -125,7 +100,7 @@ export default function AdminTasksPage() {
                     </div>
                 </div>
                 <button
-                    onClick={() => { setShowForm(!showForm); setEditId(null); setFormData({ title: '', imageUrl: '', url: '', duration: 15, type: 'ad_view', priority: 0, valid_plan_id: '' }); }}
+                    onClick={() => { setShowForm(!showForm); setEditId(null); setFormData({ title: '', imageUrl: '', url: '', duration: 15, type: 'ad_view' }); }}
                     className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
                 >
                     {showForm ? <X size={20} /> : <Plus size={20} />}
@@ -186,7 +161,7 @@ export default function AdminTasksPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Duration (Sec)</label>
                                 <input
@@ -210,48 +185,6 @@ export default function AdminTasksPage() {
                                     <option value="review">Product Review</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Priority</label>
-                                <input
-                                    type="number"
-                                    value={formData.priority}
-                                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                                    className="w-full text-slate-900 bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500 placeholder-slate-400"
-                                    placeholder="0"
-                                />
-                            </div>
-                        </div>
-
-                        {/* PLAN SELECTOR [NEW] */}
-                        {/* SERVER SELECTOR [NEW] */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Server Group (Strict Routing)</label>
-                            <select
-                                value={formData.server_id}
-                                onChange={(e) => setFormData({ ...formData, server_id: e.target.value })}
-                                className="w-full text-slate-900 bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500"
-                            >
-                                {serverOptions.map(sid => (
-                                    <option key={sid} value={sid}>{sid}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* PLAN SELECTOR */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Plan (Optional)</label>
-                            <select
-                                value={formData.valid_plan_id}
-                                onChange={(e) => setFormData({ ...formData, valid_plan_id: e.target.value })}
-                                className="w-full text-slate-900 bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-500"
-                            >
-                                <option value="">Global (All Users)</option>
-                                {plans.map(plan => (
-                                    <option key={plan._id || plan.id} value={plan._id || plan.id}>
-                                        {plan.name} (${plan.price_usd}) - {plan.daily_limit} Tasks
-                                    </option>
-                                ))}
-                            </select>
                         </div>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
@@ -287,9 +220,6 @@ export default function AdminTasksPage() {
                                     alt={ad.title}
                                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                                 />
-                                <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded-lg text-xs font-mono">
-                                    P: {ad.priority}
-                                </div>
                             </div>
                             <div className="p-4">
                                 <h3 className="font-bold text-lg text-slate-800 mb-1 truncate">{ad.title}</h3>

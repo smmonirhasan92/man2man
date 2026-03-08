@@ -3,7 +3,7 @@ const Plan = require('../admin/PlanModel');
 
 exports.getTaskAds = async (req, res) => {
     try {
-        const ads = await TaskAd.find().sort({ priority: -1, createdAt: -1 });
+        const ads = await TaskAd.find().sort({ createdAt: -1 });
         res.json(ads);
     } catch (err) {
         console.error(err);
@@ -13,7 +13,7 @@ exports.getTaskAds = async (req, res) => {
 
 exports.createTaskAd = async (req, res) => {
     try {
-        const { title, url, imageUrl, duration, priority, type } = req.body;
+        const { title, url, imageUrl, duration, type } = req.body;
 
         // Basic Validation
         if (!title || !url || !duration) {
@@ -28,9 +28,7 @@ exports.createTaskAd = async (req, res) => {
             url,
             imageUrl,
             duration: parseInt(duration),
-            priority: parseInt(priority) || 0,
-            type: type || 'ad_view',
-            server_id: req.body.server_id || 'SERVER_01' // [NEW] Pass server_id
+            type: type || 'ad_view'
         });
 
         const savedAd = await newAd.save();

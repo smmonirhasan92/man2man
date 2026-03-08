@@ -78,16 +78,16 @@ class AdminController {
         try {
             const Plan = require('./PlanModel');
             const PLANS = [
-                { price: 500, name: "Student Node" },
-                { price: 1000, name: "Starter Node" },
-                { price: 2000, name: "Basic Node" },
-                { price: 3000, name: "Standard Node" },
-                { price: 5000, name: "Advanced Node" },
-                { price: 7000, name: "Pro Node" },
-                { price: 9000, name: "Business Node" },
-                { price: 10000, name: "Enterprise Node" },
-                { price: 12000, name: "Corporate Node" },
-                { price: 15000, name: "Tycoon Node" }
+                { price: 500, name: "Student Node" },      // $10
+                { price: 1000, name: "Starter Node" },     // $20
+                { price: 2000, name: "Basic Node" },       // $40
+                { price: 3000, name: "Standard Node" },    // $60
+                { price: 5000, name: "Advanced Node" },    // $100
+                { price: 7000, name: "Pro Node" },         // $140
+                { price: 9000, name: "Business Node" },    // $180
+                { price: 10000, name: "Enterprise Node" }, // $200
+                { price: 12000, name: "Corporate Node" },  // $240
+                { price: 15000, name: "Tycoon Node" }      // $300
             ];
 
             const VALIDITY_DAYS = 35;
@@ -106,10 +106,10 @@ class AdminController {
                 const perTaskReward = dailyRevenue / DAILY_TASKS;
 
                 const planData = {
-                    name: `${p.name} (${p.price} BDT)`,
+                    name: `${p.name} ($${p.price * 0.02})`, // Visual helper showing equivalent USD
                     type: 'server',
                     unlock_price: p.price,
-                    price_usd: (p.price / 120).toFixed(2), // Approx USD for display
+                    price_usd: (p.price * 0.02).toFixed(2), // Convert precisely back to USD value
                     validity_days: VALIDITY_DAYS,
                     daily_limit: DAILY_TASKS,
                     task_reward: parseFloat(perTaskReward.toFixed(4)), // PRE-CALCULATED PRECISION
@@ -119,7 +119,7 @@ class AdminController {
                     features: [
                         'Dedicated v2 Server',
                         `${DAILY_TASKS} Tasks Daily`,
-                        `Total Return: ${totalReturn.toFixed(0)} BDT`,
+                        `Total Return: ${totalReturn.toFixed(0)} NXS`, // NXS standard
                         '24/7 Support'
                     ],
                     is_active: true
@@ -132,19 +132,19 @@ class AdminController {
                 );
                 results.push(updatedPlan.name);
 
-                // --- SEED TASKS FOR THIS SERVER GROUP ---
+                // --- SEED TASKS ---
+                // We keep generic placeholder tasks here but strip any complex logic because Ads will now pull from a global pool.
                 const TaskAd = require('../task/TaskAdModel');
                 const taskCount = await TaskAd.countDocuments({ server_id: updatedPlan.server_id });
 
-                if (taskCount < 5) { // Only seed if empty or low
+                if (taskCount < 5) {
                     const tasksToSeed = [];
                     for (let t = 1; t <= 10; t++) {
                         tasksToSeed.push({
-                            title: `Premium Ad View #${t} (${updatedPlan.name})`,
-                            url: "https://google.com", // Placeholder
+                            title: `Advertiser Clip #${t}`,
+                            url: "https://google.com",
                             imageUrl: "https://via.placeholder.com/150",
                             duration: 10,
-                            reward_amount: perTaskReward, // Display only, overridden by Plan Logic
                             server_id: updatedPlan.server_id,
                             type: 'ad_view',
                             is_active: true,
