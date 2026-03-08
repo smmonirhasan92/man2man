@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ShieldAlert, Ban, CheckCircle, Activity, MapPin, Calendar, Smartphone, Coins } from 'lucide-react';
+import { X, ShieldAlert, Ban, CheckCircle, Activity, MapPin, Calendar, Smartphone, Coins, MessageCircle } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,22 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
         }
     };
 
+    const handleDirectMessage = async () => {
+        const msg = window.prompt(`Enter message to send ${profile.fullName || 'this user'}:`);
+        if (!msg) return;
+
+        try {
+            await api.post('/support/admin/initiate', {
+                targetUserId: userId,
+                message: msg
+            });
+            toast.success('Message sent! View in Support Panel.');
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to send message");
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -76,8 +92,8 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 <div className="text-slate-400 font-mono text-sm mb-3">{profile.phone || profile.u_ph || 'No Phone'}</div>
                                 <div className="flex flex-wrap gap-2">
                                     <span className={`px-3 py-1 text-[11px] font-bold uppercase rounded-lg border ${profile.status === 'blocked' ? 'bg-red-500/20 text-red-500 border-red-500/30' :
-                                            profile.status === 'restricted' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' :
-                                                'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
+                                        profile.status === 'restricted' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' :
+                                            'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
                                         }`}>
                                         Status: {profile.status || 'Active'}
                                     </span>
@@ -139,7 +155,22 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                             )}
                         </div>
 
-                        {/* 4. Admin Actions (Danger Zone) */}
+                        {/* 4. Communication & Admin Actions */}
+                        <div className="border border-indigo-500/20 bg-indigo-500/5 rounded-2xl p-5 mb-4">
+                            <h4 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">Direct Communication</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button
+                                    onClick={handleDirectMessage}
+                                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition font-bold"
+                                    title="Start a manual support chat with this user"
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    <span>Send Message to User</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 5. Danger Zone */}
                         <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-5">
                             <h4 className="text-sm font-bold text-red-500 mb-4 flex items-center gap-2">Danger Zone</h4>
 

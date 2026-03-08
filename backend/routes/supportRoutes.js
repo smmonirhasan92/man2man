@@ -12,6 +12,7 @@ r.get('/my-messages', authMiddleware, supportController.getUserMessages);
 
 // Admin Routes
 r.get('/all', authMiddleware, roleMiddleware(['super_admin', 'employee_admin']), supportController.getAllMessages);
+r.post('/admin/initiate', authMiddleware, roleMiddleware(['super_admin', 'employee_admin']), supportController.adminInitiateTicket);
 
 // Thread Routes (Dual-Use)
 r.post('/reply', authMiddleware, supportController.replyToMessage);

@@ -25,6 +25,31 @@ exports.sendMessage = async (req, res) => {
     }
 };
 
+// Admin Initiate Ticket
+exports.adminInitiateTicket = async (req, res) => {
+    try {
+        const { targetUserId, message } = req.body;
+        const adminId = req.user.user.id; // From middleware
+
+        const newTicket = await SupportMessage.create({
+            userId: targetUserId,
+            subject: 'Support team message',
+            messages: [{
+                senderId: adminId,
+                senderRole: 'admin',
+                text: message
+            }],
+            status: 'answered'
+        });
+
+        const populated = await newTicket.populate('userId', 'fullName email phone');
+        res.status(201).json({ message: 'Message sent to user', support: populated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 // Get User Tickets (User History)
 exports.getUserMessages = async (req, res) => {
     try {
