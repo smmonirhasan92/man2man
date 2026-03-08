@@ -7,7 +7,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
     if (!isOpen || !order) return null;
 
     const liveAvailable = order.userId?.wallet?.main || 0;
-    const rate = order.rate || 126; // Fallback if no rate
+    const rate = order.rate || 1.3; // Fallback if no rate
     const maxLimit = Math.min(order.amount, liveAvailable);
 
     const handleSubmit = (e) => {
@@ -50,7 +50,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
                         <div className="flex flex-col gap-3 relative z-10">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-slate-400 font-medium">Exchange Rate</span>
-                                <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">50 NXS (1 USD) = {rate} Local Fiat</span>
+                                <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">1 NXS = {rate} Local Fiat</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-slate-400 font-medium">Seller's Balance</span>

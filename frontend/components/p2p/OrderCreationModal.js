@@ -97,13 +97,13 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                     <div className="bg-[#111] p-3 rounded-xl border border-white/10 flex items-start gap-2">
                         <span className="text-yellow-500 text-base leading-none">💡</span>
                         <div className="text-[10px] text-slate-300 font-bold leading-relaxed">
-                            <span className="text-white">Exchange Rate Setup:</span> Set the rate in your local currency per 1 USD (e.g., 126 BDT). Buyers/Sellers will use this rate to calculate fiat payments.
+                            <span className="text-white">Exchange Rate Setup:</span> Set the rate in your local currency for <strong>1 NXS</strong> (e.g., 2.5 BDT or 1.3 BDT). Buyers/Sellers will use this rate to calculate fiat payments.
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Exchange Rate (per 1 USD)</label>
+                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Exchange Rate (per 1 NXS)</label>
                             <div className="relative flex gap-2">
                                 <select
                                     value={fiatCurrency}
@@ -119,10 +119,11 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                                 </select>
                                 <input
                                     type="number"
+                                    step="0.01"
                                     value={rate}
                                     onChange={e => setRate(e.target.value)}
                                     className={`w-2/3 bg-[#111927] border border-white/10 rounded-xl p-3 font-black focus:outline-none transition ${adMode === 'BUY' ? 'text-blue-400 focus:border-blue-500' : 'text-emerald-400 focus:border-emerald-500'}`}
-                                    placeholder="e.g. 120"
+                                    placeholder="e.g. 1.30"
                                 />
                             </div>
                         </div>
@@ -138,12 +139,6 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                             />
                         </div>
                     </div>
-
-                    {amount >= 50 && fiatCurrency === 'BDT' && (
-                        <div className="px-2 text-[9px] text-[#fcd535] font-bold tracking-widest leading-relaxed">
-                            ⚠️ Orders 50 NXS or above are restricted to a <strong className="text-white">+/- 4 BDT</strong> variance from the standard 126 BDT rate (Max 130, Min 122).
-                        </div>
-                    )}
 
                     <div className="space-y-1">
                         <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
