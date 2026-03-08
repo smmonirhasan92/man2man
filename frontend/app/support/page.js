@@ -179,21 +179,7 @@ export default function SupportPage() {
 
             <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 scrollbar-hide">
 
-                {/* Quick Contact Options */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    <a href="https://wa.me/8801700000000" target="_blank" className="bg-green-50 border border-green-100 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                            <MessageCircle className="w-6 h-6" />
-                        </div>
-                        <span className="font-bold text-green-700 text-sm">WhatsApp</span>
-                    </a>
-                    <a href="tel:+8801700000000" className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-95 transition">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                            <Phone className="w-6 h-6" />
-                        </div>
-                        <span className="font-bold text-blue-700 text-sm">Call Us</span>
-                    </a>
-                </div>
+
 
                 {/* Send Message Form */}
                 <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-8">
