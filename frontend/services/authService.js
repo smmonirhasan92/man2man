@@ -61,21 +61,8 @@ export const authService = {
             const user = await this.getCurrentUser();
             if (user) {
                 localStorage.setItem('user', JSON.stringify(user));
-
-                // [SYNC] Update Active Server Metadata if present
-                if (user.synthetic_phone) {
-                    localStorage.setItem('active_server_phone', user.synthetic_phone);
-                    // [FIX] Also persist ID and Name to unlock Task UI
-                    // Assuming user object has these fields populated from backend or we use defaults
-                    if (user.active_plan_id) localStorage.setItem('active_server_id', user.active_plan_id);
-                    if (user.active_plan_name) localStorage.setItem('active_server_name', user.active_plan_name);
-
-                    // Fallback for "Restore" - If we have phone but no ID (Legacy User), make one up to bypass UI lock
-                    if (!localStorage.getItem('active_server_id')) {
-                        localStorage.setItem('active_server_id', 'legacy_server_01');
-                        localStorage.setItem('active_server_name', 'USA PRIMARY');
-                    }
-                }
+                // [FIX] Removed auto-override of `active_server_phone`. 
+                // Users with multiple servers must retain their explicit connection choice.
             }
             return user;
         } catch (error) {

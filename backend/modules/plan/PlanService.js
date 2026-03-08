@@ -58,6 +58,19 @@ class PlanService {
             if (!plan) throw new Error('Plan not found.');
             if (!plan.is_active) throw new Error('Plan is deprecated.');
 
+            // [NEW] 12-Day Cooldown (Anti-Duplicate Purchase Guard)
+            const lastPurchase = await UserPlan.findOne({
+                userId,
+                planId: plan._id
+            }).sort({ createdAt: -1 }).session(session);
+
+            if (lastPurchase) {
+                const daysSince = (new Date() - lastPurchase.createdAt) / (1000 * 60 * 60 * 24);
+                if (daysSince < 12) {
+                    throw new Error(`You cannot purchase the exact same package within 12 days. Please wait ${Math.ceil(12 - daysSince)} more days or choose a different package.`);
+                }
+            }
+
             /* 
             // [MODIFIED] Multi-Server Support Enablement
             // Previously, purchasing a new server auto-terminated all existing sessions.
