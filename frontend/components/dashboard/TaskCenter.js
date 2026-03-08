@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import taskService from '../../services/taskService';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import SpinWheelModal from '../gamification/SpinWheelModal';
+import api from '../../services/api';
 
 export default function TaskCenter({ taskData }) {
     // Default values if data not loaded
@@ -43,6 +45,19 @@ export default function TaskCenter({ taskData }) {
     const [verifyInput, setVerifyInput] = useState('');
     const [verifiedSession, setVerifiedSession] = useState(false);
     const [serverName, setServerName] = useState('Network Node');
+
+    // [NEW] Daily Spin State
+    const [spinStatus, setSpinStatus] = useState(null);
+    const [showSpinModal, setShowSpinModal] = useState(false);
+
+    // Fetch Spin Status when completed reaches limit
+    useEffect(() => {
+        if (completed >= limit && limit > 0) {
+            api.get('/task/spin-status')
+                .then(res => setSpinStatus(res.data))
+                .catch(err => console.error("Spin status error:", err));
+        }
+    }, [completed, limit]);
 
     // [NEW] Dynamic Task List
     const [tasksList, setTasksList] = useState([]);
@@ -245,6 +260,15 @@ export default function TaskCenter({ taskData }) {
                     <h2 className="text-xl font-black text-white uppercase mb-2">Server Completed</h2>
                     <p className="text-sm text-slate-400 mb-6">You have completed all tasks for this server today.</p>
 
+                    {spinStatus && spinStatus.isEligible && (
+                        <button
+                            onClick={() => setShowSpinModal(true)}
+                            className="w-full py-4 mb-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-black rounded-xl shadow-[0_4px_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2 uppercase tracking-tight transition-all hover:scale-[1.02] animate-bounce"
+                        >
+                            🎡 Unlock Daily Bonus Spin
+                        </button>
+                    )}
+
                     <button
                         onClick={() => router.push('/servers')}
                         className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(79,70,229,0.3)] flex items-center justify-center gap-2 uppercase tracking-wide transition-all hover:scale-[1.02]"
@@ -359,6 +383,19 @@ export default function TaskCenter({ taskData }) {
                             }
                         }}
                         onClose={() => setIsPlayerOpen(false)}
+                    />
+                )
+            }
+
+            {
+                showSpinModal && (
+                    <SpinWheelModal
+                        onClose={() => setShowSpinModal(false)}
+                        onComplete={(amount) => {
+                            setLocalEarnings(prev => prev + amount);
+                            setSpinStatus(prev => ({ ...prev, isEligible: false, alreadySpunToday: true }));
+                            setShowSpinModal(false);
+                        }}
                     />
                 )
             }

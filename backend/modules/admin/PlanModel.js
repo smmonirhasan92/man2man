@@ -44,6 +44,14 @@ const planSchema = new mongoose.Schema({
         type: Number,
         default: 1.0
     },
+    direct_commission_percent: {
+        type: Number,
+        default: 7.2 // Target 7.2% for Base (e.g., 250 NXS -> ~18 NXS)
+    },
+    upsell_bonus_percent: {
+        type: Number,
+        default: 0.66 // Target 0.66% applied to Excess/Difference amount
+    },
     node_code: {
         type: String,
         default: 'STD_NODE',

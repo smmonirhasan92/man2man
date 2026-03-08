@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('../user/UserModel');
+const Plan = require('../admin/PlanModel');
 const Transaction = require('../wallet/TransactionModel');
 const SystemSetting = require('../settings/SystemSettingModel');
 const NotificationService = require('../notification/NotificationService');
@@ -96,7 +97,9 @@ class ReferralService {
                     console.log(`[Referral] User ${currentUser.username} officially counted. Direct Upline active referrals: ${directUpline.referralCount}`);
                 }
             }
-            // -------------------------------------------------------------------------
+            // Fetch the Buyer's New Plan to determine standard percentages
+            const buyerPlanObj = await Plan.findOne({ name: planName }).session(session);
+            const buyerDirectPercent = buyerPlanObj ? buyerPlanObj.direct_commission_percent : 7.2;
 
             const rates = ReferralService.PLAN_COMMISSION_RATES;
             let totalDistributed = 0;
@@ -108,8 +111,65 @@ class ReferralService {
                 const uplineUser = await User.findOne({ referralCode: uplineCode }).session(session);
                 if (!uplineUser) break; // Broken link
 
-                // Calculate Commission (Safe Rounding)
-                let commission = (planAmount * rates[i]) / 100;
+                let commission = 0;
+                let commissionDesc = '';
+                let liabilitySaved = 0;
+
+                // --- [NEW] Level 1 Dynamic Commission (Upsell / Downsell Engine) ---
+                if (i === 0 && buyerPlanObj) {
+                    // Find Upline's Highest Active Plan
+                    const UserPlan = require('../plan/UserPlanModel');
+                    const uplinePlans = await UserPlan.find({
+                        userId: uplineUser._id,
+                        status: 'active',
+                        expiryDate: { $gt: new Date() }
+                    }).session(session);
+
+                    let uplineHighestPlanValue = 0;
+                    let uplineDirectPercent = 7.2;
+                    let uplineUpsellPercent = 0.66;
+
+                    if (uplinePlans.length > 0) {
+                        // Fetch plan details to find the most expensive one they own
+                        const planIds = uplinePlans.map(p => p.planId);
+                        const allUplinePlans = await Plan.find({ _id: { $in: planIds } }).session(session);
+
+                        for (const p of allUplinePlans) {
+                            if (p.unlock_price > uplineHighestPlanValue) {
+                                uplineHighestPlanValue = p.unlock_price;
+                                uplineDirectPercent = p.direct_commission_percent;
+                                uplineUpsellPercent = p.upsell_bonus_percent;
+                            }
+                        }
+                    }
+
+                    // The Core Engine: Check if Seller is smaller than Buyer (Upsell Scenario)
+                    if (uplineHighestPlanValue > 0 && uplineHighestPlanValue < planAmount) {
+                        // Seller gets capped at their own plan's default commission
+                        const referrerCap = (uplineHighestPlanValue * uplineDirectPercent) / 100;
+                        // Plus a tiny bonus on the excess amount
+                        const excessAmount = planAmount - uplineHighestPlanValue;
+                        const upsellBonus = (excessAmount * uplineUpsellPercent) / 100;
+
+                        commission = referrerCap + upsellBonus;
+
+                        // Calculate standard payout to find how much the platform saved
+                        const theoreticalPayout = (planAmount * buyerDirectPercent) / 100;
+                        liabilitySaved = Math.max(0, theoreticalPayout - commission);
+
+                        commissionDesc = `L1 Commission (Smart Capped) from ${currentUser.username} (${planName})`;
+                        console.log(`🤑 [Smart Cap] Saved Platform ${liabilitySaved.toFixed(4)} NXS on ${uplineUser.username}'s sale.`);
+                    } else {
+                        // Downsell or Equal Level: Full Buyer Percent
+                        commission = (planAmount * buyerDirectPercent) / 100;
+                        commissionDesc = `L1 Commission from ${currentUser.username} (${planName})`;
+                    }
+                } else {
+                    // Level 2 to Level 5: Standard Percentages (1%, 1%, 0.5%, 0.5%)
+                    commission = (planAmount * rates[i]) / 100;
+                    commissionDesc = `L${i + 1} Commission from ${currentUser.username} (${planName})`;
+                }
+
                 // Fix precision to 4 decimals to avoid 0.00500000001
                 commission = Math.round(commission * 10000) / 10000;
 
@@ -125,20 +185,14 @@ class ReferralService {
                         type: 'referral_commission',
                         amount: commission,
                         status: 'completed',
-                        description: `L${i + 1} Commission from ${currentUser.username} (${planName})`,
+                        description: commissionDesc,
                         metadata: {
                             sourceUser: userId,
                             level: i + 1,
-                            planAmount: planAmount
+                            planAmount: planAmount,
+                            liabilitySaved: liabilitySaved > 0 ? liabilitySaved : undefined
                         }
                     }], { session });
-
-                    // Notify
-                    /* NotificationService.send(
-                        uplineUser._id,
-                        `You earned $${commission.toFixed(4)} (Level ${i + 1}) from ${currentUser.username}'s purchase!`,
-                        'success'
-                    ); */
 
                     totalDistributed += commission;
                     console.log(`   -> Credited L${i + 1} (${uplineUser.username}): ${commission}`);

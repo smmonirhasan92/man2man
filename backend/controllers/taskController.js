@@ -400,3 +400,26 @@ exports.seedTasks = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// [NEW] Daily Spin Wheel Status & Execution
+exports.getSpinStatus = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const status = await TaskService.getSpinStatus(userId);
+        res.json(status);
+    } catch (err) {
+        Logger.error('TaskController.getSpinStatus Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.executeDailySpin = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const result = await TaskService.executeDailySpin(userId);
+        res.json(result);
+    } catch (err) {
+        Logger.error("Execute Spin Error:", err);
+        res.status(400).json({ message: err.message || 'Spin Failed' });
+    }
+};

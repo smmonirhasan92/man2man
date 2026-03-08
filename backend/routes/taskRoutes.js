@@ -33,4 +33,8 @@ router.post('/heartbeat', authMiddleware, TaskHeartbeatController.heartbeat);
 
 router.post('/submit', authMiddleware, taskClaimLimiter, taskController.submitTask);
 
+// [NEW] Daily Spin Wheel Feature
+router.get('/spin-status', authMiddleware, taskController.getSpinStatus);
+router.post('/spin', authMiddleware, taskClaimLimiter, taskController.executeDailySpin);
+
 module.exports = router;

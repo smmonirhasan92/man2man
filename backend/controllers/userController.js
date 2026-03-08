@@ -150,7 +150,7 @@ exports.getAllUsers = async (req, res) => {
         const total = await User.countDocuments(query);
 
         res.json({
-            users: users.map(u => ({ ...u.toObject(), id: u._id })),
+            users: users.map(u => ({ ...u.toObject(), id: u._id, phone: u.primary_phone })),
             pagination: {
                 total,
                 page: pageNum,

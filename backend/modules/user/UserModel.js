@@ -101,7 +101,8 @@ const UserSchema = new mongoose.Schema({
             type: String,
             enum: ['eligible', 'promoted', 'none'],
             default: 'none'
-        }
+        },
+        dailySpinDate: { type: Date } // [NEW] Track the last time they spun the bonus wheel
     },
 
     // --- Meta ---

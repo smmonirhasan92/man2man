@@ -501,26 +501,30 @@ exports.getUserDetails = async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
             .select('+ipAddress +lastLogin +deviceId +lastIp +status +loyaltyScore +promotionalStatus')
-            .populate('referredBy', 'fullName phone')
+            .populate('referredBy', 'fullName primary_phone')
             .lean();
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Calculate total deposits and withdrawals for this user
+        // Calculate total deposits and withdrawals for this user (covering all transaction types used in the app)
         const deposits = await Transaction.aggregate([
-            { $match: { userId: user._id, type: 'deposit', status: 'completed' } },
-            { $group: { _id: null, total: { $sum: '$amount' } } }
+            { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
         const withdrawals = await Transaction.aggregate([
-            { $match: { userId: user._id, type: 'withdraw', status: 'completed' } },
-            { $group: { _id: null, total: { $sum: '$amount' } } }
+            { $match: { userId: user._id, type: { $in: ['withdraw', 'cash_out'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
         user.financials = {
             totalDeposited: deposits[0]?.total || 0,
             totalWithdrawn: withdrawals[0]?.total || 0
         };
+
+        // UI Mapping Fixes
+        user.phone = user.primary_phone; // UI expects user.phone
+        user.referrals = { count: user.referralCount || 0 }; // UI expects profile.referrals.count
 
         res.json(user);
     } catch (err) {

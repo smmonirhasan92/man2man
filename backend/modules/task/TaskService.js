@@ -399,6 +399,125 @@ class TaskService {
         // We assume if they hit this endpoint with valid US Key, they passed the frontend simulation
         return await this.completeTask(userId, taskId, "AUTO_PROCESS", usaKey);
     }
+
+    // --- DAILY SPIN WHEEL ---
+
+    /**
+     * Check if a user is eligible for the Daily Bonus Spin.
+     * Eligibility requires completing all daily tasks assigned to their plan, and not having spun already today.
+     */
+    async getSpinStatus(userId) {
+        const user = await User.findById(userId);
+        if (!user) throw new Error("User not found");
+
+        const PlanService = require('../plan/PlanService'); // Lazy load
+        const activePlan = await PlanService.getActivePlans(userId).then(p => p[0]);
+
+        let dailyLimit = 0;
+        let completedToday = 0;
+
+        if (activePlan) {
+            dailyLimit = activePlan.dailyLimit || (await PlanService.getUserDailyLimit(userId, activePlan._id));
+            const planLastDate = activePlan.last_earning_date ? new Date(activePlan.last_earning_date) : new Date(0);
+            const now = new Date();
+            const planIsToday = planLastDate.getDate() === now.getDate() && planLastDate.getMonth() === now.getMonth();
+            completedToday = planIsToday ? (activePlan.tasksCompletedToday || 0) : 0;
+        } else {
+            // No plan, fallback
+            dailyLimit = await PlanService.getUserDailyLimit(userId);
+            const now = new Date();
+            const lastDate = (user.taskData && user.taskData.lastTaskDate) ? new Date(user.taskData.lastTaskDate) : new Date(0);
+            const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
+            completedToday = (isToday && user.taskData) ? user.taskData.tasksCompletedToday : 0;
+        }
+
+        const limitReached = completedToday >= dailyLimit && dailyLimit > 0;
+
+        // Check spin date
+        const today = new Date();
+        const spinDate = user.taskData?.dailySpinDate ? new Date(user.taskData.dailySpinDate) : new Date(0);
+        const alreadySpunToday = spinDate.getDate() === today.getDate() && spinDate.getMonth() === today.getMonth() && spinDate.getFullYear() === today.getFullYear();
+
+        return {
+            isEligible: limitReached && !alreadySpunToday,
+            limitReached,
+            alreadySpunToday
+        };
+    }
+
+    /**
+     * Execute the spin, award random 1-3 NXS.
+     */
+    async executeDailySpin(userId) {
+        return await TransactionHelper.runTransaction(async (session) => {
+            const user = await User.findById(userId).session(session);
+            if (!user) throw new Error("User not found");
+
+            // 1. Verify Eligibility inside transaction
+            const status = await this.getSpinStatus(userId);
+            if (!status.limitReached) {
+                throw new Error("You must complete all daily tasks first.");
+            }
+            if (status.alreadySpunToday) {
+                throw new Error("You have already claimed your daily bonus spin today.");
+            }
+
+            // 2. Calculate Reward based on Weighted Probabilities
+            // 80% chance: 0.50 to 1.00 NXS
+            // 15% chance: 1.01 to 2.00 NXS
+            // 5% chance: 2.01 to 3.00 NXS
+
+            let min = 0;
+            let max = 0;
+            const roll = Math.random() * 100;
+
+            if (roll < 80) {
+                min = 0.50;
+                max = 1.00;
+            } else if (roll < 95) {
+                min = 1.01;
+                max = 2.00;
+            } else {
+                min = 2.01;
+                max = 3.00;
+            }
+
+            const rewardAmount = parseFloat((Math.random() * (max - min) + min).toFixed(2));
+
+            // 3. Update User Wallet and Spin Date
+            user.wallet.main += rewardAmount; // Assuming bonus goes to main wallet, like an airdrop
+            if (!user.taskData) user.taskData = {};
+            user.taskData.dailySpinDate = new Date();
+
+            await user.save({ session });
+
+            // 4. Log Transaction
+            await Transaction.create([{
+                userId: user._id,
+                amount: rewardAmount,
+                type: 'admin_credit',
+                description: 'Daily Task Completion Bonus Spin',
+                status: 'completed',
+                source: 'system',
+                currency: 'NXS'
+            }], { session });
+
+            return { success: true, reward: rewardAmount };
+        }).then(async (result) => {
+            // Post-Transaction notifications
+            const SocketService = require('../common/SocketService');
+            SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, result.reward); // Only sending delta or full? Best to fetch full, but usually we just send new balance. Wait, standard is to send the full balance. Let's send a generic notification instead.
+
+            const NotificationService = require('../notification/NotificationService');
+            await NotificationService.send(userId, `🎡 You won ${result.reward} NXS from the Daily Bonus Spin!`, 'success');
+
+            const reUser = await User.findById(userId);
+            SocketService.broadcast(`user_${userId}`, `main_balance_update_${userId}`, reUser.wallet.main);
+
+            return result;
+        });
+    }
+
 }
 
 module.exports = new TaskService();
