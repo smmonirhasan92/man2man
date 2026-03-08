@@ -48,7 +48,7 @@ exports.getTaskStatus = async (req, res) => {
         const taskData = user.taskData || { lastTaskDate: new Date(0), tasksCompletedToday: 0 };
         const lastDate = taskData.lastTaskDate ? new Date(taskData.lastTaskDate) : new Date(0);
         const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
-        const completedToday = isToday ? taskData.tasksCompletedToday : 0;
+        let completedToday = isToday ? taskData.tasksCompletedToday : 0;
 
         // [NEW] Get Reward Rate & Limit for frontend display
         // DYNAMIC RATE GUARD: Determine rate based on the ACTIVE SESSION (x-usa-identity)
@@ -77,6 +77,11 @@ exports.getTaskStatus = async (req, res) => {
                 if (planDetails) {
                     rewardPerTask = planDetails.task_reward;
                 }
+
+                // [NEW] Localized Server Completion Tracking
+                const planLastDate = activePlan.last_earning_date ? new Date(activePlan.last_earning_date) : new Date(0);
+                const planIsToday = planLastDate.getDate() === now.getDate() && planLastDate.getMonth() === now.getMonth();
+                completedToday = planIsToday ? (activePlan.tasksCompletedToday || 0) : 0;
             }
         } else {
             // Fallback (Display Only - Legacy Behavior)
@@ -209,8 +214,9 @@ exports.startTask = async (req, res) => {
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
         const { taskId } = req.body;
+        const usaKey = req.headers['x-usa-identity'] || req.headers['x-usa-key'];
 
-        const result = await TaskService.startTask(userId, taskId);
+        const result = await TaskService.startTask(userId, taskId, usaKey);
         res.json(result);
 
     } catch (err) {

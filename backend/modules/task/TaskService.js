@@ -57,22 +57,41 @@ class TaskService {
      * Step 1: Start Task
      * Generates a secure session for the task.
      */
-    async startTask(userId, taskId) {
+    async startTask(userId, taskId, usaKey) {
         // 1. Check if user exists
         const user = await User.findById(userId);
         if (!user) throw new Error('User not found.');
 
         // 2. Initial Validation (Plan & Limits)
-        const dailyLimit = await PlanService.getUserDailyLimit(userId);
-        if (dailyLimit <= 0) throw new Error('No Active Plan.');
+        const PlanService = require('../plan/PlanService');
+        const UserPlan = require('../plan/UserPlanModel');
 
-        const now = new Date();
-        const lastDate = user.taskData.lastTaskDate ? new Date(user.taskData.lastTaskDate) : new Date(0);
-        const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
-        const completedToday = isToday ? user.taskData.tasksCompletedToday : 0;
+        let activePlan = null;
+        if (usaKey) {
+            const cleanKey = usaKey.trim();
+            activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanKey, status: 'active' });
+        }
+
+        let dailyLimit = 0;
+        let completedToday = 0;
+
+        if (activePlan) {
+            dailyLimit = activePlan.dailyLimit || (await PlanService.getUserDailyLimit(userId, activePlan._id));
+            const planLastDate = activePlan.last_earning_date ? new Date(activePlan.last_earning_date) : new Date(0);
+            const now = new Date();
+            const planIsToday = planLastDate.getDate() === now.getDate() && planLastDate.getMonth() === now.getMonth();
+            completedToday = planIsToday ? (activePlan.tasksCompletedToday || 0) : 0;
+        } else {
+            // Legacy Global
+            dailyLimit = await PlanService.getUserDailyLimit(userId);
+            const now = new Date();
+            const lastDate = user.taskData.lastTaskDate ? new Date(user.taskData.lastTaskDate) : new Date(0);
+            const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
+            completedToday = isToday ? user.taskData.tasksCompletedToday : 0;
+        }
 
         if (completedToday >= dailyLimit) {
-            throw new Error(`Daily limit reached.`);
+            throw new Error(`Daily limit reached for this server.`);
         }
 
         // 3. Set Start Token in DB
@@ -189,31 +208,14 @@ class TaskService {
         const sameDay = today.getDate() === lastEarnDate.getDate() && today.getMonth() === lastEarnDate.getMonth();
 
         let earningsSoFar = sameDay ? (activePlan.earnings_today || 0) : 0;
-        let tasksDone = sameDay ? activePlan.tasksCompletedToday : 0;
-
-        if (!sameDay) {
-            earningsSoFar = 0;
-            tasksDone = 0;
-            activePlan.tasksCompletedToday = 0;
-            activePlan.earnings_today = 0;
-        }
+        let planTasksDone = sameDay ? (activePlan.tasksCompletedToday || 0) : 0;
 
         console.log(`[TaskService] ROI Curve (Day ${currentDay}): Goal=${(earningsSoFar + rewardAmount).toFixed(4)} Earned=${earningsSoFar.toFixed(4)} Task=${rewardAmount}`);
 
-        // Update UserPlan State Immediately
-        activePlan.earnings_today = (earningsSoFar + rewardAmount);
-        activePlan.last_earning_date = today;
-        // activePlan.tasksCompletedToday will be incremented by completeTask logic below or we do it here?
-        // Note: completeTask logic usually increments `user.taskData`. We must also sync `activePlan`.
-
-        // [IMPORTANT] Sync UserPlan Task Count
-        activePlan.tasksCompletedToday += 1;
-        await activePlan.save(); // Save persistence
-
-        // Check Cumulative Limit (Global)
-        const dailyLimit = await PlanService.getUserDailyLimit(userId);
-        if (dailyLimit <= 0) {
-            throw new Error('No Active Plan. Please purchase a plan to perform tasks.');
+        // Limit Check Specific to this Plan
+        const limitForPlan = activePlan.dailyLimit || (await PlanService.getUserDailyLimit(userId, activePlan._id));
+        if (planTasksDone >= limitForPlan) {
+            throw new Error(`Daily Task Limit Reached on this Server (${planTasksDone}/${limitForPlan}). Select another server or upgrade.`);
         }
 
         // --- SECURITY: 2-STEP HANDSHAKE CHECK ---
@@ -257,15 +259,6 @@ class TaskService {
         }
         // -----------------------
 
-        const lastDate = user.taskData.lastTaskDate ? new Date(user.taskData.lastTaskDate) : new Date(0);
-        const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
-
-        let completedToday = isToday ? user.taskData.tasksCompletedToday : 0;
-
-        if (completedToday >= dailyLimit) {
-            throw new Error(`Daily Task Limit Reached (${completedToday}/${dailyLimit}). Upgrade Plan for more.`);
-        }
-
         // --- COOLDOWN CHECK (8 Seconds) ---
         // Retained for extra safety between separate task ACTIONS
         const lastTaskTime = user.taskData.lastTaskDate ? new Date(user.taskData.lastTaskDate).getTime() : 0;
@@ -281,18 +274,18 @@ class TaskService {
             const userUpd = await User.findById(userId).session(session);
             if (!userUpd) throw new Error('User not found.');
 
-            // --- RE-VALIDATE INSIDE LOCK ---
-            const lastDate = userUpd.taskData.lastTaskDate ? new Date(userUpd.taskData.lastTaskDate) : new Date(0);
-            const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
-            const completedToday = isToday ? userUpd.taskData.tasksCompletedToday : 0;
+            // --- RE-VALIDATE INSIDE LOCK (PLAN SPECIFIC) ---
+            const activePlanUpd = await UserPlan.findById(activePlan._id).session(session);
+            if (!activePlanUpd) throw new Error('Active Plan disconnected mid-transaction.');
 
-            if (completedToday >= dailyLimit) {
-                throw new Error(`Daily Task Limit Reached (${completedToday}/${dailyLimit}).`);
-            }
-            // -------------------------------
+            const planLastDateLock = activePlanUpd.last_earning_date ? new Date(activePlanUpd.last_earning_date) : new Date(0);
+            const isTodayLock = planLastDateLock.getDate() === now.getDate() && planLastDateLock.getMonth() === now.getMonth();
 
-            if (!isToday) {
-                userUpd.taskData.tasksCompletedToday = 0;
+            let earningsSoFarLock = isTodayLock ? (activePlanUpd.earnings_today || 0) : 0;
+            let planTasksDoneLock = isTodayLock ? (activePlanUpd.tasksCompletedToday || 0) : 0;
+
+            if (planTasksDoneLock >= limitForPlan) {
+                throw new Error(`Daily Task Limit Reached on this Server (${planTasksDoneLock}/${limitForPlan}).`);
             }
 
             // [NEW P2P MARKETING LOGIC] Zero-Liability Task Commission
@@ -303,6 +296,17 @@ class TaskService {
             const earnerNetIncome = rewardAmount - systemDeductionAmount;
 
             console.log(`[TaskService] Pre-Reward Wallet:`, userUpd.wallet);
+
+            // Update Plan State
+            activePlanUpd.tasksCompletedToday = planTasksDoneLock + 1;
+            activePlanUpd.earnings_today = earningsSoFarLock + rewardAmount;
+            activePlanUpd.last_earning_date = now;
+            await activePlanUpd.save({ session });
+
+            // Update legacy global state for dashboards
+            const globalLastDate = userUpd.taskData.lastTaskDate ? new Date(userUpd.taskData.lastTaskDate) : new Date(0);
+            const globalIsToday = globalLastDate.getDate() === now.getDate() && globalLastDate.getMonth() === now.getMonth();
+            if (!globalIsToday) userUpd.taskData.tasksCompletedToday = 0;
             userUpd.taskData.tasksCompletedToday += 1;
             userUpd.taskData.lastTaskDate = now;
 
@@ -315,11 +319,7 @@ class TaskService {
             // Clear current task session
             userUpd.taskData.currentTask = { taskId: null, startTime: null };
 
-            // [SYNC] Update Plan Usage in User Model (Global Tracker)
-            userUpd.taskData.lastTaskDate = new Date();
-
             await userUpd.save({ session });
-            // activePlan already saved above with earnings
 
             await Transaction.create([{
                 userId,
@@ -367,8 +367,8 @@ class TaskService {
             return {
                 message: 'Task Completed',
                 newBalance: userUpd.wallet.income,
-                tasksToday: userUpd.taskData.tasksCompletedToday,
-                limit: dailyLimit,
+                tasksToday: activePlanUpd.tasksCompletedToday,
+                limit: limitForPlan,
                 rewardAmount: earnerNetIncome // [FIX] Return explicit net amount so frontend popup matches DB
             };
         });
