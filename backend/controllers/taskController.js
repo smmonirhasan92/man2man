@@ -98,8 +98,10 @@ exports.getTaskStatus = async (req, res) => {
         res.json({
             canTask: completedToday < finalLimit,
             completedToday,
+            tasksCompletedToday: completedToday, // [FIX] Required by TaskCenter.js tracking
             dailyLimit: finalLimit,
             rewardPerTask,
+            todaysEarnings: completedToday * (rewardPerTask * 0.95), // [FIX] Calculate accurate net earnings for today
             nextReset: 'Midnight UTC',
             syntheticPhone: effectivePhone
         });
