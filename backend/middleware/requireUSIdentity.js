@@ -29,7 +29,7 @@ exports.requireUSIdentity = async (req, res, next) => {
         const identityHeader = req.headers['x-usa-identity'];
         console.log(`[IdentityCheck] User: ${user._id} | Header: ${identityHeader} | Profile: ${user.synthetic_phone}`);
 
-        let targetIdentity = identityHeader || user.synthetic_phone;
+        let targetIdentity = identityHeader ? identityHeader.trim() : (user.synthetic_phone ? user.synthetic_phone.trim() : null);
 
         if (!targetIdentity) {
             return res.status(403).json({ message: 'Secure Connection Required. Please Connect to a Server Node.' });

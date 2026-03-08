@@ -62,11 +62,12 @@ exports.getTaskStatus = async (req, res) => {
         let sessionLimit = 0; // [NEW] Session Specific Limit
 
         if (identityHeader) {
+            const cleanIdentity = identityHeader.trim();
             const Plan = require('../modules/admin/PlanModel');
             const UserPlan = require('../modules/plan/UserPlanModel'); // lazy load
 
             // Find the specific plan for this identity
-            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: identityHeader, status: 'active' });
+            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanIdentity, status: 'active' });
 
             if (activePlan) {
                 // Get Session Specific Limit
@@ -153,8 +154,9 @@ exports.getTasks = async (req, res) => {
         let isV2 = false;
 
         if (identityHeader) {
+            const cleanIdentity = identityHeader.trim();
             const UserPlan = require('../modules/plan/UserPlanModel');
-            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: identityHeader, status: 'active' });
+            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanIdentity, status: 'active' });
             if (activePlan) {
                 planId = activePlan.planId;
                 isV2 = await isV2Plan(userId, planId); // Check V2
@@ -260,8 +262,9 @@ exports.processTask = async (req, res) => {
         }
 
         // [NEW] Check V2 Routing
+        const cleanUsaKey = usaKey.trim();
         const UserPlan = require('../modules/plan/UserPlanModel');
-        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: usaKey, status: 'active' });
+        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanUsaKey, status: 'active' });
         if (activePlan) {
             const v2 = await isV2Plan(userId, activePlan.planId);
             if (v2) {
@@ -301,8 +304,9 @@ exports.claimTask = async (req, res) => {
         }
 
         // [NEW] Check V2 Routing
+        const cleanUsaKeyClaim = usaKey.trim();
         const UserPlan = require('../modules/plan/UserPlanModel');
-        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: usaKey, status: 'active' });
+        const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanUsaKeyClaim, status: 'active' });
         if (activePlan && await isV2Plan(userId, activePlan.planId)) {
             console.log(`[TaskController] V2 Route Active for Claim ${taskId}`);
             const result = await TaskServiceV2.completeTask(userId, taskId, usaKey);
@@ -333,8 +337,9 @@ exports.submitTask = async (req, res) => {
 
         const usaKey = req.headers['x-usa-key'];
         if (usaKey) {
+            const cleanUsaKeySubmit = usaKey.trim();
             const UserPlan = require('../modules/plan/UserPlanModel');
-            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: usaKey, status: 'active' });
+            const activePlan = await UserPlan.findOne({ userId, syntheticPhone: cleanUsaKeySubmit, status: 'active' });
             if (activePlan && await isV2Plan(userId, activePlan.planId)) {
                 console.log(`[TaskController] V2 Route Active for Submit ${taskId}`);
                 // completeTask in V2 checks key strictly
