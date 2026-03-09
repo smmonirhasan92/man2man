@@ -28,6 +28,18 @@ export default function LoginForm() {
         setError('');
         setSuccess('');
 
+        // [PROACTIVE CLEANUP] Clear OLD session before starting new login
+        // This prevents "stuck" states or stale headers when switching accounts
+        try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('active_server_id');
+            localStorage.removeItem('active_server_phone');
+            document.cookie = 'token=; path=/; max-age=0';
+        } catch (e) {
+            console.error('Cleanup failed:', e);
+        }
+
         try {
             // [REFACTOR] Send primary_phone to match Backend
             // [FIX] Sanitize inputs to remove hidden trailing spaces from mobile keyboards
@@ -52,15 +64,13 @@ export default function LoginForm() {
 
             setSuccess('Login Successful! Redirecting...');
 
-            // Redirect based on role
-            setTimeout(() => {
-                const adminRoles = ['admin', 'super_admin', 'employee_admin'];
-                if (adminRoles.includes(user.role)) {
-                    router.push('/admin/dashboard');
-                } else {
-                    router.push('/dashboard');
-                }
-            }, 1000);
+            // Redirect based on role (INSTANT REDIRECT)
+            const adminRoles = ['admin', 'super_admin', 'employee_admin'];
+            if (adminRoles.includes(user.role)) {
+                router.push('/admin/dashboard');
+            } else {
+                router.push('/dashboard');
+            }
 
         } catch (err) {
             console.error('Login Error Full Response:', err);

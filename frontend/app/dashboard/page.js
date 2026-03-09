@@ -83,8 +83,8 @@ function DashboardContent() {
 
             {/* Original Clean Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1080')] bg-cover bg-center opacity-70"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0A2540]/90 via-[#0A2540]/70 to-[#0A2540]"></div>
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1080')] bg-cover bg-center opacity-30"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0A2540] via-[#0A2540]/80 to-[#0A2540]"></div>
             </div>
 
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">

@@ -103,24 +103,32 @@ export function NotificationProvider({ children }) {
         });
 
         // 2. Wallet Update (Real-time Balance)
-        socket.on('wallet:update', (data) => {
+        const handleWalletUpdate = (data) => {
+            console.log('[SOCKET_CONTEXT] Wallet Update Received');
             playSound();
-            // Show Premium Toast
-            if (data.type === 'withdrawal_completed') {
+
+            // If it's a legacy or structured withdrawal/deposit event
+            if (data?.type === 'withdrawal_completed') {
                 toast.success(`Withdrawal Approved: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #064e3b, #065f46)' },
                     icon: '💸'
                 });
-            } else if (data.type === 'deposit_received') {
+            } else if (data?.type === 'deposit_received') {
                 toast.success(`Deposit Received: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #1e3a8a, #172554)' },
                     icon: '💎'
                 });
+            } else {
+                // Silent refresh for P2P and others
+                console.log('[SOCKET_CONTEXT] Triggering Silent Balance Refresh');
             }
 
-            // Trigger Context Refund
+            // Trigger Context Refresh (Refreshes the global useAuth state)
             if (refreshUser) refreshUser();
-        });
+        };
+
+        socket.on('wallet:update', handleWalletUpdate);
+        socket.on('balance_update', handleWalletUpdate);
 
         // 3. System Config Update (RTP / Maintenance)
         socket.on('config:update', (data) => {
@@ -134,7 +142,8 @@ export function NotificationProvider({ children }) {
         return () => {
             socket.off('connect');
             socket.off('notification');
-            socket.off('wallet:update');
+            socket.off('wallet:update', handleWalletUpdate);
+            socket.off('balance_update', handleWalletUpdate);
             socket.off('config:update');
         };
     }, [socket]); // [FIX] Removed refreshUser from dependency array to prevent infinite loop
