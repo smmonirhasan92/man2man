@@ -35,7 +35,9 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
                             <DollarSign className="w-5 h-5 text-emerald-400" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black text-white tracking-wide">BUY NXS</h2>
+                            <h2 className="text-lg font-black text-white tracking-wide uppercase">
+                                {order.type === 'SELL' ? 'Buy NXS' : 'Sell NXS'}
+                            </h2>
                             <p className="text-[#10b981] text-[10px] font-bold uppercase tracking-widest mt-0.5">Secure P2P Escrow</p>
                         </div>
                     </div>
@@ -72,7 +74,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
 
                     <form onSubmit={handleSubmit}>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-                            Amount to Buy
+                            Amount to {order.type === 'SELL' ? 'Buy' : 'Sell'}
                         </label>
                         <div className="relative mb-8 group">
                             <input
@@ -93,6 +95,26 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
                                 MAX
                             </button>
                         </div>
+
+                        {/* LIVE CALCULATION DISPLAY */}
+                        {amount && Number(amount) > 0 && (
+                            <div className="mb-6 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="p-3 bg-emerald-500/10 rounded-xl flex justify-between items-center border border-emerald-500/20 shadow-inner">
+                                    <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Rate (1 NXS):</span>
+                                    <span className="text-sm font-black text-emerald-400">
+                                        {(Number(rate) / 50).toFixed(2)} <span className="text-[10px]">{order.fiatCurrency || 'BDT'}</span>
+                                    </span>
+                                </div>
+                                <div className="p-3 bg-[#0b1120] rounded-xl flex justify-between items-center border border-slate-700/50 shadow-2xl">
+                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                        Total {order.type === 'SELL' ? 'To Pay' : 'To Receive'}:
+                                    </span>
+                                    <span className="text-lg font-black text-white">
+                                        {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{order.fiatCurrency || 'BDT'}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex gap-3">
                             <button type="button" onClick={onClose} className="flex-1 py-3.5 px-4 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/50 hover:text-white hover:border-slate-500 transition-all duration-200">
