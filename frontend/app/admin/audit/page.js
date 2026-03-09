@@ -147,6 +147,85 @@ export default function AuditPage() {
                 </div>
             </div>
 
+            {/* [NEW] ECOSYSTEM MONEY FLOW SECTION */}
+            <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400"></div>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <Activity className="w-6 h-6 text-sky-500" />
+                            Ecosystem Money Flow
+                        </h2>
+                        <p className="text-slate-500 text-sm">How much money is being generated (Liability) vs recovered (Equity).</p>
+                    </div>
+
+                    {/* Sustainability Badge */}
+                    <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 border ${(auditData.economics?.netSystemProfit || 0) >= 0
+                            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                            : 'bg-rose-50 border-rose-100 text-rose-700'
+                        }`}>
+                        <span className="text-xs font-bold uppercase tracking-wider">Net Sustainability</span>
+                        <span className="text-lg font-black">${auditData.economics?.netSystemProfit?.toLocaleString() || '0'}</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Column 1: Liability Generation (Mining/Referrals) */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-rose-500 font-bold text-xs uppercase tracking-widest px-2">
+                            <TrendingUp className="w-4 h-4 rotate-180" /> Liability Generation (Outflow Risk)
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center p-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl">
+                                <span className="text-slate-600 text-sm font-medium">Task Mining (Mined by Users)</span>
+                                <span className="font-bold text-slate-800">${auditData.economics?.totalTaskIncome?.toLocaleString() || '0'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl">
+                                <span className="text-slate-600 text-sm font-medium">Referral Generation (Bonus)</span>
+                                <span className="font-bold text-slate-800">${auditData.economics?.totalReferralBonus?.toLocaleString() || '0'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-rose-50/50 border border-rose-100/50 rounded-2xl">
+                                <span className="text-slate-600 text-sm font-medium">Lottery Wins (Prizes Given)</span>
+                                <span className="font-bold text-slate-800">${auditData.economics?.totalLotteryPrizes?.toLocaleString() || '0'}</span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-rose-500 text-white rounded-2xl flex justify-between items-center shadow-lg shadow-rose-500/10">
+                            <span className="text-xs font-bold uppercase">Total Generation</span>
+                            <span className="text-xl font-black">${auditData.economics?.totalIncomeGiven?.toLocaleString() || '0'}</span>
+                        </div>
+                    </div>
+
+                    {/* Column 2: Recovery (Sales/Fees) */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-widest px-2">
+                            <TrendingUp className="w-4 h-4" /> System Recovery (Equity Building)
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center p-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl">
+                                <span className="text-slate-600 text-sm font-medium">Server Sales (NXS Recovery)</span>
+                                <span className="font-bold text-slate-800">${auditData.economics?.totalServerRevenue?.toLocaleString() || '0'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl">
+                                <span className="text-slate-600 text-sm font-medium">Lottery Sales (Liability Burn)</span>
+                                <span className="font-bold text-slate-800">${auditData.economics?.totalLotteryRevenue?.toLocaleString() || '0'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl">
+                                <span className="text-slate-600 text-sm font-medium">P2P Fees Collected</span>
+                                <span className="font-bold text-slate-800">${auditData.economics?.totalP2PFee?.toLocaleString() || '0'}</span>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-emerald-500 text-white rounded-2xl flex justify-between items-center shadow-lg shadow-emerald-500/10">
+                            <span className="text-xs font-bold uppercase">Total Recovery</span>
+                            <span className="text-xl font-black">${auditData.economics?.totalSystemRecovery?.toLocaleString() || '0'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Circulation Volume */}
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
                 <div className="absolute left-0 bottom-0 w-64 h-64 bg-white/5 rounded-full -ml-16 -mb-16 blur-3xl"></div>

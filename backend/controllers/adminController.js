@@ -264,16 +264,42 @@ exports.getFinancialStats = async (req, res) => {
         const totalIncomeGiven = totalTaskIncome + totalLotteryPrizes + totalReferralBonus;
         const netSystemProfit = totalSystemRecovery - totalIncomeGiven;
 
+        const totalRevoked = 0; // Placeholder - burn mechanic not yet implemented
+
+        const healthStatus = liabilities > totalMinted * 1.5 ? 'CRITICAL' : liabilities > totalMinted ? 'WARNING' : 'HEALTHY';
+
         res.json({
             overview: {
                 total_minted: totalMinted,
                 current_liabilities: liabilities,
                 net_system_equity: totalMinted - liabilities,
                 unbacked_circulation: liabilities > totalMinted ? liabilities - totalMinted : 0,
-                today_deposits: totalDeposits, // mapped for legacy dashboard compat
+                today_deposits: totalDeposits,
                 today_withdraws: totalWithdraws,
                 pending_deposits: 0,
                 pending_withdraws: 0
+            },
+            authorized: {
+                total_deposits: totalDeposits,
+                net_game_creation: totalTaskIncome + totalReferralBonus + totalLotteryPrizes,
+                total_supply: totalDeposits + totalTaskIncome + totalReferralBonus + totalLotteryPrizes
+            },
+            actual: {
+                user_main_balances: userAgg[0]?.totalMain || 0,
+                user_game_balances: userAgg[0]?.totalEscrow || 0,
+                total_liability: liabilities
+            },
+            volume: {
+                p2p_transfers: p2pVolume
+            },
+            health: {
+                status: healthStatus,
+                message: healthStatus === 'HEALTHY'
+                    ? 'System funds are well-backed. Recovery exceeds liability.'
+                    : healthStatus === 'WARNING'
+                        ? 'Liabilities are approaching minted supply. Monitor closely.'
+                        : 'CRITICAL: Liabilities exceed minted supply by a large margin.',
+                discrepancy: liabilities - totalMinted
             },
             revenue: {
                 total_commission: revenue,
