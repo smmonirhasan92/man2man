@@ -112,6 +112,7 @@ export default function RootLayout({ children }) {
 
                                 <PWAInstallPrompt />
                                 <NotificationPopup />
+                                <ChatWidget />
                                 {/* Premium Toasts */}
                                 <Toaster
                                     position="top-center"
@@ -144,7 +145,7 @@ export default function RootLayout({ children }) {
                     </CurrencyProvider>
                 </NotificationProvider>
             </body>
-        </html>
+        </html >
     )
 }
 
