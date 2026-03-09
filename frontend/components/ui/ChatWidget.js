@@ -20,6 +20,11 @@ export default function ChatWidget() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isOpen]);
 
+    // [NEW] Hide on Auth Routes for clean experience
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    const isAuthRoute = ['/login', '/register', '/'].includes(pathname);
+    if (isAuthRoute) return null;
+
     const handleSend = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
