@@ -1,22 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// Routes that REQUIRE a login token
-const PROTECTED_PREFIXES = [
-    '/dashboard',
-    '/wallet',
-    '/profile',
-    '/tasks',
-    '/task',
-    '/agent',
-    '/p2p',
-    '/lottery',
-    '/plans',
-    '/referral',
-    '/notifications',
-    '/support',
-];
-
-// Routes that are always public (no token needed)
+// Public routes — no token needed
 const PUBLIC_PREFIXES = [
     '/login',
     '/register',
@@ -25,28 +9,23 @@ const PUBLIC_PREFIXES = [
     '/static',
     '/uploads',
     '/favicon.ico',
-    '/admin',   // Admin has its own role check
+    '/admin',   // Admin panel has its own role check
+    '/api',
 ];
 
 export async function middleware(request) {
     const { pathname } = request.nextUrl;
 
-    // 1. Always allow public paths
-    const isPublic = PUBLIC_PREFIXES.some(p => pathname.startsWith(p));
+    // 1. Always allow public paths through
+    const isPublic = PUBLIC_PREFIXES.some(p => pathname.startsWith(p)) || pathname === '/';
     if (isPublic) return NextResponse.next();
 
-    // 2. Check if the path is a protected route
-    const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
-    if (!isProtected) return NextResponse.next();
-
-    // 3. Read token from cookies (set during login)
+    // 2. Check for token cookie
     const token = request.cookies.get('token')?.value;
 
-    // 4. If no token → redirect to login
+    // 3. No token → go to login (simple, no ?from= param to avoid loops)
     if (!token) {
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('from', pathname); // Remember where they were going
-        return NextResponse.redirect(loginUrl);
+        return NextResponse.redirect(new URL('/login', request.url));
     }
 
     return NextResponse.next();
