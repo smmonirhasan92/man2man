@@ -118,6 +118,8 @@ const userRoutes = require('./routes/userRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const settingsRoutes = require('./modules/settings/SettingsRoutes');
+const supportRoutes = require('./routes/supportRoutes');
+
 
 // --- USE CORE ROUTES ---
 app.use('/api/auth', authRoutes);
@@ -136,7 +138,7 @@ app.use('/api/lottery', require('./routes/lotteryRoutes')); // [NEW] Dedicated L
 app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
 app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
-app.use('/api/support', require('./routes/supportRoutes')); // [NEW] Support Ticketing System
+app.use('/api/support', supportRoutes); // [NEW] Support Ticketing System
 // app.use('/api/settings', settingsRoutes); // Cleaned
 
 // --- GLOBAL ERROR HANDLER ---
