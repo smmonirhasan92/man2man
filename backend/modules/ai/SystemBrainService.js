@@ -15,7 +15,7 @@ async function initAI() {
 
     initPromise = (async () => {
         try {
-            console.log("[AI] 🚀 Initializing Engine...");
+            console.log("[AI] 🚀 Initializing Engine (v3)...");
 
             if (!fs.existsSync(modelPath)) {
                 throw new Error("Model file not found at: " + modelPath);
@@ -24,13 +24,20 @@ async function initAI() {
             const llamaCpp = await import('node-llama-cpp');
             LlamaChatSession = llamaCpp.LlamaChatSession;
 
+            // v3 API
             llama = await llamaCpp.getLlama();
 
-            console.log("[AI] 🧠 Loading Model binary...");
+            console.log("[AI] 🧠 Loading Model...");
             model = await llama.loadModel({ modelPath });
 
             console.log("[AI] 💎 Creating Context...");
-            context = await model.createContext();
+            // Use llama.createContext or model.createContext
+            context = await llama.createContext({ model });
+
+            if (!context) {
+                console.log("[AI] Falling back to model.createContext()...");
+                context = await model.createContext();
+            }
 
             console.log("[AI] ✅ Local AI Ready.");
         } catch (e) {
@@ -48,42 +55,40 @@ initAI().catch(() => { });
 
 const SYSTEM_PROMPT = `You are a friendly, human-like support representative for "USA Affiliate".
 Rules:
-1. Persona: You are named "Support AI".
-2. Platform: USA Affiliate (usaaffiliatemarketing.com) is a secure video task earning platform.
-3. Tone: 100% POSITIVE and polite.
-4. Brevity: Keep responses under 3 sentences.`;
+1. Persona: You are "Support AI".
+2. Platform: USA Affiliate is a video task earning platform.
+3. Tone: 100% POSITIVE.
+4. Brevity: Max 2-3 sentences.`;
 
 const activeSessions = new Map();
 
 exports.chat = async (message, onToken = null, sessionId = 'default') => {
     try {
         if (!model || !context || !LlamaChatSession) {
-            console.log("[AI] Waiting for initialization...");
+            console.log("[AI] Waiting for init...");
             await initAI();
+            if (!context) throw new Error("Context failed to initialize");
         }
 
         let session = activeSessions.get(sessionId);
         if (!session) {
-            session = new LlamaChatSession({ context, systemPrompt: SYSTEM_PROMPT });
+            session = new LlamaChatSession({ context });
             activeSessions.set(sessionId, session);
         }
 
+        const options = { systemPrompt: SYSTEM_PROMPT };
         if (onToken) {
-            return await session.prompt(message, {
-                onToken: (tokens) => {
-                    const chunk = model.detokenize(tokens);
-                    onToken(chunk);
-                }
-            });
-        } else {
-            return await session.prompt(message);
+            options.onToken = (tokens) => {
+                const chunk = model.detokenize(tokens);
+                onToken(chunk);
+            };
         }
+
+        return await session.prompt(message, options);
     } catch (err) {
         console.error('[AI] Chat Error:', err);
-        return "I'm warming up my gears! USA Affiliate is 100% secure. Please ask again in a moment.";
+        return "I'm warming up my gears! USA Affiliate is 100% secure. Please try again in 30 seconds.";
     }
 };
 
-exports.generateReview = async (productName, rating = 5) => {
-    return "Excellent product! Highly recommended.";
-};
+exports.generateReview = async () => "Excellent platform! Highly recommended.";
