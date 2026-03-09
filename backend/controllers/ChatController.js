@@ -34,9 +34,9 @@ class ChatController {
             }
 
             // Prepare the model
-            // gemini-flash-latest is the fastest and cheapest (free tier) for chat tasks
+            // gemini-1.5-flash is the stable supported version
             const model = genAI.getGenerativeModel({
-                model: "gemini-flash-latest",
+                model: "gemini-1.5-flash",
                 systemInstruction: SYSTEM_PROMPT,
             });
 
