@@ -1,28 +1,48 @@
 const path = require('path');
+const fs = require('fs');
 
 // --- Local AI Setup (100% Free & Internal) ---
 let model = null;
 let context = null;
 let LlamaChatSession = null;
+let initPromise = null;
+
+const modelPath = path.resolve(__dirname, '../../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf');
 
 // Initialize AI brain asynchronously
 async function initAI() {
-    try {
-        // node-llama-cpp v3 is ESM only
-        const llama = await import('node-llama-cpp');
-        const LlamaModel = llama.LlamaModel;
-        const LlamaContext = llama.LlamaContext;
-        LlamaChatSession = llama.LlamaChatSession;
+    if (initPromise) return initPromise;
 
-        const modelPath = path.resolve(__dirname, '../../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf');
-        model = new LlamaModel({
-            modelPath: modelPath
-        });
-        context = new LlamaContext({ model });
-        console.log("[AI] Local TinyLlama Brain Initialized via ESM Import.");
-    } catch (e) {
-        console.error("[AI] Local Model Load Error:", e.message);
-    }
+    initPromise = (async () => {
+        try {
+            console.log("[AI] 🚀 Initializing Brain...");
+
+            if (!fs.existsSync(modelPath)) {
+                console.error("[AI] ❌ Model file not found at:", modelPath);
+                return;
+            }
+
+            console.log("[AI] 📦 Loading node-llama-cpp (ESM)...");
+            const llama = await import('node-llama-cpp');
+            const LlamaModel = llama.LlamaModel;
+            const LlamaContext = llama.LlamaContext;
+            LlamaChatSession = llama.LlamaChatSession;
+
+            console.log("[AI] 🧠 Loading Model binary into RAM...");
+            model = new LlamaModel({
+                modelPath: modelPath
+            });
+            console.log("[AI] ⚙️ Creating Context...");
+            context = new LlamaContext({ model });
+
+            console.log("[AI] ✅ Local TinyLlama Brain Ready.");
+        } catch (e) {
+            console.error("[AI] ❌ Local Model Load Error:", e);
+            initPromise = null; // Allow retry on failure
+        }
+    })();
+
+    return initPromise;
 }
 
 // Start initialization immediately
@@ -42,6 +62,7 @@ exports.chat = async (message, onToken = null, sessionId = 'default') => {
     try {
         // Ensure initialized
         if (!model || !LlamaChatSession) {
+            console.log("[AI] Chat requested but model not ready. Current Status: ", { hasModel: !!model, hasSession: !!LlamaChatSession });
             await initAI();
             if (!model) return "I'm warming up my gears! USA Affiliate is the best, please ask again in a second.";
         }
