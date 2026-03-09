@@ -353,15 +353,18 @@ class TaskService {
                 metadata: { grossReward: rewardAmount, deducedP2P: systemDeductionAmount }
             }], { session });
 
-            // [P2P DISTRIBUTION] Distribute the deducted 5% to the 5 Uplines
-            console.log(`[TaskService] Distributing $${systemDeductionAmount} (5%) up the referral chain for User: ${userId}`);
-            // Note: ReferralService.distributeIncome internally calculates percentages based on the ORIGINAL gross amount.
-            // Since PLAN_COMMISSION_RATES is [2.0, 1.0, 1.0, 0.5, 0.5] (total 5%), passing the GROSS rewardAmount is correct.
-            let p2pDistributed = 0;
-            try {
-                const p2pRes = await this.ReferralService.distributeIncome(userUpd.referredBy, rewardAmount, 'p2p_task_commission', session);
-                p2pDistributed = p2pRes.distributed;
-            } catch (e) { console.error("[TaskService P2P Dist Error]", e); }
+            // [REFERRAL BATCHING] Identify if this is the final task for the day
+            const isFinalTask = planTasksDoneLock + 1 >= limitForPlan;
+
+            // [P2P DISTRIBUTION] Trigger only on final task
+            if (isFinalTask && userUpd.referredBy) {
+                console.log(`[TaskService] Daily Limit Reached. Distributing Referral Commissions for ${userId}`);
+                try {
+                    const totalDailyGross = activePlanUpd.earnings_today;
+                    // Passing sourceUserId as first argument to match new ReferralService.distributeIncome signature
+                    await this.ReferralService.distributeIncome(userId, userUpd.referredBy, totalDailyGross, 'p2p_task_commission', session);
+                } catch (e) { console.error("[TaskService P2P Dist Error]", e); }
+            }
 
             // Notify User
             await NotificationService.send(userId, `✅ Task Reward: +${earnerNetIncome.toFixed(4)} NXS`, 'success');
