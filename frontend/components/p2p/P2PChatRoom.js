@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { useSocket } from '../../hooks/useSocket';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
-import { Send, Clock, AlertTriangle, CheckCircle, Upload, Shield, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { Send, Clock, AlertTriangle, CheckCircle, Upload, Shield, Image as ImageIcon, ArrowLeft, Zap, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import VisualGuide from '../ui/VisualGuide';
