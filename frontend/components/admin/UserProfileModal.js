@@ -124,7 +124,49 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                             </div>
                         </div>
 
-                        {/* 3. Deep Analytics List */}
+                        {/* 3. Deep Financial Accounting */}
+                        <div className="mb-8">
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Financial Accounting</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="text-[10px] uppercase font-bold text-slate-500">Total Earned (Tasks/Refs)</p>
+                                        <Coins className="w-4 h-4 text-yellow-500" />
+                                    </div>
+                                    <p className="text-xl font-black text-yellow-500">${profile.financials?.totalEarned?.toFixed(2) || 0}</p>
+                                    <p className="text-[9px] text-slate-500 mt-1">Total revenue user generated from system activities</p>
+                                </div>
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="text-[10px] uppercase font-bold text-slate-500">Platform Spend (Plans/Fees)</p>
+                                        <Activity className="w-4 h-4 text-blue-500" />
+                                    </div>
+                                    <p className="text-xl font-black text-blue-400">${profile.financials?.totalSpent?.toFixed(2) || 0}</p>
+                                    <p className="text-[9px] text-slate-500 mt-1">Total user spent back into the system</p>
+                                </div>
+                            </div>
+
+                            {/* Net Settlement Indicator */}
+                            <div className={`mt-4 p-4 rounded-xl border flex items-center justify-between ${(profile.financials?.netAccounting || 0) >= 0
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                    : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                }`}>
+                                <div>
+                                    <p className="text-[10px] uppercase font-bold opacity-70">Platform Position</p>
+                                    <p className="text-sm font-black">
+                                        {(profile.financials?.netAccounting || 0) >= 0
+                                            ? "System Owes User (Liability)"
+                                            : "User Owes System (Negative)"
+                                        }
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xl font-black">${Math.abs(profile.financials?.netAccounting || 0).toFixed(2)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. Security & Metadata List */}
                         <div className="space-y-3 mb-8">
                             <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Security & Metadata</h4>
 

@@ -508,18 +508,40 @@ exports.getUserDetails = async (req, res) => {
 
         // Calculate total deposits and withdrawals for this user (covering all transaction types used in the app)
         const deposits = await Transaction.aggregate([
-            { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed' } },
+            { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge', 'admin_credit'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
         const withdrawals = await Transaction.aggregate([
-            { $match: { userId: user._id, type: { $in: ['withdraw', 'cash_out'] }, status: 'completed' } },
+            { $match: { userId: user._id, type: { $in: ['withdraw', 'cash_out', 'admin_debit'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
+        // [NEW] Calculate Total Earnings (Income from Platform)
+        const earnings = await Transaction.aggregate([
+            { $match: { userId: user._id, type: { $in: ['task_reward', 'referral_commission', 'referral_bonus', 'lottery_win', 'game_win'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+
+        // [NEW] Calculate Total Spent (purchases, fees, etc)
+        const spent = await Transaction.aggregate([
+            { $match: { userId: user._id, type: { $in: ['plan_purchase', 'lottery_buy', 'game_bet', 'fee'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+
+        const totalDep = deposits[0]?.total || 0;
+        const totalWit = withdrawals[0]?.total || 0;
+        const totalEarn = earnings[0]?.total || 0;
+        const totalSpent = spent[0]?.total || 0;
+
         user.financials = {
-            totalDeposited: deposits[0]?.total || 0,
-            totalWithdrawn: withdrawals[0]?.total || 0
+            totalDeposited: totalDep,
+            totalWithdrawn: totalWit,
+            totalEarned: totalEarn,
+            totalSpent: totalSpent,
+            // Accounting: (Amount In - Amount Out)
+            // If positive, system effectively holds this 'liability' for the user
+            netAccounting: (totalDep + totalEarn) - (totalWit + totalSpent)
         };
 
         // UI Mapping Fixes
