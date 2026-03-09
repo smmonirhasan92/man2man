@@ -20,6 +20,10 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     const [timeLeft, setTimeLeft] = useState('15:00');
     const { permission, requestPermission, notify } = useNotification();
 
+    // Audio Refs
+    const notificationAudio = useRef(null);
+    const successAudio = useRef(null);
+
     // [SECURITY] PIN & Modal State
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pin, setPin] = useState('');
@@ -79,7 +83,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     return [...prev, msg];
                 });
                 scrollToBottom();
-                if (msg.sender !== user?.id) {
+                if (msg.senderId !== user?._id && msg.senderId?._id !== user?._id) {
                     playDing();
                 }
             }
@@ -98,6 +102,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (updatedTrade._id === tradeId) {
                 setTrade(updatedTrade);
                 toast.success('Trade Completed!');
+                playSuccess();
                 notify('Trade Complete', 'The P2P Trade has been finalized and crypto released.');
             }
         });
@@ -173,10 +178,18 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     const playDing = () => {
-        // [NOTIFICATION API INTEGRATION]
-        // Triggers BOTH sound AND a native device push notification 
-        // using the Custom Hook created in `frontend/hooks/useNotification.js`
+        if (notificationAudio.current) {
+            notificationAudio.current.currentTime = 0;
+            notificationAudio.current.play().catch(e => console.log('Audio blocked:', e));
+        }
         notify('New P2P Message', 'You have received a new message in your trade.');
+    };
+
+    const playSuccess = () => {
+        if (successAudio.current) {
+            successAudio.current.currentTime = 0;
+            successAudio.current.play().catch(e => console.log('Audio blocked:', e));
+        }
     };
 
     const sendMessage = async () => {
@@ -329,6 +342,8 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
+            <audio ref={notificationAudio} src="/sounds/notification.mp3" preload="auto" />
+            <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (
