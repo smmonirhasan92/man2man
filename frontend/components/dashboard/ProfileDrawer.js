@@ -31,8 +31,14 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
             localStorage.setItem('active_server_phone', plan.syntheticPhone);
 
             toast.success("Secure Tunnel Established", { icon: '🛡️' });
-            router.push('/tasks');
-            onClose();
+
+            // [DIRECT EFFECTIVENESS] Hard reload if on tasks, otherwise navigate
+            if (window.location.pathname === '/tasks') {
+                window.location.reload();
+            } else {
+                router.push('/tasks');
+                onClose();
+            }
 
         } catch (err) {
             console.error(err);

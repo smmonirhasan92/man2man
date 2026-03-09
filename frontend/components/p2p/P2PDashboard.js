@@ -51,10 +51,13 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
         if (socket) {
             socket.on('p2p_alert', () => {
+                playSound(); // [SOUND ALERT]
                 fetchOrders();
             });
             socket.on('p2p_completed', (trade) => {
                 console.log("P2P Completed Event Received - Refreshing Orders");
+                playSound(); // [SOUND ALERT]
+                notify('Trade Completed', `Your trade for ${trade.amount} NXS is complete!`);
                 fetchOrders();
                 // [NEW] Trigger Rating Modal
                 setRatingTradeId(trade._id);
@@ -63,6 +66,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             socket.on('p2p_trade_start', (trade) => {
                 // If I am the seller and a trade just started, show push notification
                 if (trade.sellerId === user?._id) {
+                    playSound(); // [SOUND ALERT]
                     toast.custom((t) => (
                         <div className={`${t.visible ? 'animate-in slide-in-from-top-4 fade-in' : 'animate-out slide-out-to-top-4 fade-out'} max-w-sm w-full bg-emerald-900 border border-emerald-500 shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
                             <div className="flex-1 w-0 p-4">
@@ -368,17 +372,15 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 ))}
             </div>
 
-            {/* Post Ad Button (Moved inside My Ads) */}
-            {mode === 'my_ads' && (
-                <div className="px-4 py-3">
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="w-full py-3 bg-[#fcd535] hover:bg-[#e6c130] text-black rounded-lg font-black flex items-center justify-center gap-2 transition"
-                    >
-                        <Plus className="w-5 h-5" /> POST NEW AD
-                    </button>
-                </div>
-            )}
+            {/* 4. Stable "Post Ad" Button (Right below Tabs/"Function") */}
+            <div className="px-4 py-3 bg-[#0b0e11] border-b border-[#2b3139]/30">
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="w-full py-3 bg-[#fcd535] hover:bg-[#e6c130] text-black rounded-xl font-black flex items-center justify-center gap-2 transition-all shadow-[0_4px_15px_rgba(252,213,53,0.15)] active:scale-[0.98]"
+                >
+                    <Plus className="w-5 h-5" /> POST NEW AD
+                </button>
+            </div>
 
             {/* Advanced Filters */}
             {(mode === 'buy' || mode === 'sell') && (

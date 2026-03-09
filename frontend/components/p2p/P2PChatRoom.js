@@ -39,13 +39,17 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     const confirmReleaseWithPin = async () => {
         if (pin.length < 4) return toast.error("Enter valid Password");
+        setLoading(true);
         try {
             await api.post(`/p2p/trade/${tradeId}/release`, { pin });
             toast.success("Funds Released Successfully!");
             setIsPinModalOpen(false);
+            setPin('');
             fetchTradeData();
         } catch (e) {
             toast.error(e.response?.data?.message || "Release Failed");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -206,26 +210,31 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         }
     };
 
+    const [isConfirmingPaid, setIsConfirmingPaid] = useState(false);
+
     const handleMarkPaid = async () => {
         // Validation: Either Proof OR (TxID + Sender)
         if (!proofUrl && (!txId || !senderNumber)) {
             return toast.error("SECURITY: Upload Proof OR enter TxID + Sender Num.");
         }
 
-        setConfirmModal({
-            isOpen: true,
-            title: 'Confirm Payment Sent',
-            message: 'Did you send the money? False claims lead to bans.',
-            confirmText: 'Yes, I Sent It',
-            onConfirm: async () => {
-                try {
-                    await api.post(`/p2p/trade/${tradeId}/pay`, { proofUrl, txId, senderNumber });
-                    toast.success("Marked as Paid!");
-                    fetchTradeData();
-                    setConfirmModal({ isOpen: false });
-                } catch (e) { toast.error(e.response?.data?.message); }
-            }
-        });
+        if (!isConfirmingPaid) {
+            setIsConfirmingPaid(true);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await api.post(`/p2p/trade/${tradeId}/pay`, { proofUrl, txId, senderNumber });
+            toast.success("Marked as Paid!");
+            setIsConfirmingPaid(false);
+            fetchTradeData();
+        } catch (e) {
+            toast.error(e.response?.data?.message);
+            setIsConfirmingPaid(false);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDispute = () => {
@@ -404,36 +413,76 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 </div>
             )}
 
-            {/* Seller Action Required Box (Compact) */}
+            {/* Seller Action Required Box (Compact & Inline Actions) */}
             {trade.status === 'PAID' && isSeller && (
                 <div className="shrink-0 p-3 bg-[#181a20] border-b border-[#2b3139]">
                     <div className="flex justify-between items-center mb-3">
                         <div>
-                            <div className="text-[10px] text-[#0ecb81] font-bold uppercase">Action Required</div>
-                            <div className="text-[13px] font-bold text-[#eaeaec]">Verify Payment</div>
+                            <div className="text-[10px] text-[#0ecb81] font-bold uppercase tracking-widest">Verify & Release</div>
+                            <div className="text-[14px] font-black text-[#eaeaec]">Payment Received?</div>
                         </div>
                         <div className="text-right">
-                            <div className="text-lg font-black text-[#eaeaec] font-mono">{trade.amount} NXS</div>
+                            <div className="text-lg font-black text-[#eaeaec] font-mono leading-none">{trade.amount} NXS</div>
+                            <div className="text-[9px] text-[#848e9c] font-bold uppercase mt-1">Escrow Balance</div>
                         </div>
                     </div>
-                    <div className="bg-[#0b0e11] rounded p-2 mb-3 border border-[#2b3139] grid grid-cols-2 gap-2">
+                    <div className="bg-[#0b0e11] rounded-xl p-3 mb-3 border border-[#2b3139] grid grid-cols-2 gap-3 shadow-inner">
                         <div>
-                            <div className="text-[9px] text-[#848e9c]">Sender:</div>
-                            <div className="font-mono text-[11px] text-[#eaeaec] font-bold">{trade.senderNumber || '---'}</div>
+                            <div className="text-[9px] text-[#848e9c] font-bold uppercase mb-1">Sender:</div>
+                            <div className="font-mono text-[12px] text-[#eaeaec] font-black">{trade.senderNumber || '---'}</div>
                         </div>
                         <div>
-                            <div className="text-[9px] text-[#848e9c]">TxID:</div>
-                            <div className="font-mono text-[11px] text-[#0ecb81] font-bold">{trade.txId || '---'}</div>
+                            <div className="text-[9px] text-[#848e9c] font-bold uppercase mb-1">TxID:</div>
+                            <div className="font-mono text-[12px] text-[#0ecb81] font-black">{trade.txId || '---'}</div>
                         </div>
                         {trade.paymentProofUrl && (
-                            <div className="col-span-2 text-center mt-1">
-                                <a href={trade.paymentProofUrl} target="_blank" className="text-[10px] text-[#fcd535] underline">View Receipt Screenshot</a>
+                            <div className="col-span-2 pt-2 border-t border-[#2b3139] flex items-center justify-between">
+                                <span className="text-[10px] text-[#848e9c] font-bold italic">Buyer attached proof</span>
+                                <a href={trade.paymentProofUrl} target="_blank" className="text-[10px] text-[#fcd535] font-black underline flex items-center gap-1">
+                                    <ImageIcon className="w-3 h-3" /> View Proof
+                                </a>
                             </div>
                         )}
                     </div>
-                    <button onClick={handleReleaseClick} className="w-full bg-[#0ecb81] hover:bg-[#0b9e65] text-black py-2.5 rounded font-black text-xs uppercase transition">
-                        Release Crypto
-                    </button>
+
+                    {!isPinModalOpen ? (
+                        <button
+                            onClick={() => setIsPinModalOpen(true)}
+                            className="w-full bg-[#0ecb81] hover:bg-[#0b9e65] text-black py-3 rounded-xl font-black text-xs uppercase shadow-[0_4px_15px_rgba(14,203,129,0.2)] transition-all active:scale-[0.98]"
+                        >
+                            Release Crypto
+                        </button>
+                    ) : (
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="flex gap-2 items-center mb-2">
+                                <Shield className="w-4 h-4 text-[#fcd535]" />
+                                <span className="text-[10px] font-black text-[#fcd535] uppercase tracking-wider">Security Auth Required</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="password"
+                                    autoFocus
+                                    className="flex-1 bg-[#0b0e11] border border-[#fcd535]/30 rounded-xl px-4 py-3 text-sm tracking-[0.3em] text-[#eaeaec] font-black outline-none focus:border-[#fcd535] shadow-inner"
+                                    value={pin}
+                                    onChange={(e) => setPin(e.target.value)}
+                                    placeholder="••••"
+                                />
+                                <button
+                                    onClick={confirmReleaseWithPin}
+                                    disabled={loading || pin.length < 4}
+                                    className="bg-[#0ecb81] text-black px-6 rounded-xl font-black text-[11px] uppercase disabled:opacity-50 transition-all hover:shadow-[0_0_15px_rgba(14,203,129,0.3)] shadow-lg"
+                                >
+                                    {loading ? '...' : 'Verify'}
+                                </button>
+                                <button
+                                    onClick={() => { setIsPinModalOpen(false); setPin(''); }}
+                                    className="bg-[#2b3139] text-[#848e9c] px-4 rounded-xl font-black text-[11px] uppercase"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -473,27 +522,53 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
             {/* 3. Action Bar (Fixed at bottom) */}
             <div className="shrink-0 bg-[#181a20] border-t border-[#2b3139]">
-                {/* Proof Panel (Buyer) */}
+                {/* Proof Panel (Buyer) - Integrated Inline Confirmation */}
                 {trade.status === 'CREATED' && isBuyer && (
-                    <div id="step-2-proof" className="p-3 border-b border-[#2b3139]">
-                        <div className="text-[10px] text-[#848e9c] mb-1.5 font-bold uppercase">Submit Proof of Payment</div>
-                        <div className="flex gap-2 mb-2">
+                    <div id="step-2-proof" className="p-3 border-b border-[#2b3139] bg-[#0b0e11]/30">
+                        <div className="flex justify-between items-center mb-2 px-1">
+                            <div className="text-[10px] text-[#848e9c] font-black uppercase tracking-widest flex items-center gap-1.5">
+                                <Zap className="w-3 h-3 text-[#fcd535]" /> Submit Payment Proof
+                            </div>
+                            {isConfirmingPaid && (
+                                <span className="text-[9px] text-[#fcd535] font-black animate-pulse">Double Tap to Confirm!</span>
+                            )}
+                        </div>
+                        <div className="flex gap-2 mb-3">
                             <input
                                 value={senderNumber}
                                 onChange={(e) => setSenderNumber(e.target.value)}
-                                placeholder="Sender Last 4"
-                                className="flex-1 bg-[#0b0e11] border border-[#2b3139] rounded px-3 py-2 text-[11px] text-[#eaeaec] outline-none focus:border-[#fcd535]"
+                                placeholder="Sender Last 4 Digit"
+                                className="flex-1 bg-[#0b0e11] border border-[#2b3139] rounded-xl px-4 py-3 text-[12px] text-[#eaeaec] font-black outline-none focus:border-[#fcd535] transition-all shadow-inner"
                             />
                             <input
                                 value={txId}
                                 onChange={(e) => setTxId(e.target.value)}
-                                placeholder="TxID"
-                                className="flex-[1.5] bg-[#0b0e11] border border-[#2b3139] rounded px-3 py-2 text-[11px] text-[#eaeaec] outline-none focus:border-[#fcd535]"
+                                placeholder="Transaction ID"
+                                className="flex-[1.5] bg-[#0b0e11] border border-[#2b3139] rounded-xl px-4 py-3 text-[12px] text-[#eaeaec] font-black outline-none focus:border-[#fcd535] transition-all shadow-inner"
                             />
                         </div>
-                        <button id="step-3-submit" onClick={handleMarkPaid} className="w-full bg-[#fcd535] hover:bg-[#e6c130] text-black py-2.5 rounded font-black text-xs uppercase transition">
-                            Transferred, Notify Seller
+                        <button
+                            id="step-3-submit"
+                            onClick={handleMarkPaid}
+                            disabled={loading}
+                            className={`w-full py-3.5 rounded-xl font-black text-xs uppercase transition-all flex items-center justify-center gap-2 transform active:scale-[0.97] ${isConfirmingPaid ? 'bg-emerald-600 text-white shadow-[0_5px_20px_rgba(16,185,129,0.3)]' : 'bg-[#fcd535] text-black shadow-lg hover:bg-[#e6c130]'}`}
+                        >
+                            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : isConfirmingPaid ? (
+                                <>
+                                    <CheckCircle className="w-4 h-4" /> I Have Sent the Money
+                                </>
+                            ) : (
+                                "Notify Seller I Paid"
+                            )}
                         </button>
+                        {isConfirmingPaid && (
+                            <button
+                                onClick={() => setIsConfirmingPaid(false)}
+                                className="w-full mt-2 text-[10px] text-[#848e9c] font-black py-1 hover:text-white transition"
+                            >
+                                CANCEL SELECTION
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -535,26 +610,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             </div>
 
             {/* Modals & Guides remain exactly the same logically but updated UI colors */}
-            {/* PIN MODAL */}
-            {isPinModalOpen && (
-                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#181a20] p-5 rounded-lg border border-[#2b3139] w-full max-w-[280px]">
-                        <h3 className="text-[13px] font-bold text-[#eaeaec] mb-1">Security Verification</h3>
-                        <p className="text-[10px] text-[#848e9c] mb-4">Enter Password to release crypto</p>
-                        <input
-                            type="password"
-                            className="w-full bg-[#0b0e11] border border-[#2b3139] rounded p-2.5 text-center text-sm tracking-widest text-[#eaeaec] mb-4 focus:border-[#0ecb81] outline-none font-mono"
-                            value={pin}
-                            onChange={(e) => setPin(e.target.value)}
-                            placeholder="Password"
-                        />
-                        <div className="flex gap-2">
-                            <button onClick={() => setIsPinModalOpen(false)} className="flex-1 py-2 bg-[#2b3139] text-[#848e9c] rounded font-bold text-[11px] uppercase">Cancel</button>
-                            <button onClick={confirmReleaseWithPin} className="flex-1 py-2 bg-[#0ecb81] text-black font-bold rounded text-[11px] uppercase">Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Dispute Modal */}
             {showDisputeModal && (

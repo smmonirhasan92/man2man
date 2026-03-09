@@ -139,11 +139,19 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                             />
                             {/* LIVE CALCULATION DISPLAY */}
                             {amount && rate && (
-                                <div className="mt-2 p-2 bg-slate-800/50 rounded-lg flex justify-between items-center border border-white/5 shadow-inner">
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Fiat Value:</span>
-                                    <span className="text-sm font-black text-white">
-                                        {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{fiatCurrency}</span>
-                                    </span>
+                                <div className="mt-2 space-y-2">
+                                    <div className="p-2 bg-emerald-500/10 rounded-lg flex justify-between items-center border border-emerald-500/20 shadow-inner">
+                                        <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest text-[9px]">Calculated Rate:</span>
+                                        <span className="text-sm font-black text-emerald-400">
+                                            1 NXS = {(Number(rate) / 50).toFixed(2)} <span className="text-[10px]">{fiatCurrency}</span>
+                                        </span>
+                                    </div>
+                                    <div className="p-2 bg-slate-800/50 rounded-lg flex justify-between items-center border border-white/5 shadow-inner">
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-[9px]">Total Receive:</span>
+                                        <span className="text-sm font-black text-white">
+                                            {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{fiatCurrency}</span>
+                                        </span>
+                                    </div>
                                 </div>
                             )}
                         </div>
