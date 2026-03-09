@@ -118,7 +118,8 @@ const userRoutes = require('./routes/userRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const settingsRoutes = require('./modules/settings/SettingsRoutes');
-const supportRoutes = require('./routes/supportRoutes');
+// const supportRoutes = require('./routes/supportRoutes'); // [REMOVED] Moved to safe-init block below
+
 
 
 // --- USE CORE ROUTES ---
