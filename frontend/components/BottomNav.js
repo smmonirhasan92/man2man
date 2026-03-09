@@ -14,7 +14,7 @@ function BottomNav() {
 
     // [OPTIMIZED] Memoize visibility check to prevent re-renders on every scroll/interaction
     const isHidden = useMemo(() => {
-        const hiddenRoutes = ['/', '/register', '/admin', '/agent'];
+        const hiddenRoutes = ['/', '/login', '/register', '/admin', '/agent'];
         return hiddenRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
     }, [pathname]);
 

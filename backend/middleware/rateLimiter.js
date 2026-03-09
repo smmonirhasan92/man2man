@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 // Rate limiter for authentication routes (Login/Register)
 exports.authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 Mins
-    max: 10,
+    max: 100, // Increased from 10 to 100 to allow multiple account logins from same IP
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: 'Too many authentication attempts, please try again after 15 minutes.' }

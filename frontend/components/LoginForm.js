@@ -64,13 +64,12 @@ export default function LoginForm() {
 
             setSuccess('Login Successful! Redirecting...');
 
-            // Redirect based on role (INSTANT REDIRECT)
+            // Redirect based on role (Hard Redirect for cookie sync)
             const adminRoles = ['admin', 'super_admin', 'employee_admin'];
-            if (adminRoles.includes(user.role)) {
-                router.push('/admin/dashboard');
-            } else {
-                router.push('/dashboard');
-            }
+            const target = adminRoles.includes(user.role) ? '/admin/dashboard' : '/dashboard';
+
+            // Hard refresh redirect ensures middleware picks up cookie instantly
+            window.location.href = target;
 
         } catch (err) {
             console.error('Login Error Full Response:', err);
