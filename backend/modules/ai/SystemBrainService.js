@@ -1,20 +1,32 @@
 const path = require('path');
-const { LlamaModel, LlamaContext, LlamaChatSession } = require('node-llama-cpp');
 
 // --- Local AI Setup (100% Free & Internal) ---
 let model = null;
 let context = null;
+let LlamaChatSession = null;
 
-try {
-    const modelPath = path.resolve(__dirname, '../../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf');
-    model = new LlamaModel({
-        modelPath: modelPath
-    });
-    context = new LlamaContext({ model });
-    console.log("[AI] Local TinyLlama Brain Initialized.");
-} catch (e) {
-    console.error("[AI] Local Model Load Error:", e.message);
+// Initialize AI brain asynchronously
+async function initAI() {
+    try {
+        // node-llama-cpp v3 is ESM only
+        const llama = await import('node-llama-cpp');
+        const LlamaModel = llama.LlamaModel;
+        const LlamaContext = llama.LlamaContext;
+        LlamaChatSession = llama.LlamaChatSession;
+
+        const modelPath = path.resolve(__dirname, '../../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf');
+        model = new LlamaModel({
+            modelPath: modelPath
+        });
+        context = new LlamaContext({ model });
+        console.log("[AI] Local TinyLlama Brain Initialized via ESM Import.");
+    } catch (e) {
+        console.error("[AI] Local Model Load Error:", e.message);
+    }
 }
+
+// Start initialization immediately
+initAI();
 
 const SYSTEM_PROMPT = `You are a friendly, human-like support representative for "USA Affiliate".
 Rules:
@@ -28,7 +40,11 @@ const activeSessions = new Map();
 
 exports.chat = async (message, onToken = null, sessionId = 'default') => {
     try {
-        if (!model) return "I'm warming up my gears! USA Affiliate is the best, please ask again in a second.";
+        // Ensure initialized
+        if (!model || !LlamaChatSession) {
+            await initAI();
+            if (!model) return "I'm warming up my gears! USA Affiliate is the best, please ask again in a second.";
+        }
 
         let session = activeSessions.get(sessionId);
         if (!session) {
