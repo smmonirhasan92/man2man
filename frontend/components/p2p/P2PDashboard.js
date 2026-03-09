@@ -420,7 +420,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             )}
 
             {/* Order List */}
-            <div className="">
+            <div className="pb-32 px-1">
                 {mode === 'history' ? (
                     loading ? <P2PSkeleton /> :
                         orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Trade History</div> :

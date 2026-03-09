@@ -19,8 +19,8 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020617]/80 backdrop-blur-md p-4 animate-fade-in font-sans">
-            <div className="bg-[#0f172a] border border-slate-700/50 w-full max-w-sm rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up relative">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#020617]/80 backdrop-blur-md p-4 animate-fade-in font-sans">
+            <div className="bg-[#0f172a] border border-slate-700/50 w-full max-w-sm rounded-[24px] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up relative max-h-[90vh] flex flex-col">
 
                 {/* Decorative glowing gradient top bar */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500"></div>
@@ -43,88 +43,91 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
                     </div>
                 </div>
 
-                {/* Body */}
-                <div className="p-6">
-                    {/* Market Data Highlight */}
-                    <div className="bg-[#0b1120] rounded-xl p-4 mb-6 border border-slate-700/50 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {/* Body */}
+                    <div className="p-6">
+                        {/* Market Data Highlight */}
+                        <div className="bg-[#0b1120] rounded-xl p-4 mb-6 border border-slate-700/50 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                        <div className="flex flex-col gap-3 relative z-10">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-slate-400 font-medium">Exchange Rate</span>
-                                <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">$1 USD (50 NXS) = {rate} Local Fiat</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-slate-400 font-medium">Seller's Balance</span>
-                                <span className="font-bold text-white flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-blue-400" /> {liveAvailable} NXS</span>
-                            </div>
-                            <div className="h-px bg-slate-700/50 w-full my-0.5"></div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-emerald-400/80 text-xs font-bold uppercase tracking-wider">Available Limit</span>
-                                <span className="font-black text-emerald-400 text-lg shadow-emerald-500/50 drop-shadow-md">{maxLimit} NXS</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl mb-4 text-center">
-                        <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-wide">
-                            <span className="text-yellow-500 text-sm">💡</span> Note: NXS is pegged to USD. The P2P Exchange Rate determines how much local currency (e.g., BDT) you pay per USD.
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit}>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-                            Amount to {order.type === 'SELL' ? 'Buy' : 'Sell'}
-                        </label>
-                        <div className="relative mb-8 group">
-                            <input
-                                type="number"
-                                required
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                min="1"
-                                max={maxLimit}
-                                placeholder={`Enter amount... (Max ${maxLimit})`}
-                                className="w-full bg-[#1e293b] border border-slate-600 rounded-xl px-4 py-3.5 text-white font-bold tracking-wide focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-500 text-lg shadow-inner"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setAmount(maxLimit)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg hover:bg-emerald-500 hover:text-white hover:shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-300"
-                            >
-                                MAX
-                            </button>
-                        </div>
-
-                        {/* LIVE CALCULATION DISPLAY */}
-                        {amount && Number(amount) > 0 && (
-                            <div className="mb-6 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <div className="p-3 bg-emerald-500/10 rounded-xl flex justify-between items-center border border-emerald-500/20 shadow-inner">
-                                    <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Rate (1 NXS):</span>
-                                    <span className="text-sm font-black text-emerald-400">
-                                        {(Number(rate) / 50).toFixed(2)} <span className="text-[10px]">{order.fiatCurrency || 'BDT'}</span>
-                                    </span>
+                            <div className="flex flex-col gap-3 relative z-10">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400 font-medium">Exchange Rate</span>
+                                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">$1 USD (50 NXS) = {rate} Local Fiat</span>
                                 </div>
-                                <div className="p-3 bg-[#0b1120] rounded-xl flex justify-between items-center border border-slate-700/50 shadow-2xl">
-                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                                        Total {order.type === 'SELL' ? 'To Pay' : 'To Receive'}:
-                                    </span>
-                                    <span className="text-lg font-black text-white">
-                                        {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{order.fiatCurrency || 'BDT'}</span>
-                                    </span>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400 font-medium">Seller's Balance</span>
+                                    <span className="font-bold text-white flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5 text-blue-400" /> {liveAvailable} NXS</span>
+                                </div>
+                                <div className="h-px bg-slate-700/50 w-full my-0.5"></div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-emerald-400/80 text-xs font-bold uppercase tracking-wider">Available Limit</span>
+                                    <span className="font-black text-emerald-400 text-lg shadow-emerald-500/50 drop-shadow-md">{maxLimit} NXS</span>
                                 </div>
                             </div>
-                        )}
-
-                        <div className="flex gap-3">
-                            <button type="button" onClick={onClose} className="flex-1 py-3.5 px-4 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/50 hover:text-white hover:border-slate-500 transition-all duration-200">
-                                Cancel
-                            </button>
-                            <button type="submit" disabled={!amount || Number(amount) <= 0 || Number(amount) > maxLimit} className="flex-1 py-3.5 px-4 rounded-xl font-black bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
-                                Proceed
-                            </button>
                         </div>
-                    </form>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl mb-4 text-center">
+                            <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-wide">
+                                <span className="text-yellow-500 text-sm">💡</span> Note: NXS is pegged to USD. The P2P Exchange Rate determines how much local currency (e.g., BDT) you pay per USD.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                                Amount to {order.type === 'SELL' ? 'Buy' : 'Sell'}
+                            </label>
+                            <div className="relative mb-8 group">
+                                <input
+                                    type="number"
+                                    required
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    min="1"
+                                    max={maxLimit}
+                                    placeholder={`Enter amount... (Max ${maxLimit})`}
+                                    className="w-full bg-[#1e293b] border border-slate-600 rounded-xl px-4 py-3.5 text-white font-bold tracking-wide focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-500 text-lg shadow-inner"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setAmount(maxLimit)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg hover:bg-emerald-500 hover:text-white hover:shadow-[0_0_10px_rgba(16,185,129,0.4)] transition-all duration-300"
+                                >
+                                    MAX
+                                </button>
+                            </div>
+
+                            {/* LIVE CALCULATION DISPLAY */}
+                            {amount && Number(amount) > 0 && (
+                                <div className="mb-6 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="p-3 bg-emerald-500/10 rounded-xl flex justify-between items-center border border-emerald-500/20 shadow-inner">
+                                        <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Rate (1 NXS):</span>
+                                        <span className="text-sm font-black text-emerald-400">
+                                            {(Number(rate) / 50).toFixed(2)} <span className="text-[10px]">{order.fiatCurrency || 'BDT'}</span>
+                                        </span>
+                                    </div>
+                                    <div className="p-3 bg-[#0b1120] rounded-xl flex justify-between items-center border border-slate-700/50 shadow-2xl">
+                                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                            Total {order.type === 'SELL' ? 'To Pay' : 'To Receive'}:
+                                        </span>
+                                        <span className="text-lg font-black text-white">
+                                            {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{order.fiatCurrency || 'BDT'}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button type="button" onClick={onClose} className="flex-1 py-3.5 px-4 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/50 hover:text-white hover:border-slate-500 transition-all duration-200">
+                                    Cancel
+                                </button>
+                                <button type="submit" disabled={!amount || Number(amount) <= 0 || Number(amount) > maxLimit} className="flex-1 py-3.5 px-4 rounded-xl font-black bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
+                                    Proceed
+                                </button>
+                            </div>
+                            <div className="h-10"></div> {/* Bottom Clearance */}
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
