@@ -76,6 +76,10 @@ const UserSchema = new mongoose.Schema({
     referredBy: { type: String },
     referralCount: { type: Number, default: 0 },
     referralIncome: { type: Number, default: 0.00 },
+    referralEarningsByLevel: {
+        type: [Number],
+        default: [0, 0, 0, 0, 0] // Level 1 to 5
+    },
     isReferralBonusPaid: { type: Boolean, default: false },
     commissionRate: { type: Number, default: 0.00 },
     agentData: {

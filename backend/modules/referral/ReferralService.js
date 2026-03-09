@@ -177,12 +177,18 @@ class ReferralService {
                     // Credit INCOME WALLET directly (Module C Requirement)
                     uplineUser.wallet.income = (uplineUser.wallet.income || 0) + commission;
                     uplineUser.referralIncome = (uplineUser.referralIncome || 0) + commission;
+                    // [NEW] Update level-wise stats
+                    if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0, 0, 0];
+                    uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + commission;
+                    uplineUser.markModified('referralEarningsByLevel'); // Required for mixed arrays in Mongoose
+
                     await uplineUser.save({ session });
 
                     // Log Transaction
                     await Transaction.create([{
                         userId: uplineUser._id,
                         type: 'referral_commission',
+                        source: 'referral',
                         amount: commission,
                         status: 'completed',
                         description: commissionDesc,
@@ -216,9 +222,9 @@ class ReferralService {
      * Distribute Generic Income (Task, etc)
      * Now follows the same 5-level structure (5% total pool)
      */
-    static async distributeIncome(referrerCode, amount, type, externalSession = null) {
+    static async distributeIncome(sourceUserId, referrerCode, amount, type, externalSession = null) {
         const logic = async (session) => {
-            console.log(`[Referral] Distributing ${type}: ${amount} (Starting at ${referrerCode})`);
+            console.log(`[Referral] Distributing ${type}: ${amount} (Earned by ${sourceUserId}, Starting at ${referrerCode})`);
 
             if (!referrerCode || amount <= 0) return { success: true, distributed: 0 };
 
@@ -240,15 +246,26 @@ class ReferralService {
                 if (comm > 0) {
                     uplineUser.wallet.income = (uplineUser.wallet.income || 0) + comm;
                     uplineUser.referralIncome = (uplineUser.referralIncome || 0) + comm;
+
+                    // [NEW] Update level-wise stats
+                    if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0, 0, 0];
+                    uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + comm;
+                    uplineUser.markModified('referralEarningsByLevel');
+
                     await uplineUser.save({ session });
 
                     await Transaction.create([{
                         userId: uplineUser._id,
                         type: 'referral_commission',
+                        source: 'referral',
                         amount: comm,
                         status: 'completed',
-                        description: `L${i + 1} Task Bonus`,
-                        metadata: { level: i + 1 }
+                        description: `L${i + 1} Task Bonus from ${sourceUserId}`,
+                        metadata: {
+                            level: i + 1,
+                            sourceUser: sourceUserId,
+                            type: type
+                        }
                     }], { session });
 
                     // [REDIS] Invalidate Upline Cache

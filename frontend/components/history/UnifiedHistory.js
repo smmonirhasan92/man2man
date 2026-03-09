@@ -45,8 +45,8 @@ export default function UnifiedHistory() {
     const formatTitle = (item) => {
         if (item.source === 'game' && item.amount > 0) return `Verified Task Reward`;
         if (item.source === 'game') return `Task Entry Fee`;
-        if (item.type === 'referral_bonus') return `Referral Commission`;
-        return item.title;
+        if (item.type === 'referral_bonus' || item.type === 'referral_commission') return `Referral Commission`;
+        return item.title || item.type?.replace(/_/g, ' ').toUpperCase();
     };
 
     const getCurrency = (item) => {

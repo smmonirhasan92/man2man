@@ -72,11 +72,11 @@ export default function ReferralNetworkUI() {
 
             <div className="space-y-3 relative z-10">
                 {[
-                    { level: 1, label: 'Direct Referrals', value: levelCounts.level1, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: Award },
-                    { level: 2, label: 'Tier 2 Agents', value: levelCounts.level2, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: Users },
-                    { level: 3, label: 'Tier 3 Squad', value: levelCounts.level3, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: Users },
-                    { level: 4, label: 'Tier 4 Network', value: levelCounts.level4, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: Users },
-                    { level: 5, label: 'Tier 5 Reach', value: levelCounts.level5, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', icon: Zap },
+                    { level: 1, label: 'Direct Referrals', value: levelCounts.level1, earning: networkData.levelEarnings[0], color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: Award },
+                    { level: 2, label: 'Tier 2 Agents', value: levelCounts.level2, earning: networkData.levelEarnings[1], color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: Users },
+                    { level: 3, label: 'Tier 3 Squad', value: levelCounts.level3, earning: networkData.levelEarnings[2], color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: Users },
+                    { level: 4, label: 'Tier 4 Network', value: levelCounts.level4, earning: networkData.levelEarnings[3], color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: Users },
+                    { level: 5, label: 'Tier 5 Reach', value: levelCounts.level5, earning: networkData.levelEarnings[4], color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', icon: Zap },
                 ].map((tier, idx) => (
                     <motion.div
                         key={tier.level}
@@ -99,9 +99,12 @@ export default function ReferralNetworkUI() {
                             </div>
                         </div>
 
-                        <div className="flex items-center">
+                        <div className="flex flex-col items-end">
                             <span className={`text-xl font-black ${tier.color} tracking-tighter drop-shadow-sm`}>
                                 {tier.value}
+                            </span>
+                            <span className="text-[10px] font-black text-white/60 uppercase tracking-tighter">
+                                Profit: <span className="text-emerald-400">{tier.earning.toFixed(2)}</span> NXS
                             </span>
                         </div>
                     </motion.div>

@@ -330,6 +330,8 @@ exports.getNetworkSummary = async (req, res) => {
             success: true,
             totalNetworkSize,
             levelCounts: networkCounts,
+            levelEarnings: user.referralEarningsByLevel || [0, 0, 0, 0, 0],
+            totalReferralIncome: user.referralIncome || 0,
             username: user.username
         });
 

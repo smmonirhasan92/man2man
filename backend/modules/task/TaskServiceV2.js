@@ -130,13 +130,23 @@ class TaskServiceV2 {
                 throw new Error("Daily limit reached (Race Condition Blocked)");
             }
 
-            // Increment
+            // [LOGIC] Check if this is the final task for the day to trigger Referral Commission
+            const isFinalTask = lockedPlan.tasksCompletedToday + 1 >= dailyLimit;
+
+            // [P2P MARKETING LOGIC] Zero-Liability Task Commission
+            // System deducts 5% of the earned task reward to distribute to 5 uplines.
+            // Earner receives 95% of the task reward.
+            const DEDUCTION_PERCENT = 5.0;
+            const systemDeductionAmount = (rewardAmount * DEDUCTION_PERCENT) / 100;
+            const earnerNetIncome = rewardAmount - systemDeductionAmount;
+
+            // Increment User Stats
             userUpd.taskData.tasksCompletedToday += 1;
             userUpd.taskData.lastTaskDate = new Date();
 
-            // Wallet Credit
+            // Wallet Credit (NET)
             if (!userUpd.wallet.income) userUpd.wallet.income = 0;
-            userUpd.wallet.income += rewardAmount;
+            userUpd.wallet.income += earnerNetIncome;
 
             // Clear Session
             userUpd.taskData.currentTask = null;
@@ -145,11 +155,10 @@ class TaskServiceV2 {
 
             // Update Plan Stats
             lockedPlan.tasksCompletedToday += 1;
-            // Reset logic if new day (handled by middleware usually, but good to be safe)
             const lastDate = lockedPlan.last_earning_date ? new Date(lockedPlan.last_earning_date) : new Date(0);
             const isToday = lastDate.getDate() === new Date().getDate();
             if (!isToday) {
-                lockedPlan.tasksCompletedToday = 1; // Reset to 1 (current task)
+                lockedPlan.tasksCompletedToday = 1;
             }
 
             lockedPlan.earnings_today = (isToday ? lockedPlan.earnings_today : 0) + rewardAmount;
@@ -160,11 +169,24 @@ class TaskServiceV2 {
             await Transaction.create([{
                 userId,
                 type: 'task_reward',
-                amount: rewardAmount,
+                amount: earnerNetIncome,
                 status: 'completed',
                 description: `Task V2 Reward (${planDetails.name})`,
-                balanceAfter: userUpd.wallet.income
+                balanceAfter: userUpd.wallet.income,
+                metadata: { gross: rewardAmount, system_fee: systemDeductionAmount }
             }], { session });
+
+            // [REFERRAL BATCHING] Trigger only on final task
+            if (isFinalTask && userUpd.referredBy) {
+                console.log(`[TaskServiceV2] Daily Limit Reached. Distributing Referral Commissions for ${userId}`);
+                try {
+                    const ReferralService = require('../referral/ReferralService');
+                    const totalDailyGross = lockedPlan.earnings_today;
+                    await ReferralService.distributeIncome(userId, userUpd.referredBy, totalDailyGross, 'task_batch', session);
+                } catch (reErr) {
+                    console.error("[TaskServiceV2] Referral Distribution Failed:", reErr.message);
+                }
+            }
 
             // Socket
             const SocketService = require('../common/SocketService');
@@ -173,7 +195,8 @@ class TaskServiceV2 {
             return {
                 success: true,
                 newBalance: userUpd.wallet.income,
-                reward: rewardAmount
+                reward: earnerNetIncome,
+                isFinal: isFinalTask
             };
         });
     }
