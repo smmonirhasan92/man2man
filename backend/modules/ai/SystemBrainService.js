@@ -1,80 +1,70 @@
 const path = require('path');
 const fs = require('fs');
 
-// --- Local AI Setup (100% Free & Internal) ---
+// --- Local AI Setup (node-llama-cpp v3) ---
+let llama = null;
 let model = null;
 let context = null;
-let chatSessionClass = null;
+let LlamaChatSession = null;
 let initPromise = null;
 
 const modelPath = path.resolve(__dirname, '../../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf');
 
-// Initialize AI brain asynchronously
 async function initAI() {
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
         try {
-            console.log("[AI] 🚀 Initializing Brain (v3 API)...");
+            console.log("[AI] 🚀 Initializing Engine...");
 
             if (!fs.existsSync(modelPath)) {
-                console.error("[AI] ❌ Model file not found at:", modelPath);
-                return;
+                throw new Error("Model file not found at: " + modelPath);
             }
 
-            console.log("[AI] 📦 Loading node-llama-cpp...");
-            const { getLlama } = await import('node-llama-cpp');
+            const llamaCpp = await import('node-llama-cpp');
+            LlamaChatSession = llamaCpp.LlamaChatSession;
 
-            console.log("[AI] ⚙️ Getting Llama Engine...");
-            const llama = await getLlama();
+            llama = await llamaCpp.getLlama();
 
-            console.log("[AI] 🧠 Loading Model...");
-            model = await llama.loadModel({
-                modelPath: modelPath
-            });
+            console.log("[AI] 🧠 Loading Model binary...");
+            model = await llama.loadModel({ modelPath });
 
             console.log("[AI] 💎 Creating Context...");
             context = await model.createContext();
 
-            // In v3, session might be LlamaChatSession
-            const llamaCpp = await import('node-llama-cpp');
-            chatSessionClass = llamaCpp.LlamaChatSession;
-
-            console.log("[AI] ✅ Local TinyLlama Brain Ready.");
+            console.log("[AI] ✅ Local AI Ready.");
         } catch (e) {
-            console.error("[AI] ❌ Local Model Load Error:", e);
+            console.error("[AI] ❌ Init Error:", e);
             initPromise = null;
+            throw e;
         }
     })();
 
     return initPromise;
 }
 
-// Start initialization immediately
-initAI();
+// Start early
+initAI().catch(() => { });
 
 const SYSTEM_PROMPT = `You are a friendly, human-like support representative for "USA Affiliate".
 Rules:
 1. Persona: You are named "Support AI".
 2. Platform: USA Affiliate (usaaffiliatemarketing.com) is a secure video task earning platform.
-3. Tone: 100% POSITIVE and polite. Reassure users that funds are safe.
-4. Brevity: Keep responses under 3 sentences.
-5. P2P: Mention P2P for buying/selling NxS safely.`;
+3. Tone: 100% POSITIVE and polite.
+4. Brevity: Keep responses under 3 sentences.`;
 
 const activeSessions = new Map();
 
 exports.chat = async (message, onToken = null, sessionId = 'default') => {
     try {
-        // Ensure initialized
-        if (!model || !chatSessionClass) {
-            console.log("[AI] Chat requested but model not ready.");
+        if (!model || !context || !LlamaChatSession) {
+            console.log("[AI] Waiting for initialization...");
             await initAI();
-            if (!model) return "I'm warming up my gears! USA Affiliate is the best, please ask again in a second.";
         }
 
         let session = activeSessions.get(sessionId);
         if (!session) {
-            session = new chatSessionClass({ context, systemPrompt: SYSTEM_PROMPT });
+            session = new LlamaChatSession({ context, systemPrompt: SYSTEM_PROMPT });
             activeSessions.set(sessionId, session);
         }
 
@@ -89,11 +79,11 @@ exports.chat = async (message, onToken = null, sessionId = 'default') => {
             return await session.prompt(message);
         }
     } catch (err) {
-        console.error('[AI] Local Chat Error:', err);
-        return "Our network is very busy with happy users, but USA Affiliate is 100% secure! How can I help?";
+        console.error('[AI] Chat Error:', err);
+        return "I'm warming up my gears! USA Affiliate is 100% secure. Please ask again in a moment.";
     }
 };
 
 exports.generateReview = async (productName, rating = 5) => {
-    return "Excellent product! Highly recommended for daily use.";
+    return "Excellent product! Highly recommended.";
 };
