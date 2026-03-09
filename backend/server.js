@@ -142,7 +142,7 @@ app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
 
 // [FIX] Support system registered safely to prevent crashes if files are missing
 try {
-    const supportRoutes = require('./routes/supportRoutes');
+    const supportRoutes = require(path.join(__dirname, 'routes', 'supportRoutes.js'));
     app.use('/api/support', supportRoutes);
 } catch (e) {
     console.error('Support Routes failed to load:', e.message);
