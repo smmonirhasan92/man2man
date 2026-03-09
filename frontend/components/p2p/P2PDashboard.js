@@ -38,7 +38,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const [buyModalConfig, setBuyModalConfig] = useState({ isOpen: false, order: null });
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const router = useRouter(); // [FIX] Initialize hook here
-    const { permission, requestPermission, notify } = useNotification();
+    const { permission, requestPermission, notify, playSound } = useNotification();
+
 
     const [marketStats, setMarketStats] = useState({ price: 0, high: 0, low: 0, vol: 0, change: 0 });
 
@@ -51,13 +52,14 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
         if (socket) {
             socket.on('p2p_alert', () => {
-                playSound(); // [SOUND ALERT]
+                // playSound(); // [REMOVED] Redundant with backend notification
                 fetchOrders();
             });
             socket.on('p2p_completed', (trade) => {
                 console.log("P2P Completed Event Received - Refreshing Orders");
-                playSound(); // [SOUND ALERT]
+                // playSound(); // [REMOVED] notify() already calls playSound()
                 notify('Trade Completed', `Your trade for ${trade.amount} NXS is complete!`);
+
                 fetchOrders();
                 // [NEW] Trigger Rating Modal
                 setRatingTradeId(trade._id);
@@ -66,7 +68,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
             socket.on('p2p_trade_start', (trade) => {
                 // If I am the seller and a trade just started, show push notification
                 if (trade.sellerId === user?._id) {
-                    playSound(); // [SOUND ALERT]
+                    // playSound(); // [REMOVED] NotificationContext already handles generic 'notification' event
+
                     toast.custom((t) => (
                         <div className={`${t.visible ? 'animate-in slide-in-from-top-4 fade-in' : 'animate-out slide-out-to-top-4 fade-out'} max-w-sm w-full bg-emerald-900 border border-emerald-500 shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
                             <div className="flex-1 w-0 p-4">

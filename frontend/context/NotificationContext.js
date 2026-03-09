@@ -88,7 +88,12 @@ export function NotificationProvider({ children }) {
             joinRoom();
         });
 
+        let lastSoundTime = 0;
         const playSound = () => {
+            const now = Date.now();
+            if (now - lastSoundTime < 500) return; // Cooldown of 500ms
+            lastSoundTime = now;
+
             try {
                 const audio = new Audio('/sounds/notification.mp3');
                 audio.play().catch(e => console.warn("Audio autoplay blocked", e));
@@ -128,7 +133,7 @@ export function NotificationProvider({ children }) {
         };
 
         socket.on('wallet:update', handleWalletUpdate);
-        socket.on('balance_update', handleWalletUpdate);
+
 
         // 3. System Config Update (RTP / Maintenance)
         socket.on('config:update', (data) => {

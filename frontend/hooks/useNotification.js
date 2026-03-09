@@ -34,7 +34,12 @@ export function useNotification() {
     }, []);
 
     // Play sound safely (requires prior user interaction in many browsers)
+    const lastPlayTime = useRef(0);
     const playSound = useCallback(() => {
+        const now = Date.now();
+        if (now - lastPlayTime.current < 500) return; // Don't play too frequently
+        lastPlayTime.current = now;
+
         if (audioRef.current) {
             // Reset to start if already playing
             audioRef.current.currentTime = 0;
