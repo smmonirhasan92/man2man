@@ -4,6 +4,8 @@ module.exports = {
             name: 'man2man-backend',
             script: './backend/server.js',
             cwd: '/var/www/man2man',
+            instances: 1,
+            exec_mode: 'fork',
             env: {
                 NODE_ENV: 'production',
                 PORT: 5050
