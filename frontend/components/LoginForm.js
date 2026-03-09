@@ -43,11 +43,12 @@ export default function LoginForm() {
             const { token, user } = res.data;
 
             // Store Auth Data
-            // Store Auth Data
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
             // Remember phone for next login
             localStorage.setItem('savedPhone', cleanPhone);
+            // [FIX] Also store in cookie so Next.js middleware can protect routes server-side
+            document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
 
             setSuccess('Login Successful! Redirecting...');
 

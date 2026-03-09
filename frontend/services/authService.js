@@ -45,6 +45,7 @@ export const authService = {
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
+                document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
             }
             return response.data;
         } catch (error) {
@@ -81,6 +82,7 @@ export const authService = {
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
+                document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
             }
             return response.data;
         } catch (error) {
@@ -95,6 +97,9 @@ export const authService = {
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/';
+        localStorage.removeItem('active_server_phone');
+        localStorage.removeItem('active_server_id');
+        document.cookie = 'token=; path=/; max-age=0'; // Clear cookie
+        window.location.href = '/login';
     }
 };

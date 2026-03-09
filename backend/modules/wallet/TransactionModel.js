@@ -45,6 +45,7 @@ const TransactionSchema = new mongoose.Schema({
     recipientDetails: { type: String }, // For send_money, mobile_recharge
     proofImage: { type: String },       // For recharge
     adminComment: { type: String },
+    balanceAfter: { type: Number },     // [FIX] Post-transaction balance snapshot (used by TaskServiceV2)
 
     // Relationships
     assignedAgentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

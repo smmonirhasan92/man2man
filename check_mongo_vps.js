@@ -1,24 +1,21 @@
 const { NodeSSH } = require('node-ssh');
 const ssh = new NodeSSH();
-async function checkMongo() {
+async function run() {
     try {
-        await ssh.connect({ host: '76.13.244.202', username: 'root', password: 'Sir@@@admin123', port: 22 });
-        console.log("--- MONGO RS STATUS ---");
-        const r1 = await ssh.execCommand('mongosh --eval "rs.status()"');
-        console.log(r1.stdout);
-        console.log(r1.stderr);
+        await ssh.connect({ host: '76.13.244.202', username: 'root', password: 'Sir@@@admin123' });
 
-        console.log("--- MONGO DB STATS ---");
-        const r2 = await ssh.execCommand('mongosh universal_game_core_v1 --eval "db.stats()"');
-        console.log(r2.stdout);
+        console.log('--- MONGO PROCESS ---');
+        const ps = await ssh.execCommand('ps aux | grep mongo');
+        console.log(ps.stdout);
 
-        console.log("--- USERS COUNT ---");
-        const r3 = await ssh.execCommand('mongosh universal_game_core_v1 --eval "db.users.countDocuments()"');
-        console.log(r3.stdout);
+        console.log('--- MONGOSH TEST ---');
+        const dbs = await ssh.execCommand('mongosh --eval "db.getMongo().getDBNames()" --quiet');
+        console.log('Databases:', dbs.stdout.trim());
 
-        ssh.dispose();
-    } catch (err) {
-        console.log(err);
-    }
+        console.log('\n--- COLLECTION CHECK (man2man) ---');
+        const colls = await ssh.execCommand('mongosh man2man --eval "db.getCollectionNames()" --quiet');
+        console.log('Collections:', colls.stdout.trim());
+
+    } catch (e) { console.error(e); } finally { ssh.dispose(); }
 }
-checkMongo();
+run();

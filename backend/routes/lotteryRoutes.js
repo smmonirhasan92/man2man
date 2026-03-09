@@ -66,7 +66,7 @@ router.get('/history', async (req, res) => {
 
 // [ADMIN] Create Slot
 router.post('/admin/create', protect, async (req, res) => {
-    if (req.user.user.role !== 'admin' && req.user.user.role !== 'superadmin') {
+    if (req.user.user.role !== 'admin' && req.user.user.role !== 'super_admin') {
         return res.status(403).json({ message: 'Admin Only' });
     }
     try {
@@ -101,7 +101,7 @@ router.post('/admin/create', protect, async (req, res) => {
 
 // [ADMIN] Force Draw
 router.post('/admin/draw', protect, async (req, res) => {
-    if (req.user.user.role !== 'admin' && req.user.user.role !== 'superadmin') {
+    if (req.user.user.role !== 'admin' && req.user.user.role !== 'super_admin') {
         return res.status(403).json({ message: 'Admin Only' });
     }
     try {
@@ -130,7 +130,7 @@ router.post('/admin/draw', protect, async (req, res) => {
 
 // [ADMIN] Update Slot
 router.put('/admin/:id', protect, async (req, res) => {
-    if (req.user.user.role !== 'admin' && req.user.user.role !== 'superadmin') return res.status(403).json({ message: 'Admin Only' });
+    if (req.user.user.role !== 'admin' && req.user.user.role !== 'super_admin') return res.status(403).json({ message: 'Admin Only' });
     try {
         const slot = await LotteryService.updateSlot(req.params.id, req.body);
         res.json(slot);
@@ -141,7 +141,7 @@ router.put('/admin/:id', protect, async (req, res) => {
 
 // [ADMIN] Delete Slot
 router.delete('/admin/:id', protect, async (req, res) => {
-    if (req.user.user.role !== 'admin' && req.user.user.role !== 'superadmin') return res.status(403).json({ message: 'Admin Only' });
+    if (req.user.user.role !== 'admin' && req.user.user.role !== 'super_admin') return res.status(403).json({ message: 'Admin Only' });
     try {
         await LotteryService.deleteSlot(req.params.id);
         res.json({ message: 'Slot Deleted' });
@@ -152,7 +152,7 @@ router.delete('/admin/:id', protect, async (req, res) => {
 
 // [ADMIN] NUKE ALL
 router.delete('/admin/nuke/all', protect, async (req, res) => {
-    if (req.user.user.role !== 'admin' && req.user.user.role !== 'superadmin') return res.status(403).json({ message: 'Admin Only' });
+    if (req.user.user.role !== 'admin' && req.user.user.role !== 'super_admin') return res.status(403).json({ message: 'Admin Only' });
     try {
         // Assuming LotteryManager has a method or we loop. 
         // For safety, let's use the service.

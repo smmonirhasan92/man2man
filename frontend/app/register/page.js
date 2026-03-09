@@ -298,7 +298,29 @@ function RegisterForm() {
                             Create Account
                         </h1>
                         <p className="text-slate-400 text-xs font-semibold tracking-widest mt-2 uppercase">USA Affiliate Network</p>
+
+                        {/* [NEW] Direct App Download for Referred Users */}
+                        {formData.referralCode && (
+                            <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                        <Smartphone className="w-5 h-5 text-emerald-400" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Official App</p>
+                                        <p className="text-xs font-bold text-white">Faster & Secure Access</p>
+                                    </div>
+                                </div>
+                                <a
+                                    href="https://usaaffiliatemarketing.com/app.apk"
+                                    className="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all active:scale-95"
+                                >
+                                    GET APK
+                                </a>
+                            </div>
+                        )}
                     </div>
+
 
                     {error && <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 text-red-200 rounded-xl text-sm font-bold text-center anim-shake">{error}</div>}
 

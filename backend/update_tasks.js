@@ -14,9 +14,9 @@ const HIGH_END_IMAGES = [
 ];
 
 async function updateDb() {
-    console.log("Connecting to Database:", process.env.MONGO_URI);
+    console.log("Connecting to Database:", process.env.MONGODB_URI);
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.MONGODB_URI);
         const ads = await TaskAd.find({});
         let updated = 0;
 

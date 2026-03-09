@@ -71,18 +71,23 @@ api.interceptors.response.use(
                 console.warn("[AUTH] Session Invalid/Expired. Clearing token and redirecting...");
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
+                document.cookie = 'token=; path=/; max-age=0'; // Clear cookie too
                 if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
                     window.location.href = '/login';
                 }
             } else if (error.response.status === 404 && isAuthCheck) {
-                // [DEBUG] Do NOT logout on 404 for now, just log it.
-                console.error("[AUTH] User not found (404) but keeping session for debug.");
+                // [FIX] User deleted from DB — clear session and force login
+                console.warn("[AUTH] User account not found. Clearing session and redirecting to login...");
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('active_server_phone');
+                localStorage.removeItem('active_server_id');
+                document.cookie = 'token=; path=/; max-age=0'; // Clear cookie too
+                if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+                    window.location.href = '/login';
+                }
             } else {
-                // [DEBUG PROBE] Log FULL details for User Screenshot
-                console.error(`❌ [API_CRASH] ${error.config.url}`);
-                console.error("👇 ERROR DETAILS (Show this to Developer) 👇");
-                console.error(JSON.stringify(error.response.data, null, 2));
-                console.error("👆 -------------------------------------- 👆");
+                // Silent — don't pollute console in production
             }
         }
         return Promise.reject(error);

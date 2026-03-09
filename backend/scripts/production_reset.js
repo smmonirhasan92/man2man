@@ -1,67 +1,70 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const mongoose = require('mongoose');
-const User = require('../modules/user/UserModel');
-const Transaction = require('../modules/wallet/TransactionModel');
-const P2POrder = require('../modules/p2p/P2POrderModel');
-const Notification = require('../modules/notification/NotificationModel');
+const dotenv = require('dotenv');
+const path = require('path');
 
-async function resetSystem() {
-    console.log("=========================================");
-    console.log("🚨 WARNING: INITIATING PRODUCTION RESET 🚨");
-    console.log("=========================================");
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
-    try {
-        await mongoose.connect(process.env.DB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        console.log("✅ Database Connected.");
+async function reset() {
+    const dbs = ['man2man', 'universal_game_core_v1'];
 
-        // 1. Delete all users EXCEPT 'super_admin'
-        const usersDeleted = await User.deleteMany({ role: { $ne: 'super_admin' } });
-        console.log(`🗑️ Deleted Users: ${usersDeleted.deletedCount}`);
-
-        // 2. We should optionally reset the super_admin's wallet and stats to zero, but we will leave them intact 
-        // to prevent accidentally ruining the admin's own manual setup or test balances.
-        const admins = await User.find({ role: 'super_admin' });
-        console.log(`🛡️ Protected Super Admins: ${admins.length}`);
-
-        // 3. Delete all Transactions
-        const txDeleted = (await Transaction.deleteMany({})).deletedCount;
-        console.log(`🗑️ Deleted Transactions: ${txDeleted}`);
-
-        // 4. Delete Withdrawals & Deposits (Merged into Transactions)
-        console.log(`Notice: Withdrawals and Deposits are now managed within Transactions.`);
-
-        // 5. Delete P2P Orders
+    for (const dbName of dbs) {
         try {
-            const p2pOrderDeleted = (await P2POrder.deleteMany({})).deletedCount;
-            console.log(`🗑️ Deleted P2P Orders: ${p2pOrderDeleted}`);
-        } catch (e) { console.log('Notice: P2P skip'); }
+            const uri = `mongodb://127.0.0.1:27017/${dbName}`;
+            await mongoose.connect(uri);
+            console.log(`\n--- Purging Database: ${dbName} ---`);
 
-        // 6. Delete Lottery Tickets
-        console.log('Notice: LotteryTicket model deprecated.');
+            // 1. Identify Super Admin to preserve
+            const superAdmins = await mongoose.connection.db.collection('users').find({ role: 'super_admin' }).toArray();
+            if (superAdmins.length === 0) {
+                console.warn(`WARNING: No Super Admin found in ${dbName}. Skipping user purge for safety.`);
+            } else {
+                const superAdminIds = superAdmins.map(u => u._id);
+                console.log(`Preserving ${superAdminIds.length} Super Admin(s).`);
 
-        // 7. Delete Task Histories
-        console.log('Notice: TaskHistory model deprecated.');
+                // 2. Delete all other users
+                const userDelete = await mongoose.connection.db.collection('users').deleteMany({ _id: { $nin: superAdminIds } });
+                console.log(`Deleted ${userDelete.deletedCount} non-admin users.`);
+            }
 
-        // 8. Delete Notifications
-        try {
-            const notifDeleted = (await Notification.deleteMany({})).deletedCount;
-            console.log(`🗑️ Deleted User Notifications: ${notifDeleted}`);
-        } catch (e) { console.log('Notice: Notification skip'); }
+            // 3. Clear all transactional/activity collections
+            const collectionsToClear = [
+                'lotteryslots', 'userplans', 'gamelogs', 'gamewallets',
+                'transactions', 'notifications', 'supportmessages',
+                'p2porders', 'system_logs', 'transactionledgers',
+                'p2ptrades', 'p2pmessages', 'taskads'
+            ];
 
-        console.log("=========================================");
-        console.log("✅ PRODUCTION RESET COMPLETED SUCCESSFULLY ✅");
-        console.log("=========================================");
+            for (const col of collectionsToClear) {
+                const result = await mongoose.connection.db.collection(col).deleteMany({});
+                console.log(`Cleared collection '${col}': ${result.deletedCount} records.`);
+            }
 
-    } catch (err) {
-        console.error("❌ Reset Error:", err);
-    } finally {
-        await mongoose.disconnect();
-        process.exit(0);
+            // 4. Reset Super Admin balances
+            if (superAdmins.length > 0) {
+                const walletReset = await mongoose.connection.db.collection('users').updateMany(
+                    { role: 'super_admin' },
+                    {
+                        $set: {
+                            'wallet.main': 0,
+                            'wallet.income': 0,
+                            'wallet.p2p_locked': 0,
+                            referralCount: 0,
+                            activePlanId: null
+                        }
+                    }
+                );
+                console.log(`Reset wallets for ${walletReset.modifiedCount} Super Admins.`);
+            }
+
+            await mongoose.disconnect();
+            console.log(`--- Purge of ${dbName} Complete ---`);
+
+        } catch (err) {
+            console.error(`ERROR during reset of ${dbName}:`, err);
+            if (mongoose.connection.readyState !== 0) await mongoose.disconnect();
+        }
     }
 }
 
-resetSystem();
+// Security confirmation check could be added here if run interactively
+reset();

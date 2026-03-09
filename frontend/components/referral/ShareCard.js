@@ -1,14 +1,19 @@
 'use client';
-import { useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
+
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
 import { Download, Share2, Layers, Crown } from 'lucide-react';
 
-export default function ShareCard({ user, stats }) {
+function ShareCard({ user, stats }) {
+
+
     const cardRef = useRef(null);
     const [loading, setLoading] = useState(false);
 
     const referralLink = `https://usaaffiliatemarketing.com/register?ref=${user.referralCode}`;
+    const downloadLink = "#"; // [UPDATING] Replace with actual APK link if provided
+
 
     const handleDownload = async () => {
         if (!cardRef.current) return;
@@ -47,8 +52,10 @@ export default function ShareCard({ user, stats }) {
                             <span className="text-xs font-bold text-amber-200 uppercase tracking-widest">Empire Builder</span>
                         </div>
                         <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 leading-tight">
-                            JOIN MY<br />NETWORK
+                            JOIN MY<br />NETWORK 🌐
                         </h1>
+                        <p className="text-[10px] text-amber-500/80 font-bold uppercase tracking-[0.2em] mt-1">Download & Earn</p>
+
                     </div>
 
                     {/* Stats Circle */}
@@ -95,3 +102,5 @@ export default function ShareCard({ user, stats }) {
         </div>
     );
 }
+
+export default memo(ShareCard);

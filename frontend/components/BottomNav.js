@@ -2,32 +2,39 @@
 import Link from 'next/link';
 import { Home, Wallet, Gamepad2, User, Settings, Zap, Ticket, Globe } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState, useMemo } from 'react';
 
-export default function BottomNav() {
+
+function BottomNav() {
+
+
     const pathname = usePathname();
     const [isVisible, setIsVisible] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Routes where BottomNav should be HIDDEN
-    const hiddenRoutes = ['/', '/register', '/admin', '/agent'];
-    const isHidden = hiddenRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
+    // [OPTIMIZED] Memoize visibility check to prevent re-renders on every scroll/interaction
+    const isHidden = useMemo(() => {
+        const hiddenRoutes = ['/', '/register', '/admin', '/agent'];
+        return hiddenRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
+    }, [pathname]);
 
     useEffect(() => {
-        setTimeout(() => setIsVisible(true), 100);
+        const timer = setTimeout(() => setIsVisible(true), 150);
+        return () => clearTimeout(timer);
     }, []);
 
     if (isHidden) return null;
 
-    const navItems = [
-        { name: 'Home', href: '/dashboard', icon: Home },
-        // { name: 'Games', href: '/game-center', icon: Gamepad2 }, // [REMOVED]
 
+    // [OPTIMIZED] Memoize nav items to prevent object creation re-renders
+    const navItems = useMemo(() => [
+        { name: 'Home', href: '/dashboard', icon: Home },
         { name: 'Lottery', href: '/lottery', icon: Ticket },
         { name: 'P2P Market', href: '/p2p', icon: Globe, isFab: true },
         { name: 'Wallet', href: '/wallet/recharge', icon: Wallet },
-        { name: 'Member', action: () => setIsMenuOpen(!isMenuOpen), icon: User },
-    ];
+        { name: 'Member', action: () => setIsMenuOpen(prev => !prev), icon: User },
+    ], []);
+
 
     return (
         <>
@@ -117,3 +124,5 @@ export default function BottomNav() {
         </>
     );
 }
+
+export default memo(BottomNav);
