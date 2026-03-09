@@ -9,8 +9,7 @@ class ChatController {
                 return res.status(400).json({ message: "Message is required." });
             }
 
-            // Using unified Local AI Brain from SystemBrainService
-            // Pass the first user interaction as sessionId for history tracking if wanted
+            // Centralized AI Brain
             const reply = await SystemBrain.chat(message, null, req.ip);
 
             return res.json({ reply });
