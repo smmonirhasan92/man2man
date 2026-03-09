@@ -168,11 +168,17 @@ export default function P2PDashboard({ initialMode, onClose }) {
     };
 
     const handleTradeAction = (order) => {
-        // [LIVE BALANCE CHECK] For SELL ads only
+        // [LIVE BALANCE CHECK] For SELL ads only (We are buying)
         if (order.type === 'SELL') {
             const liveAvailable = order.userId?.wallet?.main || 0;
             const maxLimit = Math.min(order.amount, liveAvailable);
             if (maxLimit <= 0) return toast.error("Seller has no balance available right now.");
+        }
+
+        // [LIVE BALANCE CHECK] For BUY ads only (We are selling)
+        if (order.type === 'BUY') {
+            const myBalance = user?.wallet?.main || 0;
+            if (myBalance <= 0) return toast.error("Your balance is zero. You cannot sell NXS.");
         }
 
         setBuyModalConfig({ isOpen: true, order });
@@ -565,7 +571,13 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     fetchOrders();
                 }}
             />
-            <BuyOrderModal isOpen={buyModalConfig.isOpen} onClose={() => setBuyModalConfig({ isOpen: false, order: null })} order={buyModalConfig.order} onConfirm={confirmTrade} />
+            <BuyOrderModal
+                isOpen={buyModalConfig.isOpen}
+                onClose={() => setBuyModalConfig({ isOpen: false, order: null })}
+                order={buyModalConfig.order}
+                onConfirm={confirmTrade}
+                currentUserBalance={user?.wallet?.main || 0}
+            />
             {ratingTradeId && <RatingModal tradeId={ratingTradeId} onClose={() => setRatingTradeId(null)} onSuccess={() => setRatingTradeId(null)} />}
             <ConfirmationModal isOpen={modal.isOpen} onClose={() => setModal({ ...modal, isOpen: false })} onConfirm={modal.onConfirm} title={modal.title} message={modal.message} confirmText={modal.confirmText || 'Confirm'} />
         </div>

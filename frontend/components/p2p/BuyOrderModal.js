@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { X, DollarSign, Wallet } from 'lucide-react';
 
-export default function BuyOrderModal({ isOpen, onClose, order, onConfirm }) {
+export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, currentUserBalance = 0 }) {
     const [amount, setAmount] = useState('');
 
     if (!isOpen || !order) return null;
 
-    const liveAvailable = order.userId?.wallet?.main || 0;
+    // Logic: 
+    // If order type is SELL, we are BUYING. The limit is the SELLER'S (order creator) balance.
+    // If order type is BUY, we are SELLING. The limit is OUR (current user) balance.
+    const liveAvailable = order.type === 'SELL' ? (order.userId?.wallet?.main || 0) : currentUserBalance;
     const rate = order.rate || 1.3; // Fallback if no rate
     const maxLimit = Math.min(order.amount, liveAvailable);
 
