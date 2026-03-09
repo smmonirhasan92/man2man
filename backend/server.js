@@ -138,7 +138,8 @@ app.use('/api/lottery', require('./routes/lotteryRoutes')); // [NEW] Dedicated L
 app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
 app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
-app.use('/api/support', supportRoutes); // [NEW] Support Ticketing System
+const supportRoutesPath = path.join(__dirname, 'routes', 'supportRoutes.js');
+app.use('/api/support', require(supportRoutesPath)); // [NEW] Support Ticketing System
 // app.use('/api/settings', settingsRoutes); // Cleaned
 
 // --- GLOBAL ERROR HANDLER ---
