@@ -138,8 +138,15 @@ app.use('/api/lottery', require('./routes/lotteryRoutes')); // [NEW] Dedicated L
 app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
 app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
-const supportRoutesPath = path.join(__dirname, 'routes', 'supportRoutes.js');
-app.use('/api/support', require(supportRoutesPath)); // [NEW] Support Ticketing System
+
+// [FIX] Support system registered safely to prevent crashes if files are missing
+try {
+    const supportRoutes = require('./routes/supportRoutes');
+    app.use('/api/support', supportRoutes);
+} catch (e) {
+    console.error('Support Routes failed to load:', e.message);
+}
+
 // app.use('/api/settings', settingsRoutes); // Cleaned
 
 // --- GLOBAL ERROR HANDLER ---
