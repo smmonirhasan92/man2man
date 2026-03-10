@@ -70,29 +70,32 @@ export default function PWAInstallPrompt() {
             return;
         }
 
-        // If PWA install prompt is available, use it (Native experience)
+        // If PWA install prompt is available, use it (Seamless native Experience)
         if (deferredPrompt) {
             try {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
                     setShow(false);
-                    toast.success('Starting installation...');
+                    toast.success('Perfect! App is installing...');
                 }
                 setDeferredPrompt(null);
                 return;
             } catch (err) {
-                console.error('PWA prompt failed, falling back to direct download');
+                console.error('Seamless prompt failed');
             }
         }
 
-        // FALLBACK / DIRECT DOWNLOAD: Exactly what the user wants.
-        // This triggers the browser's download manager for the APK file.
-        toast.loading('Downloading app...', { duration: 2000 });
-        window.location.href = "/app.apk";
+        // SEAMLESS FALLBACK: Teaching the user how to install the "Safe Way"
+        // This is exactly how it worked before - no scary APK warnings.
+        toast("Safe Install: Tap the browser menu (⋮) and select 'Install App'", {
+            duration: 6000,
+            icon: '📲',
+            style: { border: '1px solid #3b82f6' }
+        });
 
-        // Hide banner after initiating download to stop the annoyance
-        setTimeout(() => setShow(false), 3000);
+        // After a delay, maybe show them the direct download button if they really want it
+        // but for now, we focus on the SEAMLESS experience.
     };
 
     const handleDismiss = () => {
