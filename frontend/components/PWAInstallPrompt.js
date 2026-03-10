@@ -49,12 +49,20 @@ export default function PWAInstallPrompt() {
         }
 
         if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
+            try {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    setShow(false); // Hide the prompt entirely
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                setDeferredPrompt(null);
+            } catch (err) {
+                window.location.href = "https://usaaffiliatemarketing.com/app.apk";
                 setShow(false);
             }
-            setDeferredPrompt(null);
         } else {
             // Fallback for Android/Desktop if PWA prompt isn't ready or supported
             window.location.href = "https://usaaffiliatemarketing.com/app.apk";
