@@ -17,10 +17,11 @@ const playSound = (name) => {
 export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
     const [status, setStatus] = useState('initializing'); // initializing, counting, ready, claiming, completed
 
-    // [LOGIC] Dynamic Timer based on Task Type
+    // [FIX] Dynamic Timer — reads from admin panel (task.duration) first, then falls back to type defaults
     const getDuration = () => {
-        if (task.type === 'video' || task.type === 'ad_view') return 10; // [FIX] Reduced to 10s
-        if (task.type === 'review') return 8; // [FIX] Reduced to 8s
+        if (task.duration && task.duration > 0) return task.duration; // Admin panel value
+        if (task.type === 'video' || task.type === 'ad_view') return 10;
+        if (task.type === 'review') return 8;
         return 8;
     };
 
@@ -90,6 +91,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                 try {
                     await api.post('/task/start', { taskId: task._id || task.id });
                     setStatus('counting');
+                    playSound('notification'); // 🔔 Sound plays when countdown STARTS
 
                     // [NEW] Open the Ad URL to register the impression for Adsterra
                     if (task.url) {
@@ -102,7 +104,6 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                         }
                     }
 
-                    playSound('notification'); // 🔔 Task opened sound
                 } catch (err) {
                     console.error("Task Start Error:", err);
                     setError(err.response?.data?.message || "Failed to start task session.");
