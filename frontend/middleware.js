@@ -12,12 +12,14 @@ const PUBLIC_PREFIXES = [
     '/manifest.json',
     '/sw.js',
     '/app.apk',
+    '/app-icon.png',
+    '/networking_globe.png',
     '/icon.png',
     '/globe.svg',
     '/logo.png',
     '/icons',
     '/sounds',
-    '/admin',   // Admin panel has its own role check
+    '/admin',
     '/api',
 ];
 
