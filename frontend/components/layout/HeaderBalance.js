@@ -8,7 +8,7 @@ export default function HeaderBalance({ balance }) {
     const [viewState, setViewState] = useState(0);
 
     const rawBalance = parseFloat(balance || 0); // Always USD (e.g. 10000)
-    const rate = 120; // 1 USD = 120 USD
+    const rate = 50; // 1 USD = 50 NXS (i.e. 1 NXS = $0.02)
 
     const handleToggle = (e) => {
         e.stopPropagation(); // Prevent deposit click

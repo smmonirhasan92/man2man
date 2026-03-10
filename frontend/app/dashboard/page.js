@@ -233,7 +233,10 @@ function DashboardContent() {
 function BalanceDisplay({ user }) {
     const rawBalance = parseFloat(user?.wallet_balance || 0);
     const income = parseFloat(user?.wallet?.income || 0);
-    const usdTotal = ((rawBalance + income) / 120).toFixed(2);
+    const rate = 50; // 1 USD = 50 NXS (i.e. 1 NXS = $0.02)
+    const usdTotal = ((rawBalance + income) / rate).toFixed(2);
+    const mainUsd = (rawBalance / rate).toFixed(2);
+    const incomeUsd = (income / rate).toFixed(2);
 
     return (
         <div className="w-full bg-[#0d1f35] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
@@ -248,12 +251,12 @@ function BalanceDisplay({ user }) {
             <div className="flex items-center gap-4 pt-4 border-t border-white/5">
                 <div className="flex-1">
                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Purchased NXS</p>
-                    <p className="text-sm font-bold text-white">${rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-bold text-white">${mainUsd}</p>
                 </div>
                 <div className="w-px h-8 bg-white/10"></div>
                 <div className="flex-1 text-right">
                     <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mb-1">Total Income</p>
-                    <p className="text-sm font-bold text-white">${income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-bold text-white">${incomeUsd}</p>
                 </div>
             </div>
         </div>
