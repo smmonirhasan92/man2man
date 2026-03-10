@@ -90,8 +90,8 @@ function DashboardContent() {
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">
 
                 {/* 1. Header (Compact Style Recreated) */}
-                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsDrawerOpen(true)}
                             className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden shadow-lg bg-white/10 hover:scale-105 transition active:scale-95"
@@ -114,27 +114,10 @@ function DashboardContent() {
                             </div>
                         </div>
                     </div>
-                    {/* Compact Stacked Wallet Display — NO more side-by-side squeeze */}
-                    <div
-                        className="flex flex-col items-end gap-0.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md cursor-pointer select-none shrink-0"
-                        onClick={() => window.location.href = '/wallet/recharge'}
-                    >
-                        {/* Income Row */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] text-green-400 font-bold uppercase tracking-wider">Income</span>
-                            <span className="text-sm font-black font-mono text-green-400 leading-none">
-                                ${(Number(user?.wallet?.income || 0) * 0.02).toFixed(2)}
-                            </span>
-                        </div>
-                        {/* Divider */}
-                        <div className="w-full h-px bg-white/10 my-0.5" />
-                        {/* Main Balance Row */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Main</span>
-                            <span className="text-sm font-black font-mono text-white leading-none">
-                                ••••••
-                            </span>
-                        </div>
+                    {/* Interactive Tap-to-View Wallet Display */}
+                    <div className="flex items-center gap-2">
+                        <IncomeDisplay amount={user?.wallet?.income} />
+                        <HeaderBalance balance={user?.wallet_balance} />
                     </div>
                 </div>
 
