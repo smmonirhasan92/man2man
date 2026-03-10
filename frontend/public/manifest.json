@@ -4,9 +4,18 @@
   "description": "Premium Gaming, Lottery & Secure Wallet System",
   "start_url": "/?source=pwa",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "minimal-ui"
+  ],
   "background_color": "#0a192f",
   "theme_color": "#0a192f",
-  "orientation": "any",
+  "orientation": "portrait",
+  "categories": [
+    "finance",
+    "games",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -49,17 +58,6 @@
       "name": "Send Money",
       "short_name": "Send",
       "url": "/wallet/send",
-      "icons": [
-        {
-          "src": "/logo.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Tasks",
-      "short_name": "Tasks",
-      "url": "/tasks/work",
       "icons": [
         {
           "src": "/logo.png",

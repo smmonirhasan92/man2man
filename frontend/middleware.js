@@ -9,6 +9,14 @@ const PUBLIC_PREFIXES = [
     '/static',
     '/uploads',
     '/favicon.ico',
+    '/manifest.json',
+    '/sw.js',
+    '/app.apk',
+    '/icon.png',
+    '/globe.svg',
+    '/logo.png',
+    '/icons',
+    '/sounds',
     '/admin',   // Admin panel has its own role check
     '/api',
 ];
