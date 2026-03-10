@@ -70,7 +70,7 @@ export default function PWAInstallPrompt() {
             return;
         }
 
-        // If PWA install prompt is available, use it (Seamless native Experience)
+        // 1. Try PWA Native Prompt (Seamless & Safe)
         if (deferredPrompt) {
             try {
                 deferredPrompt.prompt();
@@ -78,24 +78,23 @@ export default function PWAInstallPrompt() {
                 if (outcome === 'accepted') {
                     setShow(false);
                     toast.success('Perfect! App is installing...');
+                    setDeferredPrompt(null);
+                    return;
                 }
-                setDeferredPrompt(null);
-                return;
             } catch (err) {
                 console.error('Seamless prompt failed');
             }
         }
 
-        // SEAMLESS FALLBACK: Teaching the user how to install the "Safe Way"
-        // This is exactly how it worked before - no scary APK warnings.
-        toast("Safe Install: Tap the browser menu (⋮) and select 'Install App'", {
-            duration: 6000,
-            icon: '📲',
-            style: { border: '1px solid #3b82f6' }
-        });
+        // 2. Fallback to Direct APK (The "Old Way" the user wants)
+        toast.loading('Starting direct download...', { duration: 2000 });
 
-        // After a delay, maybe show them the direct download button if they really want it
-        // but for now, we focus on the SEAMLESS experience.
+        // This is the direct link to the app file
+        setTimeout(() => {
+            window.location.href = "/app.apk";
+            // Hide banner after a few seconds so it doesn't stay stuck
+            setTimeout(() => setShow(false), 5000);
+        }, 500);
     };
 
     const handleDismiss = () => {
