@@ -90,7 +90,7 @@ export default function PWAInstallPrompt() {
                 <div className="flex items-center gap-3 relative z-10">
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-[#0a192f] shadow-inner flex items-center justify-center p-2.5 border border-blue-500/50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/globe.svg" alt="Networking Logo" className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                        <img src="/networking_globe.png" alt="Networking Logo" className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                     </div>
                     <div>
                         <h4 className="text-white font-black text-base tracking-wide flex items-center gap-1">
