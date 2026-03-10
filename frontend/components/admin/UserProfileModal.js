@@ -115,12 +115,12 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 <p className="text-xl font-black text-yellow-500">{profile.loyaltyScore || 0}</p>
                             </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Total Deposited</p>
+                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Deposited (USD)</p>
                                 <p className="text-xl font-black text-emerald-400">${profile.financials?.totalDeposited || 0}</p>
                             </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Total Withdrawn</p>
-                                <p className="text-xl font-black text-rose-400">${profile.financials?.totalWithdrawn || 0}</p>
+                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Withdrawn</p>
+                                <p className="text-xl font-black text-rose-400">{profile.financials?.totalWithdrawn || 0} NXS</p>
                             </div>
                         </div>
 
@@ -130,19 +130,19 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div className="flex justify-between items-center mb-2">
-                                        <p className="text-[10px] uppercase font-bold text-slate-500">Total Earned (Tasks/Refs)</p>
-                                        <Coins className="w-4 h-4 text-yellow-500" />
+                                        <p className="text-[10px] uppercase font-bold text-slate-500">Total Earned</p>
+                                        <Wallet className="w-4 h-4 text-indigo-400" />
                                     </div>
-                                    <p className="text-xl font-black text-yellow-500">${profile.financials?.totalEarned?.toFixed(2) || 0}</p>
-                                    <p className="text-[9px] text-slate-500 mt-1">Total revenue user generated from system activities</p>
+                                    <p className="text-xl font-black text-indigo-400">{profile.financials?.totalEarned?.toFixed(2) || 0} NXS</p>
+                                    <p className="text-[9px] text-slate-500 mt-1">Rewards ~${((profile.financials?.totalEarned || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
                                 </div>
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div className="flex justify-between items-center mb-2">
-                                        <p className="text-[10px] uppercase font-bold text-slate-500">Platform Spend (Plans/Fees)</p>
-                                        <Activity className="w-4 h-4 text-blue-500" />
+                                        <p className="text-[10px] uppercase font-bold text-slate-500">Total Spent</p>
+                                        <ShoppingCart className="w-4 h-4 text-amber-500" />
                                     </div>
-                                    <p className="text-xl font-black text-blue-400">${profile.financials?.totalSpent?.toFixed(2) || 0}</p>
-                                    <p className="text-[9px] text-slate-500 mt-1">Total user spent back into the system</p>
+                                    <p className="text-xl font-black text-amber-400">{profile.financials?.totalSpent?.toFixed(2) || 0} NXS</p>
+                                    <p className="text-[9px] text-slate-500 mt-1">Purchases ~${((profile.financials?.totalSpent || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
                                 </div>
                             </div>
 
@@ -152,9 +152,9 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                     <Smartphone className="w-4 h-4 text-emerald-500" />
                                 </div>
                                 <p className={`text-xl font-black ${(profile.financials?.p2pNet || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {(profile.financials?.p2pNet || 0) >= 0 ? '+' : ''}${profile.financials?.p2pNet?.toFixed(2) || 0}
+                                    {(profile.financials?.p2pNet || 0) >= 0 ? '+' : ''}{profile.financials?.p2pNet?.toFixed(2) || 0} NXS
                                 </p>
-                                <p className="text-[9px] text-slate-500 mt-1">Net flow of funds via P2P transfers</p>
+                                <p className="text-[9px] text-slate-500 mt-1">Net Flow ~${((profile.financials?.p2pNet || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
                             </div>
 
                             {/* Net Settlement Indicator */}
@@ -163,7 +163,10 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
                                 }`}>
                                 <div>
-                                    <p className="text-[10px] uppercase font-bold opacity-70">Platform Position</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-[10px] uppercase font-bold opacity-70">Platform Position</p>
+                                        <span className="text-[8px] bg-white/10 px-1.5 py-0.5 rounded uppercase font-bold">1 USD = {profile.financials?.currencyRatio || 50} NXS</span>
+                                    </div>
                                     <p className="text-sm font-black">
                                         {(profile.financials?.netAccounting || 0) >= 0
                                             ? "System Owes User (Liability)"
@@ -173,13 +176,14 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xl font-black">${Math.abs(profile.financials?.netAccounting || 0).toFixed(2)}</p>
+                                    <p className="text-[9px] opacity-60">Normalized Value (USD)</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* 3.5 [NEW] Purchased Packages History */}
                         <div className="mb-8">
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Purchased Packages</h4>
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Purchased Packages (NXS)</h4>
                             <div className="space-y-2">
                                 {profile.planHistory && profile.planHistory.length > 0 ? (
                                     profile.planHistory.map((item, idx) => (
@@ -189,7 +193,7 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                                 <p className="text-[10px] text-slate-500">{new Date(item.createdAt).toLocaleString()}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-sm font-black text-rose-400">-${Math.abs(item.amount).toFixed(2)}</p>
+                                                <p className="text-sm font-black text-rose-400">-{Math.abs(item.amount).toFixed(0)} NXS</p>
                                                 <span className="text-[9px] font-bold text-slate-600 uppercase">Completed</span>
                                             </div>
                                         </div>

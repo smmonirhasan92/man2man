@@ -532,57 +532,61 @@ exports.getUserDetails = async (req, res) => {
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Calculate total deposits and withdrawals for this user (covering all transaction types used in the app)
-        const deposits = await Transaction.aggregate([
+        // [CURRENCY FIX] Define USD vs NXS Buckets
+        // USD: Real money flow (Deposits, Mobile Recharge, Admin Adjustments in USD)
+        // NXS: Ecosystem tokens (Task Rewards, Commissions, Plan Purchases, Withdrawals)
+        // Ratio: 1 USD = 50 NXS
+        const NXS_RATIO = 50;
+
+        const usd_deposits = await Transaction.aggregate([
             { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge', 'admin_credit'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        const withdrawals = await Transaction.aggregate([
+        const nxs_withdrawals = await Transaction.aggregate([
             { $match: { userId: user._id, type: { $in: ['withdraw', 'cash_out', 'admin_debit'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        // [NEW] Calculate Total Earnings (Income from Platform)
-        const earnings = await Transaction.aggregate([
+        const nxs_earnings = await Transaction.aggregate([
             { $match: { userId: user._id, type: { $in: ['task_reward', 'referral_commission', 'referral_bonus', 'lottery_win', 'game_win'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        // [NEW] Calculate Total Spent (purchases, fees, etc)
-        const spent = await Transaction.aggregate([
+        const nxs_spent = await Transaction.aggregate([
             { $match: { userId: user._id, type: { $in: ['plan_purchase', 'lottery_buy', 'game_bet', 'fee'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        // [NEW] Calculate P2P Movement (Inflow: receive, Outflow: send)
-        const p2pIn = await Transaction.aggregate([
+        const nxs_p2pIn = await Transaction.aggregate([
             { $match: { userId: user._id, type: 'p2p_receive', status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
-        const p2pOut = await Transaction.aggregate([
+
+        const nxs_p2pOut = await Transaction.aggregate([
             { $match: { userId: user._id, type: 'p2p_send', status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        const totalDep = deposits[0]?.total || 0;
-        const totalWit = withdrawals[0]?.total || 0;
-        const totalEarn = earnings[0]?.total || 0;
-        const totalSpent = spent[0]?.total || 0;
-        const totalP2PIn = p2pIn[0]?.total || 0;
-        const totalP2POut = p2pOut[0]?.total || 0;
+        const totalUsdIn = usd_deposits[0]?.total || 0;
+        const totalNxsOut = (nxs_withdrawals[0]?.total || 0) + (nxs_spent[0]?.total || 0) + (nxs_p2pOut[0]?.total || 0);
+        const totalNxsIn = (nxs_earnings[0]?.total || 0) + (nxs_p2pIn[0]?.total || 0);
+
+        // Normalize everything to USD for "Platform Position"
+        const normalizedNxsIn = totalNxsIn / NXS_RATIO;
+        const normalizedNxsOut = totalNxsOut / NXS_RATIO;
 
         user.financials = {
-            totalDeposited: totalDep,
-            totalWithdrawn: totalWit,
-            totalEarned: totalEarn,
-            totalSpent: totalSpent,
-            totalP2PReceived: totalP2PIn,
-            totalP2PSent: totalP2POut,
-            p2pNet: totalP2PIn - totalP2POut,
-            // Accounting: (Amount In - Amount Out)
-            // If positive, system effectively holds this 'liability' for the user
-            netAccounting: (totalDep + totalEarn + totalP2PIn) - (totalWit + totalSpent + totalP2POut)
+            totalDeposited: totalUsdIn,
+            totalWithdrawn: nxs_withdrawals[0]?.total || 0,
+            totalEarned: nxs_earnings[0]?.total || 0,
+            totalSpent: nxs_spent[0]?.total || 0,
+            totalP2PReceived: nxs_p2pIn[0]?.total || 0,
+            totalP2PSent: nxs_p2pOut[0]?.total || 0,
+            p2pNet: (nxs_p2pIn[0]?.total || 0) - (nxs_p2pOut[0]?.total || 0),
+            currencyRatio: NXS_RATIO,
+            // (Real USD In) + (NXS Income in USD) - (NXS Outgo in USD)
+            netAccounting: totalUsdIn + normalizedNxsIn - normalizedNxsOut
         };
 
         // [NEW] Fetch Plan Purchase History
