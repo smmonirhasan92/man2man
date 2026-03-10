@@ -7,6 +7,7 @@ export default function PWAInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [show, setShow] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
     const audioRef = useRef(null);
 
     useEffect(() => {
@@ -23,7 +24,17 @@ export default function PWAInstallPrompt() {
             setDeferredPrompt(e);
         };
 
+        const updateHandler = () => {
+            setIsUpdating(true);
+        };
+
         window.addEventListener('beforeinstallprompt', handler);
+        window.addEventListener('pwaUpdateAvailable', updateHandler);
+
+        // Check if update is already flagged
+        if (typeof window !== 'undefined' && window.updateAvailable) {
+            setIsUpdating(true);
+        }
 
         // Check standalone mode (already installed)
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -42,15 +53,25 @@ export default function PWAInstallPrompt() {
             return () => {
                 clearTimeout(timer);
                 window.removeEventListener('beforeinstallprompt', handler);
+                window.removeEventListener('pwaUpdateAvailable', updateHandler);
             };
         }
 
-        return () => window.removeEventListener('beforeinstallprompt', handler);
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handler);
+            window.removeEventListener('pwaUpdateAvailable', updateHandler);
+        };
     }, []);
 
     const handleInstall = async () => {
+        if (isUpdating) {
+            // If it's an update, let the AutoUpdater handle it by reloading
+            window.location.reload();
+            return;
+        }
+
         if (isIOS) {
-            alert("To install: Tap the 'Share' icon at the bottom, then select 'Add to Home Screen'.");
+            toast("To install: Tap 'Share' at the bottom, then 'Add to Home Screen'.", { icon: '📱' });
             return;
         }
 
@@ -60,17 +81,16 @@ export default function PWAInstallPrompt() {
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
                     setShow(false);
+                    toast.success('Installation started!');
                 }
                 setDeferredPrompt(null);
             } catch (err) {
-                // Fallback on error
-                window.location.href = "https://usaaffiliatemarketing.com/app.apk";
-                setShow(false);
+                // Fallback on error - don't redirect to broken link
+                toast("Please tap the browser menu (⋮) and select 'Install App'", { icon: '⚙️' });
             }
         } else {
             // Fallback for Android/Desktop if PWA prompt isn't ready or supported
-            window.location.href = "https://usaaffiliatemarketing.com/app.apk";
-            setShow(false);
+            toast("To install: Tap the browser menu (⋮) and select 'Install App' or 'Add to Home screen'", { duration: 5000, icon: '📲' });
         }
     };
 
@@ -97,7 +117,7 @@ export default function PWAInstallPrompt() {
                             USA Affiliate <span className="text-[10px] bg-blue-600 px-1.5 py-0.5 rounded text-white font-bold">PRO</span>
                         </h4>
                         <p className="text-blue-400 text-[10px] font-bold uppercase tracking-wider mt-0.5 opacity-90">
-                            {isIOS ? 'Install on iOS' : 'Download Android App'}
+                            {isUpdating ? 'New Version Ready' : (isIOS ? 'Install on iOS' : 'Download Android App')}
                         </p>
                     </div>
                 </div>
@@ -112,7 +132,7 @@ export default function PWAInstallPrompt() {
                         onClick={handleInstall}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-blue-500/40 hover:scale-105 active:scale-95 transition-all tracking-wide uppercase flex items-center gap-1.5 border border-white/10"
                     >
-                        {isIOS ? 'How?' : 'GET'} <Download className="w-3 h-3" />
+                        {isUpdating ? 'Update' : (isIOS ? 'How?' : 'GET')} <Download className="w-3 h-3" />
                     </button>
                 </div>
             </div>

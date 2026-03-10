@@ -17,6 +17,13 @@ export default function AutoUpdater() {
                 console.log(`A new service worker has installed, but it can't activate ` +
                     `until all tabs running the current version have safely been closed.`);
 
+                // Set global flag for other components
+                if (typeof window !== 'undefined') {
+                    window.updateAvailable = true;
+                    // Trigger a custom event to notify listeners
+                    window.dispatchEvent(new Event('pwaUpdateAvailable'));
+                }
+
                 // Show a non-intrusive toast informing the user
                 toast.success('App update available! Updating automatically...', {
                     icon: '🚀',
@@ -45,8 +52,11 @@ export default function AutoUpdater() {
                     console.error('Failed to clear caches:', err);
                 }
 
-                // Reload the page to load the new cached assets instantly
-                window.location.reload();
+                // Add a small delay so user can actually see the "Updating" toast
+                // Also helps prevent aggressive reload loops if something is stuck
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             });
 
             wb.register();
