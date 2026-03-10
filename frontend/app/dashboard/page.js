@@ -114,10 +114,27 @@ function DashboardContent() {
                             </div>
                         </div>
                     </div>
-                    {/* Interactive Tap-to-View Wallet Display */}
-                    <div className="flex items-center gap-2">
-                        <IncomeDisplay amount={user?.wallet?.income} />
-                        <HeaderBalance balance={user?.wallet_balance} />
+                    {/* Compact Stacked Wallet Display — NO more side-by-side squeeze */}
+                    <div
+                        className="flex flex-col items-end gap-0.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md cursor-pointer select-none shrink-0"
+                        onClick={() => window.location.href = '/wallet'}
+                    >
+                        {/* Income Row */}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[8px] text-green-400 font-bold uppercase tracking-widest">Income</span>
+                            <span className="text-[12px] font-black font-mono text-green-400 leading-none">
+                                ${(Number(user?.wallet?.income || 0) * 0.02).toFixed(2)}
+                            </span>
+                        </div>
+                        {/* Divider */}
+                        <div className="w-full h-px bg-white/10 my-0.5" />
+                        {/* Main Balance Row */}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Main</span>
+                            <span className="text-[12px] font-black font-mono text-white leading-none">
+                                ••••••
+                            </span>
+                        </div>
                     </div>
                 </div>
 
