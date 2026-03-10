@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ShieldAlert, Ban, CheckCircle, Activity, MapPin, Calendar, Smartphone, Coins, MessageCircle } from 'lucide-react';
+import { X, ShieldAlert, Ban, CheckCircle, Activity, MapPin, Calendar, Smartphone, Coins, MessageCircle, Wallet, ShoppingCart } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
