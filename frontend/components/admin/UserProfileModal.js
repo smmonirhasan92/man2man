@@ -146,114 +146,151 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 </div>
                             </div>
 
-                            {/* Net Settlement Indicator */}
-                            <div className={`mt-4 p-4 rounded-xl border flex items-center justify-between ${(profile.financials?.netAccounting || 0) >= 0
-                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                    : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                                }`}>
-                                <div>
-                                    <p className="text-[10px] uppercase font-bold opacity-70">Platform Position</p>
-                                    <p className="text-sm font-black">
-                                        {(profile.financials?.netAccounting || 0) >= 0
-                                            ? "System Owes User (Liability)"
-                                            : "User Owes System (Negative)"
-                                        }
-                                    </p>
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div className="flex justify-between items-center mb-2">
+                                    <p className="text-[10px] uppercase font-bold text-slate-500">P2P Net Movement (Received-Sent)</p>
+                                    <Smartphone className="w-4 h-4 text-emerald-500" />
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xl font-black">${Math.abs(profile.financials?.netAccounting || 0).toFixed(2)}</p>
-                                </div>
+                                <p className={`text-xl font-black ${(profile.financials?.p2pNet || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {(profile.financials?.p2pNet || 0) >= 0 ? '+' : ''}${profile.financials?.p2pNet?.toFixed(2) || 0}
+                                </p>
+                                <p className="text-[9px] text-slate-500 mt-1">Net flow of funds via P2P transfers</p>
                             </div>
                         </div>
 
-                        {/* 4. Security & Metadata List */}
-                        <div className="space-y-3 mb-8">
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Security & Metadata</h4>
-
-                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl">
-                                <MapPin className="w-5 h-5 text-indigo-400 shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-[10px] uppercase font-bold text-slate-500">Last Known IP / Device</p>
-                                    <p className="text-sm font-medium text-white font-mono mt-0.5">{profile.lastIp || profile.ipAddress || 'Unknown'} <span className="text-slate-500 ml-2">{profile.deviceId ? `[${profile.deviceId.substring(0, 8)}...]` : ''}</span></p>
-                                </div>
+                        {/* Net Settlement Indicator */}
+                        <div className={`mt-4 p-4 rounded-xl border flex items-center justify-between ${(profile.financials?.netAccounting || 0) >= 0
+                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                            : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                            }`}>
+                            <div>
+                                <p className="text-[10px] uppercase font-bold opacity-70">Platform Position</p>
+                                <p className="text-sm font-black">
+                                    {(profile.financials?.netAccounting || 0) >= 0
+                                        ? "System Owes User (Liability)"
+                                        : "User Owes System (Negative)"
+                                    }
+                                </p>
                             </div>
-
-                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl">
-                                <Calendar className="w-5 h-5 text-indigo-400 shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-[10px] uppercase font-bold text-slate-500">Registration Date</p>
-                                    <p className="text-sm font-medium text-white mt-0.5">{new Date(profile.createdAt).toLocaleString()}</p>
-                                </div>
+                            <div className="text-right">
+                                <p className="text-xl font-black">${Math.abs(profile.financials?.netAccounting || 0).toFixed(2)}</p>
                             </div>
+                        </div>
+                    </div>
 
-                            {profile.referredBy && (
-                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-indigo-500/20">
-                                    <Activity className="w-5 h-5 text-indigo-400 shrink-0" />
-                                    <div className="flex-1">
-                                        <p className="text-[10px] uppercase font-bold text-indigo-400">Referred By</p>
-                                        <p className="text-sm font-medium text-white mt-0.5">{profile.referredBy.fullName} ({profile.referredBy.phone})</p>
+                        {/* 3.5 [NEW] Purchased Packages History */}
+                <div className="mb-8">
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Purchased Packages</h4>
+                    <div className="space-y-2">
+                        {profile.planHistory && profile.planHistory.length > 0 ? (
+                            profile.planHistory.map((item, idx) => (
+                                <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                                    <div>
+                                        <p className="text-sm font-bold text-white">{item.adminNote || 'Mining Server Purchase'}</p>
+                                        <p className="text-[10px] text-slate-500">{new Date(item.createdAt).toLocaleString()}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-rose-400">-${Math.abs(item.amount).toFixed(2)}</p>
+                                        <span className="text-[9px] font-bold text-slate-600 uppercase">Completed</span>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* 4. Communication & Admin Actions */}
-                        <div className="border border-indigo-500/20 bg-indigo-500/5 rounded-2xl p-5 mb-4">
-                            <h4 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">Direct Communication</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <button
-                                    onClick={handleDirectMessage}
-                                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition font-bold"
-                                    title="Start a manual support chat with this user"
-                                >
-                                    <MessageCircle className="w-5 h-5" />
-                                    <span>Send Message to User</span>
-                                </button>
+                            ))
+                        ) : (
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/5 text-center">
+                                <p className="text-xs text-slate-500">No package documentation found.</p>
                             </div>
-                        </div>
-
-                        {/* 5. Danger Zone */}
-                        <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-5">
-                            <h4 className="text-sm font-bold text-red-500 mb-4 flex items-center gap-2">Danger Zone</h4>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <button
-                                    onClick={() => handleStatusChange('active')}
-                                    disabled={profile.status === 'active'}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition ${profile.status === 'active' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 opacity-50 cursor-not-allowed' : 'bg-white/5 border-white/10 text-emerald-500 hover:bg-emerald-500/20 hover:border-emerald-500/50'
-                                        }`}
-                                >
-                                    <CheckCircle className="w-6 h-6 mb-2" />
-                                    <span className="text-xs font-bold uppercase">Activate</span>
-                                </button>
-
-                                <button
-                                    onClick={() => handleStatusChange('restricted')}
-                                    disabled={profile.status === 'restricted'}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition ${profile.status === 'restricted' ? 'bg-orange-500/10 border-orange-500/30 text-orange-500 opacity-50 cursor-not-allowed' : 'bg-white/5 border-white/10 text-orange-500 hover:bg-orange-500/20 hover:border-orange-500/50'
-                                        }`}
-                                    title="User can login but cannot transact"
-                                >
-                                    <ShieldAlert className="w-6 h-6 mb-2" />
-                                    <span className="text-xs font-bold uppercase">Freeze / Restrict</span>
-                                </button>
-
-                                <button
-                                    onClick={() => handleStatusChange('blocked')}
-                                    disabled={profile.status === 'blocked'}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition ${profile.status === 'blocked' ? 'bg-red-500/10 border-red-500/30 text-red-500 opacity-50 cursor-not-allowed' : 'bg-white/5 border-white/10 text-red-500 hover:bg-red-500/20 hover:border-red-500/50'
-                                        }`}
-                                    title="User is completely banned and logged out"
-                                >
-                                    <Ban className="w-6 h-6 mb-2" />
-                                    <span className="text-xs font-bold uppercase">Ban Account</span>
-                                </button>
-                            </div>
-                        </div>
-
+                        )}
                     </div>
-                )}
+                </div>
+
+                {/* 4. Security & Metadata List */}
+                <div className="space-y-3 mb-8">
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Security & Metadata</h4>
+
+                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl">
+                        <MapPin className="w-5 h-5 text-indigo-400 shrink-0" />
+                        <div className="flex-1">
+                            <p className="text-[10px] uppercase font-bold text-slate-500">Last Known IP / Device</p>
+                            <p className="text-sm font-medium text-white font-mono mt-0.5">{profile.lastIp || profile.ipAddress || 'Unknown'} <span className="text-slate-500 ml-2">{profile.deviceId ? `[${profile.deviceId.substring(0, 8)}...]` : ''}</span></p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl">
+                        <Calendar className="w-5 h-5 text-indigo-400 shrink-0" />
+                        <div className="flex-1">
+                            <p className="text-[10px] uppercase font-bold text-slate-500">Registration Date</p>
+                            <p className="text-sm font-medium text-white mt-0.5">{new Date(profile.createdAt).toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    {profile.referredBy && (
+                        <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-indigo-500/20">
+                            <Activity className="w-5 h-5 text-indigo-400 shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-[10px] uppercase font-bold text-indigo-400">Referred By</p>
+                                <p className="text-sm font-medium text-white mt-0.5">{profile.referredBy.fullName} ({profile.referredBy.phone})</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 4. Communication & Admin Actions */}
+                <div className="border border-indigo-500/20 bg-indigo-500/5 rounded-2xl p-5 mb-4">
+                    <h4 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">Direct Communication</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            onClick={handleDirectMessage}
+                            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition font-bold"
+                            title="Start a manual support chat with this user"
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            <span>Send Message to User</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* 5. Danger Zone */}
+                <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-5">
+                    <h4 className="text-sm font-bold text-red-500 mb-4 flex items-center gap-2">Danger Zone</h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button
+                            onClick={() => handleStatusChange('active')}
+                            disabled={profile.status === 'active'}
+                            className={`flex flex-col items-center justify-center p-4 rounded-xl border transition ${profile.status === 'active' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 opacity-50 cursor-not-allowed' : 'bg-white/5 border-white/10 text-emerald-500 hover:bg-emerald-500/20 hover:border-emerald-500/50'
+                                }`}
+                        >
+                            <CheckCircle className="w-6 h-6 mb-2" />
+                            <span className="text-xs font-bold uppercase">Activate</span>
+                        </button>
+
+                        <button
+                            onClick={() => handleStatusChange('restricted')}
+                            disabled={profile.status === 'restricted'}
+                            className={`flex flex-col items-center justify-center p-4 rounded-xl border transition ${profile.status === 'restricted' ? 'bg-orange-500/10 border-orange-500/30 text-orange-500 opacity-50 cursor-not-allowed' : 'bg-white/5 border-white/10 text-orange-500 hover:bg-orange-500/20 hover:border-orange-500/50'
+                                }`}
+                            title="User can login but cannot transact"
+                        >
+                            <ShieldAlert className="w-6 h-6 mb-2" />
+                            <span className="text-xs font-bold uppercase">Freeze / Restrict</span>
+                        </button>
+
+                        <button
+                            onClick={() => handleStatusChange('blocked')}
+                            disabled={profile.status === 'blocked'}
+                            className={`flex flex-col items-center justify-center p-4 rounded-xl border transition ${profile.status === 'blocked' ? 'bg-red-500/10 border-red-500/30 text-red-500 opacity-50 cursor-not-allowed' : 'bg-white/5 border-white/10 text-red-500 hover:bg-red-500/20 hover:border-red-500/50'
+                                }`}
+                            title="User is completely banned and logged out"
+                        >
+                            <Ban className="w-6 h-6 mb-2" />
+                            <span className="text-xs font-bold uppercase">Ban Account</span>
+                        </button>
+                    </div>
+                </div>
+
             </div>
+                )}
         </div>
+        </div >
     );
 }

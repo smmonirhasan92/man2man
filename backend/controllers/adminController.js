@@ -555,20 +555,45 @@ exports.getUserDetails = async (req, res) => {
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
+        // [NEW] Calculate P2P Movement (Inflow: receive, Outflow: send)
+        const p2pIn = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'p2p_receive', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const p2pOut = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'p2p_send', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+
         const totalDep = deposits[0]?.total || 0;
         const totalWit = withdrawals[0]?.total || 0;
         const totalEarn = earnings[0]?.total || 0;
         const totalSpent = spent[0]?.total || 0;
+        const totalP2PIn = p2pIn[0]?.total || 0;
+        const totalP2POut = p2pOut[0]?.total || 0;
 
         user.financials = {
             totalDeposited: totalDep,
             totalWithdrawn: totalWit,
             totalEarned: totalEarn,
             totalSpent: totalSpent,
+            totalP2PReceived: totalP2PIn,
+            totalP2PSent: totalP2POut,
+            p2pNet: totalP2PIn - totalP2POut,
             // Accounting: (Amount In - Amount Out)
             // If positive, system effectively holds this 'liability' for the user
-            netAccounting: (totalDep + totalEarn) - (totalWit + totalSpent)
+            netAccounting: (totalDep + totalEarn + totalP2PIn) - (totalWit + totalSpent + totalP2POut)
         };
+
+        // [NEW] Fetch Plan Purchase History
+        user.planHistory = await Transaction.find({
+            userId: user._id,
+            type: 'plan_purchase',
+            status: 'completed'
+        })
+            .select('amount createdAt adminNote')
+            .sort({ createdAt: -1 })
+            .lean();
 
         // UI Mapping Fixes
         user.phone = user.primary_phone; // UI expects user.phone
