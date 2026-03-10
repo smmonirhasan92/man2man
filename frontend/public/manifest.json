@@ -4,13 +4,9 @@
   "description": "Premium Gaming, Lottery & Secure Wallet System",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "display_override": [
-    "window-controls-overlay",
-    "minimal-ui"
-  ],
+  "orientation": "portrait",
   "background_color": "#0a192f",
   "theme_color": "#0a192f",
-  "orientation": "portrait",
   "categories": [
     "finance",
     "games",

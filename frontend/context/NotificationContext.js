@@ -89,20 +89,31 @@ export function NotificationProvider({ children }) {
         });
 
         let lastSoundTime = 0;
-        const playSound = () => {
+        const playSound = (type = 'info') => {
             const now = Date.now();
-            if (now - lastSoundTime < 500) return; // Cooldown of 500ms
+            if (now - lastSoundTime < 800) return; // Cooldown
             lastSoundTime = now;
 
             try {
-                const audio = new Audio('/sounds/notification.mp3');
-                audio.play().catch(e => console.warn("Audio autoplay blocked", e));
+                let soundPath = '/sounds/notification.mp3';
+                if (type === 'success') soundPath = '/sounds/success.mp3';
+                if (type === 'error') soundPath = '/sounds/error.mp3';
+
+                const audio = new Audio(soundPath);
+                audio.volume = 0.8; // Louder for better mobile response
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.warn("Audio autoplay blocked, will try on next interaction", e);
+                    });
+                }
             } catch (e) { }
         };
 
         // 2. Generic Notification
         socket.on('notification', (newNotif) => {
-            playSound();
+            playSound(newNotif.type);
             const style = newNotif.type === 'error' ? errorStyle : premiumStyle;
             toast(newNotif.message, { style });
         });
@@ -110,7 +121,7 @@ export function NotificationProvider({ children }) {
         // 2. Wallet Update (Real-time Balance)
         const handleWalletUpdate = (data) => {
             console.log('[SOCKET_CONTEXT] Wallet Update Received');
-            playSound();
+            playSound('success');
 
             // If it's a legacy or structured withdrawal/deposit event
             if (data?.type === 'withdrawal_completed') {

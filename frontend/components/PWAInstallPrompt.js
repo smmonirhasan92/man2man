@@ -36,14 +36,15 @@ export default function PWAInstallPrompt() {
             setIsUpdating(true);
         }
 
-        // Check standalone mode (already installed)
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
         const dismissed = localStorage.getItem('pwa-prompt-dismissed-v2');
+        const sessionShown = sessionStorage.getItem('pwa-prompt-shown-session');
 
-        if (!isStandalone && !dismissed) {
+        if (!isStandalone && !dismissed && !sessionShown) {
             // Show proactively after a short delay for a premium feel
             const timer = setTimeout(() => {
                 setShow(true);
+                sessionStorage.setItem('pwa-prompt-shown-session', 'true');
                 // Attempt to play sound to grab attention
                 if (audioRef.current) {
                     audioRef.current.play().catch(e => console.log('Audio autoplay blocked by browser', e));

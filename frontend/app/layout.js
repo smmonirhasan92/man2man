@@ -36,9 +36,9 @@ export const metadata = {
         images: ['/og-image.png'],
     },
     icons: {
-        icon: '/logo.png',
-        shortcut: '/logo.png',
-        apple: '/logo.png',
+        icon: '/networking_globe.png',
+        shortcut: '/networking_globe.png',
+        apple: '/networking_globe.png',
     },
 }
 
@@ -48,6 +48,8 @@ export const viewport = {
     maximumScale: 1,
     userScalable: false,
     themeColor: '#0a192f',
+    viewportFit: 'cover',
+    interactiveWidget: 'resizes-visual',
 }
 
 import { NotificationProvider } from '../context/NotificationContext';
