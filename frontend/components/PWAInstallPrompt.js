@@ -1,81 +1,40 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function PWAInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [show, setShow] = useState(false);
-    const [isIOS, setIsIOS] = useState(false);
 
     useEffect(() => {
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-        if (isStandalone) return;
-
-        // Detect iOS
-        const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        setIsIOS(ios);
-
         const handler = (e) => {
             e.preventDefault();
             setDeferredPrompt(e);
+            // Check if user already dismissed
+            if (!localStorage.getItem('pwa-prompt-dismissed')) {
+                setShow(true);
+            }
         };
 
         window.addEventListener('beforeinstallprompt', handler);
 
-        // Show proactively on entry pages for all devices
-        const dismissed = localStorage.getItem('pwa-prompt-dismissed');
-        const isEntryPage = ['/', '/login', '/register'].includes(window.location.pathname);
-
-        let timer;
-        if (!dismissed || isEntryPage) {
-            // Delay slightly for better UX
-            timer = setTimeout(() => setShow(true), 1500);
+        // Detect if already installed (standalone)
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            setShow(false);
         }
 
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handler);
-            if (timer) clearTimeout(timer);
-        };
+        return () => window.removeEventListener('beforeinstallprompt', handler);
     }, []);
 
     const handleInstall = async () => {
-        if (isIOS) {
-            toast("Tap 'Share' and then 'Add to Home Screen' to install.", {
-                icon: '📲',
-                duration: 5000
-            });
-            return;
-        }
-
-        if (deferredPrompt) {
-            try {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    console.log('User accepted the install prompt');
-                    setShow(false); // Hide the prompt entirely
-                } else {
-                    console.log('User dismissed the install prompt');
-                }
-                setDeferredPrompt(null);
-            } catch (err) {
-                window.location.href = "https://usaaffiliatemarketing.com/app.apk";
-                setShow(false);
-            }
-        } else {
-            // Fallback for Android/Desktop if PWA prompt isn't ready or supported
-            window.location.href = "https://usaaffiliatemarketing.com/app.apk";
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
             setShow(false);
         }
+        setDeferredPrompt(null);
     };
-
-    // Global hook for drawer
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            window.triggerPWAInstall = handleInstall;
-        }
-    }, [handleInstall]);
 
     const handleDismiss = () => {
         setShow(false);
@@ -94,9 +53,7 @@ export default function PWAInstallPrompt() {
                     </div>
                     <div>
                         <h4 className="text-white font-black text-sm tracking-wide">USA Affiliate</h4>
-                        <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                            {isIOS ? 'Install on iOS' : 'Official App'}
-                        </p>
+                        <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">Official App</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -110,7 +67,7 @@ export default function PWAInstallPrompt() {
                         onClick={handleInstall}
                         className="bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-900 px-5 py-2.5 rounded-lg text-xs font-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all tracking-wide uppercase"
                     >
-                        {isIOS ? 'How?' : 'Install'}
+                        Install
                     </button>
                 </div>
             </div>
