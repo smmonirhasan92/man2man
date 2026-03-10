@@ -65,33 +65,33 @@ export default function PWAInstallPrompt() {
 
     const handleInstall = async () => {
         if (isUpdating) {
-            // If it's an update, let the AutoUpdater handle it by reloading
             window.location.reload();
             return;
         }
 
-        if (isIOS) {
-            toast("To install: Tap 'Share' at the bottom, then 'Add to Home Screen'.", { icon: '📱' });
-            return;
-        }
-
+        // If PWA install prompt is available, use it (Native experience)
         if (deferredPrompt) {
             try {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
                     setShow(false);
-                    toast.success('Installation started!');
+                    toast.success('Starting installation...');
                 }
                 setDeferredPrompt(null);
+                return;
             } catch (err) {
-                // Fallback on error - don't redirect to broken link
-                toast("Please tap the browser menu (⋮) and select 'Install App'", { icon: '⚙️' });
+                console.error('PWA prompt failed, falling back to direct download');
             }
-        } else {
-            // Fallback for Android/Desktop if PWA prompt isn't ready or supported
-            toast("To install: Tap the browser menu (⋮) and select 'Install App' or 'Add to Home screen'", { duration: 5000, icon: '📲' });
         }
+
+        // FALLBACK / DIRECT DOWNLOAD: Exactly what the user wants.
+        // This triggers the browser's download manager for the APK file.
+        toast.loading('Downloading app...', { duration: 2000 });
+        window.location.href = "/app.apk";
+
+        // Hide banner after initiating download to stop the annoyance
+        setTimeout(() => setShow(false), 3000);
     };
 
     const handleDismiss = () => {
