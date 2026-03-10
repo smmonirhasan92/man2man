@@ -260,7 +260,9 @@ class ReferralService {
                         source: 'referral',
                         amount: comm,
                         status: 'completed',
-                        description: `L${i + 1} Task Bonus from ${sourceUserId}`,
+                        description: type === 'batched_daily_task_reward'
+                            ? `L${i + 1} Batched Daily Task Rewards from ${sourceUserId}`
+                            : `L${i + 1} Task Bonus from ${sourceUserId}`,
                         metadata: {
                             level: i + 1,
                             sourceUser: sourceUserId,

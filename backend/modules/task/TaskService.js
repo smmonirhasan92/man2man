@@ -353,18 +353,8 @@ class TaskService {
                 metadata: { grossReward: rewardAmount, deducedP2P: systemDeductionAmount }
             }], { session });
 
-            // [REFERRAL BATCHING] Identify if this is the final task for the day
-            const isFinalTask = planTasksDoneLock + 1 >= limitForPlan;
-
-            // [P2P DISTRIBUTION] Trigger only on final task
-            if (isFinalTask && userUpd.referredBy) {
-                console.log(`[TaskService] Daily Limit Reached. Distributing Referral Commissions for ${userId}`);
-                try {
-                    const totalDailyGross = activePlanUpd.earnings_today;
-                    // Passing sourceUserId as first argument to match new ReferralService.distributeIncome signature
-                    await this.ReferralService.distributeIncome(userId, userUpd.referredBy, totalDailyGross, 'p2p_task_commission', session);
-                } catch (e) { console.error("[TaskService P2P Dist Error]", e); }
-            }
+            // [SECURITY FIX] Removed Daily Task Referral Bonus
+            // User Strategy: Prevent infinite liability generation. Referral commission is now strictly One-Time on package buys.
 
             // Notify User
             await NotificationService.send(userId, `✅ Task Reward: +${earnerNetIncome.toFixed(4)} NXS`, 'success');
@@ -499,6 +489,33 @@ class TaskService {
             user.taskData.dailySpinDate = new Date();
 
             await user.save({ session });
+
+            // [REFERRAL BATCHING] Distribute batched commissions for ALL tasks completed today
+            if (user.referredBy) {
+                try {
+                    const UserPlan = require('../plan/UserPlanModel');
+                    const now = new Date();
+                    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+
+                    // Aggregate earnings across all plans for today
+                    const dailyPlans = await UserPlan.find({
+                        userId,
+                        last_earning_date: { $gte: startOfDay }
+                    }).session(session);
+
+                    let totalDailyEarnings = 0;
+                    dailyPlans.forEach(p => {
+                        totalDailyEarnings += (p.earnings_today || 0);
+                    });
+
+                    if (totalDailyEarnings > 0) {
+                        console.log(`[TaskService] Distributing Batched Commissions for ${userId}. Total Daily: ${totalDailyEarnings}`);
+                        await this.ReferralService.distributeIncome(userId, user.referredBy, totalDailyEarnings, 'batched_daily_task_reward', session);
+                    }
+                } catch (e) {
+                    console.error("[TaskService] Batched Commission Error:", e);
+                }
+            }
 
             // 4. Log Transaction
             await Transaction.create([{
