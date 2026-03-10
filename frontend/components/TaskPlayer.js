@@ -5,6 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import confetti from 'canvas-confetti';
 
+// Quick fire-and-forget sound helper
+const playSound = (name) => {
+    try {
+        const a = new Audio(`/sounds/${name}.mp3`);
+        a.volume = 0.7;
+        a.play().catch(() => { });
+    } catch (e) { }
+};
+
 export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
     const [status, setStatus] = useState('initializing'); // initializing, counting, ready, claiming, completed
 
@@ -93,6 +102,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                         }
                     }
 
+                    playSound('notification'); // 🔔 Task opened sound
                 } catch (err) {
                     console.error("Task Start Error:", err);
                     setError(err.response?.data?.message || "Failed to start task session.");
@@ -114,6 +124,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
                     if (nextTime <= 0) {
                         clearInterval(timer);
                         clearInterval(heartbeatInterval);
+                        playSound('click'); // ✅ Timer done — claim ready
                         setStatus('reviewing'); // [FIX] Emulate Ad Verification step
                         return 0;
                     }
@@ -169,6 +180,7 @@ export default function TaskPlayer({ task, onComplete, onClose, usaKey }) {
 
             // SUCCESS!
             setClaimResult(response.data); // Capture Result
+            playSound('success'); // 🎉 Reward claimed!
             fireCelebration();
             setStatus('completed');
 
