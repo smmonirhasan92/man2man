@@ -35,28 +35,11 @@ export default function AutoUpdater() {
                 wb.messageSkipWaiting();
             });
 
-            // When the new service worker has taken control
-            wb.addEventListener('controlling', async (event) => {
+            // When a new service worker has taken control
+            wb.addEventListener('controlling', (event) => {
                 console.log('The service worker is currently controlling this page.');
-
-                // Nuclear Cache Busting: Delete all caches to prevent white screen loops
-                try {
-                    if ('caches' in window) {
-                        const cacheNames = await window.caches.keys();
-                        await Promise.all(
-                            cacheNames.map((cacheName) => window.caches.delete(cacheName))
-                        );
-                        console.log('Successfully cleared old PWA caches.');
-                    }
-                } catch (err) {
-                    console.error('Failed to clear caches:', err);
-                }
-
-                // Add a small delay so user can actually see the "Updating" toast
-                // Also helps prevent aggressive reload loops if something is stuck
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                // We no longer nuclear reload here to avoid annoying the user.
+                // The PWA banner will show an "UPDATE" button instead.
             });
 
             wb.register();
