@@ -176,7 +176,7 @@ export default function StakingDashboard({ userWallet }) {
                                         {/* Left: Info */}
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-bold text-white">{stake.poolId.name}</h3>
+                                                <h3 className="text-lg font-bold text-white">{stake.poolId?.name || 'Legacy Pool'}</h3>
                                                 <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${stake.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' : stake.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'
                                                     }`}>
                                                     {stake.status}
