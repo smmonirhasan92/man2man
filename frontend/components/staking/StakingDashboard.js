@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import StakeModal from './StakeModal';
-import { Package, Clock, TrendingUp, AlertTriangle, CheckCircle, Activity, Loader2, Info } from 'lucide-react';
+import { Package, Clock, TrendingUp, AlertTriangle, CheckCircle, Activity, Loader2, Info, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function StakingDashboard({ userWallet }) {

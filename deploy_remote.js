@@ -11,8 +11,13 @@ async function deploy() {
             port: 22
         });
 
+        console.log('Connected! Pulling latest code and building...');
+
         const commands = [
-            'pm2 logs man2man-backend --lines=50 --nostream'
+            'cd /var/www/man2man && git fetch --all && git reset --hard origin/main',
+            'cd /var/www/man2man/frontend && rm -rf .next && npm i && npm run build',
+            'pm2 restart man2man-frontend',
+            'pm2 restart man2man-backend'
         ];
 
         for (const cmd of commands) {
