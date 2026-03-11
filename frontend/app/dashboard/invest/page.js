@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../../../services/api';
 import StakingDashboard from '../../../components/staking/StakingDashboard';
-import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InvestPage() {
@@ -31,7 +30,7 @@ export default function InvestPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-emerald-500" />
+                <div className="w-12 h-12 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
             </div>
         );
     }
