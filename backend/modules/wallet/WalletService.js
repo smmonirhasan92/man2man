@@ -256,7 +256,7 @@ class WalletService {
     }
 
     // Send Money (P2P)
-    static async sendMoney(senderId, amount, recipientPhone) {
+    static async sendMoney(senderId, amount, recipientPhone, ip = 'unknown') {
         return await runTransaction(async (session) => {
             const parsedAmount = parseFloat(amount);
 
@@ -347,7 +347,8 @@ class WalletService {
                 status: 'pending',
                 recipientDetails: `Sent to: ${recipientPhone}`,
                 relatedUserId: recipient.id,
-                assignedAgentId: null
+                assignedAgentId: null,
+                metadata: { ip }
             }], { session });
 
             return { message: 'Send Money Request Pending Approval' };
@@ -355,7 +356,7 @@ class WalletService {
     }
 
     // Request Recharge (Add Money)
-    static async requestRecharge(userId, amount, method, transactionId, recipientDetails, receivedByAgentId, proofImagePath) {
+    static async requestRecharge(userId, amount, method, transactionId, recipientDetails, receivedByAgentId, proofImagePath, ip = 'unknown') {
         try {
             // Check for duplicate TrxID on Active Transactions
             const exists = await Transaction.findOne({ transactionId });

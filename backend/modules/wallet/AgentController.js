@@ -16,7 +16,7 @@ class AgentController {
                 return res.status(403).json({ message: "Agent access only" });
             }
 
-            const txn = await AgentService.processDeposit(agentId, userId, parseFloat(amount));
+            const txn = await AgentService.processDeposit(agentId, userId, parseFloat(amount), req.ip);
             return res.json({ success: true, message: "Deposit Successful", txn });
 
         } catch (err) {

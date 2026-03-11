@@ -120,13 +120,24 @@ class P2PService {
                 throw new Error(`Maximum limit for this listing is ${order.amount} NXS.`);
             }
 
-            // 1. Lock Seller's Escrow LIVE
-            await User.findByIdAndUpdate(sellerId, {
-                $inc: {
-                    'wallet.main': -requestedAmount,
-                    'wallet.escrow_locked': requestedAmount
-                }
-            }, { session });
+            // 1. Lock Seller's Escrow LIVE [SECURITY: Strict Balance Check]
+            const updatedSeller = await User.findOneAndUpdate(
+                {
+                    _id: sellerId,
+                    'wallet.main': { $gte: requestedAmount }
+                },
+                {
+                    $inc: {
+                        'wallet.main': -requestedAmount,
+                        'wallet.escrow_locked': requestedAmount
+                    }
+                },
+                { session, new: true }
+            );
+
+            if (!updatedSeller) {
+                throw new Error(`Seller does not have enough balance (${requestedAmount} NXS) to fulfill this trade.`);
+            }
 
             // 2. Create Trade Session
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 Minutes
@@ -166,7 +177,7 @@ class P2PService {
             // Notify System & Users out of session
             SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_start', trade);
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
-            await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id });
+            await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id, url: '/p2p' });
 
             // Because Seller's balance changed, the UserModel pre/post save hook WILL NOT fire from findByIdAndUpdate.
             // So we manually broadcast the new balance to the global market or just personal room.
@@ -405,8 +416,7 @@ class P2PService {
     }
 
     // --- 4. BUYER MARKS PAID ---
-    // --- 4. BUYER MARKS PAID ---
-    async markPaid(userId, tradeId, proofData) {
+    async markPaid(userId, tradeId, proofData, ip = 'unknown') {
         const { proofUrl, txId, senderNumber } = proofData;
 
         // [SECURITY] Either Proof Image OR (TxID + SenderNumber) is required
@@ -421,6 +431,7 @@ class P2PService {
 
         trade.status = 'PAID';
         trade.paidAt = new Date();
+        trade.buyerIp = ip; // [SECURITY] Capture Buyer IP on payment claim
 
         if (proofUrl) trade.paymentProofUrl = proofUrl;
         if (txId) trade.txId = txId;
@@ -430,7 +441,7 @@ class P2PService {
 
         // Notify Seller
         SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_mark_paid', trade);
-        await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID.Verify TxID: ${txId || 'N/A'} `, 'warning', { tradeId: trade._id });
+        await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'info', { tradeId: trade._id, url: '/p2p' });
 
         await P2PMessage.create({ tradeId: trade._id, senderId: trade.buyerId, isSystem: true, content: `Buyer marked payment as sent.TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'} ` });
 
@@ -438,7 +449,7 @@ class P2PService {
     }
 
     // --- 5. SELLER CONFIRMS RELEASE (INSTANT RELEASE WITH PIN) ---
-    async confirmRelease(userId, tradeId, pin) {
+    async confirmRelease(userId, tradeId, pin, ip = 'unknown') {
         if (!pin) throw new Error("Password is required to release funds");
 
         const trade = await P2PTrade.findById(tradeId);
@@ -457,17 +468,23 @@ class P2PService {
         }
 
         // [CHANGE] "Seamless" Logic: Trust Seller -> Execute Transfer Immediately
-        console.log(`[P2P] Seller ${userId} confirmed receipt with valid PIN.Releasing funds...`);
+        console.log(`[P2P] Seller ${userId} (IP: ${ip}) confirmed receipt with valid PIN. Releasing funds...`);
 
         // We call adminApproveRelease passing 'SYSTEM_AUTO' as adminId (system action)
-        return await this.adminApproveRelease('SYSTEM_AUTO', tradeId);
+        return await this.adminApproveRelease('SYSTEM_AUTO', tradeId, ip);
     }
 
     // --- 6. ADMIN APPROVES RELEASE (Fee Deduction) ---
-    async adminApproveRelease(adminId, tradeId) {
+    async adminApproveRelease(adminId, tradeId, ip = 'unknown') {
         return await TransactionHelper.runTransaction(async (session) => {
             const trade = await P2PTrade.findById(tradeId).session(session);
             if (!trade) throw new Error("Trade not found");
+
+            if (adminId === 'SYSTEM_AUTO') {
+                trade.sellerIp = ip; // Release triggered by Seller
+            } else {
+                trade.resolvedByIp = ip; // Release triggered by Admin
+            }
 
             // [FIX] Allow PAID status for Instant Release (System Auto)
             const allowedStatuses = ['AWAITING_ADMIN', 'PAID'];
@@ -519,12 +536,13 @@ class P2PService {
             // based on the actual `amount` remaining. Do not auto-close it.
 
             // 5. Logs - [SECURITY] Made untraceable for users (no sender/receiver ID exposed)
+            const isAuto = adminId === 'SYSTEM_AUTO';
             const transactionLogs = [
                 {
                     userId: trade.sellerId,
                     amount: -trade.amount,
                     type: 'p2p_sell',
-                    description: `P2P Trade Settled`, // Generic description 
+                    description: `P2P Settled: ${isAuto ? 'Seller Released' : 'Admin Approved'}`,
                     source: 'transaction',
                     status: 'completed'
                 },
@@ -532,7 +550,7 @@ class P2PService {
                     userId: trade.buyerId,
                     amount: finalAmount,
                     type: 'p2p_buy',
-                    description: `P2P Escrow Release`, // Generic description
+                    description: `P2P Settled: ${isAuto ? 'Seller Released' : 'Admin Approved'}`,
                     source: 'transaction',
                     status: 'completed'
                 }
@@ -685,13 +703,15 @@ class P2PService {
     }
 
     // --- 7. ADMIN DISPUTE RESOLUTION ---
-    async resolveDispute(adminId, tradeId, resolution) {
+    async resolveDispute(adminId, tradeId, resolution, ip = 'unknown') {
         // resolution: 'RELEASE_TO_BUYER' | 'REFUND_TO_SELLER'
 
         return await TransactionHelper.runTransaction(async (session) => {
             const trade = await P2PTrade.findById(tradeId).session(session);
             if (!trade) throw new Error("Trade not found");
             if (['COMPLETED', 'CANCELLED'].includes(trade.status)) throw new Error("Trade already finalized");
+
+            trade.resolvedByIp = ip;
 
             if (resolution === 'RELEASE_TO_BUYER') {
                 // Same logic as confirmRelease
@@ -727,8 +747,8 @@ class P2PService {
             const msg = `Admin resolved dispute: ${resolution === 'RELEASE_TO_BUYER' ? 'Funds released to Buyer' : 'Funds refunded to Seller'} `;
             SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade);
             SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
-            await NotificationService.send(trade.buyerId, msg, 'info');
-            await NotificationService.send(trade.sellerId, msg, 'info');
+            await NotificationService.send(trade.buyerId, msg, 'info', { url: '/p2p' });
+            await NotificationService.send(trade.sellerId, msg, 'info', { url: '/p2p' });
 
             return trade;
         });

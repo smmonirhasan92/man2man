@@ -438,6 +438,16 @@ function RegisterForm() {
                         >
                             {loading ? <span className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></span> : 'FINALIZE REGISTRATION'}
                         </button>
+
+                        {/* [NEW] Persistent Install Action */}
+                        <button
+                            type="button"
+                            onClick={() => window.triggerPWAInstall && window.triggerPWAInstall()}
+                            className="w-full py-3 mt-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500/20 transition-all active:scale-95 group"
+                        >
+                            <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Download Official App
+                        </button>
                     </form>
                 </div>
             </div>

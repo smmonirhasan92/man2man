@@ -59,6 +59,8 @@ const UserSchema = new mongoose.Schema({
         agent: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
         commission: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [ADMIN/AGENT] Fee Earnings
         pending_referral: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
+        staked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [STAKING] Locked NXS
+        total_earned_staking: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [STAKING] Lifetime earnings
 
         turnover: {
             required: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },

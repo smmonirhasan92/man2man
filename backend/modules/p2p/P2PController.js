@@ -135,8 +135,8 @@ class P2PController {
     // POST /api/p2p/trade/:id/pay
     async markPaid(req, res) {
         try {
-            // Pass the entire body (proofUrl, txId, senderNumber)
-            const trade = await P2PService.markPaid(req.user.user.id, req.params.id, req.body);
+            // Pass the entire body (proofUrl, txId, senderNumber) + IP
+            const trade = await P2PService.markPaid(req.user.user.id, req.params.id, req.body, req.ip);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });
@@ -157,7 +157,7 @@ class P2PController {
     async confirmRelease(req, res) {
         try {
             const { pin } = req.body;
-            const trade = await P2PService.confirmRelease(req.user.user.id, req.params.id, pin);
+            const trade = await P2PService.confirmRelease(req.user.user.id, req.params.id, pin, req.ip);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });
@@ -199,7 +199,7 @@ class P2PController {
         try {
             const { tradeId, resolution } = req.body;
             // Admin Check Middleware should be applied on route
-            const trade = await P2PService.resolveDispute(req.user.user.id, tradeId, resolution);
+            const trade = await P2PService.resolveDispute(req.user.user.id, tradeId, resolution, req.ip);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });
@@ -228,7 +228,7 @@ class P2PController {
             }
             // --- END 3-LAYER SECURITY CHECK ---
 
-            const trade = await P2PService.adminApproveRelease(req.user.user.id, tradeId);
+            const trade = await P2PService.adminApproveRelease(req.user.user.id, tradeId, req.ip);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });

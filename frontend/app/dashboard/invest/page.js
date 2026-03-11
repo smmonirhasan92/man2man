@@ -1,0 +1,49 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '../../../services/api';
+import StakingDashboard from '../../../components/staking/StakingDashboard';
+import { Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function InvestPage() {
+    const router = useRouter();
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    const fetchUser = async () => {
+        try {
+            const res = await api.get('/auth/me');
+            setUser(res.data.user);
+        } catch (e) {
+            console.error(e);
+            toast.error("Please login first");
+            router.push('/login');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+                <Loader2 className="w-12 h-12 animate-spin text-emerald-500" />
+            </div>
+        );
+    }
+
+    if (!user) return null;
+
+    return (
+        <div className="min-h-screen bg-[#020617] text-slate-300 pb-24">
+            {/* Header section can match your existing dashboard's design token */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <StakingDashboard userWallet={user.wallet} />
+            </div>
+        </div>
+    );
+}

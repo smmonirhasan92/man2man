@@ -94,7 +94,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (updatedTrade._id === tradeId) {
                 setTrade(updatedTrade);
                 toast('Buyer marked as PAID', { icon: '💸' });
-                notify('Trade Updated', 'The buyer has marked the payment as PAID.');
+                playSuccess();
             }
         });
 
@@ -103,7 +103,6 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                 setTrade(updatedTrade);
                 toast.success('Trade Completed!');
                 playSuccess();
-                notify('Trade Complete', 'The P2P Trade has been finalized and crypto released.');
             }
         });
 
@@ -111,7 +110,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (updatedTrade._id === tradeId) {
                 setTrade(updatedTrade);
                 toast.error('Trade Frozen by Tribunal.');
-                notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.');
+                notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.', '/p2p', '/sounds/error.mp3');
             }
         });
 
@@ -178,18 +177,11 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     const playDing = () => {
-        if (notificationAudio.current) {
-            notificationAudio.current.currentTime = 0;
-            notificationAudio.current.play().catch(e => console.log('Audio blocked:', e));
-        }
-        notify('New P2P Message', 'You have received a new message in your trade.');
+        notify('New P2P Message', 'You have received a new message in your trade.', '/p2p', '/sounds/click.mp3');
     };
 
     const playSuccess = () => {
-        if (successAudio.current) {
-            successAudio.current.currentTime = 0;
-            successAudio.current.play().catch(e => console.log('Audio blocked:', e));
-        }
+        notify('Trade Updated', 'This trade has been marked as paid or completed.', '/p2p', '/sounds/success.mp3');
     };
 
     const sendMessage = async () => {

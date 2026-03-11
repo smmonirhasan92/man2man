@@ -57,7 +57,8 @@ exports.transferMoney = async (req, res) => {
                 amount: -amountFloat,
                 status: 'completed',
                 recipientDetails: `Sent to ${recipient.phone}`,
-                description: 'Agent Stock Transfer'
+                description: 'Agent Stock Transfer',
+                metadata: { ip: req.ip }
             }, {
                 userId: recipient._id,
                 type: 'add_money',
@@ -121,7 +122,7 @@ exports.requestRecharge = async (req, res) => {
         }
 
         const result = await WalletService.requestRecharge(
-            req.user.user.id, amount, method, transactionId, recipientDetails, receivedByAgentId, null // No proofImage
+            req.user.user.id, amount, method, transactionId, recipientDetails, receivedByAgentId, null, req.ip
         );
         res.status(201).json({ message: 'Deposit Request Submitted', transaction: result });
     } catch (err) {

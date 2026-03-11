@@ -63,10 +63,10 @@ class NotificationService {
 
             if (user && user.pushSubscriptions && user.pushSubscriptions.length > 0) {
                 const payload = JSON.stringify({
-                    title: 'Man2Man Notification',
+                    title: 'Man2Man P2P Alert',
                     body: message,
                     type: type,
-                    url: '/'
+                    url: metadata.url || '/'
                 });
 
                 let subscriptionNeedsSave = false;

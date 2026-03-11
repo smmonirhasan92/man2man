@@ -137,6 +137,7 @@ app.use('/api/notifications', require('./modules/notification/NotificationRoutes
 // Game routes removed per Feature Purge
 app.use('/api/lottery', require('./routes/lotteryRoutes')); // [NEW] Dedicated Lottery Routes
 app.use('/api/p2p', require('./routes/p2pRoutes')); // [NEW] P2P Escrow Routes
+app.use('/api/staking', require('./routes/stakingRoutes')); // [NEW] P2P Staking Pools
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
 app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
 
@@ -299,6 +300,14 @@ const startServer = async () => {
 
         const initPulse = require('./modules/cron/Pulse');
         initPulse();
+
+        // [STAKING] Initialize Default Investment Pools if Empty
+        try {
+            const StakingService = require('./modules/staking/StakingService');
+            await StakingService.seedDefaultPools();
+        } catch (seedErr) {
+            Logger.warn('Failed to seed default Staking Pools:', seedErr.message);
+        }
 
         server.listen(PORT, '0.0.0.0', () => {
             Logger.info(`Server (HTTP + Socket.io) is running on port ${PORT}`);

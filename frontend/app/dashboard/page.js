@@ -181,7 +181,7 @@ function DashboardContent() {
                 <div className="w-full px-6 mb-8 mt-4">
                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Discover Options</h3>
                     <div className="grid grid-cols-3 gap-3">
-                        {/* <FolderCard href="/gaming-zone" icon={Gamepad2} label="Gaming" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-white/20" /> */}
+                        <FolderCard href="/dashboard/invest" icon={DollarSign} label="Invest" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
                         <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-yellow-400" gradient="from-yellow-600/20 to-yellow-900/40" border="border-white/20" />
                         <FolderCard href="/p2p" icon={Server} label="P2P Market" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
 

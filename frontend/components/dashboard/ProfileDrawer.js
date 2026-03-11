@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Server, MessageSquare, LogOut, Settings, Wallet, Copy } from 'lucide-react';
+import { X, Server, MessageSquare, LogOut, Settings, Wallet, Copy, Download } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -236,6 +236,21 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                     <button onClick={() => router.push('/profile')} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
                         <Settings size={14} /> Full Profile Settings
                     </button>
+
+                    {/* [NEW] Manual App Download Button */}
+                    <button
+                        onClick={() => {
+                            if (window.triggerPWAInstall) {
+                                window.triggerPWAInstall();
+                            } else {
+                                toast.error("Please open this site in Chrome/Safari to install.");
+                            }
+                        }}
+                        className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition uppercase"
+                    >
+                        <Download size={14} /> Download Official App
+                    </button>
+
                     <button onClick={logout} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
                         <LogOut size={14} /> Sign Out
                     </button>

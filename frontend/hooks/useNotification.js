@@ -33,25 +33,25 @@ export function useNotification() {
         }
     }, []);
 
-    // Play sound safely (requires prior user interaction in many browsers)
     const lastPlayTime = useRef(0);
-    const playSound = useCallback(() => {
+    const playSound = useCallback((soundPath = null) => {
         const now = Date.now();
         if (now - lastPlayTime.current < 500) return; // Don't play too frequently
         lastPlayTime.current = now;
 
-        if (audioRef.current) {
-            // Reset to start if already playing
-            audioRef.current.currentTime = 0;
-            const playPromise = audioRef.current.play();
-
-            // Handle auto-play policies silently
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log('Audio autoplay blocked by browser policy. User must interact with DOM first.');
-                });
+        try {
+            const audioToPlay = soundPath ? new Audio(soundPath) : audioRef.current;
+            if (audioToPlay) {
+                audioToPlay.currentTime = 0;
+                audioToPlay.volume = 0.8;
+                const playPromise = audioToPlay.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Audio autoplay blocked by browser policy.');
+                    });
+                }
             }
-        }
+        } catch (e) { }
     }, []);
 
     // Show native push notification
@@ -74,6 +74,9 @@ export function useNotification() {
             // Optional: Focus window on click
             notification.onclick = function () {
                 window.focus();
+                if (this.data && this.data.url) {
+                    window.location.href = this.data.url;
+                }
                 this.close();
             };
         } catch (error) {
@@ -82,9 +85,9 @@ export function useNotification() {
     }, []);
 
     // Utility: Trigger both (the best practice hybrid approach)
-    const notify = useCallback((title, body = '') => {
-        playSound();
-        showPush(title, { body });
+    const notify = useCallback((title, body = '', url = null, soundPath = null) => {
+        playSound(soundPath);
+        showPush(title, { body, ...(url && { data: { url } }) });
     }, [playSound, showPush]);
 
     return {

@@ -14,12 +14,9 @@ async function deploy() {
         console.log('Connected! Pulling latest code and building...');
 
         const commands = [
-            'cd /var/www/man2man && git pull origin main && git log -1',
-            'cd /var/www/man2man/frontend && rm -rf .next && npm i',
-            'cd /var/www/man2man/backend && npm i',
-            'cd /var/www/man2man/frontend && npm run build',
-            'pm2 restart all',
-            'pm2 status'
+            'cd /var/www/man2man && git reset --hard && git pull origin main',
+            'cd /var/www/man2man/frontend && rm -rf .next && npm i && npm run build',
+            'pm2 restart man2man-frontend'
         ];
 
         for (const cmd of commands) {

@@ -23,6 +23,11 @@ const P2PTradeSchema = new mongoose.Schema({
     disputeReason: { type: String },
     disputeRaisedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Tracks who initiated the Tribunal
 
+    // Security \u0026 Traceability [NEW]
+    buyerIp: { type: String },
+    sellerIp: { type: String },
+    resolvedByIp: { type: String },
+
     // Timestamps
     expiresAt: { type: Date, required: true },
     paidAt: { type: Date },

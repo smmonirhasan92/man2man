@@ -25,7 +25,16 @@ export default function LoginPage() {
                     <LoginForm />
                 </div>
 
-                <div className="mt-6 text-center">
+                <div className="mt-8 text-center space-y-4">
+                    {/* [NEW] Persistent Install Link for Public Entry */}
+                    <button
+                        onClick={() => window.triggerPWAInstall && window.triggerPWAInstall()}
+                        className="w-full py-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-500/20 transition-all active:scale-95 group"
+                    >
+                        <svg className="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Install Official App
+                    </button>
+
                     <p className="text-slate-500 text-xs">
                         Don't have an account?{' '}
                         <a href="/register" className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors">

@@ -10,7 +10,7 @@ class AgentService {
      * Agent Deposits Money to User (Agent Sells Coins)
      * Agent Stock (wallet.agent) Decreases. User Wallet (wallet.main) Increases.
      */
-    async processDeposit(agentId, userId, amount) {
+    async processDeposit(agentId, userId, amount, ip = 'unknown') {
         if (amount <= 0) throw new Error("Invalid amount");
 
         return await TransactionHelper.runTransaction(async (session) => {
@@ -81,7 +81,8 @@ class AgentService {
                 amount: -amount,
                 status: 'completed',
                 description: `Deposit to User: ${user.username}`,
-                recipientDetails: userId.toString()
+                recipientDetails: userId.toString(),
+                metadata: { ip }
             }], opts);
 
             // B. User Log
