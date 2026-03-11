@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import StakeModal from './StakeModal';
-import { Package, Clock, TrendingUp, AlertTriangle, CheckCircle, Activity, Info, X, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function StakingDashboard({ userWallet }) {
@@ -102,7 +101,7 @@ export default function StakingDashboard({ userWallet }) {
 
                 <div className="flex-1">
                     <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                        <TrendingUp className="w-6 h-6 text-emerald-400" /> Micro-Investments
+                        📈 Micro-Investments
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">Lock your NXS for higher returns. Zero effort, steady profits.</p>
                 </div>
@@ -121,7 +120,7 @@ export default function StakingDashboard({ userWallet }) {
 
             {/* Investment Pools */}
             <div>
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Package className="w-5 h-5 text-indigo-400" /> Available Pools</h2>
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">📦 Available Pools</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {pools.map(pool => (
                         <div key={pool._id} className="bg-[#1e293b] border border-slate-700/50 hover:border-emerald-500/50 transition-colors rounded-2xl p-5 relative overflow-hidden group">
@@ -148,7 +147,7 @@ export default function StakingDashboard({ userWallet }) {
                                 onClick={() => { setSelectedPool(pool); setIsModalOpen(true); }}
                                 className="w-full py-2.5 rounded-xl font-bold bg-[#0f172a] text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition flex justify-center items-center gap-2"
                             >
-                                <Lock className="w-4 h-4" /> INVEST NOW
+                                🔒 INVEST NOW
                             </button>
                         </div>
                     ))}
@@ -157,11 +156,10 @@ export default function StakingDashboard({ userWallet }) {
 
             {/* My Active Stakes */}
             <div>
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-cyan-400" /> My Portfolio</h2>
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">💼 My Portfolio</h2>
                 {myStakes.length === 0 ? (
                     <div className="bg-[#1e293b] border border-slate-700/50 rounded-2xl p-10 text-center">
-                        <Package className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                        <h3 className="text-slate-300 font-bold text-lg">No Active Investments</h3>
+                        <h3 className="text-slate-300 font-bold text-lg mt-3">No Active Investments</h3>
                         <p className="text-slate-500 text-sm mt-1">Lock some NXS in the pools above to start earning passive income.</p>
                     </div>
                 ) : (
@@ -208,9 +206,8 @@ export default function StakingDashboard({ userWallet }) {
                                             {stake.status === 'ACTIVE' && (
                                                 <div className="mt-5">
                                                     <div className="flex justify-between text-xs font-bold mb-1.5">
-                                                        <span className="text-slate-400 flx items-center gap-1">
-                                                            <Clock className="w-3 h-3 inline-block mr-1" />
-                                                            {isMatured ? 'Matured!' : `${daysRemaining} Days Left`}
+                                                        <span className="text-slate-400 flex items-center gap-1">
+                                                            ⏱️ {isMatured ? 'Matured!' : `${daysRemaining} Days Left`}
                                                         </span>
                                                         <span className="text-emerald-400">{progress.toFixed(0)}%</span>
                                                     </div>
@@ -234,7 +231,7 @@ export default function StakingDashboard({ userWallet }) {
                                                             disabled={actionLoading === stake._id}
                                                             className="flex-1 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-900/20 transition flex justify-center items-center gap-2"
                                                         >
-                                                            {actionLoading === stake._id ? <div className="w-4 h-4 rounded-full border-2 border-emerald-200 border-t-transparent animate-spin"></div> : <CheckCircle className="w-4 h-4" />}
+                                                            {actionLoading === stake._id ? <div className="w-4 h-4 rounded-full border-2 border-emerald-200 border-t-transparent animate-spin"></div> : '✅'}
                                                             CLAIM
                                                         </button>
                                                     ) : (
@@ -243,7 +240,7 @@ export default function StakingDashboard({ userWallet }) {
                                                             disabled={actionLoading === stake._id}
                                                             className="flex-1 w-full bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-500/20 hover:border-red-500/50 font-bold py-2.5 rounded-xl text-xs transition flex justify-center items-center gap-1"
                                                         >
-                                                            {actionLoading === stake._id ? <div className="w-4 h-4 rounded-full border-2 border-red-200 border-t-transparent animate-spin"></div> : <AlertTriangle className="w-3 h-3" />}
+                                                            {actionLoading === stake._id ? <div className="w-4 h-4 rounded-full border-2 border-red-200 border-t-transparent animate-spin"></div> : '⚠️'}
                                                             Early Withdraw
                                                         </button>
                                                     )}
@@ -252,12 +249,12 @@ export default function StakingDashboard({ userWallet }) {
 
                                             {stake.status === 'COMPLETED' && (
                                                 <div className="w-full flex items-center justify-center gap-1 text-emerald-500/50 text-xs font-bold font-mono py-2">
-                                                    <CheckCircle className="w-4 h-4" /> SETTLED
+                                                    ✅ SETTLED
                                                 </div>
                                             )}
                                             {stake.status === 'CANCELLED' && (
                                                 <div className="w-full flex items-center justify-center gap-1 text-red-500/50 text-xs font-bold font-mono py-2 flex-col text-center">
-                                                    <div className="flex items-center justify-center gap-1"><X className="w-4 h-4" /> CANCELLED</div>
+                                                    <div className="flex items-center justify-center gap-1">❌ CANCELLED</div>
                                                     <span className="text-[10px] font-normal leading-tight opacity-70">Penalty Applied</span>
                                                 </div>
                                             )}

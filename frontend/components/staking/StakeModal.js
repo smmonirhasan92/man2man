@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, TrendingUp, AlertCircle, Clock } from 'lucide-react';
 
 export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfirm }) {
     const [amount, setAmount] = useState('');
@@ -32,7 +31,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#020617]/80 backdrop-blur-md p-4 animate-fade-in font-sans">
-            <div className="bg-[#0f172a] border border-slate-700/50 w-full max-w-sm rounded-[24px] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up relative">
+            <div className="bg-[#0f172a] border border-slate-700/50 w-full max-w-sm rounded-[24px] shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative">
                 {/* Decorative Glowing Top Bar */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500"></div>
 
@@ -41,11 +40,11 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                         <div>
                             <h2 className="text-xl font-black text-white">{pool.name}</h2>
                             <p className="text-sm text-slate-400 mt-1 flex items-center gap-1">
-                                <Clock className="w-4 h-4" /> Lock for {pool.durationDays} Days
+                                ⏱️ Lock for {pool.durationDays} Days
                             </p>
                         </div>
-                        <button onClick={onClose} className="text-slate-400 hover:text-white transition">
-                            <X className="w-6 h-6" />
+                        <button onClick={onClose} className="text-slate-400 hover:text-white transition font-bold text-xl">
+                            ✕
                         </button>
                     </div>
 
@@ -97,7 +96,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-emerald-400 font-bold flex items-center gap-1">
-                                        <TrendingUp className="w-4 h-4" /> Expected Profit:
+                                        📈 Expected Profit:
                                     </span>
                                     <span className="font-bold text-emerald-400">+{expectedProfit} NXS</span>
                                 </div>
@@ -110,7 +109,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                         )}
 
                         <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl mb-6 flex gap-2 items-start">
-                            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                            <span className="text-yellow-500 flex-shrink-0 mt-0.5 font-bold">⚠️</span>
                             <p className="text-[11px] text-yellow-500/90 font-bold leading-relaxed">
                                 Early withdrawal incurs a <span className="text-white">5% penalty</span> on principal and forfeits all rewards. Funds will be locked for exactly {pool.durationDays} days.
                             </p>
@@ -129,7 +128,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                                 disabled={!isValid}
                                 className="flex-1 py-3 flex items-center justify-center gap-2 rounded-xl font-black bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg hover:shadow-emerald-500/25 transition disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                             >
-                                <Lock className="w-4 h-4" /> LOCK NOW
+                                🔒 LOCK NOW
                             </button>
                         </div>
                     </form>
