@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import StakeModal from './StakeModal';
-import { Package, Clock, TrendingUp, AlertTriangle, CheckCircle, Activity, Loader2, Info, X } from 'lucide-react';
+import { Package, Clock, TrendingUp, AlertTriangle, CheckCircle, Activity, Info, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function StakingDashboard({ userWallet }) {
@@ -91,7 +91,7 @@ export default function StakingDashboard({ userWallet }) {
     };
 
     if (loading) {
-        return <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+        return <div className="p-8 flex justify-center"><div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div></div>;
     }
 
     return (
@@ -234,7 +234,7 @@ export default function StakingDashboard({ userWallet }) {
                                                             disabled={actionLoading === stake._id}
                                                             className="flex-1 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 rounded-xl shadow-lg shadow-emerald-900/20 transition flex justify-center items-center gap-2"
                                                         >
-                                                            {actionLoading === stake._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                                            {actionLoading === stake._id ? <div className="w-4 h-4 rounded-full border-2 border-emerald-200 border-t-transparent animate-spin"></div> : <CheckCircle className="w-4 h-4" />}
                                                             CLAIM
                                                         </button>
                                                     ) : (
@@ -243,7 +243,7 @@ export default function StakingDashboard({ userWallet }) {
                                                             disabled={actionLoading === stake._id}
                                                             className="flex-1 w-full bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-500/20 hover:border-red-500/50 font-bold py-2.5 rounded-xl text-xs transition flex justify-center items-center gap-1"
                                                         >
-                                                            {actionLoading === stake._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-3 h-3" />}
+                                                            {actionLoading === stake._id ? <div className="w-4 h-4 rounded-full border-2 border-red-200 border-t-transparent animate-spin"></div> : <AlertTriangle className="w-3 h-3" />}
                                                             Early Withdraw
                                                         </button>
                                                     )}

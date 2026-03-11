@@ -90,7 +90,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
 
                         {/* Live Calculation */}
                         {Number(amount) > 0 && (
-                            <div className="mb-6 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2 animate-in fade-in">
+                            <div className="mb-6 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400">Principal Locked:</span>
                                     <span className="font-bold text-white">{amount} NXS</span>
