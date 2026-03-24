@@ -1,40 +1,55 @@
 'use client';
 import React, { useState } from 'react';
-import { Eye, EyeOff, TrendingUp, Wallet } from 'lucide-react';
+import { EyeOff, TrendingUp } from 'lucide-react';
+import USCIcon from '../ui/USCIcon';
 
 /**
- * Unified Wallet Header
- * Consolidates Main Balance and Income into a single premium card.
+ * Unified Wallet Header (v5 - User Approved Sequence)
+ * Sequence: USD (Default) -> NXS (NX Coin) -> Hidden
  */
 export default function UnifiedWallet({ balance, income }) {
-    const [isVisible, setIsVisible] = useState(false);
+    // 0: USD Mode (Default), 1: NXS Mode (NX Coin), 2: Hidden
+    const [viewMode, setViewMode] = useState(0); 
     
     const rawBalance = parseFloat(balance || 0);
     const rawIncome = parseFloat(income || 0);
     const rate = 50; // 1 USD = 50 NXS
+    
+    const toggleMode = () => setViewMode((prev) => (prev + 1) % 3);
 
-    // Calculation: (USD Value)
+    // Main Calculations
     const mainUsd = (rawBalance / rate).toFixed(2);
-    const incomeUsd = (rawIncome * 0.02).toFixed(2); // Consistent with IncomeDisplay
+    const mainNxs = rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    // Income Calculations
+    const incomeUsd = (rawIncome * 0.02).toFixed(2);
+    const incomeNxs = rawIncome.toFixed(2);
 
     return (
-        <div className="flex-1 flex items-center bg-white/5 border border-white/10 rounded-2xl p-1 backdrop-blur-md shadow-2xl relative overflow-hidden group transition-all hover:bg-white/10">
+        <div 
+            onClick={toggleMode}
+            className="flex-1 flex items-center bg-white/5 border border-white/10 rounded-2xl p-1 backdrop-blur-md shadow-2xl relative overflow-hidden group transition-all hover:bg-white/10 cursor-pointer select-none min-w-[180px]"
+        >
             {/* Subtle Gradient Glow */}
             <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
             
-            {/* Main Balance Section */}
-            <div 
-                className="flex-1 px-4 py-2 cursor-pointer select-none"
-                onClick={() => setIsVisible(!isVisible)}
-            >
+            {/* Main Assets Section */}
+            <div className="flex-1 px-4 py-2">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.1em]">Assets</span>
-                    {isVisible ? <EyeOff size={10} className="text-slate-500" /> : <Eye size={10} className="text-slate-500" />}
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.1em]">
+                        {viewMode === 0 ? 'USD Assets' : viewMode === 1 ? 'NXS Assets' : 'Assets'}
+                    </span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <span className="text-sm font-black text-white font-mono">
-                        {isVisible ? `$${mainUsd}` : '••••••'}
+                    {viewMode === 0 ? (
+                        <span className="text-emerald-400 font-bold text-sm">$</span>
+                    ) : viewMode === 1 ? (
+                        <USCIcon className="w-3.5 h-3.5 mb-0.5" />
+                    ) : null}
+                    <span className="text-sm font-black text-white font-mono leading-none">
+                        {viewMode === 0 ? mainUsd : viewMode === 1 ? mainNxs : '••••••'}
                     </span>
+                    {viewMode === 2 && <EyeOff size={10} className="text-slate-500 ml-1" />}
                 </div>
             </div>
 
@@ -44,12 +59,14 @@ export default function UnifiedWallet({ balance, income }) {
             {/* Income Section */}
             <div className="flex-1 px-4 py-2 border-l border-white/5">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-[0.1em]">Gains</span>
-                    <TrendingUp size={10} className="text-emerald-500" />
+                    <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-[0.1em]">
+                        {viewMode === 1 ? 'NXS Gains' : 'Gains'}
+                    </span>
+                    {viewMode !== 2 && <TrendingUp size={10} className="text-emerald-500" />}
                 </div>
                 <div className="flex items-center gap-1">
-                    <span className="text-sm font-black text-emerald-400 font-mono">
-                        ${incomeUsd}
+                    <span className="text-sm font-black text-emerald-400 font-mono leading-none">
+                        {viewMode === 0 ? `$${incomeUsd}` : viewMode === 1 ? incomeNxs : '••••'}
                     </span>
                 </div>
             </div>
