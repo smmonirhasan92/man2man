@@ -8,6 +8,7 @@ import AuthInput from '../../components/ui/AuthInput';
 import Button from '../../components/ui/Button';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import useGameSound from '../../hooks/useGameSound';
+import { validatePhone } from '../../utils/phoneValidation';
 
 // Premium Country Data with CDN Flag Images
 const countries = [
@@ -205,6 +206,14 @@ function RegisterForm() {
             setError('Please enter your Name and Phone Number first.');
             return;
         }
+
+        // [NEW] Strict Phone Validation
+        const phoneCheck = validatePhone(formData.countryCode, formData.phone);
+        if (!phoneCheck.isValid) {
+            setError(phoneCheck.error || 'Invalid Phone Number Format.');
+            return;
+        }
+
         setIsOtpLoading(true);
         setTimeout(() => {
             const code = Math.floor(1000 + Math.random() * 9000).toString();

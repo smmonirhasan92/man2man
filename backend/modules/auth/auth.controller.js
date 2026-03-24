@@ -17,6 +17,36 @@ exports.register = async (req, res) => {
         password = password?.trim();
         referralCode = referralCode?.trim();
 
+        // [NEW] Multi-Country Phone Validation Engine
+        const validationRules = {
+            '+880': { regex: /^01[3-9]\d{8}$/, error: 'Invalid BD number. Must be 11 digits (013-019).' },
+            '+91': { regex: /^[6-9]\d{9}$/, error: 'Invalid India number. Must be 10 digits (6-9).' },
+            '+92': { regex: /^3\d{9}$/, error: 'Invalid Pakistan number. Must be 10 digits (3).' },
+            '+966': { regex: /^5\d{8}$/, error: 'Invalid Saudi number. Must be 9 digits (5).' }
+        };
+
+        // Determine country code from full phone (it's stored as +88017...)
+        const activeCountryCode = Object.keys(validationRules).find(code => primary_phone.startsWith(code));
+        
+        if (activeCountryCode) {
+            const rule = validationRules[activeCountryCode];
+            const phoneWithoutCode = primary_phone.replace(activeCountryCode, '');
+            // Some users might include a leading 0 in the phone field even with country code
+            // e.g. +880017... instead of +88017...
+            // Let's normalize it to the pattern the regex expects (which is 01... for BD)
+            let checkPhone = phoneWithoutCode;
+            if (activeCountryCode === '+880' && !checkPhone.startsWith('0')) checkPhone = '0' + checkPhone;
+
+            if (!rule.regex.test(checkPhone)) {
+                return res.status(400).json({ message: rule.error });
+            }
+        } else {
+            // Generic validation for other countries (standard 7-15 digits)
+            if (!/^\+?\d{7,15}$/.test(primary_phone)) {
+                return res.status(400).json({ message: 'Invalid phone number format.' });
+            }
+        }
+
         // --- SECURITY ---
         // --- PHONE NORMALIZATION ---
         // 1. Remove +88 if present
