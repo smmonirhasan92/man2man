@@ -9,8 +9,8 @@ export default function NodeCarousel({ plans, activeId, onSelect, connectingId }
     return (
         <div className="w-full py-4 overflow-hidden">
             <div className="flex items-center justify-between px-6 mb-3">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Server size={14} className="text-amber-400" /> Your Active Nodes
+                <h3 className="text-base font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Server size={16} className="text-amber-400" /> Your Pending Work
                 </h3>
                 <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-slate-300">
                     {plans.length} Nodes
@@ -64,7 +64,7 @@ export default function NodeCarousel({ plans, activeId, onSelect, connectingId }
                             </div>
 
                             {/* Plan Name */}
-                            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDone ? 'text-amber-500/70' : isConnecting ? 'text-blue-400' : isActive ? 'text-blue-400' : 'text-slate-500'}`}>
+                            <p className={`text-xs font-black uppercase tracking-widest mb-1 ${isDone ? 'text-amber-500/70' : isConnecting ? 'text-blue-400' : isActive ? 'text-blue-400' : 'text-slate-500'}`}>
                                 {plan.planName}
                             </p>
                             
@@ -87,8 +87,8 @@ export default function NodeCarousel({ plans, activeId, onSelect, connectingId }
 
                             <div className="flex justify-between items-end">
                                 <div className="flex flex-col">
-                                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter">Daily Tasks</span>
-                                    <span className={`text-sm font-black font-mono ${isDone ? 'text-amber-400' : 'text-white'}`}>
+                                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Daily Tasks</span>
+                                    <span className={`text-base font-black font-mono ${isDone ? 'text-amber-400' : 'text-white'}`}>
                                         {plan.tasksCompletedToday || 0}/{plan.dailyLimit || 7}
                                     </span>
                                 </div>
