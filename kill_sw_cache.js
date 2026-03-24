@@ -29,8 +29,8 @@ async function killSw() {
         `;
         await ssh.execCommand(`echo "${workerKillScript}" > /var/www/man2man/frontend/public/sw.js`);
 
-        console.log('--- Phase 3: Final Rebuild & Restart ---');
-        await ssh.execCommand('cd /var/www/man2man/frontend && rm -rf .next && npm run build');
+        console.log('--- Phase 3: Fresh Install & Rebuild ---');
+        await ssh.execCommand('cd /var/www/man2man/frontend && rm -rf .next && npm i && npm run build');
         await ssh.execCommand('pm2 restart all');
 
         ssh.dispose();

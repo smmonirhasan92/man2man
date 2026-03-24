@@ -69,6 +69,10 @@ export default function UnifiedWallet({ balance, income }) {
                         {viewMode === 0 ? `$${incomeUsd}` : viewMode === 1 ? incomeNxs : '••••'}
                     </span>
                 </div>
+                {/* Version Tag for v6.5 Verification */}
+                <div className="absolute bottom-1 right-2 text-[6px] text-white/20 font-mono uppercase tracking-tighter">
+                    v6.5
+                </div>
             </div>
         </div>
     );
