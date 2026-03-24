@@ -157,7 +157,14 @@ function DashboardContent() {
                     }}
                 />
 
-                {/* 3. USA Node Management (Enhanced) */}
+                {/* 3. Promo Slider (Hero Position) */}
+                <div className="w-full px-6 relative z-0 mb-4">
+                    <div className="p-1 rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative bg-white/5 backdrop-blur-sm">
+                        <ImageSlider />
+                    </div>
+                </div>
+
+                {/* 4. USA Node Management (Enhanced) */}
                 {user?.active_plans?.length > 0 ? (
                     <NodeCarousel 
                         plans={user.active_plans} 
@@ -165,7 +172,7 @@ function DashboardContent() {
                         onSelect={handleNodeSelect} 
                     />
                 ) : (
-                    <div className="w-full px-6 mb-2">
+                    <div className="w-full px-6 mb-4">
                         <Link href="/marketplace" className="block bg-slate-800/40 border border-white/5 p-4 rounded-3xl text-center hover:bg-slate-800/60 transition shadow-xl">
                             <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-2 text-red-400">
                                 <Server size={20} />
@@ -176,44 +183,31 @@ function DashboardContent() {
                     </div>
                 )}
 
-                {/* 4. Resotred Image Slider */}
-                <div className="w-full px-6 relative z-0 mb-3">
-                    <div className="p-1 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/20 relative bg-white/5 backdrop-blur-sm">
-                        <ImageSlider />
-                    </div>
+                {/* 5. Finance Priority Actions - Compact & Flat */}
+                <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
+                    <button 
+                        onClick={() => setP2pMode('buy')} 
+                        className="bg-emerald-500/5 border border-emerald-500/20 p-5 rounded-[2rem] flex flex-col items-center justify-center gap-2 hover:bg-emerald-500/10 transition group shadow-xl backdrop-blur-md"
+                    >
+                        <div className="p-2 bg-emerald-500 rounded-xl text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+                            <Plus size={16} strokeWidth={3} />
+                        </div>
+                        <span className="text-white font-black text-[10px] uppercase tracking-widest mt-1">Buy NXS</span>
+                    </button>
+
+                    <button 
+                        onClick={() => setP2pMode('sell')} 
+                        className="bg-red-500/5 border border-red-500/20 p-5 rounded-[2rem] flex flex-col items-center justify-center gap-2 hover:bg-red-500/10 transition group shadow-xl backdrop-blur-md"
+                    >
+                        <div className="p-2 bg-red-500 rounded-xl text-white shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
+                            <ArrowDownLeft size={16} strokeWidth={3} />
+                        </div>
+                        <span className="text-white font-black text-[10px] uppercase tracking-widest mt-1">Sell NXS</span>
+                    </button>
                 </div>
 
-                {/* 5. Wallet & Finance Operations (Consolidated) */}
-                <div className="w-full px-6 mb-6">
-                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 backdrop-blur-md shadow-xl relative overflow-hidden">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Wallet size={16} className="text-blue-400" />
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Finance Hub</h3>
-                        </div>
-
-                        {/* Buy/Sell Row */}
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                            <button onClick={() => setP2pMode('buy')} className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-emerald-500/20 transition group">
-                                <div className="p-2 bg-emerald-500 rounded-xl text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                                    <Plus size={16} strokeWidth={3} />
-                                </div>
-                                <span className="text-white font-black text-[10px] uppercase tracking-wider">Buy NXS</span>
-                            </button>
-
-                            <button onClick={() => setP2pMode('sell')} className="bg-red-500/10 border border-red-500/30 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-red-500/20 transition group">
-                                <div className="p-2 bg-red-500 rounded-xl text-white shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
-                                    <ArrowDownLeft size={16} strokeWidth={3} />
-                                </div>
-                                <span className="text-white font-black text-[10px] uppercase tracking-wider">Sell NXS</span>
-                            </button>
-                        </div>
-
-                        {/* Internal Transfer (Sleek Integration) */}
-                        <div className="pt-4 border-t border-white/5">
-                            <WalletSwap user={user} onSuccess={fetchUser} />
-                        </div>
-                    </div>
-                </div>
+                {/* 6. Internal Transfer (Direct Component) */}
+                <WalletSwap user={user} onSuccess={fetchUser} />
 
                 {/* 7. Task Panel */}
                 <TaskPanel user={user} />
