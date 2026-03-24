@@ -156,25 +156,55 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                                 <div className="text-center py-10 text-slate-500 text-xs">No active servers found.</div>
                             ) : (
                                 servers.map(server => (
-                                    <div key={server._id} className="bg-slate-800/50 p-3 rounded-xl border border-white/5">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="text-xs font-bold text-indigo-300">{server.planName}</span>
-                                            {/* CONNECT BUTTON */}
-                                            <button
-                                                onClick={() => setConnectingPlan(server)}
-                                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1"
-                                            >
-                                                <Server size={10} /> CONNECT
-                                            </button>
+                                    <div key={server._id} className={`p-4 rounded-2xl border transition-all ${
+                                        (server.tasksCompletedToday >= server.dailyLimit) 
+                                        ? 'bg-amber-500/5 border-amber-500/20' 
+                                        : 'bg-slate-800/40 border-white/5'
+                                    }`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-white uppercase tracking-tight">{server.planName}</span>
+                                                <div className="flex items-center gap-1.5 mt-1">
+                                                    {(server.tasksCompletedToday >= server.dailyLimit) ? (
+                                                        <span className="text-[9px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-amber-500/20">
+                                                            COMPLETED
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-emerald-500/20">
+                                                            RUNNING
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {/* Progress Indicator */}
+                                            <div className="text-right">
+                                                <div className="text-[10px] font-bold text-slate-400 mb-0.5">Progress</div>
+                                                <div className="text-xs font-black text-white font-mono">
+                                                    {server.tasksCompletedToday || 0}/{server.dailyLimit || 7}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-white font-mono text-sm tracking-wide bg-black/30 p-2 rounded lg group/copy cursor-pointer active:scale-95 transition" onClick={() => {
-                                            if (server.syntheticPhone && server.syntheticPhone !== 'Generating...') {
-                                                handleCopy(server.syntheticPhone, "USA Number Copied!");
-                                            }
-                                        }}>
-                                            <Image src="https://flagcdn.com/us.svg" className="w-4 h-3 rounded-[1px]" alt="USA" width={16} height={12} loading="lazy" />
-                                            {server.syntheticPhone || 'Generating...'}
-                                            <Copy size={12} className="text-slate-500 group-hover/copy:text-white ml-auto" />
+
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex-1 flex items-center gap-2 text-white font-mono text-sm tracking-wide bg-black/30 p-2 rounded-lg group/copy cursor-pointer active:scale-95 transition" onClick={() => {
+                                                if (server.syntheticPhone && server.syntheticPhone !== 'Generating...') {
+                                                    handleCopy(server.syntheticPhone, "USA Number Copied!");
+                                                }
+                                            }}>
+                                                <Image src="https://flagcdn.com/us.svg" className="w-4 h-3 rounded-[1px]" alt="USA" width={16} height={12} loading="lazy" />
+                                                {server.syntheticPhone || 'Generating...'}
+                                                <Copy size={12} className="text-slate-500 group-hover/copy:text-white ml-auto" />
+                                            </div>
+
+                                            {/* ACTION BUTTON */}
+                                            {server.tasksCompletedToday < server.dailyLimit && (
+                                                <button
+                                                    onClick={() => setConnectingPlan(server)}
+                                                    className="bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20"
+                                                >
+                                                   Connect
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))

@@ -8,15 +8,14 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
 import ConnectionFlow from '../../components/ConnectionFlow';
 
 import TaskPanel from '../../components/tasks/TaskPanel';
-import HeaderBalance from '../../components/layout/HeaderBalance';
-import IncomeDisplay from '../../components/layout/IncomeDisplay';
+import UnifiedWallet from '../../components/layout/UnifiedWallet';
 import WalletSwap from '../../components/wallet/WalletSwap';
 import ProfileDrawer from '../../components/dashboard/ProfileDrawer';
 import P2PDashboard from '../../components/p2p/P2PDashboard';
@@ -142,10 +141,9 @@ function DashboardContent() {
                             </div>
                         </div>
                     </div>
-                    {/* Interactive Tap-to-View Wallet Display */}
-                    <div className="flex items-center gap-2">
-                        <IncomeDisplay amount={user?.wallet?.income} />
-                        <HeaderBalance balance={user?.wallet_balance} />
+                    {/* 2. Unified Premium Wallet Hub */}
+                    <div className="flex-1 max-w-[200px]">
+                        <UnifiedWallet balance={user?.wallet_balance} income={user?.wallet?.income} />
                     </div>
                 </div>
 
@@ -185,28 +183,36 @@ function DashboardContent() {
                     </div>
                 </div>
 
-                {/* 5. Finance Priority Actions - Compact */}
-                <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
-                    <button onClick={() => setP2pMode('buy')} className="bg-[#0f1f33] border border-emerald-500/30 p-3 rounded-xl flex items-center justify-center gap-3 hover:bg-[#132840] hover:border-emerald-500/60 transition shadow-lg group relative overflow-hidden">
-                        <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform">
-                            <Plus className="w-4 h-4" strokeWidth={3} />
+                {/* 5. Wallet & Finance Operations (Consolidated) */}
+                <div className="w-full px-6 mb-6">
+                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 backdrop-blur-md shadow-xl relative overflow-hidden">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Wallet size={16} className="text-blue-400" />
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Finance Hub</h3>
                         </div>
-                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Buy NXS</span>
-                    </button>
 
-                    <button onClick={() => setP2pMode('sell')} className="bg-[#0f1f33] border border-red-500/30 p-3 rounded-xl flex items-center justify-center gap-3 hover:bg-[#132840] hover:border-red-500/60 transition shadow-lg group relative overflow-hidden">
-                        <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-110 transition-transform">
-                            <ArrowDownLeft className="w-4 h-4" strokeWidth={3} />
+                        {/* Buy/Sell Row */}
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <button onClick={() => setP2pMode('buy')} className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-emerald-500/20 transition group">
+                                <div className="p-2 bg-emerald-500 rounded-xl text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+                                    <Plus size={16} strokeWidth={3} />
+                                </div>
+                                <span className="text-white font-black text-[10px] uppercase tracking-wider">Buy NXS</span>
+                            </button>
+
+                            <button onClick={() => setP2pMode('sell')} className="bg-red-500/10 border border-red-500/30 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-red-500/20 transition group">
+                                <div className="p-2 bg-red-500 rounded-xl text-white shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
+                                    <ArrowDownLeft size={16} strokeWidth={3} />
+                                </div>
+                                <span className="text-white font-black text-[10px] uppercase tracking-wider">Sell NXS</span>
+                            </button>
                         </div>
-                        <span className="text-white font-black text-xs uppercase tracking-widest mt-0.5">Sell NXS</span>
-                    </button>
-                </div>
 
-                {/* 6. Restored Wallet Swap Feature */}
-                <div className="mb-4 w-full">
-                    <WalletSwap user={user} onSuccess={fetchUser} />
+                        {/* Internal Transfer (Sleek Integration) */}
+                        <div className="pt-4 border-t border-white/5">
+                            <WalletSwap user={user} onSuccess={fetchUser} />
+                        </div>
+                    </div>
                 </div>
 
                 {/* 7. Task Panel */}
