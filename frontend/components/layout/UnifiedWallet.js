@@ -37,7 +37,7 @@ export default function UnifiedWallet({ balance, income }) {
             <div className="flex-1 px-4 py-2">
                 <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">
-                        {viewMode === 0 ? 'USD Assets' : viewMode === 1 ? 'NXS Assets' : 'Assets'}
+                        {viewMode === 0 ? 'USD Balance' : viewMode === 1 ? 'NXS Balance' : 'Balance'}
                     </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -60,7 +60,7 @@ export default function UnifiedWallet({ balance, income }) {
             <div className="flex-1 px-4 py-2 border-l border-white/5">
                 <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.1em]">
-                        {viewMode === 1 ? 'NXS Gains' : 'Gains'}
+                        {viewMode === 1 ? 'NXS Income' : 'Income'}
                     </span>
                     {viewMode !== 2 && <TrendingUp size={12} className="text-emerald-500" />}
                 </div>

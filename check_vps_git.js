@@ -1,7 +1,7 @@
 const { NodeSSH } = require('node-ssh');
 const ssh = new NodeSSH();
 
-async function check() {
+async function checkLog() {
     try {
         await ssh.connect({
             host: '76.13.244.202',
@@ -10,13 +10,9 @@ async function check() {
             port: 22
         });
         
-        console.log('--- PM2 STATUS ---');
-        const res1 = await ssh.execCommand('pm2 list');
+        console.log('--- VPS GIT LOG ---');
+        const res1 = await ssh.execCommand('git log -n 1', { cwd: '/var/www/man2man' });
         console.log(res1.stdout);
-
-        console.log('--- BACKEND LOGS (Last 20 lines) ---');
-        const res2 = await ssh.execCommand('pm2 logs man2man-backend --lines 20 --noprefix');
-        console.log(res2.stdout || res2.stderr);
 
         ssh.dispose();
     } catch (err) {
@@ -24,4 +20,4 @@ async function check() {
         ssh.dispose();
     }
 }
-check();
+checkLog();

@@ -41,7 +41,7 @@ export default function WalletSwap({ user, onSuccess }) {
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-3 border border-white/10 shadow-xl backdrop-blur-md">
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <Wallet className="w-4 h-4 text-cyan-400" /> Internal Transfer
+                        <Wallet className="w-4 h-4 text-cyan-400" /> Fund Transfer
                     </h3>
                     <span className="text-[10px] font-bold text-cyan-400 uppercase bg-cyan-900/30 px-2 py-1 rounded">
                         Income → Main
@@ -109,7 +109,7 @@ export default function WalletSwap({ user, onSuccess }) {
                 {/* Fee Warning */}
                 <div className="mt-3 text-center">
                     <p className="text-[10px] text-amber-500/80 font-medium tracking-wide">
-                        ⚠️ A 3% Exchange Fee applies to Internal Transfers.
+                        ⚠️ A 3% Exchange Fee applies to Fund Transfers.
                     </p>
                 </div>
             </div>
