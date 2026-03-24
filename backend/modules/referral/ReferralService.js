@@ -68,8 +68,9 @@ class ReferralService {
                             for (const tier of tiers) {
                                 // If they EXACTLY hit the target, award the tier bonus once
                                 if (directUpline.referralCount === tier.targetReferrals && tier.bonusAmount > 0) {
-                                    // Promotional Tier bonuses go to the Main Wallet as per requirement
-                                    directUpline.wallet.main = (directUpline.wallet.main || 0) + tier.bonusAmount;
+                                    // [MODIFIED] Promotional Tier bonuses now go to the Income Wallet as per v6.5 "All-to-Income" policy
+                                    directUpline.wallet.income = (directUpline.wallet.income || 0) + tier.bonusAmount;
+                                    directUpline.referralIncome = (directUpline.referralIncome || 0) + tier.bonusAmount;
 
                                     // Mark as Promoted for Admin visibility
                                     if (directUpline.taskData) directUpline.taskData.promotionalStatus = 'promoted';

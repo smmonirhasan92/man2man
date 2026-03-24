@@ -142,6 +142,14 @@ exports.transferToMain = async (req, res) => {
             return res.status(400).json({ message: "Invalid Amount" });
         }
 
+        // [v6.5] Financial Hardening: $5 Minimum Limit (250 NXS)
+        if (amountFloat < 250) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Minimum transfer amount is 250 NXS ($5.00 USD). Please accumulate more earnings." 
+            });
+        }
+
         // [COOLDOWN] Redis Lock (5 Seconds)
         const { client } = require('../../config/redis');
         if (client.isOpen) {

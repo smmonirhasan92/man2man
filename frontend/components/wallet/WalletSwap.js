@@ -12,10 +12,12 @@ export default function WalletSwap({ user, onSuccess }) {
     const [receipt, setReceipt] = useState(null);
 
     const handleSwap = async () => {
-        if (!amount || parseFloat(amount) <= 0) return;
+        if (!amount || parseFloat(amount) < 5) return;
         setLoading(true);
         try {
-            const response = await api.post('/wallet/transfer/main', { amount });
+            // [v6.5] Convert USD input to NXS for the backend (1 USD = 50 NXS)
+            const nxsAmount = parseFloat(amount) * 50;
+            const response = await api.post('/wallet/transfer/main', { amount: nxsAmount });
 
             onSuccess(); // Refresh user data
             setAmount('');
@@ -57,9 +59,6 @@ export default function WalletSwap({ user, onSuccess }) {
                         <div className="text-xs font-bold text-white leading-none">
                             ${(Number(incomeBalance) * 0.02).toFixed(2)} USD
                         </div>
-                        <div className="text-[8px] text-slate-500 font-mono mt-0.5">
-                            ({Number(incomeBalance).toFixed(2)} NXS)
-                        </div>
                     </div>
 
                     {/* Arrow */}
@@ -81,36 +80,37 @@ export default function WalletSwap({ user, onSuccess }) {
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold font-mono text-[10px] tracking-widest mt-[0.5px]">
-                            NXS Amount:
+                            USD Amount:
                         </span>
                         <input
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            placeholder="0"
-                            className="w-full h-full bg-slate-950/50 border border-slate-700 rounded-xl pl-[80px] pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
+                            placeholder="Min: 5.00"
+                            className={`w-full h-full bg-slate-950/50 border ${amount && Number(amount) < 5 ? 'border-red-500/50' : 'border-slate-700'} rounded-xl pl-[80px] pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono`}
                         />
-                        {amount > 0 && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 font-bold font-mono text-[10px]">
-                                = ${(Number(amount) * 0.02).toFixed(2)}
-                            </div>
-                        )}
                     </div>
                     {/* Action Button */}
                     <button
                         onClick={handleSwap}
-                        disabled={loading || !amount}
+                        disabled={loading || !amount || Number(amount) < 5}
                         className="w-1/3 py-2 rounded-xl bg-gradient-to-r from-amber-200 to-yellow-400 text-black font-bold text-xs shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {loading ? 'Wait...' : 'Transfer'}
                     </button>
                 </div>
 
-                {/* Fee Warning */}
-                <div className="mt-3 text-center">
-                    <p className="text-[10px] text-amber-500/80 font-medium tracking-wide">
-                        ⚠️ A 3% Exchange Fee applies to Fund Transfers.
-                    </p>
+                {/* Status/Fee Warning */}
+                <div className="mt-3 text-center space-y-1">
+                    {amount && Number(amount) < 5 ? (
+                        <p className="text-[10px] text-red-400 font-bold animate-pulse">
+                            ❌ Min. Transfer: $5.00 USD
+                        </p>
+                    ) : (
+                        <p className="text-[10px] text-amber-500/80 font-medium tracking-wide">
+                            ⚠️ A 3% Exchange Fee applies to Fund Transfers.
+                        </p>
+                    )}
                 </div>
             </div>
 
