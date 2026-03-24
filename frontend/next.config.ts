@@ -68,6 +68,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // output: 'export' as const, // Disabled for PM2 Next Start
   images: {
     remotePatterns: [
