@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -20,9 +20,7 @@ import WalletSwap from '../../components/wallet/WalletSwap';
 import ProfileDrawer from '../../components/dashboard/ProfileDrawer';
 import P2PDashboard from '../../components/p2p/P2PDashboard';
 import NodeCarousel from '../../components/dashboard/NodeCarousel';
-import MarketplaceScroller from '../../components/dashboard/MarketplaceScroller';
 import VPSConnectModal from '../../components/VPSConnectModal';
-import DisclaimerModal from '../../components/DisclaimerModal';
 import api from '../../services/api';
 
 export default function DashboardPage() {
@@ -40,10 +38,6 @@ function DashboardContent() {
     const [p2pMode, setP2pMode] = useState(null); // 'buy' | 'sell' | null
     const [activeNodeId, setActiveNodeId] = useState(null);
     const [connectingNode, setConnectingNode] = useState(null);
-    const [plans, setPlans] = useState([]);
-    const [selectedPlan, setSelectedPlan] = useState(null);
-    const [showDisclaimer, setShowDisclaimer] = useState(false);
-    const [provisioning, setProvisioning] = useState(false);
     const router = useRouter();
     const { formatMoney } = useCurrency();
 
@@ -57,10 +51,6 @@ function DashboardContent() {
                 return;
             }
             setUser(data);
-            
-            // Fetch Marketplace Plans
-            const plansRes = await api.get('/plan');
-            setPlans(plansRes.data.plans || plansRes.data);
         } catch (err) {
             console.error(err);
         } finally {
@@ -124,52 +114,6 @@ function DashboardContent() {
         });
     };
 
-    const handleInitiatePurchase = (plan) => {
-        const nxsCost = plan.unlock_price || 1000;
-        const usdPrice = nxsCost / 50;
-        const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
-
-        if (totalBalance < nxsCost) {
-            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)}`);
-            return;
-        }
-
-        setSelectedPlan(plan);
-        setShowDisclaimer(true);
-    };
-
-    const handleAcceptPurchase = async () => {
-        setShowDisclaimer(false);
-        const plan = selectedPlan;
-        if (!plan) return;
-
-        setProvisioning(true);
-        try {
-            await new Promise(r => setTimeout(r, 4000)); // Dramatic deployment pause
-            const res = await api.post(`/plan/purchase/${plan._id || plan.id}`);
-            
-            if (res.data.success || res.status === 200) {
-                const purchasedPlan = res.data.plan;
-                localStorage.setItem('active_server_id', purchasedPlan._id || purchasedPlan.id);
-                localStorage.setItem('active_server_name', plan.name);
-                localStorage.setItem('active_server_phone', purchasedPlan.syntheticPhone);
-                
-                await authService.refreshUser();
-                fetchUser(); // Refresh dashboard data
-
-                toast.success("DEPLOYMENT COMPLETE", {
-                    icon: '🚀',
-                    style: { background: '#0a192f', color: '#fff', border: '1px solid #10b981' }
-                });
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error(err.response?.data?.message || "Deployment Failed");
-        } finally {
-            setProvisioning(false);
-            setSelectedPlan(null);
-        }
-    };
 
     const activeNode = user?.active_plans?.find(p => p.id === activeNodeId) || user?.active_plans?.[0];
 
@@ -251,11 +195,24 @@ function DashboardContent() {
                     </div>
                 )}
 
-                {/* 4.1 VPS Server Marketplace (Integrated Scroller) */}
-                <MarketplaceScroller 
-                    plans={plans} 
-                    onSelect={handleInitiatePurchase} 
-                />
+                {/* 4.1 VPS Server Marketplace Entry (v6.1 - Replaced Scroller with Navigation) */}
+                <div className="w-full px-6 mb-4">
+                    <button 
+                        onClick={() => router.push('/marketplace')} 
+                        className="w-full bg-blue-500/10 border border-blue-500/20 p-5 rounded-[2rem] flex items-center justify-between hover:bg-blue-500/20 transition group shadow-xl backdrop-blur-md"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-500 rounded-2xl text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                                <Globe size={24} strokeWidth={2.5} />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-white font-black text-sm uppercase tracking-tight">VPS Server Marketplace</h3>
+                                <p className="text-slate-400 text-[10px] mt-1 font-medium">Explore & Deploy Verified Nodes</p>
+                            </div>
+                        </div>
+                        <ArrowRight size={20} className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                </div>
 
                 {/* 5. Finance Priority Actions - Compact & Flat */}
                 <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
@@ -341,32 +298,6 @@ function DashboardContent() {
                     )}
                 </AnimatePresence>
 
-                {/* Provisioning Animation Overlay (New Server) */}
-                <AnimatePresence>
-                    {provisioning && (
-                        <div className="fixed inset-0 z-[100] bg-[#0a192f]/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
-                             <div className="text-center w-full px-8">
-                                <div className="flex gap-2 justify-center mb-8">
-                                    <div className="w-4 h-20 bg-slate-800 rounded overflow-hidden flex flex-col gap-px p-px">
-                                        {[...Array(6)].map((_, i) => <div key={i} className="h-2 bg-blue-500/20 rounded-[1px] relative"><div className="absolute inset-0 bg-blue-400 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}></div></div>)}
-                                    </div>
-                                    <div className="w-4 h-20 bg-slate-800 rounded overflow-hidden flex flex-col gap-px p-px">
-                                        {[...Array(6)].map((_, i) => <div key={i} className="h-2 bg-emerald-500/20 rounded-[1px] relative"><div className="absolute inset-0 bg-emerald-400 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div></div>)}
-                                    </div>
-                                </div>
-                                <h2 className="text-lg font-bold text-white tracking-widest animate-pulse mb-2 uppercase">Provisioning Node</h2>
-                                <p className="text-blue-400 font-mono text-[10px]">Deploying secure cloud infrastructure...</p>
-                            </div>
-                        </div>
-                    )}
-                </AnimatePresence>
-
-                <DisclaimerModal 
-                    isOpen={showDisclaimer}
-                    onClose={() => setShowDisclaimer(false)}
-                    onAccept={handleAcceptPurchase}
-                    plan={selectedPlan}
-                />
 
             </main>
         </div>
