@@ -1,90 +1,44 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Server, MessageSquare, LogOut, Settings, Wallet, Copy, Download } from 'lucide-react';
+import { X, MessageSquare, LogOut, Settings, Copy, Download } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { AnimatePresence } from 'framer-motion';
-import ConnectionFlow from '../ConnectionFlow';
 
 export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
-    const [activeTab, setActiveTab] = useState('servers'); // 'servers' | 'otp'
-    const [servers, setServers] = useState([]);
+    const [activeTab, setActiveTab] = useState('otp');
     const [notifications, setNotifications] = useState([]);
-    const [connectingPlan, setConnectingPlan] = useState(null);
     const router = useRouter();
-
-    const handleFlowComplete = async () => {
-        const plan = connectingPlan;
-        setConnectingPlan(null);
-        if (!plan) return;
-
-        try {
-            await api.post('/task/verify-connection', {
-                planId: plan._id,
-                syntheticPhone: plan.syntheticPhone
-            });
-
-            localStorage.setItem('active_server_id', plan._id);
-            localStorage.setItem('active_server_name', plan.planName);
-            localStorage.setItem('active_server_phone', plan.syntheticPhone);
-
-            toast.success("Secure Tunnel Established", { icon: '🛡️' });
-
-            // [DIRECT EFFECTIVENESS] Hard reload if on tasks, otherwise navigate
-            if (window.location.pathname === '/tasks') {
-                window.location.reload();
-            } else {
-                router.push('/tasks');
-                onClose();
-            }
-
-        } catch (err) {
-            console.error(err);
-            toast.error("Handshake Failed. Re-verifying...");
-        }
-    };
 
     useEffect(() => {
         if (isOpen) {
+            const fetchData = async () => {
+                try {
+                    const notifRes = await api.get('/notifications?limit=20');
+                    setNotifications(notifRes.data);
+                } catch (e) {
+                    console.error(e);
+                }
+            };
             fetchData();
         }
     }, [isOpen]);
-
-    const fetchData = async () => {
-        try {
-            const [plansRes, notifRes] = await Promise.all([
-                api.get('/plan/my-plans'),
-                api.get('/notifications?limit=20')
-            ]);
-            setServers(plansRes.data);
-            setNotifications(notifRes.data);
-        } catch (e) {
-            console.error(e);
-        }
-    };
 
     const handleCopy = async (text, label = "Copied!") => {
         try {
             await navigator.clipboard.writeText(text);
             toast.success(label, { icon: '🇺🇸' });
         } catch (err) {
-            console.warn('Clipboard API failed, using fallback:', err);
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed"; // Avoid scrolling to bottom
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                toast.success(label, { icon: '🇺🇸' });
-            } catch (fallbackErr) {
-                console.error('Fallback copy failed:', fallbackErr);
-                toast.error("Failed to copy");
-            }
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            toast.success(label, { icon: '🇺🇸' });
         }
     };
 
@@ -92,12 +46,9 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex justify-end">
-            {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
 
-            {/* Drawer */}
             <div className="relative w-80 h-full bg-[#0F172A] border-l border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#1E293B]">
                     <div className="flex items-center gap-3">
@@ -114,34 +65,9 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                     </button>
                 </div>
 
-                {/* Secure Assets Section */}
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-
-                    {/* [NEW] Marketplace Entry Point */}
-                    <button
-                        onClick={() => { onClose(); router.push('/marketplace'); }}
-                        className="w-full mb-4 py-3 bg-gradient-to-r from-indigo-900 to-slate-900 border border-indigo-500/50 rounded-xl text-xs font-black text-white shadow-lg flex items-center justify-between px-4 hover:scale-[1.02] transition-transform group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="p-1.5 bg-indigo-500 rounded-lg shadow-indigo-500/20">
-                                <Server size={16} className="text-white" />
-                            </div>
-                            <div className="text-left">
-                                <div className="uppercase tracking-wider text-[10px] text-indigo-300">New Feature</div>
-                                <div className="text-sm">Server Marketplace</div>
-                            </div>
-                        </div>
-                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                    </button>
-
                     {/* Tabs */}
                     <div className="flex p-1 bg-slate-900 rounded-xl mb-6">
-                        <button
-                            onClick={() => setActiveTab('servers')}
-                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'servers' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            <Server size={14} /> My Servers
-                        </button>
                         <button
                             onClick={() => setActiveTab('otp')}
                             className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'otp' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
@@ -150,109 +76,38 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                         </button>
                     </div>
 
-                    {activeTab === 'servers' ? (
-                        <div className="space-y-3">
-                            {servers.length === 0 ? (
-                                <div className="text-center py-10 text-slate-500 text-xs">No active servers found.</div>
-                            ) : (
-                                servers.map(server => (
-                                    <div key={server._id} className={`p-4 rounded-2xl border transition-all ${
-                                        (server.tasksCompletedToday >= server.dailyLimit) 
-                                        ? 'bg-amber-500/5 border-amber-500/20' 
-                                        : 'bg-slate-800/40 border-white/5'
-                                    }`}>
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black text-white uppercase tracking-tight">{server.planName}</span>
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                    {(server.tasksCompletedToday >= server.dailyLimit) ? (
-                                                        <span className="text-[9px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-amber-500/20">
-                                                            COMPLETED
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-emerald-500/20">
-                                                            RUNNING
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            {/* Progress Indicator */}
-                                            <div className="text-right">
-                                                <div className="text-[10px] font-bold text-slate-400 mb-0.5">Progress</div>
-                                                <div className="text-xs font-black text-white font-mono">
-                                                    {server.tasksCompletedToday || 0}/{server.dailyLimit || 7}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="flex-1 flex items-center gap-2 text-white font-mono text-sm tracking-wide bg-black/30 p-2 rounded-lg group/copy cursor-pointer active:scale-95 transition" onClick={() => {
-                                                if (server.syntheticPhone && server.syntheticPhone !== 'Generating...') {
-                                                    handleCopy(server.syntheticPhone, "USA Number Copied!");
-                                                }
-                                            }}>
-                                                <Image src="https://flagcdn.com/us.svg" className="w-4 h-3 rounded-[1px]" alt="USA" width={16} height={12} loading="lazy" />
-                                                {server.syntheticPhone || 'Generating...'}
-                                                <Copy size={12} className="text-slate-500 group-hover/copy:text-white ml-auto" />
-                                            </div>
-
-                                            {/* ACTION BUTTON */}
-                                            {server.tasksCompletedToday < server.dailyLimit && (
-                                                <button
-                                                    onClick={() => setConnectingPlan(server)}
-                                                    className="bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20"
-                                                >
-                                                   Connect
-                                                </button>
-                                            )}
-                                        </div>
+                    <div className="space-y-3">
+                        {notifications.length === 0 ? (
+                            <div className="text-center py-10 text-slate-500 text-xs">Inbox empty.</div>
+                        ) : (
+                            notifications.map(notif => (
+                                <div key={notif._id} className="bg-slate-800/50 p-3 rounded-xl border border-white/5 hover:bg-slate-800 transition group/otp" onClick={() => {
+                                    if (notif.message.includes('Code:')) {
+                                        const code = notif.message.match(/Code: (\d+)/)?.[1] || notif.message;
+                                        handleCopy(code, "OTP Code Copied!");
+                                    }
+                                }}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${notif.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                            {notif.type.toUpperCase()}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500">{new Date(notif.createdAt).toLocaleTimeString()}</span>
                                     </div>
-                                ))
-                            )}
-                            <button onClick={() => { onClose(); router.push('/marketplace'); }} className="w-full py-3 mt-4 border border-dashed border-slate-600 text-slate-400 rounded-xl text-xs font-bold hover:bg-white/5 transition flex items-center justify-center gap-2">
-                                <Server size={14} /> Purchase New Server
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {/* OTP List */}
-                            {notifications.length === 0 ? (
-                                <div className="text-center py-10 text-slate-500 text-xs">Inbox empty.</div>
-                            ) : (
-                                notifications.map(notif => (
-                                    <div key={notif._id} className="bg-slate-800/50 p-3 rounded-xl border border-white/5 hover:bg-slate-800 transition group/otp" onClick={() => {
-                                        if (notif.message.includes('Code:')) {
-                                            // Extract code simple regex
-                                            const code = notif.message.match(/Code: (\d+)/)?.[1] || notif.message;
-                                            handleCopy(code, "OTP Code Copied!");
-                                        }
-                                    }}>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${notif.type === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                                                {notif.type.toUpperCase()}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500">{new Date(notif.createdAt).toLocaleTimeString()}</span>
-                                        </div>
-                                        <p className="text-xs text-slate-300 font-medium leading-relaxed flex items-center gap-2">
-                                            {notif.message}
-                                            {notif.message.includes('Code') && <Copy size={10} className="opacity-0 group-hover/otp:opacity-100 transition" />}
-                                        </p>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    )}
-
+                                    <p className="text-xs text-slate-300 font-medium leading-relaxed flex items-center gap-2">
+                                        {notif.message}
+                                        {notif.message.includes('Code') && <Copy size={10} className="opacity-0 group-hover/otp:opacity-100 transition" />}
+                                    </p>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer Actions */}
                 <div className="p-4 border-t border-white/10 bg-[#1E293B] space-y-2">
-
-                    {/* REFERRAL SYSTEM RELOCATED */}
                     <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 mb-2">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-bold text-yellow-500 flex items-center gap-1"><Settings size={12} className="text-yellow-500" /> Invite Link</span>
-                            <span className="text-[10px] text-slate-500">Invite Friends</span>
                         </div>
                         <div className="flex items-center gap-2 bg-black/40 p-2 rounded-lg border border-white/5 cursor-pointer active:scale-95 transition group"
                             onClick={() => handleCopy(`https://usaaffiliatemarketing.com/register?ref=${user?.referralCode}`, 'Invite Link Copied!')}>
@@ -267,15 +122,8 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                         <Settings size={14} /> Full Profile Settings
                     </button>
 
-                    {/* [NEW] Manual App Download Button */}
                     <button
-                        onClick={() => {
-                            if (window.triggerPWAInstall) {
-                                window.triggerPWAInstall();
-                            } else {
-                                toast.error("Please open this site in Chrome/Safari to install.");
-                            }
-                        }}
+                        onClick={() => window.triggerPWAInstall?.()}
                         className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition uppercase"
                     >
                         <Download size={14} /> Download Official App
@@ -285,18 +133,7 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                         <LogOut size={14} /> Sign Out
                     </button>
                 </div>
-
             </div>
-
-            {/* GLOBAL CONNECTION FLOW */}
-            <AnimatePresence>
-                {connectingPlan && (
-                    <ConnectionFlow
-                        plan={connectingPlan}
-                        onComplete={handleFlowComplete}
-                    />
-                )}
-            </AnimatePresence>
         </div>
     );
 }

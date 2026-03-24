@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Server, CheckCircle, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function NodeCarousel({ plans, activeId, onSelect }) {
+export default function NodeCarousel({ plans, activeId, onSelect, connectingId }) {
     if (!plans || plans.length === 0) return null;
 
     return (
@@ -20,6 +20,7 @@ export default function NodeCarousel({ plans, activeId, onSelect }) {
             <div className="flex overflow-x-auto gap-4 px-6 pb-4 no-scrollbar scroll-smooth">
                 {plans.map((plan) => {
                     const isActive = activeId === plan.id;
+                    const isConnecting = connectingId === plan.id;
                     const isDone = plan.tasksCompletedToday >= plan.dailyLimit;
                     const progress = (plan.tasksCompletedToday / plan.dailyLimit) * 100;
 
@@ -28,11 +29,13 @@ export default function NodeCarousel({ plans, activeId, onSelect }) {
                             key={plan.id}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => {
+                                if (isConnecting) return;
                                 onSelect(plan);
-                                if (!isActive) toast.success(`Switched to ${plan.planName}`);
                             }}
                             className={`flex-shrink-0 w-44 p-5 rounded-[2rem] border transition-all duration-500 relative overflow-hidden cursor-pointer ${
-                                isDone 
+                                isConnecting
+                                ? 'bg-blue-600/10 border-blue-500 animate-pulse shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                                : isDone 
                                 ? 'bg-amber-500/5 border-amber-500/20 shadow-lg shadow-amber-500/5' 
                                 : isActive 
                                     ? 'bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border-blue-500/50 shadow-lg shadow-blue-500/10' 
@@ -41,7 +44,11 @@ export default function NodeCarousel({ plans, activeId, onSelect }) {
                         >
                             {/* Status Badge */}
                             <div className="absolute top-4 right-4 z-10">
-                                {isDone ? (
+                                {isConnecting ? (
+                                    <span className="flex items-center gap-1.5 text-[8px] font-black bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
+                                        CONNECTING
+                                    </span>
+                                ) : isDone ? (
                                     <span className="text-[8px] font-black bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/30">
                                         DONE
                                     </span>
@@ -57,7 +64,7 @@ export default function NodeCarousel({ plans, activeId, onSelect }) {
                             </div>
 
                             {/* Plan Name */}
-                            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDone ? 'text-amber-500/70' : isActive ? 'text-blue-400' : 'text-slate-500'}`}>
+                            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDone ? 'text-amber-500/70' : isConnecting ? 'text-blue-400' : isActive ? 'text-blue-400' : 'text-slate-500'}`}>
                                 {plan.planName}
                             </p>
                             

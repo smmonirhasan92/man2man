@@ -20,6 +20,10 @@ import WalletSwap from '../../components/wallet/WalletSwap';
 import ProfileDrawer from '../../components/dashboard/ProfileDrawer';
 import P2PDashboard from '../../components/p2p/P2PDashboard';
 import NodeCarousel from '../../components/dashboard/NodeCarousel';
+import MarketplaceScroller from '../../components/dashboard/MarketplaceScroller';
+import VPSConnectModal from '../../components/VPSConnectModal';
+import DisclaimerModal from '../../components/DisclaimerModal';
+import api from '../../services/api';
 
 export default function DashboardPage() {
     return (
@@ -35,6 +39,11 @@ function DashboardContent() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [p2pMode, setP2pMode] = useState(null); // 'buy' | 'sell' | null
     const [activeNodeId, setActiveNodeId] = useState(null);
+    const [connectingNode, setConnectingNode] = useState(null);
+    const [plans, setPlans] = useState([]);
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [provisioning, setProvisioning] = useState(false);
     const router = useRouter();
     const { formatMoney } = useCurrency();
 
@@ -48,6 +57,10 @@ function DashboardContent() {
                 return;
             }
             setUser(data);
+            
+            // Fetch Marketplace Plans
+            const plansRes = await api.get('/plan');
+            setPlans(plansRes.data.plans || plansRes.data);
         } catch (err) {
             console.error(err);
         } finally {
@@ -90,10 +103,72 @@ function DashboardContent() {
     }, [user, activeNodeId]);
 
     const handleNodeSelect = (node) => {
+        // Trigger Handshake Animation first
+        setConnectingNode(node);
+    };
+
+    const handleConnectComplete = () => {
+        if (!connectingNode) return;
+        
+        const node = connectingNode;
         setActiveNodeId(node.id);
         localStorage.setItem('active_server_id', node.id);
         localStorage.setItem('active_server_phone', node.syntheticPhone);
         localStorage.setItem('active_server_name', node.planName);
+        localStorage.setItem('usa_connected', 'true');
+        
+        setConnectingNode(null);
+        toast.success(`Connected to ${node.planName}`, {
+            icon: '🛡️',
+            style: { background: '#064E3B', color: '#fff' }
+        });
+    };
+
+    const handleInitiatePurchase = (plan) => {
+        const nxsCost = plan.unlock_price || 1000;
+        const usdPrice = nxsCost / 50;
+        const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
+
+        if (totalBalance < nxsCost) {
+            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)}`);
+            return;
+        }
+
+        setSelectedPlan(plan);
+        setShowDisclaimer(true);
+    };
+
+    const handleAcceptPurchase = async () => {
+        setShowDisclaimer(false);
+        const plan = selectedPlan;
+        if (!plan) return;
+
+        setProvisioning(true);
+        try {
+            await new Promise(r => setTimeout(r, 4000)); // Dramatic deployment pause
+            const res = await api.post(`/plan/purchase/${plan._id || plan.id}`);
+            
+            if (res.data.success || res.status === 200) {
+                const purchasedPlan = res.data.plan;
+                localStorage.setItem('active_server_id', purchasedPlan._id || purchasedPlan.id);
+                localStorage.setItem('active_server_name', plan.name);
+                localStorage.setItem('active_server_phone', purchasedPlan.syntheticPhone);
+                
+                await authService.refreshUser();
+                fetchUser(); // Refresh dashboard data
+
+                toast.success("DEPLOYMENT COMPLETE", {
+                    icon: '🚀',
+                    style: { background: '#0a192f', color: '#fff', border: '1px solid #10b981' }
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Deployment Failed");
+        } finally {
+            setProvisioning(false);
+            setSelectedPlan(null);
+        }
     };
 
     const activeNode = user?.active_plans?.find(p => p.id === activeNodeId) || user?.active_plans?.[0];
@@ -119,24 +194,16 @@ function DashboardContent() {
                 {/* 1. Header (Compact Style Recreated) */}
                 <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setIsDrawerOpen(true)}
-                            className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden shadow-lg bg-white/10 hover:scale-105 transition active:scale-95"
-                        >
-                            <img
-                                src={user?.photoUrl ? `https://usaaffiliatemarketing.com/api${user.photoUrl}` : `https://ui-avatars.com/api/?name=${user?.fullName || 'User'}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => e.target.src = `https://ui-avatars.com/api/?name=${user?.fullName || 'User'}`}
-                                alt="Profile"
-                            />
-                        </button>
+                        <div className="w-10 h-10 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg bg-emerald-500/10 flex items-center justify-center">
+                            <Shield size={18} className="text-emerald-500" />
+                        </div>
                         <div>
-                            <h2 className="text-sm font-black text-white tracking-wide leading-none">
-                                {activeNode?.syntheticPhone || user?.fullName?.split(' ')[0] || 'User'} 🇺🇸
+                            <h2 className="text-sm font-black text-white tracking-wide leading-none uppercase">
+                                SECURE GATEWAY 🇺🇸
                             </h2>
                             <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono flex gap-2">
-                                    ID: {user?.referralCode || '---'}
+                                <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-400 font-mono flex items-center gap-1 border border-emerald-500/20">
+                                    <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" /> SYSTEM LIVE
                                 </span>
                             </div>
                         </div>
@@ -169,19 +236,26 @@ function DashboardContent() {
                     <NodeCarousel 
                         plans={user.active_plans} 
                         activeId={activeNodeId} 
+                        connectingId={connectingNode?.id}
                         onSelect={handleNodeSelect} 
                     />
                 ) : (
                     <div className="w-full px-6 mb-4">
-                        <Link href="/marketplace" className="block bg-slate-800/40 border border-white/5 p-4 rounded-3xl text-center hover:bg-slate-800/60 transition shadow-xl">
+                        <button onClick={() => router.push('/marketplace')} className="w-full block bg-slate-800/40 border border-white/5 p-4 rounded-3xl text-center hover:bg-slate-800/60 transition shadow-xl">
                             <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-2 text-red-400">
                                 <Server size={20} />
                             </div>
                             <p className="text-white font-black text-sm uppercase tracking-tight">No USA Node Found</p>
                             <p className="text-slate-400 text-[10px] mt-1">Rent a server to unlock high-yield gateway tasks.</p>
-                        </Link>
+                        </button>
                     </div>
                 )}
+
+                {/* 4.1 VPS Server Marketplace (Integrated Scroller) */}
+                <MarketplaceScroller 
+                    plans={plans} 
+                    onSelect={handleInitiatePurchase} 
+                />
 
                 {/* 5. Finance Priority Actions - Compact & Flat */}
                 <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
@@ -256,6 +330,43 @@ function DashboardContent() {
                     </div>
                     <p className="text-[10px] text-slate-500 font-mono">SECURED BY USA AFFILIATE BLOCKCHAIN</p>
                 </div>
+
+                {/* Handshake Animation Overlay */}
+                <AnimatePresence>
+                    {connectingNode && (
+                        <VPSConnectModal 
+                            plan={connectingNode} 
+                            onComplete={handleConnectComplete} 
+                        />
+                    )}
+                </AnimatePresence>
+
+                {/* Provisioning Animation Overlay (New Server) */}
+                <AnimatePresence>
+                    {provisioning && (
+                        <div className="fixed inset-0 z-[100] bg-[#0a192f]/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+                             <div className="text-center w-full px-8">
+                                <div className="flex gap-2 justify-center mb-8">
+                                    <div className="w-4 h-20 bg-slate-800 rounded overflow-hidden flex flex-col gap-px p-px">
+                                        {[...Array(6)].map((_, i) => <div key={i} className="h-2 bg-blue-500/20 rounded-[1px] relative"><div className="absolute inset-0 bg-blue-400 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}></div></div>)}
+                                    </div>
+                                    <div className="w-4 h-20 bg-slate-800 rounded overflow-hidden flex flex-col gap-px p-px">
+                                        {[...Array(6)].map((_, i) => <div key={i} className="h-2 bg-emerald-500/20 rounded-[1px] relative"><div className="absolute inset-0 bg-emerald-400 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div></div>)}
+                                    </div>
+                                </div>
+                                <h2 className="text-lg font-bold text-white tracking-widest animate-pulse mb-2 uppercase">Provisioning Node</h2>
+                                <p className="text-blue-400 font-mono text-[10px]">Deploying secure cloud infrastructure...</p>
+                            </div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                <DisclaimerModal 
+                    isOpen={showDisclaimer}
+                    onClose={() => setShowDisclaimer(false)}
+                    onAccept={handleAcceptPurchase}
+                    plan={selectedPlan}
+                />
 
             </main>
         </div>
