@@ -1,4 +1,4 @@
-# 🗺️ USA Afiliat marking Project Architecture
+# 🗺️# USA Affiliate - System Architecture v2
 **Status:** 🟢 **Live Production** (`https://usaaffiliatemarketing.com`)
 
 This map explains exactly how your app is built, highlighting **Modular (Reusable)** parts and **Page-Specific** parts.

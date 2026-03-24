@@ -1,4 +1,4 @@
-# Shared Hosting Deployment Guide for USA Afiliat marking (cPanel)
+# Shared Hosting Deployment Guide for USA Affiliate Marketing (cPanel)
 
 This guide will help you fix the database issue and deploy the frontend.
 

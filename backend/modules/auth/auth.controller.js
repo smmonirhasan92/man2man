@@ -245,8 +245,28 @@ exports.getMe = async (req, res) => {
         userData.referral_code = user.referralCode;
         userData.kycStatus = user.kycStatus;
 
-        // --- NEW: Expose Dynamic Minimum Withdrawal Threshold (Appended AFTER Cache) ---
+        // --- NEW: Expose Detailed Active Plans & Progress (Appended AFTER Cache) ---
         const activePlans = await PlanService.getActivePlans(userId);
+        
+        userData.active_plans = activePlans.map(p => {
+            // [SYNC] Handle daily reset logic for display consistency
+            const now = new Date();
+            const lastDate = p.last_earning_date ? new Date(p.last_earning_date) : new Date(0);
+            const isToday = lastDate.getDate() === now.getDate() && lastDate.getMonth() === now.getMonth();
+            
+            return {
+                id: p._id,
+                planName: p.planName,
+                syntheticPhone: p.syntheticPhone,
+                tasksCompletedToday: isToday ? (p.tasksCompletedToday || 0) : 0,
+                dailyLimit: p.dailyLimit,
+                earnings_today: isToday ? (p.earnings_today || 0) : 0,
+                serverIp: p.serverIp,
+                serverLocation: p.serverLocation,
+                expiryDate: p.expiryDate
+            };
+        });
+
         let minWithdrawalUsd = 5; // Global Default: $5
         if (activePlans && activePlans.length > 0) {
             const Plan = require('../admin/PlanModel');

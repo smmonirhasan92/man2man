@@ -1,6 +1,6 @@
-# 🚀 USA Afiliat marking Deployment Guide
+# 🚀 USA Affiliate Marketing Deployment Guide
 
-This guide provides step-by-step instructions for deploying the **USA Afiliat marking** application (Frontend & Backend).
+This guide provides step-by-step instructions for deploying the **USA Affiliate Marketing** application (Frontend & Backend).
 
 ## 🏗️ Tech Stack
 

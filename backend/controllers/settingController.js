@@ -8,7 +8,7 @@ exports.getPublicSettings = async (req, res) => {
 
         const config = {
             usd_to_bdt_rate: 122.50, // Fallback default
-            site_name: 'USA Afiliat',
+            site_name: 'USA Affiliate',
             support_link: ''
         };
 

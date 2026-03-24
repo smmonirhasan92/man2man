@@ -1,8 +1,9 @@
 import './globals.css'
 import 'react-quill-new/dist/quill.snow.css'; // Global import for Quill styles
-import { Inter } from 'next/font/google'
+import { Inter, Outfit } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
 
 export const metadata = {
     title: 'USA Affiliate - Official Access',
@@ -70,8 +71,8 @@ import AutoUpdater from '../components/AutoUpdater';
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="en" suppressHydrationWarning={true}>
-            <body className={`${inter.className} min-h-screen text-white`} suppressHydrationWarning={true}>
+        <html lang="en" suppressHydrationWarning={true} className={`${inter.variable} ${outfit.variable}`}>
+            <body className={`${outfit.className} min-h-screen text-white bg-[#0a192f]`} suppressHydrationWarning={true}>
                 <AutoUpdater />
                 <NotificationProvider>
                     <CurrencyProvider>

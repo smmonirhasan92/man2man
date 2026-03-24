@@ -69,12 +69,16 @@ export default function TaskCenter({ taskData }) {
         if (typeof window !== 'undefined') {
             const today = new Date().toDateString();
             const lastVerified = localStorage.getItem('usa_verified_date');
-            if (lastVerified === today) {
+            const activeId = localStorage.getItem('active_server_id');
+            const activePhone = localStorage.getItem('active_server_phone');
+            
+            // [NEW] Auto-Trust: If user has an active server selected on Dashboard, trust it.
+            if (activeId || lastVerified === today) {
                 setVerifiedSession(true);
             }
             setServerName(localStorage.getItem('active_server_name') || 'Network Node');
         }
-    }, []);
+    }, [taskData]);
 
     const handleStart = async () => {
         if (completed >= limit) {
@@ -87,8 +91,9 @@ export default function TaskCenter({ taskData }) {
 
         // [NEW] Check Verification First
         if (!verifiedSession) {
-            if (!taskData?.syntheticPhone) {
-                toast.error("⚠️ DISCONNECTED\nPlease tap 'Connect to USA Server' on the Dashboard first to generate your access key.");
+            const activePhone = taskData?.syntheticPhone || (typeof window !== 'undefined' ? localStorage.getItem('active_server_phone') : null);
+            if (!activePhone) {
+                toast.error("⚠️ DISCONNECTED\nPlease tap 'Connect to USA Server' on the Dashboard first.");
                 return;
             }
             setShowVerifyModal(true);
@@ -198,8 +203,9 @@ export default function TaskCenter({ taskData }) {
         // Validation reused
         if (completed >= limit) { toast.error("Daily limit reached!"); return; }
         if (!verifiedSession) {
-            if (!taskData?.syntheticPhone) {
-                toast.error("⚠️ DISCONNECTED\nPlease tap 'Connect to USA Server' on the Dashboard.");
+            const activePhone = taskData?.syntheticPhone || (typeof window !== 'undefined' ? localStorage.getItem('active_server_phone') : null);
+            if (!activePhone) {
+                toast.error("⚠️ DISCONNECTED\nPlease select a node on the Dashboard.");
                 return;
             }
             setShowVerifyModal(true);

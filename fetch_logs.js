@@ -1,9 +1,9 @@
 const { NodeSSH } = require('node-ssh');
-const fs = require('fs');
+const ssh = new NodeSSH();
 
 async function fetchLogs() {
-    const ssh = new NodeSSH();
     try {
+        console.log('Connecting to Hostinger VPS to fetch RAW logs...');
         await ssh.connect({
             host: '76.13.244.202',
             username: 'root',
@@ -11,21 +11,21 @@ async function fetchLogs() {
             port: 22
         });
 
-        console.log('Connected. Fetching backend error logs...');
-        const result = await ssh.execCommand('tail -n 100 /root/.pm2/logs/man2man-backend-error.log');
+        console.log('\\n--- FRONTEND ERROR LOGS ---');
+        const feErr = await ssh.execCommand('tail -n 150 /root/.pm2/logs/man2man-frontend-error.log');
+        console.log(feErr.stdout || feErr.stderr || 'No frontend errors');
 
-        fs.writeFileSync('backend_errors.txt', result.stderr + '\n' + result.stdout);
-        console.log('Logs saved to backend_errors.txt');
+        console.log('\\n--- FRONTEND OUT LOGS ---');
+        const feOut = await ssh.execCommand('tail -n 150 /root/.pm2/logs/man2man-frontend-out.log');
+        console.log(feOut.stdout || 'No frontend out logs');
 
-        const feResult = await ssh.execCommand('curl -i http://localhost:5050/api/auth/me');
-        fs.writeFileSync('backend_out.txt', feResult.stdout + '\n' + feResult.stderr);
+        console.log('\\n--- BACKEND ERROR LOGS ---');
+        const beErr = await ssh.execCommand('tail -n 150 /root/.pm2/logs/man2man-backend-error.log');
+        console.log(beErr.stdout || beErr.stderr || 'No backend errors');
 
-        const beStatus = await ssh.execCommand('curl -i https://usaaffiliatemarketing.com/api/auth/me');
-        fs.writeFileSync('frontend_out.txt', beStatus.stdout + '\n' + beStatus.stderr);
-
+        ssh.dispose();
     } catch (err) {
-        console.error(err);
-    } finally {
+        console.error('Fetch Failed:', err);
         ssh.dispose();
     }
 }

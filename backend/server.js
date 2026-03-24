@@ -91,7 +91,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Test Route
 app.get('/', (req, res) => {
-    res.send('USA Afiliat marking Backend is running!');
+    res.send('USA Affiliate Marketing Backend is running!');
 });
 
 // [NEW] Health Check for Deployment Verification
@@ -106,7 +106,7 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/api', (req, res) => {
-    res.send('USA Afiliat marking Backend API is Running Successfully! 🚀');
+    res.send('USA Affiliate Marketing Backend API is Running Successfully! 🚀');
 });
 
 // --- CORE MODULE IMPORTS ONLY ---

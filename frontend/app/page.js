@@ -230,11 +230,11 @@ export default function LoginPage() {
                 <div className="mb-10 flex flex-col items-center animate-in fade-in zoom-in duration-700">
                     <div className="relative group cursor-pointer">
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#0A2540] to-[#EF4444] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                        <img src="/logo.png" className="relative w-28 h-28 drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" alt="USA Afiliat" />
+                        <img src="/logo.png" className="relative w-28 h-28 drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" alt="USA Affiliate" />
                     </div>
 
                     <h1 className="text-4xl font-extrabold tracking-tight mt-6 text-transparent bg-clip-text bg-gradient-to-r from-[#0A2540] to-[#EF4444]">
-                        USA Afiliat
+                        USA Affiliate
                     </h1>
                     <p className="text-slate-500 mt-2 text-sm font-semibold tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
@@ -360,7 +360,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="mt-8 text-center flex flex-col items-center gap-4 animate-in slide-in-from-bottom-10 duration-700 delay-300">
-                    <p className="text-slate-400 font-medium">New to USA Afiliat?</p>
+                    <p className="text-slate-400 font-medium">New to USA Affiliate?</p>
                     <Link href="/register" className="group flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-black text-lg px-8 py-4 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all hover:scale-105 active:scale-95">
                         <UserPlus className="w-6 h-6" />
                         <span>CREATE NEW ACCOUNT</span>

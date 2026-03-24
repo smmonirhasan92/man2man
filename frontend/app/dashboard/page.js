@@ -20,6 +20,7 @@ import IncomeDisplay from '../../components/layout/IncomeDisplay';
 import WalletSwap from '../../components/wallet/WalletSwap';
 import ProfileDrawer from '../../components/dashboard/ProfileDrawer';
 import P2PDashboard from '../../components/p2p/P2PDashboard';
+import NodeCarousel from '../../components/dashboard/NodeCarousel';
 
 export default function DashboardPage() {
     return (
@@ -34,6 +35,7 @@ function DashboardContent() {
     const [loading, setLoading] = useState(true);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [p2pMode, setP2pMode] = useState(null); // 'buy' | 'sell' | null
+    const [activeNodeId, setActiveNodeId] = useState(null);
     const router = useRouter();
     const { formatMoney } = useCurrency();
 
@@ -57,6 +59,11 @@ function DashboardContent() {
     useEffect(() => {
         fetchUser();
 
+        if (typeof window !== 'undefined') {
+            const storedId = localStorage.getItem('active_server_id');
+            if (storedId) setActiveNodeId(storedId);
+        }
+
         // Socket Balance Sync
         const setupSocket = async () => {
             const getSocket = (await import('../../services/socket')).default;
@@ -70,7 +77,28 @@ function DashboardContent() {
         if (user?._id) setupSocket();
 
         return () => { };
-    }, [router, user?._id]);
+    }, [user?._id]);
+
+    // Handle initial active node selection
+    useEffect(() => {
+        if (user?.active_plans?.length > 0 && !activeNodeId) {
+            const firstNode = user.active_plans[0];
+            setActiveNodeId(firstNode.id);
+            localStorage.setItem('active_server_id', firstNode.id);
+            localStorage.setItem('active_server_phone', firstNode.syntheticPhone);
+            localStorage.setItem('active_server_name', firstNode.planName);
+        }
+    }, [user, activeNodeId]);
+
+    const handleNodeSelect = (node) => {
+        setActiveNodeId(node.id);
+        localStorage.setItem('active_server_id', node.id);
+        localStorage.setItem('active_server_phone', node.syntheticPhone);
+        localStorage.setItem('active_server_name', node.planName);
+    };
+
+    const activeNode = user?.active_plans?.find(p => p.id === activeNodeId) || user?.active_plans?.[0];
+
 
     if (loading) return (
         <div className="min-h-screen font-sans bg-[#0A2540] relative">
@@ -105,7 +133,7 @@ function DashboardContent() {
                         </button>
                         <div>
                             <h2 className="text-sm font-black text-white tracking-wide leading-none">
-                                {user?.syntheticPhone || user?.fullName?.split(' ')[0] || 'User'} 🇺🇸
+                                {activeNode?.syntheticPhone || user?.fullName?.split(' ')[0] || 'User'} 🇺🇸
                             </h2>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-mono flex gap-2">
@@ -131,14 +159,21 @@ function DashboardContent() {
                     }}
                 />
 
-                {/* 3. USA Gateway Card */}
-                {user?.synthetic_phone ? (
-                    <USAGatewayCard user={user} />
+                {/* 3. USA Node Management (Enhanced) */}
+                {user?.active_plans?.length > 0 ? (
+                    <NodeCarousel 
+                        plans={user.active_plans} 
+                        activeId={activeNodeId} 
+                        onSelect={handleNodeSelect} 
+                    />
                 ) : (
                     <div className="w-full px-6 mb-2">
-                        <Link href="/marketplace" className="block bg-red-900/50 border border-red-500/50 p-3 rounded-xl text-center hover:bg-red-900/70 transition">
-                            <p className="text-red-200 font-bold text-[10px] uppercase animate-pulse">⚠️ No USA Connection Found</p>
-                            <p className="text-white font-bold text-xs mt-1">Rent Server to Unlock Verification Key</p>
+                        <Link href="/marketplace" className="block bg-slate-800/40 border border-white/5 p-4 rounded-3xl text-center hover:bg-slate-800/60 transition shadow-xl">
+                            <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-2 text-red-400">
+                                <Server size={20} />
+                            </div>
+                            <p className="text-white font-black text-sm uppercase tracking-tight">No USA Node Found</p>
+                            <p className="text-slate-400 text-[10px] mt-1">Rent a server to unlock high-yield gateway tasks.</p>
                         </Link>
                     </div>
                 )}

@@ -10,52 +10,50 @@
 }
 
 @theme {
-  /* USA PATRIOTIC THEME ENGINE v2 */
+  /* USA PATRIOTIC THEME ENGINE v3 - PREMIUM EDITION */
 
-  /* Palette: Navy Blue, Crimson Red, Metallic Silver */
+  /* Palette: Navy Blue, Gold, Crimson Red, Metallic Silver */
   --color-navy: #0a192f;
+  --color-gold: #d4af37;
+  --color-gold-light: #fcd34d;
   --color-crimson: #dc143c;
   --color-silver: #e5e7eb;
 
   /* Brand Core */
   --brand-primary: #0a192f;
-  /* Navy */
   --brand-secondary: #dc143c;
-  /* Crimson */
-  --brand-accent: #e5e7eb;
-  /* Silver */
+  --brand-accent: #d4af37; /* Switched to Gold for Premium feel */
 
   /* Derived Colors */
   --color-primary: var(--brand-primary);
   --color-secondary: var(--brand-secondary);
   --color-primary-dark: #050d1a;
 
-  /* Custom Names for Tailwind */
-  --color-brand-primary: var(--brand-primary);
-  --color-brand-secondary: var(--brand-secondary);
+  /* Fonts */
+  --font-sans: var(--font-outfit), var(--font-inter), ui-sans-serif, system-ui;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* Global Background (USA Night) */
   --bg-dark-primary: #0a192f;
-  --bg-gradient-premium: linear-gradient(to bottom, #0a192f 0%, #000000 100%);
+  --bg-gradient-premium: radial-gradient(circle at top, #1e293b 0%, #0a192f 100%);
 
   --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --accent-glow: rgba(220, 20, 60, 0.4);
-  /* Crimson Glow */
+  --text-secondary: #94a3b8;
+  --accent-glow: rgba(212, 175, 55, 0.2);
 }
 
 /* Base Styles */
 body {
   background: var(--bg-gradient-premium);
   background-attachment: fixed;
-  /* Parallax effect */
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   color: var(--text-primary);
   min-height: 100vh;
-  /* Fallback for browsers that do not support dvh */
   min-height: 100dvh;
   overscroll-behavior-y: none;
-  /* Prevent rubber-band bounce on mobile */
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
@@ -103,13 +101,16 @@ body {
   }
 
   .card-glass {
-    @apply bg-[var(--color-navy)]/90 backdrop-blur-xl border border-white/20 rounded-[2.5rem] shadow-2xl relative overflow-hidden;
+    @apply bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
   }
 
-  .card-marvelous {
-    @apply relative rounded-[2rem] bg-[var(--color-navy)] border border-[var(--color-crimson)] shadow-lg shadow-blue-900/20;
-    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.05) 75%, transparent 75%, transparent);
-    background-size: 20px 20px;
+  .card-premium {
+    @apply bg-gradient-to-br from-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden;
+  }
+
+  .text-premium-gradient {
+    @apply bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent font-black;
   }
 
   /* Gold Leaf Border Gradient */
