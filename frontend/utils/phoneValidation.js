@@ -6,9 +6,9 @@
 const validationRules = {
     '+880': {
         name: 'Bangladesh',
-        regex: /^01[3-9]\d{8}$/,
-        example: '017XXXXXXXX',
-        error: 'Invalid BD number. Must be 11 digits starting with 013-019.'
+        regex: /^0?1[3-9]\d{8}$/,
+        example: '017XXXXXXXX or 17XXXXXXXX',
+        error: 'Invalid BD number. Use 10 or 11 digits (e.g., 017... or 17...).'
     },
     '+91': {
         name: 'India',
