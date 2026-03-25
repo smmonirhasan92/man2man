@@ -105,28 +105,64 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                         </div>
 
                         {/* 2. Key Metrics Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Referrals</p>
-                                <p className="text-xl font-black text-white">{profile.referrals?.count || 0}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Referrals</p>
+                                <p className="text-lg font-black text-white">{profile.referrals?.count || 0}</p>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Loyalty</p>
-                                <p className="text-xl font-black text-yellow-500">{profile.loyaltyScore || 0}</p>
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Loyalty</p>
+                                <p className="text-lg font-black text-yellow-500">{profile.loyaltyScore || 0}</p>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Deposited (USD)</p>
-                                <p className="text-xl font-black text-emerald-400">${profile.financials?.totalDeposited || 0}</p>
+                            <div className="bg-white/5 rounded-xl p-3 border border-indigo-500/20 bg-indigo-500/5">
+                                <p className="text-[9px] uppercase font-bold text-indigo-400 mb-1">Self Deposit</p>
+                                <p className="text-lg font-black text-emerald-400">${profile.financials?.selfDeposits || 0}</p>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Withdrawn</p>
-                                <p className="text-xl font-black text-rose-400">{profile.financials?.totalWithdrawn || 0} NXS</p>
+                            <div className="bg-white/5 rounded-xl p-3 border border-purple-500/20 bg-purple-500/5">
+                                <p className="text-[9px] uppercase font-bold text-purple-400 mb-1">Admin Loan</p>
+                                <p className="text-lg font-black text-purple-400">${profile.financials?.adminLoans || 0}</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Withdrawn</p>
+                                <p className="text-lg font-black text-rose-400">{profile.financials?.totalWithdrawn || 0} NXS</p>
                             </div>
                         </div>
 
+                        {/* [AGENT ONLY] Recovery Progress */}
+                        {profile.agentAudit && (
+                            <div className="mb-8 p-5 bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-[2rem] shadow-xl">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-xs font-black text-indigo-300 uppercase tracking-[0.2em]">Agent Recovery Tracker</h4>
+                                    <span className="text-[10px] bg-indigo-500/20 px-2 py-1 rounded-full text-indigo-300 font-bold border border-indigo-500/20">
+                                        Debt Limit: ${profile.agentAudit.debtLimit || 0}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Initial Stock</p>
+                                        <p className="text-lg font-black text-white">${profile.agentAudit.initialDebt?.toFixed(2)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">P2P Sales (BDT)</p>
+                                        <p className="text-lg font-black text-emerald-400">${(profile.agentAudit.p2pSales / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Remaining Debt</p>
+                                        <p className="text-lg font-black text-rose-400">${profile.agentAudit.netLiability?.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                                <div className="mt-4 h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-1000"
+                                        style={{ width: `${Math.min(100, (profile.agentAudit.p2pSales / (profile.agentAudit.initialDebt * 50 || 1)) * 100)}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* 3. Deep Financial Accounting */}
                         <div className="mb-8">
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Financial Accounting</h4>
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Financial Ledger Summary</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div className="flex justify-between items-center mb-2">
@@ -138,23 +174,35 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 </div>
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div className="flex justify-between items-center mb-2">
-                                        <p className="text-[10px] uppercase font-bold text-slate-500">Total Spent</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-500">Total Spent/Purchased</p>
                                         <ShoppingCart className="w-4 h-4 text-amber-500" />
                                     </div>
                                     <p className="text-xl font-black text-amber-400">{profile.financials?.totalSpent?.toFixed(2) || 0} NXS</p>
-                                    <p className="text-[9px] text-slate-500 mt-1">Purchases ~${((profile.financials?.totalSpent || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
+                                    <p className="text-[9px] text-slate-500 mt-1">Direct Expenses ~${((profile.financials?.totalSpent || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
                                 </div>
                             </div>
 
                             <div className="bg-white/5 p-4 rounded-xl border border-white/5 mt-4">
                                 <div className="flex justify-between items-center mb-2">
-                                    <p className="text-[10px] uppercase font-bold text-slate-500">P2P Net Movement (Received-Sent)</p>
+                                    <p className="text-[10px] uppercase font-bold text-slate-500">P2P Activity (Sales & Transfers)</p>
                                     <Smartphone className="w-4 h-4 text-emerald-500" />
                                 </div>
-                                <p className={`text-xl font-black ${(profile.financials?.p2pNet || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {(profile.financials?.p2pNet || 0) >= 0 ? '+' : ''}{profile.financials?.p2pNet?.toFixed(2) || 0} NXS
-                                </p>
-                                <p className="text-[9px] text-slate-500 mt-1">Net Flow ~${((profile.financials?.p2pNet || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-500">Total Sold (Out)</p>
+                                        <p className="text-lg font-black text-rose-400">-{profile.financials?.totalP2PSent?.toFixed(2) || 0} NXS</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-slate-500">Total Received (In)</p>
+                                        <p className="text-lg font-black text-emerald-400">+{profile.financials?.totalP2PReceived?.toFixed(2) || 0} NXS</p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center">
+                                    <p className="text-[10px] uppercase font-bold text-slate-500">Net Ecosystem Flow</p>
+                                    <p className={`text-sm font-black ${(profile.financials?.p2pNet || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {(profile.financials?.p2pNet || 0) >= 0 ? '+' : ''}{profile.financials?.p2pNet?.toFixed(2) || 0} NXS
+                                    </p>
+                                </div>
                             </div>
 
                             {/* Net Settlement Indicator */}
@@ -164,14 +212,15 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 }`}>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <p className="text-[10px] uppercase font-bold opacity-70">Platform Position</p>
+                                        <p className="text-[10px] uppercase font-bold opacity-70">Accounting Position</p>
                                         <span className="text-[8px] bg-white/10 px-1.5 py-0.5 rounded uppercase font-bold">1 USD = {profile.financials?.currencyRatio || 50} NXS</span>
                                     </div>
                                     <p className="text-sm font-black">
-                                        {(profile.financials?.netAccounting || 0) >= 0
+                                        {profile.financials?.positionLabel || (
+                                            (profile.financials?.netAccounting || 0) >= 0
                                             ? "System Owes User (Liability)"
-                                            : "User Owes System (Negative)"
-                                        }
+                                            : "User Owes System (Negative Balance)"
+                                        )}
                                     </p>
                                 </div>
                                 <div className="text-right">
