@@ -611,7 +611,10 @@ exports.getUserDetails = async (req, res) => {
 
         const totalSelfDeposit = self_deposits[0]?.total || 0;
         const totalAdminLoan = admin_loans[0]?.total || 0;
-        const totalUsdIn = totalSelfDeposit + totalAdminLoan;
+        const totalSelfDeposit = self_deposits[0]?.total || 0;
+        const totalAdminLoanNxs = admin_loans[0]?.total || 0;
+        const totalAdminLoanUsd = totalAdminLoanNxs / NXS_RATIO;
+        const totalUsdIn = totalSelfDeposit + totalAdminLoanUsd;
 
         const totalNxsOut = (nxs_withdrawals[0]?.total || 0) + (nxs_spent[0]?.total || 0) + (nxs_p2pOut[0]?.total || 0);
         const totalNxsIn = (nxs_earnings[0]?.total || 0) + (nxs_p2pIn[0]?.total || 0);
@@ -626,7 +629,7 @@ exports.getUserDetails = async (req, res) => {
 
         user.financials = {
             selfDeposits: totalSelfDeposit,
-            adminLoans: totalAdminLoan,
+            adminLoans: totalAdminLoanUsd, // Now in USD
             totalWithdrawn: nxs_withdrawals[0]?.total || 0,
             totalEarned: nxs_earnings[0]?.total || 0,
             totalSpent: nxs_spent[0]?.total || 0,
@@ -657,18 +660,20 @@ exports.getUserDetails = async (req, res) => {
             { $match: { userId: user._id, type: { $in: ['admin_adjustment', 'mint', 'admin_credit'] }, amount: { $gt: 0 } } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
-        const initialDebt = initialDebtAgg[0]?.total || 0;
+        const initialDebtNxs = initialDebtAgg[0]?.total || 0;
+        const initialDebtUsd = initialDebtNxs / NXS_RATIO;
 
         const p2pSalesAgg = await Transaction.aggregate([
             { $match: { userId: user._id, type: 'p2p_sell', status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
-        const p2pSales = p2pSalesAgg[0]?.total || 0;
+        const p2pSalesNxs = p2pSalesAgg[0]?.total || 0;
+        const p2pSalesUsd = p2pSalesNxs / NXS_RATIO;
 
         user.agentAudit = {
-            initialDebt,
-            p2pSales,
-            netLiability: parseFloat((initialDebt - p2pSales).toFixed(4)),
+            initialDebt: initialDebtUsd,
+            p2pSales: p2pSalesNxs, // Keep NXS for the progress bar logic or convert to USD in UI?
+            netLiability: parseFloat((initialDebtUsd - p2pSalesUsd).toFixed(2)),
             debtLimit: user.agentData?.debtLimit || 0
         };
 
