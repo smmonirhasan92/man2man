@@ -198,8 +198,6 @@ export default function LoginPage() {
 
             if (adminRoles.includes(res.data.user.role)) {
                 router.push('/admin/dashboard');
-            } else if (res.data.user.role === 'agent') {
-                router.push('/agent/dashboard');
             } else {
                 router.push('/dashboard');
             }

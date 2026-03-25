@@ -45,10 +45,6 @@ function DashboardContent() {
             const data = await authService.getCurrentUser();
             if (!data) return;
 
-            if (data.role === 'agent') {
-                router.push('/agent/dashboard');
-                return;
-            }
             setUser(data);
         } catch (err) {
             console.error(err);
