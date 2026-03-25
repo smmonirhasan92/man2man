@@ -89,6 +89,7 @@ router.get('/user/:id', authMiddleware, adminCheck, adminController.getUserDetai
 router.patch('/user/:id/status', authMiddleware, adminCheck, adminController.updateUserStatus);
 // router.patch('/user/:id/whitelist', authMiddleware, adminCheck, adminController.toggleUserWhitelist);
 router.post('/user/:id/balance', authMiddleware, adminCheck, adminController.updateUserBalance);
+router.delete('/user/:id', authMiddleware, adminCheck, adminController.deleteUser);
 // router.get('/user/:id/plans', authMiddleware, adminCheck, adminController.getUserPlans);
 
 // Referral Stats

@@ -204,7 +204,7 @@ class P2PService {
 
         const orders = await P2POrder.find(query).populate({
             path: 'userId',
-            select: 'username badges wallet.main trustScore ratingCount isVerified isVerifiedMerchant completedTrades country'
+            select: 'username badges wallet.main trustScore ratingCount isVerified isVerifiedMerchant completedTrades country role'
         });
 
         // Current User Country
@@ -238,32 +238,23 @@ class P2PService {
             return true;
         });
 
-        // Sorting Logic
-        if (filters.sort) {
-            // Priority 1: Requested Sorting
-            filteredOrders.sort((a, b) => {
-                if (filters.sort === 'lowest') return a.rate - b.rate;
-                if (filters.sort === 'highest') return b.rate - a.rate;
-                return 0;
-            });
+        // --- DYNAMIC PRIORITY & RANDOMIZATION ---
+        const agents = filteredOrders.filter(o => o.userId && o.userId.role === 'agent');
+        const others = filteredOrders.filter(o => !o.userId || o.userId.role !== 'agent');
+
+        // Randomized shuffling for agents (Natural appearance)
+        const shuffledAgents = agents.sort(() => Math.random() - 0.5);
+
+        // Sorting for other users based on filters
+        if (filters.sort === 'lowest') {
+            others.sort((a, b) => a.rate - b.rate);
+        } else if (filters.sort === 'highest') {
+            others.sort((a, b) => b.rate - a.rate);
         } else {
-            // Default Sorting: Best Rate First based on Type, then Local Country
-            filteredOrders.sort((a, b) => {
-                // If it's a SELL ad, buyers want the LOWEST rate
-                // If it's a BUY ad, sellers want the HIGHEST rate
-                const rateDiff = query.type === 'BUY' ? b.rate - a.rate : a.rate - b.rate;
-                if (rateDiff !== 0) return rateDiff;
-
-                // Tie-breaker: Same Country logic
-                const aCountry = a.userId.country ? a.userId.country.toUpperCase() : "BD";
-                const bCountry = b.userId.country ? b.userId.country.toUpperCase() : "BD";
-
-                if (aCountry === currentUserCountry && bCountry !== currentUserCountry) return -1;
-                if (bCountry === currentUserCountry && aCountry !== currentUserCountry) return 1;
-                return 0; // Same country logic
-            });
+            others.sort((a, b) => b.createdAt - a.createdAt);
         }
 
+        // Combine: Agents first (shuffled), then others (sorted)
         // Native Pagination since we had to filter in memory
         const page = parseInt(filters.page, 10) || 1;
         const limit = parseInt(filters.limit, 10) || 20;

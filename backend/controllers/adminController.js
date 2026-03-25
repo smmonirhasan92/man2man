@@ -172,12 +172,21 @@ exports.updateUserBalance = async (req, res) => {
 
 exports.getFinancialStats = async (req, res) => {
     try {
+        const todayStart = new Date();
+
         // A. Total Minted (From Ledger)
         const mintedAgg = await TransactionLedger.aggregate([
             { $match: { type: 'mint' } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
         const totalMinted = mintedAgg[0]?.total || 0;
+
+        // [AGENT REQ] Total Minted Today
+        const mintedTodayAgg = await TransactionLedger.aggregate([
+            { $match: { type: { $in: ['admin_adjustment', 'mint'] }, amount: { $gt: 0 }, createdAt: { $gte: todayStart } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const mintedToday = mintedTodayAgg[0]?.total || 0;
 
         // B. Total Liabilities (User Balances)
         const userAgg = await User.aggregate([
@@ -196,6 +205,13 @@ exports.getFinancialStats = async (req, res) => {
         ]);
         const p2pVolume = p2pAgg[0]?.volume || 0;
 
+        // [AGENT REQ] P2P Volume Today
+        const p2pTodayAgg = await P2PTrade.aggregate([
+            { $match: { status: 'COMPLETED', createdAt: { $gte: todayStart } } },
+            { $group: { _id: null, volume: { $sum: "$amount" } } }
+        ]);
+        const p2pVolumeToday = p2pTodayAgg[0]?.volume || 0;
+
         // ==========================================
         // NEW AGGREGATIONS FOR SYSTEM ECONOMICS
         // ==========================================
@@ -206,6 +222,13 @@ exports.getFinancialStats = async (req, res) => {
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
         const totalDeposits = depositAgg[0]?.total || 0;
+
+        // [AGENT REQ] Cash-In Today
+        const depositsTodayAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed', createdAt: { $gte: todayStart } } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const depositsToday = depositsTodayAgg[0]?.total || 0;
 
         // F. Total System Withdrawals
         const withdrawAgg = await Transaction.aggregate([
@@ -220,6 +243,13 @@ exports.getFinancialStats = async (req, res) => {
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
         const totalServerRevenue = serverSalesAgg[0]?.total || 0;
+
+        // [AGENT REQ] Package Sales Today
+        const serverSalesTodayAgg = await Transaction.aggregate([
+            { $match: { type: 'plan_purchase', status: 'completed', createdAt: { $gte: todayStart } } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const serverSalesToday = serverSalesTodayAgg[0]?.total || 0;
 
         // H. Total Task Income Given (Liability Generated)
         const taskIncomeAgg = await Transaction.aggregate([
@@ -300,6 +330,12 @@ exports.getFinancialStats = async (req, res) => {
                         ? 'Liabilities are approaching minted supply. Monitor closely.'
                         : 'CRITICAL: Liabilities exceed minted supply by a large margin.',
                 discrepancy: liabilities - totalMinted
+            },
+            agent_live_stats: {
+                minted_today: mintedToday,
+                cash_in_today: depositsToday,
+                p2p_volume_today: p2pVolumeToday,
+                package_sales_today: serverSalesToday
             },
             revenue: {
                 total_commission: revenue,
@@ -603,6 +639,26 @@ exports.getUserDetails = async (req, res) => {
         user.phone = user.primary_phone; // UI expects user.phone
         user.referrals = { count: user.referralCount || 0 }; // UI expects profile.referrals.count
 
+        // [AGENT REQ] Debt vs Recovery Audit
+        const initialDebtAgg = await TransactionLedger.aggregate([
+            { $match: { userId: user._id, type: { $in: ['admin_adjustment', 'mint', 'admin_credit'] }, amount: { $gt: 0 } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const initialDebt = initialDebtAgg[0]?.total || 0;
+
+        const p2pSalesAgg = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'p2p_sell', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const p2pSales = p2pSalesAgg[0]?.total || 0;
+
+        user.agentAudit = {
+            initialDebt,
+            p2pSales,
+            netLiability: parseFloat((initialDebt - p2pSales).toFixed(4)),
+            debtLimit: user.agentData?.debtLimit || 0
+        };
+
         res.json(user);
     } catch (err) {
         console.error("Get User Details Error:", err);
@@ -630,5 +686,42 @@ exports.updateUserStatus = async (req, res) => {
     } catch (err) {
         console.error("Update User Status Error:", err);
         res.status(500).json({ message: "Server Error" });
+    }
+};
+// [ADMIN] Hard Delete User with Financial Reconciliation
+exports.deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // [FINANCIAL RECONCILIATION]
+        // Deduct their balances from the system's "Total Supply" before deletion
+        const balToBurn = user.wallet.main || 0;
+        const escrowToBurn = user.wallet.escrow_locked || 0;
+        const totalToBurn = balToBurn + escrowToBurn;
+
+        if (totalToBurn > 0) {
+            await TransactionLedger.create({
+                userId: user._id,
+                type: 'admin_adjustment', // Acts as a burn record
+                amount: -totalToBurn,
+                fee: 0,
+                balanceBefore: totalToBurn,
+                balanceAfter: 0,
+                description: `SYSTEM_RECONCILIATION: User ${user.username} deleted. Balance Burned.`,
+                transactionId: `BURN_${Date.now()}_${user._id.toString().substr(-4)}`,
+                metadata: { reason: 'user_deletion', originalBalance: totalToBurn }
+            });
+        }
+
+        // Hard Delete User
+        await User.findByIdAndDelete(id);
+
+        res.json({ success: true, message: `User ${user.username} deleted and ${totalToBurn} NSX deducted from total supply.` });
+    } catch (e) {
+        console.error("Delete User Error:", e);
+        res.status(500).json({ message: "Deletion Failed" });
     }
 };

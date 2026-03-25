@@ -86,6 +86,7 @@ const UserSchema = new mongoose.Schema({
     commissionRate: { type: Number, default: 0.00 },
     agentData: {
         due: { type: Number, default: 0.00 },
+        debtLimit: { type: Number, default: 5000 }, // Default limit for new agents
     },
 
     // --- Task System ---
