@@ -40,8 +40,19 @@ exports.createAgent = async (req, res) => {
 // Get All Agents with Stats
 exports.getAgents = async (req, res) => {
     try {
-        // Find all agents
-        const agents = await User.find({ role: 'agent' }, '-password');
+        // Find all agents with optional search
+        const { search } = req.query;
+        let query = { role: 'agent' };
+
+        if (search) {
+            query.$or = [
+                { fullName: { $regex: search, $options: 'i' } },
+                { phone: { $regex: search, $options: 'i' } },
+                { username: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const agents = await User.find(query, '-password');
 
         // For each agent, aggregate stats. 
         // Note: For large datasets, this N+1 should be replaced with a single aggregation on Transactions grouped by AgentID.
@@ -237,5 +248,37 @@ exports.requestWithdraw = async (req, res) => {
         res.status(500).json({ message: err.message || 'Server Error' });
     } finally {
         session.endSession();
+    }
+};
+
+// Get Agent P2P History (Recipient List)
+exports.getAgentP2PHistory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const trades = await Transaction.find({
+            userId: id,
+            type: { $in: ['p2p_sell', 'p2p_send'] },
+            status: 'completed'
+        })
+            .populate('relatedUserId', 'fullName phone username email')
+            .sort({ createdAt: -1 })
+            .limit(100);
+
+        const formattedTrades = trades.map(t => ({
+            id: t._id,
+            amount: Math.abs(t.amount),
+            date: t.createdAt,
+            recipient: t.relatedUserId ? {
+                name: t.relatedUserId.fullName,
+                phone: t.relatedUserId.phone,
+                username: t.relatedUserId.username
+            } : { name: 'Unknown', phone: 'N/A' },
+            description: t.description
+        }));
+
+        res.json(formattedTrades);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
     }
 };

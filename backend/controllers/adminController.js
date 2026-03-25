@@ -574,9 +574,14 @@ exports.getUserDetails = async (req, res) => {
         // Ratio: 1 USD = 50 NXS
         const NXS_RATIO = 50;
 
-        const usd_deposits = await Transaction.aggregate([
-            { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge', 'admin_credit'] }, status: 'completed' } },
+        const self_deposits = await Transaction.aggregate([
+            { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+
+        const admin_loans = await Transaction.aggregate([
+            { $match: { userId: user._id, type: { $in: ['admin_credit', 'admin_adjustment', 'mint'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
 
         const nxs_withdrawals = await Transaction.aggregate([
@@ -595,16 +600,19 @@ exports.getUserDetails = async (req, res) => {
         ]);
 
         const nxs_p2pIn = await Transaction.aggregate([
-            { $match: { userId: user._id, type: 'p2p_receive', status: 'completed' } },
+            { $match: { userId: user._id, type: { $in: ['p2p_buy', 'p2p_receive'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
         const nxs_p2pOut = await Transaction.aggregate([
-            { $match: { userId: user._id, type: 'p2p_send', status: 'completed' } },
+            { $match: { userId: user._id, type: { $in: ['p2p_sell', 'p2p_send'] }, status: 'completed' } },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        const totalUsdIn = usd_deposits[0]?.total || 0;
+        const totalSelfDeposit = self_deposits[0]?.total || 0;
+        const totalAdminLoan = admin_loans[0]?.total || 0;
+        const totalUsdIn = totalSelfDeposit + totalAdminLoan;
+
         const totalNxsOut = (nxs_withdrawals[0]?.total || 0) + (nxs_spent[0]?.total || 0) + (nxs_p2pOut[0]?.total || 0);
         const totalNxsIn = (nxs_earnings[0]?.total || 0) + (nxs_p2pIn[0]?.total || 0);
 
@@ -612,8 +620,13 @@ exports.getUserDetails = async (req, res) => {
         const normalizedNxsIn = totalNxsIn / NXS_RATIO;
         const normalizedNxsOut = totalNxsOut / NXS_RATIO;
 
+        // [AGENT SPECIAL LOGIC]
+        const isAgent = user.role === 'agent';
+        const netAccounting = totalUsdIn + normalizedNxsIn - normalizedNxsOut;
+
         user.financials = {
-            totalDeposited: totalUsdIn,
+            selfDeposits: totalSelfDeposit,
+            adminLoans: totalAdminLoan,
             totalWithdrawn: nxs_withdrawals[0]?.total || 0,
             totalEarned: nxs_earnings[0]?.total || 0,
             totalSpent: nxs_spent[0]?.total || 0,
@@ -621,8 +634,8 @@ exports.getUserDetails = async (req, res) => {
             totalP2PSent: nxs_p2pOut[0]?.total || 0,
             p2pNet: (nxs_p2pIn[0]?.total || 0) - (nxs_p2pOut[0]?.total || 0),
             currencyRatio: NXS_RATIO,
-            // (Real USD In) + (NXS Income in USD) - (NXS Outgo in USD)
-            netAccounting: totalUsdIn + normalizedNxsIn - normalizedNxsOut
+            netAccounting: netAccounting.toFixed(2),
+            positionLabel: isAgent ? "Agent Debt (Owes System)" : "System Liability (Owes User)"
         };
 
         // [NEW] Fetch Plan Purchase History

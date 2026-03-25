@@ -71,6 +71,7 @@ router.post('/agent', authMiddleware, adminCheck, agentController.createAgent);
 router.get('/agents', authMiddleware, adminCheck, agentController.getAgents);
 router.put('/agent/commission', authMiddleware, adminCheck, agentController.updateAgentCommission);
 router.post('/agent/balance', authMiddleware, adminCheck, agentController.adjustBalance);
+router.get('/agent/:id/p2p-history', authMiddleware, adminCheck, agentController.getAgentP2PHistory);
 
 router.get('/users', authMiddleware, adminCheck, userController.getAllUsers);
 router.put('/user/role', authMiddleware, adminCheck, userController.updateUserRole);
