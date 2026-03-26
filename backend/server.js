@@ -28,15 +28,15 @@ app.use((req, res, next) => {
     // Existing Shield Logic...
     process.stdout.write(`[RAW_REQ] ${req.method} ${req.url}\n`);
 
-    // --- CLOUDFLARE SHIELD (Stealth Mode) ---
-    // In production, only accept requests proxied by Cloudflare
-    // [DEV BYPASS] Allow all local requests including 127.0.0.1
+    // --- CLOUDFLARE SHIELD (Stealth Mode) --- [DISABLED FOR RESTORATION]
+    /*
     const isLocalhost = req.ip === '127.0.0.1' || req.ip === '::1' || req.hostname === 'localhost';
 
     if (!isLocalhost && !req.headers['cf-connecting-ip'] && !req.headers['cf-ray']) {
         // Silent Drop or 403
         console.log('🛑 [Shield] Blocked direct IP access:', req.ip);
     }
+    */
 
     next();
 });
