@@ -71,6 +71,11 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 setOrders(prev => prev.map(o => o._id === trade._id ? { ...o, ...trade } : o));
             });
 
+            // [NEW] Real-time History List Update for Disputes
+            socket.on('p2p_trade_dispute', (trade) => {
+                setOrders(prev => prev.map(o => o._id === trade._id ? { ...o, ...trade } : o));
+            });
+
             // [NEW] Real-time Refresh on Trade Start & Auto Open
             socket.on('p2p_trade_start', (trade) => {
                 // If the user's ad was bought, auto-open the chat room seamlessly
@@ -89,6 +94,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 socket.off('p2p_alert');
                 socket.off('p2p_completed');
                 socket.off('p2p_mark_paid');
+                socket.off('p2p_trade_dispute');
                 socket.off('p2p_trade_start');
             }
         };
