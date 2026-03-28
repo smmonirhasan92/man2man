@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '../../hooks/useSocket';
-import { Zap, Loader2, ArrowRight } from 'lucide-react';
+import { Zap, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function GlobalActiveTradeBanner() {
@@ -69,30 +69,30 @@ export default function GlobalActiveTradeBanner() {
     return (
         <div 
             onClick={() => router.push(`/p2p?tradeId=${activeTrade._id}`)}
-            className="fixed top-12 left-1/2 transform -translate-x-1/2 z-[100] w-[90%] max-w-sm"
+            className="fixed top-24 right-4 z-[100] flex flex-col items-end gap-2 group"
         >
-            <div className={`p-3 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all backdrop-blur-md flex items-center justify-between border ${
+            {/* Minimal Pill */}
+            <div className={`flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer hover:scale-[1.05] active:scale-[0.95] backdrop-blur-xl border transition-all duration-300 ${
                 isActionRequired 
-                ? 'bg-[#fcd535]/90 text-black border-[#fcd535]' // Golden Alert
+                ? 'bg-[#fcd535]/95 text-black border-[#fcd535]' // Golden Alert
                 : 'bg-[#1e2329]/95 text-[#eaeaec] border-[#0ecb81]/50' // Wait State
             }`}>
-                <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                        isActionRequired ? 'bg-black/10 text-black animate-pulse' : 'bg-[#0ecb81]/20 text-[#0ecb81] animate-spin-slow'
-                    }`}>
-                        {isActionRequired ? <Zap className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
-                    </div>
-                    <div>
-                        <p className={`text-[10px] uppercase font-black tracking-widest ${isActionRequired ? 'text-black/70' : 'text-[#848e9c]'}`}>
-                            Running P2P Trade • {activeTrade.status}
-                        </p>
-                        <p className="font-bold text-sm">
-                            {activeTrade.amount} NXS • {isActionRequired ? 'Action Needed!' : 'Please Wait'}
-                        </p>
-                    </div>
+                <div className={`relative flex items-center justify-center w-8 h-8 rounded-full shrink-0 ${isActionRequired ? 'bg-black/10' : 'bg-[#0ecb81]/20 text-[#0ecb81]'}`}>
+                    {isActionRequired ? <Zap className="w-4 h-4 text-black animate-pulse" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+                    
+                    {/* Ping animation for action required */}
+                    {isActionRequired && (
+                        <span className="absolute inset-0 rounded-full border-2 border-black/50 animate-ping opacity-50"></span>
+                    )}
                 </div>
-                <div className={`p-2 rounded-full ${isActionRequired ? 'bg-black/10 text-black' : 'bg-[#2b3139] text-[#eaeaec]'}`}>
-                    <ArrowRight className="w-4 h-4" />
+                
+                <div className="flex flex-col max-w-[120px]">
+                    <span className={`text-[8px] uppercase font-black tracking-widest leading-none ${isActionRequired ? 'text-black/70' : 'text-[#848e9c]'}`}>
+                        P2P • {activeTrade.status}
+                    </span>
+                    <span className="text-xs font-bold leading-tight truncate mt-0.5">
+                        {isActionRequired ? 'Action Needed!' : 'In Progress'}
+                    </span>
                 </div>
             </div>
         </div>
