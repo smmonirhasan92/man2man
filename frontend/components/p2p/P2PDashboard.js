@@ -66,53 +66,46 @@ export default function P2PDashboard({ initialMode, onClose }) {
         checkRunningTrades();
 
         if (socket) {
-            socket.on('p2p_alert', () => {
-                // playSound(); // [REMOVED] Redundant with backend notification
-                fetchOrders();
-            });
-            socket.on('p2p_completed', (trade) => {
+            const handleAlert = () => fetchOrders();
+            const handleCompleted = (trade) => {
                 console.log("P2P Completed Event Received - Refreshing Orders");
-                // Native notification handles sound and push
                 setOrders(prev => prev.map(o => o._id === trade._id ? { ...o, ...trade } : o));
                 if (mode === 'buy' || mode === 'sell') fetchOrders();
-                // [NEW] Trigger Rating Modal
                 setRatingTradeId(trade._id);
                 checkRunningTrades();
-            });
-            
-            // [NEW] Real-time History List Update when Marked Paid
-            socket.on('p2p_mark_paid', (trade) => {
+            };
+            const handleMarkPaid = (trade) => {
                 setOrders(prev => prev.map(o => o._id === trade._id ? { ...o, ...trade } : o));
-            });
-
-            // [NEW] Real-time History List Update for Disputes
-            socket.on('p2p_trade_dispute', (trade) => {
+            };
+            const handleDispute = (trade) => {
                 setOrders(prev => prev.map(o => o._id === trade._id ? { ...o, ...trade } : o));
-            });
-
-            // [NEW] Real-time Refresh on Trade Start & Auto Open
-            socket.on('p2p_trade_start', (trade) => {
+            };
+            const handleTradeStart = (trade) => {
                 checkRunningTrades();
-                // If the user's ad was bought, auto-open the chat room seamlessly
                 if (trade.sellerId === user?._id || trade.buyerId === user?._id) {
                     setActiveTradeId(trade._id);
                     localStorage.setItem('active_p2p_trade', trade._id);
                 } else if (mode === 'buy' || mode === 'sell') {
-                    // Update market lists if someone else's order got taken
                     fetchOrders();
                 }
-            });
+            };
+
+            socket.on('p2p_alert', handleAlert);
+            socket.on('p2p_completed', handleCompleted);
+            socket.on('p2p_mark_paid', handleMarkPaid);
+            socket.on('p2p_trade_dispute', handleDispute);
+            socket.on('p2p_trade_start', handleTradeStart);
+
+            return () => {
+                socket.off('p2p_alert', handleAlert);
+                socket.off('p2p_completed', handleCompleted);
+                socket.off('p2p_mark_paid', handleMarkPaid);
+                socket.off('p2p_trade_dispute', handleDispute);
+                socket.off('p2p_trade_start', handleTradeStart);
+            };
         }
 
-        return () => {
-            if (socket) {
-                socket.off('p2p_alert');
-                socket.off('p2p_completed');
-                socket.off('p2p_mark_paid');
-                socket.off('p2p_trade_dispute');
-                socket.off('p2p_trade_start');
-            }
-        };
+        return () => {}; // fallback if no socket
     }, [mode, filters, socket, user]);
 
     async function fetchStats() {

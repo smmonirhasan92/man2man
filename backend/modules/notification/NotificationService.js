@@ -47,8 +47,11 @@ class NotificationService {
                 // Namespaces also use .to()
 
                 // Room name convention: "user_<userId>"
+                const dynamicTitle = metadata.title || (message.includes('!') ? message.split('!')[0] : 'Trade Update');
+                
                 io.to(`user_${userId}`).emit('notification', {
                     _id: notif._id,
+                    title: dynamicTitle,
                     message: notif.message,
                     type: notif.type,
                     url: notif.metadata?.url || null, // [FIX] Pipe URI for deep link
@@ -63,8 +66,10 @@ class NotificationService {
             const user = await User.findById(userId);
 
             if (user && user.pushSubscriptions && user.pushSubscriptions.length > 0) {
+                const dynamicTitle = metadata.title || (message.includes('!') ? message.split('!')[0] : 'Trade Update');
+                
                 const payload = JSON.stringify({
-                    title: 'Man2Man P2P Alert',
+                    title: dynamicTitle,
                     body: message,
                     type: type,
                     url: metadata.url || '/'

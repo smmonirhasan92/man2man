@@ -115,8 +115,15 @@ export function NotificationProvider({ children }) {
             } catch (e) { }
         };
 
-        // 2. Generic Notification
-        socket.on('notification', (newNotif) => {
+        const handleNotification = (newNotif) => {
+            // [BACKGROUND SYNC] Prevent Double Notifications when active inside chat
+            if (newNotif.type === 'chat') {
+                const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+                const activeTradeId = searchParams?.get('tradeId');
+                const isChatPage = window.location.pathname.includes('/p2p') && activeTradeId === newNotif.metadata?.tradeId;
+                if (isChatPage) return; // Prevent double alerts if staring right at it
+            }
+
             playSound(newNotif.type);
             const style = newNotif.type === 'error' ? errorStyle : premiumStyle;
             
@@ -129,21 +136,20 @@ export function NotificationProvider({ children }) {
                             router.push(newNotif.url);
                         }}
                     >
-                        <div>{newNotif.message}</div>
-                        <div className="text-[10px] text-blue-400 mt-1 font-bold">Tap to view ➔</div>
+                        {newNotif.title && <div className="text-[12.5px] font-black text-[#eaeaec] drop-shadow-md pb-0.5 border-b border-[#2b3139] mb-1 leading-none tracking-wide">{newNotif.title}</div>}
+                        <div className="text-[11px] mt-1">{newNotif.message}</div>
+                        <div className="text-[9px] text-blue-400 mt-1.5 font-bold uppercase">Tap to view ➔</div>
                     </div>
                 ), { style, duration: 8000 });
             } else {
                 toast(newNotif.message, { style });
             }
-        });
+        };
 
-        // 2. Wallet Update (Real-time Balance)
         const handleWalletUpdate = (data) => {
             console.log('[SOCKET_CONTEXT] Wallet Update Received');
             playSound('success');
 
-            // If it's a legacy or structured withdrawal/deposit event
             if (data?.type === 'withdrawal_completed') {
                 toast.success(`Withdrawal Approved: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #064e3b, #065f46)' },
@@ -155,32 +161,30 @@ export function NotificationProvider({ children }) {
                     icon: '💎'
                 });
             } else {
-                // Silent refresh for P2P and others
                 console.log('[SOCKET_CONTEXT] Triggering Silent Balance Refresh');
             }
 
-            // Trigger Context Refresh (Refreshes the global useAuth state)
             if (refreshUser) refreshUser();
         };
 
-        socket.on('wallet:update', handleWalletUpdate);
-
-
-        // 3. System Config Update (RTP / Maintenance)
-        socket.on('config:update', (data) => {
+        const handleConfigUpdate = (data) => {
             console.log('Admin Config Update:', data);
             toast(`System Update: ${data.key} refreshed`, {
                 icon: '⚙️',
                 style: { ...premiumStyle, border: '1px solid #3b82f6' }
             });
-        });
+        };
+
+        socket.on('notification', handleNotification);
+        socket.on('wallet:update', handleWalletUpdate);
+        socket.on('config:update', handleConfigUpdate);
 
         return () => {
             socket.off('connect');
-            socket.off('notification');
+            socket.off('notification', handleNotification);
             socket.off('wallet:update', handleWalletUpdate);
             socket.off('balance_update', handleWalletUpdate);
-            socket.off('config:update');
+            socket.off('config:update', handleConfigUpdate);
         };
     }, [socket]); // [FIX] Removed refreshUser from dependency array to prevent infinite loop
 

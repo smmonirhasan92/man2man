@@ -4,7 +4,7 @@ self.addEventListener('push', function (event) {
     if (event.data) {
         const data = event.data.json();
         const options = {
-            body: data.body || 'New update from USA Affiliate',
+            body: data.body || 'You have a new system update',
             icon: '/networking_globe.png',
             badge: '/networking_globe.png',
             vibrate: [200, 100, 200], // [FIX] Heavier background vibration
@@ -19,7 +19,7 @@ self.addEventListener('push', function (event) {
         };
 
         event.waitUntil(
-            self.registration.showNotification(data.title || 'USA Affiliate', options)
+            self.registration.showNotification(data.title || 'Live Update', options)
         );
     }
 });

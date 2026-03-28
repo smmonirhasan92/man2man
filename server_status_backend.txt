@@ -1,0 +1,106 @@
+--- BACKEND LOGS ---
+[TAILING] Tailing last 50 lines for [man2man-backend] process (change the value with --lines option)
+/root/.pm2/logs/man2man-backend-error.log last 50 lines:
+8|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+8|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+8|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+8|man2man- |     at require (node:internal/modules/helpers:182:18)
+8|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/routes/adminRoutes.js:3:25)
+8|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|man2man- | /var/www/man2man/backend/controllers/adminController.js:614
+8|man2man- |         const totalSelfDeposit = self_deposits[0]?.total || 0;
+8|man2man- |               ^
+8|man2man- | 
+8|man2man- | SyntaxError: Identifier 'totalSelfDeposit' has already been declared
+8|man2man- |     at wrapSafe (node:internal/modules/cjs/loader:1464:18)
+8|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1495:20)
+8|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+8|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+8|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+8|man2man- |     at require (node:internal/modules/helpers:182:18)
+8|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/routes/adminRoutes.js:3:25)
+8|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|man2man- | /var/www/man2man/backend/controllers/adminController.js:614
+8|man2man- |         const totalSelfDeposit = self_deposits[0]?.total || 0;
+8|man2man- |               ^
+8|man2man- | 
+8|man2man- | SyntaxError: Identifier 'totalSelfDeposit' has already been declared
+8|man2man- |     at wrapSafe (node:internal/modules/cjs/loader:1464:18)
+8|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1495:20)
+8|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+8|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+8|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+8|man2man- |     at require (node:internal/modules/helpers:182:18)
+8|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/routes/adminRoutes.js:3:25)
+8|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+8|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+8|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+8|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+8|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+8|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+8|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+8|man2man- |     at require (node:internal/modules/helpers:182:18)
+8|man2man- | (node:266924) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+8|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+8|man2man- | (node:266924) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+
+/root/.pm2/logs/man2man-backend-out.log last 50 lines:
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [BOOT] Server starting... PORT=5050
+8|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+8|man2man- | DEBUG: transactionRoutes.js Loaded
+8|man2man- | [AI] 🚀 Initializing Engine (v3)...
+8|man2man- | ✅ NotificationService: Socket.io Initialized
+8|man2man- | [DEBUG] Connecting to DB...
+8|man2man- | MongoDB Connected: 127.0.0.1
+8|man2man- | MongoDB Atlas Connected Successfully
+8|man2man- | Database Name: universal_game_core_v1
+8|man2man- | ℹ️ Redis URL missing or invalid (must start with redis://). Running in Cache-Free Mode.
+8|man2man- | Server (HTTP + Socket.io) is running on port 5050
+8|man2man- | VERSION: 5050 - STABLE LOGGING - CORE MODULES ONLY
+8|man2man- | [SOCKET] Client connected to /system namespace: gSmZMrmaiIHl0MrwAAAB
+8|man2man- | [TRACER] GET /api/auth/me
+8|man2man- | [TRACER] Host: localhost:5050
+8|man2man- | [RAW_REQ] GET /api/auth/me
+8|man2man- | [AUTH FAIL] No Token for: GET /api/auth/me
+8|man2man- | [SOCKET] Client connected to /system namespace: qeOlPbCT6K7AlPO1AAAD
+8|man2man- | [TRACER] GET /api/auth/me
+8|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+8|man2man- | [RAW_REQ] GET /api/auth/me
+8|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1360a37de0366f5e48dca","role":"agent"},"iat":1774612818,"exp":1774699218}
+8|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1360a37de0366f5e48dca","role":"agent"},"iat":1774612818,"exp":1774699218}
+

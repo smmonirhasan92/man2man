@@ -75,51 +75,49 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     useEffect(() => {
         if (!socket) return;
 
-        // Listen for new messages
-        socket.on('p2p_message', (msg) => {
+        const handleP2PMessage = (msg) => {
             if (String(msg.tradeId) === String(tradeId)) {
                 setMessages(prev => {
-                    // Prevent duplicate messages if socket reconnects or fires twice
                     if (prev.some(m => m._id === msg._id)) return prev;
                     return [...prev, msg];
                 });
                 scrollToBottom();
-                if (String(msg.senderId) !== String(user?._id) && String(msg.senderId?._id) !== String(user?._id)) {
+                const senderStr = typeof msg.senderId === 'object' ? msg.senderId?._id?.toString() : msg.senderId?.toString();
+                const userStr = user?._id?.toString();
+                if (senderStr && userStr && senderStr !== userStr) {
                     playDing();
                 }
             }
-        });
+        };
 
-        // Listen for trade status updates (Paid/Completed)
-        socket.on('p2p_mark_paid', (updatedTrade) => {
-            if (String(updatedTrade._id) === String(tradeId)) {
-                fetchTradeData(); // Secure way to get fully populated nested structures 
-                // toast and sound are handled globally by NotificationContext
-            }
-        });
+        const handleMarkPaid = (updatedTrade) => {
+            if (String(updatedTrade._id) === String(tradeId)) fetchTradeData();
+        };
 
-        socket.on('p2p_completed', (updatedTrade) => {
-            if (String(updatedTrade._id) === String(tradeId)) {
-                fetchTradeData();
-                // toast and sound are handled globally by NotificationContext
-            }
-        });
+        const handleCompleted = (updatedTrade) => {
+            if (String(updatedTrade._id) === String(tradeId)) fetchTradeData();
+        };
 
-        socket.on('p2p_trade_dispute', (updatedTrade) => {
+        const handleDispute = (updatedTrade) => {
             if (String(updatedTrade._id) === String(tradeId)) {
                 fetchTradeData();
                 toast.error('Trade Frozen by Tribunal.');
                 notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.', '/p2p', '/sounds/error.mp3');
             }
-        });
+        };
+
+        socket.on('p2p_message', handleP2PMessage);
+        socket.on('p2p_mark_paid', handleMarkPaid);
+        socket.on('p2p_completed', handleCompleted);
+        socket.on('p2p_trade_dispute', handleDispute);
 
         return () => {
-            socket.off('p2p_message');
-            socket.off('p2p_mark_paid');
-            socket.off('p2p_completed');
-            socket.off('p2p_trade_dispute');
+            socket.off('p2p_message', handleP2PMessage);
+            socket.off('p2p_mark_paid', handleMarkPaid);
+            socket.off('p2p_completed', handleCompleted);
+            socket.off('p2p_trade_dispute', handleDispute);
         };
-    }, [socket, tradeId]);
+    }, [socket, tradeId, user?._id]);
 
     const fetchTradeData = async () => {
         try {
@@ -180,7 +178,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             notificationAudio.current.currentTime = 0;
             notificationAudio.current.play().catch(e => console.log('Audio Blocked:', e));
         }
-        notify('New P2P Message', 'You have received a new message in your trade.', null, '/sounds/notification.mp3');
+        // Removed global notify() call to prevent Double Sound Echo.
     };
 
     const playSuccess = () => {
@@ -188,7 +186,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             successAudio.current.currentTime = 0;
             successAudio.current.play().catch(e => console.log('Audio Blocked:', e));
         }
-        notify('Trade Updated', 'This trade has been marked as paid or completed.', null, '/sounds/success.mp3');
+        // Native notification handles alerts globally via NotificationContext
     };
 
     const sendMessage = async () => {
@@ -341,8 +339,8 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
-            <audio ref={notificationAudio} src="/sounds/notification.mp3" preload="auto" />
-            <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
+            <audio ref={notificationAudio} src="/sounds/click.mp3" preload="auto" />
+            <audio ref={successAudio} src="/sounds/notification.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (

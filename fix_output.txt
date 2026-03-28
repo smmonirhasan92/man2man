@@ -1,0 +1,41 @@
+﻿Applying Python fix...
+No duplicate found - already fixed?
+
+=== Verifying (grep totalSelfDeposit) ===
+612:        const totalSelfDeposit = self_deposits[0]?.total || 0;
+616:        const totalUsdIn = totalSelfDeposit + totalAdminLoanUsd;
+630:            selfDeposits: totalSelfDeposit,
+
+=== Finding backend server file ===
+/var/www/man2man/backend/fix_history.js
+/var/www/man2man/backend/debug_login.js
+/var/www/man2man/backend/debug_adminroutes_load.js
+/var/www/man2man/backend/fix_admin_2.js
+/var/www/man2man/backend/force_reset_rs.js
+/var/www/man2man/backend/verify_system_v2.js
+/var/www/man2man/backend/debug_start.js
+/var/www/man2man/backend/debug_registration_full.js
+/var/www/man2man/backend/server.js
+/var/www/man2man/backend/whitelist_admin.js
+
+/var/www/man2man/backend/ contents:
+DIAGNOSTIC_LOG.md
+HEALTH_REPORT.md
+IMPLEMENTATION_PLAN_FINANCE.md
+IMPLEMENTATION_PLAN_RESTRICTION.md
+REDIS_MISSING.md
+RESTORATION_FINAL.md
+RESTORATION_REPORT.md
+SYSTEM_STATUS.md
+aviator_final_check.txt
+aviator_stress_final.txt
+aviator_stress_final_v2.txt
+aviator_stress_final_v3.txt
+aviator_stress_final_v4.txt
+aviator_stress_final_v5.txt
+aviator_stress_final_v6.txt
+aviator_stress_final_v7.txt
+aviator_stress_report.txt
+aviator_stress_report_v2.txt
+aviator_stress_report_v3.txt
+aviator_stress_report_v4.txt

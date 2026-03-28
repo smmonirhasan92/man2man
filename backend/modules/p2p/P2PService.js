@@ -599,6 +599,21 @@ class P2PService {
         SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_message', msg);
         SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_message', msg);
 
+        // Send Offline Push Notification (Web Push)
+        // Determine recipient
+        const recipientId = trade.sellerId.toString() === senderId.toString() ? trade.buyerId : trade.sellerId;
+        
+        // Truncate message text to avoid huge push bodies
+        const previewText = text && text.length > 50 ? text.substring(0, 50) + '...' : text;
+        const bodyContent = imageUrl ? 'Sent an image attachment' : previewText;
+        
+        await NotificationService.send(
+            recipientId, 
+            bodyContent, 
+            'chat', 
+            { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}`, title: 'New Message' }
+        );
+
         return msg;
     }
 
