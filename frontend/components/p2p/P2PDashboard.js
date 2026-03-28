@@ -59,9 +59,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             });
             socket.on('p2p_completed', (trade) => {
                 console.log("P2P Completed Event Received - Refreshing Orders");
-                // playSound(); // [REMOVED] notify() already calls playSound()
-                notify('Trade Completed', `Your trade for ${trade.amount} NXS is complete!`);
-
+                notify('Trade Completed', `Your trade for ${trade.amount} NXS is complete!`, null, '/sounds/success.mp3');
                 fetchOrders();
                 // [NEW] Trigger Rating Modal
                 setRatingTradeId(trade._id);
@@ -344,15 +342,15 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
             {/* Sleek Tabs */}
             <div className="flex bg-[#181a20] px-3 overflow-x-auto scrollbar-none border-b border-[#2b3139]">
-                {['buy', 'sell', 'active', 'my_ads', 'history'].map(t => (
+                {['buy', 'sell', 'active', 'history', 'my_ads'].map(t => (
                     <button
                         key={t}
                         onClick={() => setMode(t)}
-                        className={`px-4 py-3 text-sm font-bold tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : 'text-[#fcd535]') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
+                        className={`px-4 py-3 text-sm font-black tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'active' ? 'text-[#fcd535] animate-pulse' : t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : 'text-white') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
                     >
-                        {t.replace('_', ' ').toUpperCase()}
+                        {t === 'active' ? '🔥 ACTIVE' : t === 'history' ? '📜 HISTORY' : t.replace('_', ' ').toUpperCase()}
                         {mode === t && (
-                            <div className={`absolute bottom-0 left-0 w-full h-[2px] ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : 'bg-[#fcd535]'}`} />
+                            <div className={`absolute bottom-0 left-0 w-full h-[3px] rounded-t-full ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : 'bg-[#fcd535]'}`} />
                         )}
                     </button>
                 ))}

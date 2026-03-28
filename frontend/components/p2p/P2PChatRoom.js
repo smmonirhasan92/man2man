@@ -182,7 +182,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             notificationAudio.current.currentTime = 0;
             notificationAudio.current.play().catch(e => console.log('Audio Blocked:', e));
         }
-        notify('New P2P Message', 'You have received a new message in your trade.');
+        notify('New P2P Message', 'You have received a new message in your trade.', null, '/sounds/notification.mp3');
     };
 
     const playSuccess = () => {
@@ -190,7 +190,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             successAudio.current.currentTime = 0;
             successAudio.current.play().catch(e => console.log('Audio Blocked:', e));
         }
-        notify('Trade Updated', 'This trade has been marked as paid or completed.');
+        notify('Trade Updated', 'This trade has been marked as paid or completed.', null, '/sounds/success.mp3');
     };
 
     const sendMessage = async () => {
@@ -343,8 +343,8 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
-            <audio ref={notificationAudio} src="/sounds/chat.mp3" preload="auto" />
-            <audio ref={successAudio} src="/sounds/loud_alert.mp3" preload="auto" />
+            <audio ref={notificationAudio} src="/sounds/notification.mp3" preload="auto" />
+            <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (

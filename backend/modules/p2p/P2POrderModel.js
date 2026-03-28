@@ -11,10 +11,15 @@ const P2POrderSchema = new mongoose.Schema({
 
     paymentMethod: {
         type: String,
-        enum: ['bkash', 'nagad', 'rocket', 'bank', 'binance', 'gpay', 'phonepe', 'paytm'],
-        required: true
+        required: true // Removed enum for custom flexibility (v3.0)
     },
     paymentDetails: { type: String, required: true }, // Encrypted or Hidden until match ideally, but simple string for now
+    
+    transactionType: { 
+        type: String, 
+        enum: ['SEND_MONEY', 'CASH_OUT'], 
+        default: 'SEND_MONEY' 
+    }, // [NEW v3.0] User's receiving preference
 
     status: {
         type: String,

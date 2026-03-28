@@ -1,9 +1,8 @@
 const { NodeSSH } = require('node-ssh');
 const ssh = new NodeSSH();
 
-async function deployReal() {
+async function check() {
     try {
-        console.log('Connecting to VPS (Target: usaaffiliatemarketing)...');
         await ssh.connect({
             host: '76.13.244.202',
             username: 'root',
@@ -11,12 +10,9 @@ async function deployReal() {
             port: 22
         });
 
-        const rootDir = '/var/www/man2man';
-        
         const commands = [
-            `cd ${rootDir} && git fetch --all && git reset --hard origin/main`,
-            `cd ${rootDir}/frontend && npm i && npm run build`,
-            `pm2 restart all || (pm2 start npm --name "frontend" -- start)`
+            `pm2 status`,
+            `pm2 logs --lines 50 --nostream`
         ];
 
         for (const cmd of commands) {
@@ -26,11 +22,9 @@ async function deployReal() {
             if (result.stderr) console.error(result.stderr);
         }
 
-        console.log('\nREAL Deployment completed successfully.');
         ssh.dispose();
     } catch (err) {
-        console.error('Deployment Failed:', err);
-        ssh.dispose();
+        console.error('Failed:', err);
     }
 }
-deployReal();
+check();

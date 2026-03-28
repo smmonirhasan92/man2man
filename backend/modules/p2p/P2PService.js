@@ -14,7 +14,7 @@ const bcrypt = require('bcryptjs');
 class P2PService {
 
     // --- 1. CREATE P2P AD (BUY or SELL Listing) ---
-    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL', fiatCurrency = 'USD') {
+    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL', fiatCurrency = 'USD', transactionType = 'SEND_MONEY') {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
         // [AUTO-BOUNDARY] Dynamic Rate Limits for Large Transactions
@@ -71,7 +71,10 @@ class P2PService {
             rate,
             fiatCurrency,
             paymentMethod,
+            fiatCurrency,
+            paymentMethod,
             paymentDetails,
+            transactionType: transactionType || 'SEND_MONEY', // [NEW v3.0] Receiver's preference
             status: 'OPEN'
         });
 
@@ -79,7 +82,7 @@ class P2PService {
     }
 
     // --- 3. INITIATE TRADE (Match & Lock Escrow) ---
-    async initiateTrade(takerId, orderId, requestedAmount, takerPaymentDetails) {
+    async initiateTrade(takerId, orderId, requestedAmount, takerPaymentDetails, takerTransactionType) {
         if (!requestedAmount || requestedAmount <= 0) throw new Error("Invalid amount requested");
 
         return await TransactionHelper.runTransaction(async (session) => {
@@ -147,6 +150,7 @@ class P2PService {
                 buyerId: buyerId,
                 amount: requestedAmount,
                 takerPaymentDetails: takerPaymentDetails || null, // [NEW] Save Seller's receiving info
+                transactionType: takerTransactionType || order.transactionType || 'SEND_MONEY', // [NEW v3.0] Track actual payment paradigm for this specific trade
                 status: 'CREATED',
                 expiresAt: expiresAt
             }], { session });
@@ -655,7 +659,7 @@ class P2PService {
         return await P2PTrade.findById(tradeId)
             .populate('sellerId', 'username primary_phone')
             .populate('buyerId', 'username')
-            .populate('orderId', 'paymentMethod paymentDetails rate amount');
+            .populate('orderId', 'paymentMethod paymentDetails rate amount transactionType'); // [FIX v3.0] Hydrate parent order transaction mode
     }
 
     // --- USER INITIATES DISPUTE (TRIBUNAL) ---
