@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import api from '../../services/api';
-import { X, Globe2, Zap, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { X, Globe2, Zap, ArrowDownCircle, ArrowUpCircle, ChevronDown, CheckCircle, Search, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -14,6 +14,8 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
     const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
 
     const [method, setMethod] = useState(defaultMethod);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [transactionType, setTransactionType] = useState('SEND_MONEY');
     const [accountType, setAccountType] = useState('Personal'); // [NEW]
     const [details, setDetails] = useState('');
@@ -33,6 +35,24 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
             { value: 'bank', label: 'Bank Transfer' }
         ];
     };
+
+    const getPaymentIconColor = (val) => {
+        if (!val) return 'bg-slate-500';
+        const v = val.toLowerCase();
+        if (v.includes('bkash')) return 'bg-[#E2136E] text-white';
+        if (v.includes('nagad')) return 'bg-[#F37021] text-white';
+        if (v.includes('rocket')) return 'bg-[#8C2982] text-white';
+        if (v.includes('binance')) return 'bg-[#FCD535] text-black';
+        if (v.includes('gpay')) return 'bg-[#4285F4] text-white';
+        if (v.includes('phonepe')) return 'bg-[#5f259f] text-white';
+        if (v.includes('paytm')) return 'bg-[#002970] text-white';
+        return 'bg-blue-500 text-white';
+    };
+
+    const filteredMethods = getPaymentMethods().filter(pm => 
+        pm.label.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        pm.value.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -169,23 +189,105 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                             </div>
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="space-y-1 relative" style={{ zIndex: 50 }}>
                             <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
                                 {adMode === 'BUY' ? 'I will pay via' : 'Receive fiat via'}
                             </label>
-                            <input
-                                list="payment-methods"
-                                type="text"
-                                value={method}
-                                onChange={e => setMethod(e.target.value)}
-                                className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white font-bold outline-none transition ${adMode === 'BUY' ? 'focus:border-blue-500' : 'focus:border-emerald-500'}`}
-                                placeholder="e.g. bKash, Nagad, Binance, Venus"
-                            />
-                            <datalist id="payment-methods">
-                                {getPaymentMethods().map(pm => (
-                                    <option key={pm.value} value={pm.value}>{pm.label}</option>
-                                ))}
-                            </datalist>
+                            
+                            <div className="relative">
+                                {/* Invisible overlay to close dropdown when tapping outside */}
+                                {showDropdown && (
+                                    <div 
+                                        className="fixed inset-0 z-40" 
+                                        onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            setShowDropdown(false); 
+                                            if (document.activeElement) document.activeElement.blur();
+                                        }}
+                                    ></div>
+                                )}
+                                
+                                <div className={`relative z-50 flex items-center bg-[#111927] border border-white/10 rounded-xl px-3 transition-colors ${adMode === 'BUY' ? 'focus-within:border-blue-500 focus-within:shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'focus-within:border-emerald-500 focus-within:shadow-[0_0_15px_rgba(16,185,129,0.2)]'}`}>
+                                    {/* Selected Icon Display - only show if not searching AND method exists */}
+                                    {!showDropdown && method && (
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mr-2 shadow-lg ${getPaymentIconColor(method)}`}>
+                                            <span className="text-[10px] font-black">{method.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                    )}
+                                    
+                                    <input
+                                        type="text"
+                                        value={showDropdown ? searchQuery : (getPaymentMethods().find(m => m.value === method)?.label || method)}
+                                        onFocus={() => {
+                                            setSearchQuery('');
+                                            setShowDropdown(true);
+                                        }}
+                                        onChange={e => {
+                                            setSearchQuery(e.target.value);
+                                            setShowDropdown(true);
+                                        }}
+                                        className={`w-full bg-transparent p-3 pl-0 text-white font-bold outline-none cursor-pointer placeholder-slate-500`}
+                                        placeholder="Tap to search or select method..."
+                                    />
+                                    <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-300 pointer-events-none ${showDropdown ? 'rotate-180 text-white' : ''}`} />
+                                </div>
+
+                                {/* Custom Dropdown Menu */}
+                                {showDropdown && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-[100] max-h-60 overflow-y-auto custom-scrollbar flex flex-col">
+                                        {/* Search Header visual */}
+                                        <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-black/20 sticky top-0 backdrop-blur-md">
+                                            <Search className="w-4 h-4 text-slate-400" />
+                                            <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Searching Options</span>
+                                        </div>
+                                        
+                                        <div className="p-2 space-y-1">
+                                            {filteredMethods.map(pm => (
+                                                <div 
+                                                    key={pm.value}
+                                                    onClick={() => {
+                                                        setMethod(pm.value);
+                                                        setSearchQuery('');
+                                                        setShowDropdown(false);
+                                                        if (document.activeElement) document.activeElement.blur();
+                                                    }}
+                                                    className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all active:scale-95 ${method === pm.value ? 'bg-emerald-500/10 border border-emerald-500/20' : 'hover:bg-white/5 border border-transparent'}`}
+                                                >
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-lg ${getPaymentIconColor(pm.value)}`}>
+                                                        <span className="text-[12px] font-black">{pm.label.charAt(0)}</span>
+                                                    </div>
+                                                    <span className="text-sm font-bold text-white flex-1">{pm.label}</span>
+                                                    {method === pm.value && <CheckCircle className="w-5 h-5 text-emerald-400" />}
+                                                </div>
+                                            ))}
+                                            
+                                            {/* Custom Entry if search doesn't explicitly match */}
+                                            {searchQuery && !filteredMethods.some(m => m.label.toLowerCase() === searchQuery.toLowerCase() || m.value.toLowerCase() === searchQuery.toLowerCase()) && (
+                                                <div 
+                                                    onClick={() => {
+                                                        setMethod(searchQuery);
+                                                        setShowDropdown(false);
+                                                        if (document.activeElement) document.activeElement.blur();
+                                                    }}
+                                                    className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-between cursor-pointer transition-all hover:bg-blue-500/20 active:scale-95"
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-blue-300 font-bold uppercase tracking-widest">Custom Method</span>
+                                                        <span className="text-sm text-blue-400 font-black">+ Use &quot;{searchQuery}&quot;</span>
+                                                    </div>
+                                                    <ArrowRight className="w-5 h-5 text-blue-400" />
+                                                </div>
+                                            )}
+                                            
+                                            {filteredMethods.length === 0 && !searchQuery && (
+                                                <div className="p-4 text-center text-xs text-slate-500 font-bold">
+                                                    No methods available
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {adMode === 'SELL' && (
@@ -256,7 +358,7 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
 
                         {adMode === 'SELL' && (
                             <div className="px-2 text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">
-                                *Ensure your selling amount meets your package's minimum threshold (e.g. 250 NXS).*
+                                *Ensure your selling amount meets your package&apos;s minimum threshold (e.g. 250 NXS).*
                             </div>
                         )}
 
