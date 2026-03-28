@@ -14,6 +14,8 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
     const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
 
     const [method, setMethod] = useState(defaultMethod);
+    const [transactionType, setTransactionType] = useState('SEND_MONEY');
+    const [accountType, setAccountType] = useState('Personal'); // [NEW]
     const [details, setDetails] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -39,13 +41,20 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
         if (adMode === 'SELL' && (!amount || !details || !rate)) return toast.error("Fill all fields");
         setLoading(true);
         try {
+            // Prefix Logic
+            let finalDetails = details;
+            if (['bkash', 'nagad', 'rocket'].includes(method.toLowerCase())) {
+                finalDetails = `[${accountType}] ${details}`;
+            }
+
             await api.post('/p2p/order', {
                 type: adMode,
                 amount: Number(amount),
                 rate: Number(rate),
                 fiatCurrency: fiatCurrency,
                 paymentMethod: method,
-                paymentDetails: adMode === 'BUY' ? 'Pending Taker Info' : details // [FIX] Maker doesn't provide this for BUY ads
+                transactionType: adMode === 'SELL' ? transactionType : 'SEND_MONEY',
+                paymentDetails: adMode === 'BUY' ? 'Pending Taker Info' : finalDetails
             });
             toast.success(`${adMode === 'BUY' ? 'Buy' : 'Sell'} Ad Created Successfully!`);
             onSuccess(adMode);
@@ -164,30 +173,78 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                             <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
                                 {adMode === 'BUY' ? 'I will pay via' : 'Receive fiat via'}
                             </label>
-                            <select
+                            <input
+                                list="payment-methods"
+                                type="text"
                                 value={method}
                                 onChange={e => setMethod(e.target.value)}
-                                className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white font-bold outline-none transition appearance-none ${adMode === 'BUY' ? 'focus:border-blue-500' : 'focus:border-emerald-500'}`}
-                            >
+                                className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white font-bold outline-none transition ${adMode === 'BUY' ? 'focus:border-blue-500' : 'focus:border-emerald-500'}`}
+                                placeholder="e.g. bKash, Nagad, Binance, Venus"
+                            />
+                            <datalist id="payment-methods">
                                 {getPaymentMethods().map(pm => (
                                     <option key={pm.value} value={pm.value}>{pm.label}</option>
                                 ))}
-                            </select>
+                            </datalist>
                         </div>
 
                         {adMode === 'SELL' && (
-                            <div className="space-y-1">
-                                <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
-                                    Payment Instructions
-                                </label>
-                                <input
-                                    type="text"
-                                    value={details}
-                                    onChange={e => setDetails(e.target.value)}
-                                    className="w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white outline-none transition font-mono focus:border-emerald-500"
-                                    placeholder="e.g. 017XXXXXX (bKash Personal)"
-                                />
-                            </div>
+                            <>
+                                {['bkash', 'nagad', 'rocket'].includes(method.toLowerCase()) && (
+                                    <div className="space-y-1 mt-2">
+                                        <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
+                                            Account Type
+                                        </label>
+                                        <div className="flex bg-[#111] p-1 rounded-xl border border-white/10 text-nowrap overflow-x-auto custom-scrollbar no-scrollbar">
+                                            {['Personal', 'Agent', 'Merchant'].map(t => (
+                                                <button
+                                                    key={t}
+                                                    type="button"
+                                                    onClick={() => setAccountType(t)}
+                                                    className={`flex-1 px-3 py-2 rounded-lg text-[10px] font-bold transition-all ${accountType === t ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-1 mt-2">
+                                    <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
+                                        Transaction Type
+                                    </label>
+                                    <div className="flex bg-[#111] p-1 rounded-xl border border-white/10">
+                                        <button
+                                            type="button"
+                                            onClick={() => setTransactionType('SEND_MONEY')}
+                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${transactionType === 'SEND_MONEY' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            Send Money
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setTransactionType('CASH_OUT')}
+                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${transactionType === 'CASH_OUT' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            Cash Out
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
+                                        {method.toLowerCase().includes('binance') ? 'Binance Pay ID / Email' : 'Payment Details (Number)'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={details}
+                                        onChange={e => setDetails(e.target.value)}
+                                        className="w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white outline-none transition font-mono focus:border-emerald-500"
+                                        placeholder={method.toLowerCase().includes('binance') ? "Binance ID or Email" : `e.g. 017XXXXXX (${method})`}
+                                    />
+                                </div>
+                            </>
                         )}
 
                         <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 flex gap-3 items-center">

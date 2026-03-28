@@ -4,6 +4,8 @@ import { X, DollarSign, Wallet } from 'lucide-react';
 export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, currentUserBalance = 0 }) {
     const [amount, setAmount] = useState('');
     const [takerPaymentDetails, setTakerPaymentDetails] = useState('');
+    const [takerTransactionType, setTakerTransactionType] = useState('SEND_MONEY');
+    const [takerAccountType, setTakerAccountType] = useState('Personal'); // [NEW]
 
     if (!isOpen || !order) return null;
 
@@ -18,10 +20,14 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
         e.preventDefault();
         const numAmount = Number(amount);
         if (numAmount > 0 && numAmount <= maxLimit) {
-            if (order.type === 'BUY' && !takerPaymentDetails.trim()) {
-                return; // HTML5 required attribute handles the UI block
+            // Prefix Logic for Taker
+            let finalTakerDetails = takerPaymentDetails;
+            const pm = order.paymentMethod?.toLowerCase() || '';
+            if (['bkash', 'nagad', 'rocket'].includes(pm)) {
+                finalTakerDetails = `[${takerAccountType}] ${takerPaymentDetails}`;
             }
-            onConfirm(numAmount, takerPaymentDetails);
+
+            onConfirm(numAmount, finalTakerDetails, takerTransactionType);
         }
     };
 
@@ -109,15 +115,50 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
                                         Your Receiving Account ({order.paymentMethod})
                                     </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={takerPaymentDetails}
-                                        onChange={(e) => setTakerPaymentDetails(e.target.value)}
-                                        placeholder={`Enter your ${order.paymentMethod} account details...`}
-                                        className="w-full bg-[#1e293b] border border-slate-600 rounded-xl px-4 py-3 text-white font-bold tracking-wide focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-slate-500 shadow-inner"
-                                    />
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-1 px-1">The Buyer will send {order.fiatCurrency || 'BDT'} to this account.</p>
+                                    
+                                    {['bkash', 'nagad', 'rocket'].includes(order.paymentMethod?.toLowerCase()) && (
+                                        <div className="flex bg-[#0b1120] p-1 rounded-xl border border-slate-700/50 mb-3 relative">
+                                            {['Personal', 'Agent', 'Merchant'].map(t => (
+                                                <button
+                                                    key={t}
+                                                    type="button"
+                                                    onClick={() => setTakerAccountType(t)}
+                                                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${takerAccountType === t ? 'bg-slate-700 text-white shadow-md' : 'text-slate-500 hover:text-white'}`}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-1">
+                                        <input
+                                            type="text"
+                                            required
+                                            value={takerPaymentDetails}
+                                            onChange={(e) => setTakerPaymentDetails(e.target.value)}
+                                            placeholder={order.paymentMethod?.toLowerCase().includes('binance') ? "Binance Pay ID / Email" : `Enter your ${order.paymentMethod} number...`}
+                                            className="w-full bg-[#1e293b] border border-slate-600 rounded-xl px-4 py-3 text-white font-bold tracking-wide focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-500 shadow-inner"
+                                        />
+                                    </div>
+
+                                    <div className="flex bg-[#0b1120] p-1 rounded-xl border border-slate-700/50 mt-3 relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setTakerTransactionType('SEND_MONEY')}
+                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${takerTransactionType === 'SEND_MONEY' ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            Send Money
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setTakerTransactionType('CASH_OUT')}
+                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${takerTransactionType === 'CASH_OUT' ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            Cash Out
+                                        </button>
+                                    </div>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-2 px-1">The Buyer will send {order.fiatCurrency || 'BDT'} to this account.</p>
                                 </div>
                             )}
 

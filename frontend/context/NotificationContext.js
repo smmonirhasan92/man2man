@@ -5,6 +5,7 @@ import { useSocket } from '../hooks/useSocket';
 import api from '../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -23,6 +24,10 @@ export function NotificationProvider({ children }) {
     const [socket, setSocket] = useState(null);
     const { refreshUser } = useAuth(); // Hook to refresh balance on update
     const systemSocket = useSocket('/system'); // Use the singleton hook
+    const router = useRouter();
+
+    // Persistent Audio Refs to bypass Browser Autoplay rules 
+    const isClient = typeof window !== 'undefined';
 
     // Initialize Socket
     useEffect(() => {
@@ -90,23 +95,22 @@ export function NotificationProvider({ children }) {
 
         let lastSoundTime = 0;
         const playSound = (type = 'info') => {
+            if (!isClient) return;
             const now = Date.now();
             if (now - lastSoundTime < 800) return; // Cooldown
             lastSoundTime = now;
 
             try {
-                let soundPath = '/sounds/notification.mp3';
-                if (type === 'success') soundPath = '/sounds/success.mp3';
-                if (type === 'error') soundPath = '/sounds/error.mp3';
+                let audioNode = document.getElementById('global-audio-info');
+                if (type === 'success') audioNode = document.getElementById('global-audio-success');
+                if (type === 'error') audioNode = document.getElementById('global-audio-error');
 
-                const audio = new Audio(soundPath);
-                audio.volume = 0.8; // Louder for better mobile response
-                const playPromise = audio.play();
-
-                if (playPromise !== undefined) {
-                    playPromise.catch(e => {
-                        console.warn("Audio autoplay blocked, will try on next interaction", e);
-                    });
+                if (audioNode) {
+                    audioNode.currentTime = 0;
+                    const playPromise = audioNode.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.warn("Audio autoplay blocked by OS:", e));
+                    }
                 }
             } catch (e) { }
         };
@@ -115,7 +119,23 @@ export function NotificationProvider({ children }) {
         socket.on('notification', (newNotif) => {
             playSound(newNotif.type);
             const style = newNotif.type === 'error' ? errorStyle : premiumStyle;
-            toast(newNotif.message, { style });
+            
+            if (newNotif.url) {
+                toast((t) => (
+                    <div 
+                        className="cursor-pointer" 
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            router.push(newNotif.url);
+                        }}
+                    >
+                        <div>{newNotif.message}</div>
+                        <div className="text-[10px] text-blue-400 mt-1 font-bold">Tap to view ➔</div>
+                    </div>
+                ), { style, duration: 8000 });
+            } else {
+                toast(newNotif.message, { style });
+            }
         });
 
         // 2. Wallet Update (Real-time Balance)
@@ -202,6 +222,20 @@ export function NotificationProvider({ children }) {
                     },
                 }}
             />
+            {/* INVISIBLE GLOBAL AUDIO ELEMENTS TO PREVENT AUTOPLAY STUTTERS */}
+            {isClient && (
+                <>
+                    <audio id="global-audio-info" preload="auto">
+                        <source src="/sounds/chat.mp3" type="audio/mpeg" />
+                    </audio>
+                    <audio id="global-audio-success" preload="auto">
+                        <source src="/sounds/loud_alert.mp3" type="audio/mpeg" />
+                    </audio>
+                    <audio id="global-audio-error" preload="auto">
+                        <source src="/sounds/error.mp3" type="audio/mpeg" />
+                    </audio>
+                </>
+            )}
         </NotificationContext.Provider>
     );
 }

@@ -5,9 +5,9 @@ class P2PController {
     // POST /api/p2p/order (Renamed from sell)
     async createOrder(req, res) {
         try {
-            const { amount, paymentMethod, paymentDetails, rate, type, fiatCurrency } = req.body;
+            const { amount, paymentMethod, paymentDetails, rate, type, fiatCurrency, transactionType } = req.body;
             // Only Super Admins should be able to create isInstant true orders, handle securely if needed later. Defaulting to false for users.
-            const order = await P2PService.createOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate, type || 'SELL', fiatCurrency || 'USD');
+            const order = await P2PService.createOrder(req.user.user.id, amount, paymentMethod, paymentDetails, rate, type || 'SELL', fiatCurrency || 'USD', transactionType);
             res.json({ success: true, order });
         } catch (e) {
             res.status(400).json({ message: e.message });
@@ -109,8 +109,8 @@ class P2PController {
     // POST /api/p2p/buy/:orderId
     async initiateTrade(req, res) {
         try {
-            const { requestedAmount, takerPaymentDetails } = req.body; // Expanded to accept taker's payment info
-            const trade = await P2PService.initiateTrade(req.user.user.id, req.params.orderId, requestedAmount, takerPaymentDetails);
+            const { requestedAmount, takerPaymentDetails, transactionType } = req.body; // Expanded to accept taker's payment info & type
+            const trade = await P2PService.initiateTrade(req.user.user.id, req.params.orderId, requestedAmount, takerPaymentDetails, transactionType);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });

@@ -68,6 +68,7 @@ import { Toaster } from 'react-hot-toast';
 import GlobalProfileDrawer from '../components/GlobalProfileDrawer';
 import Shell from '../components/layout/Shell';
 import AutoUpdater from '../components/AutoUpdater';
+import GlobalActiveTradeBanner from '../components/p2p/GlobalActiveTradeBanner';
 
 export default function RootLayout({ children }) {
     return (
@@ -115,6 +116,7 @@ export default function RootLayout({ children }) {
 
                                 <PWAInstallPrompt />
                                 <NotificationPopup />
+                                <GlobalActiveTradeBanner />
                                 <ChatWidget />
                                 {/* Premium Toasts */}
                                 <Toaster
