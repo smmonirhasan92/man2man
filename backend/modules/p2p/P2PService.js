@@ -405,7 +405,7 @@ class P2PService {
             const updatedSeller = await User.findById(trade.sellerId);
             SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
 
-            await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `Trade was CANCELLED.Escrow returned to Seller.` });
+            await this.addSystemMessage(trade._id, `Trade was CANCELLED. Escrow returned to Seller.`);
 
             return trade;
         });
@@ -439,7 +439,7 @@ class P2PService {
         SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_mark_paid', trade);
         await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'info', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
-        await P2PMessage.create({ tradeId: trade._id, senderId: trade.buyerId, isSystem: true, content: `Buyer marked payment as sent.TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'} ` });
+        await this.addSystemMessage(trade._id, `Buyer marked payment as sent. TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'}`);
 
         return trade;
     }

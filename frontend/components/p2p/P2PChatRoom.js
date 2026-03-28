@@ -77,14 +77,14 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
         // Listen for new messages
         socket.on('p2p_message', (msg) => {
-            if (msg.tradeId === tradeId) {
+            if (String(msg.tradeId) === String(tradeId)) {
                 setMessages(prev => {
                     // Prevent duplicate messages if socket reconnects or fires twice
                     if (prev.some(m => m._id === msg._id)) return prev;
                     return [...prev, msg];
                 });
                 scrollToBottom();
-                if (msg.senderId !== user?._id && msg.senderId?._id !== user?._id) {
+                if (String(msg.senderId) !== String(user?._id) && String(msg.senderId?._id) !== String(user?._id)) {
                     playDing();
                 }
             }
@@ -92,22 +92,22 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
         // Listen for trade status updates (Paid/Completed)
         socket.on('p2p_mark_paid', (updatedTrade) => {
-            if (updatedTrade._id === tradeId) {
-                setTrade(updatedTrade);
+            if (String(updatedTrade._id) === String(tradeId)) {
+                fetchTradeData(); // Secure way to get fully populated nested structures 
                 // toast and sound are handled globally by NotificationContext
             }
         });
 
         socket.on('p2p_completed', (updatedTrade) => {
-            if (updatedTrade._id === tradeId) {
-                setTrade(updatedTrade);
+            if (String(updatedTrade._id) === String(tradeId)) {
+                fetchTradeData();
                 // toast and sound are handled globally by NotificationContext
             }
         });
 
         socket.on('p2p_trade_dispute', (updatedTrade) => {
-            if (updatedTrade._id === tradeId) {
-                setTrade(updatedTrade);
+            if (String(updatedTrade._id) === String(tradeId)) {
+                fetchTradeData();
                 toast.error('Trade Frozen by Tribunal.');
                 notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.', '/p2p', '/sounds/error.mp3');
             }
