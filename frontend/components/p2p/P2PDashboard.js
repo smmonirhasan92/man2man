@@ -41,6 +41,9 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const searchParams = useSearchParams();
     const tradeQueryId = searchParams ? searchParams.get('tradeId') : null;
     const { permission, requestPermission, notify, playSound } = useNotification();
+    
+    // [NEW] Global Running Trades Count for Smart Banner
+    const [runningCount, setRunningCount] = useState(0);
 
 
     const [marketStats, setMarketStats] = useState({ price: 0, high: 0, low: 0, vol: 0, change: 0 });
@@ -48,9 +51,19 @@ export default function P2PDashboard({ initialMode, onClose }) {
     // [FIX] Use System Namespace to match Backend
     const socket = useSocket('/system');
 
+    const checkRunningTrades = async () => {
+        try {
+            if (!user) return;
+            const res = await api.get('/p2p/my-trades');
+            const active = res.data.filter(t => ['CREATED', 'PAID', 'AWAITING_ADMIN', 'DISPUTED'].includes(t.status));
+            setRunningCount(active.length);
+        } catch(e){}
+    };
+
     useEffect(() => {
         fetchOrders();
         fetchStats();
+        checkRunningTrades();
 
         if (socket) {
             socket.on('p2p_alert', () => {
@@ -64,6 +77,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 if (mode === 'buy' || mode === 'sell') fetchOrders();
                 // [NEW] Trigger Rating Modal
                 setRatingTradeId(trade._id);
+                checkRunningTrades();
             });
             
             // [NEW] Real-time History List Update when Marked Paid
@@ -78,6 +92,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
             // [NEW] Real-time Refresh on Trade Start & Auto Open
             socket.on('p2p_trade_start', (trade) => {
+                checkRunningTrades();
                 // If the user's ad was bought, auto-open the chat room seamlessly
                 if (trade.sellerId === user?._id || trade.buyerId === user?._id) {
                     setActiveTradeId(trade._id);
@@ -267,6 +282,22 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 </div>
             )}
 
+            {/* Smart Running Banner */}
+            {runningCount > 0 && mode !== 'active' && !activeTradeId && (
+                <div 
+                    onClick={() => setMode('active')}
+                    className="bg-[#fcd535]/10 text-[#fcd535] border-b border-[#fcd535]/20 px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-[#fcd535]/20 transition"
+                >
+                    <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 animate-spin-slow" style={{ animationDuration: '3s' }} />
+                        <span className="text-xs font-bold font-mono tracking-wide">You have {runningCount} Running Trade{runningCount > 1 ? 's' : ''}!</span>
+                    </div>
+                    <button className="text-[10px] bg-[#fcd535] text-black px-4 py-1.5 rounded font-black uppercase tracking-wider shadow-[0_0_10px_rgba(252,213,53,0.3)] animate-pulse hover:scale-105 transition">
+                        View Now
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex justify-between items-center p-4 bg-[#181a20] border-b border-[#2b3139]">
                 <div className="flex items-center gap-3">
@@ -366,7 +397,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                         onClick={() => setMode(t)}
                         className={`px-4 py-3 text-sm font-black tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'active' ? 'text-[#fcd535] animate-pulse' : t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : 'text-white') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
                     >
-                        {t === 'active' ? '🔥 ACTIVE' : t === 'history' ? '📜 HISTORY' : t.replace('_', ' ').toUpperCase()}
+                        {t === 'active' ? '⏳ RUNNING' : t === 'history' ? '📜 HISTORY' : t.replace('_', ' ').toUpperCase()}
                         {mode === t && (
                             <div className={`absolute bottom-0 left-0 w-full h-[3px] rounded-t-full ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : 'bg-[#fcd535]'}`} />
                         )}
