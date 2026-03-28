@@ -131,12 +131,12 @@ function DashboardContent() {
 
                 {/* Header */}
                 <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg bg-emerald-500/10 flex items-center justify-center">
-                            <Shield size={18} className="text-emerald-500" />
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <Shield size={16} className="text-emerald-500" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-white tracking-wide leading-none uppercase">
+                            <h2 className="text-xs font-black text-white tracking-wide leading-none uppercase">
                                 SECURE GATEWAY 🇺🇸
                             </h2>
                             <div className="flex items-center gap-2 mt-1">
@@ -146,7 +146,7 @@ function DashboardContent() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex-1 max-w-[200px]">
+                    <div className="flex-1 max-w-[245px] flex justify-end">
                         <UnifiedWallet balance={user?.wallet_balance} income={user?.wallet?.income} />
                     </div>
                 </div>
