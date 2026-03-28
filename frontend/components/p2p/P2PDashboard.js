@@ -115,14 +115,14 @@ export default function P2PDashboard({ initialMode, onClose }) {
         };
     }, [mode, filters, socket, user]);
 
-    const fetchStats = async () => {
+    async function fetchStats() {
         try {
             const res = await api.get('/p2p/summary');
             if (res.data) setMarketStats(res.data);
         } catch (e) { console.error("Stats API failed", e); }
-    };
+    }
 
-    const fetchOrders = async (isLoadMore = false) => {
+    async function fetchOrders(isLoadMore = false) {
         const fetchPage = isLoadMore ? page + 1 : 1;
         if (!isLoadMore) {
             setLoading(true);
@@ -171,7 +171,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             if (!isLoadMore) setOrders([]);
         }
         setLoading(false);
-    };
+    }
 
     const handleTradeAction = (order) => {
         // [LIVE BALANCE CHECK] For SELL ads only (We are buying)
