@@ -117,7 +117,23 @@ export function NotificationProvider({ children }) {
         socket.on('notification', (newNotif) => {
             playSound(newNotif.type);
             const style = newNotif.type === 'error' ? errorStyle : premiumStyle;
-            toast(newNotif.message, { style });
+            
+            if (newNotif.url) {
+                toast((t) => (
+                    <div 
+                        className="cursor-pointer" 
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            window.location.href = newNotif.url;
+                        }}
+                    >
+                        <div>{newNotif.message}</div>
+                        <div className="text-[10px] text-blue-400 mt-1 font-bold">Tap to view ➔</div>
+                    </div>
+                ), { style, duration: 8000 });
+            } else {
+                toast(newNotif.message, { style });
+            }
         });
 
         // 2. Wallet Update (Real-time Balance)
@@ -207,9 +223,15 @@ export function NotificationProvider({ children }) {
             {/* INVISIBLE GLOBAL AUDIO ELEMENTS TO PREVENT AUTOPLAY STUTTERS */}
             {isClient && (
                 <>
-                    <audio id="global-audio-info" src="/sounds/notification.mp3" preload="auto" />
-                    <audio id="global-audio-success" src="/sounds/success.mp3" preload="auto" />
-                    <audio id="global-audio-error" src="/sounds/error.mp3" preload="auto" />
+                    <audio id="global-audio-info" preload="auto">
+                        <source src="/sounds/notification.mp3" type="audio/mpeg" />
+                    </audio>
+                    <audio id="global-audio-success" preload="auto">
+                        <source src="/sounds/success.mp3" type="audio/mpeg" />
+                    </audio>
+                    <audio id="global-audio-error" preload="auto">
+                        <source src="/sounds/error.mp3" type="audio/mpeg" />
+                    </audio>
                 </>
             )}
         </NotificationContext.Provider>

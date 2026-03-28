@@ -51,6 +51,7 @@ class NotificationService {
                     _id: notif._id,
                     message: notif.message,
                     type: notif.type,
+                    url: notif.metadata?.url || null, // [FIX] Pipe URI for deep link
                     createdAt: notif.createdAt
                 });
                 console.log(`[Notification] Sent to user_${userId}: ${message}`);
