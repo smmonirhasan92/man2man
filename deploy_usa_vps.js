@@ -16,6 +16,7 @@ async function deployReal() {
         const commands = [
             `cd ${rootDir} && git fetch --all && git reset --hard origin/main`,
             `cd ${rootDir}/frontend && npm i && npm run build`,
+            `fuser -k 3000/tcp || true`,
             `pm2 restart all || (pm2 start npm --name "frontend" -- start)`
         ];
 

@@ -610,8 +610,6 @@ exports.getUserDetails = async (req, res) => {
         ]);
 
         const totalSelfDeposit = self_deposits[0]?.total || 0;
-        const totalAdminLoan = admin_loans[0]?.total || 0;
-        const totalSelfDeposit = self_deposits[0]?.total || 0;
         const totalAdminLoanNxs = admin_loans[0]?.total || 0;
         const totalAdminLoanUsd = totalAdminLoanNxs / NXS_RATIO;
         const totalUsdIn = totalSelfDeposit + totalAdminLoanUsd;
