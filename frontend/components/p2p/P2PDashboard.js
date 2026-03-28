@@ -5,7 +5,7 @@ import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, Use
 import OrderCreationModal from './OrderCreationModal';
 import BuyOrderModal from './BuyOrderModal';
 import P2PChatRoom from './P2PChatRoom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSocket } from '../../hooks/useSocket';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
@@ -38,6 +38,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const [buyModalConfig, setBuyModalConfig] = useState({ isOpen: false, order: null });
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const router = useRouter(); // [FIX] Initialize hook here
+    const searchParams = useSearchParams();
+    const tradeQueryId = searchParams ? searchParams.get('tradeId') : null;
     const { permission, requestPermission, notify, playSound } = useNotification();
 
 
@@ -168,9 +170,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 try {
                     const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount, takerPaymentDetails });
                     if (res.data.success) {
-                        setActiveTradeId(res.data.trade._id);
-                        localStorage.setItem('active_p2p_trade', res.data.trade._id);
                         toast.success("Trade Started Successfully!");
+                        router.push(`/p2p?tradeId=${res.data.trade._id}`); // [FIX] Auto-Jump securely via URL
                     }
                 } catch (e) {
                     toast.error(e.response?.data?.message || "Failed to start trade");
@@ -193,14 +194,20 @@ export default function P2PDashboard({ initialMode, onClose }) {
     };
 
     useEffect(() => {
-        const savedTrade = localStorage.getItem('active_p2p_trade');
-        if (savedTrade) setActiveTradeId(savedTrade);
-    }, []);
+        if (tradeQueryId) {
+            setActiveTradeId(tradeQueryId);
+            localStorage.setItem('active_p2p_trade', tradeQueryId);
+        } else {
+            const savedTrade = localStorage.getItem('active_p2p_trade');
+            if (savedTrade) setActiveTradeId(savedTrade);
+        }
+    }, [tradeQueryId]);
 
     // Clear on exit
     const exitTrade = () => {
         setActiveTradeId(null);
         localStorage.removeItem('active_p2p_trade');
+        router.replace('/p2p'); // Clear URL query so it doesn't auto-reopen
     };
 
     const getMethodStyle = (method) => {

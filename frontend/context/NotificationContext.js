@@ -24,6 +24,9 @@ export function NotificationProvider({ children }) {
     const { refreshUser } = useAuth(); // Hook to refresh balance on update
     const systemSocket = useSocket('/system'); // Use the singleton hook
 
+    // Persistent Audio Refs to bypass Browser Autoplay rules 
+    const isClient = typeof window !== 'undefined';
+
     // Initialize Socket
     useEffect(() => {
         if (systemSocket) {
@@ -90,23 +93,22 @@ export function NotificationProvider({ children }) {
 
         let lastSoundTime = 0;
         const playSound = (type = 'info') => {
+            if (!isClient) return;
             const now = Date.now();
             if (now - lastSoundTime < 800) return; // Cooldown
             lastSoundTime = now;
 
             try {
-                let soundPath = '/sounds/notification.mp3';
-                if (type === 'success') soundPath = '/sounds/success.mp3';
-                if (type === 'error') soundPath = '/sounds/error.mp3';
+                let audioNode = document.getElementById('global-audio-info');
+                if (type === 'success') audioNode = document.getElementById('global-audio-success');
+                if (type === 'error') audioNode = document.getElementById('global-audio-error');
 
-                const audio = new Audio(soundPath);
-                audio.volume = 0.8; // Louder for better mobile response
-                const playPromise = audio.play();
-
-                if (playPromise !== undefined) {
-                    playPromise.catch(e => {
-                        console.warn("Audio autoplay blocked, will try on next interaction", e);
-                    });
+                if (audioNode) {
+                    audioNode.currentTime = 0;
+                    const playPromise = audioNode.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.warn("Audio autoplay blocked by OS:", e));
+                    }
                 }
             } catch (e) { }
         };
@@ -202,6 +204,14 @@ export function NotificationProvider({ children }) {
                     },
                 }}
             />
+            {/* INVISIBLE GLOBAL AUDIO ELEMENTS TO PREVENT AUTOPLAY STUTTERS */}
+            {isClient && (
+                <>
+                    <audio id="global-audio-info" src="/sounds/notification.mp3" preload="auto" />
+                    <audio id="global-audio-success" src="/sounds/success.mp3" preload="auto" />
+                    <audio id="global-audio-error" src="/sounds/error.mp3" preload="auto" />
+                </>
+            )}
         </NotificationContext.Provider>
     );
 }

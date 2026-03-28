@@ -178,7 +178,7 @@ class P2PService {
             // Notify System & Users out of session
             SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_start', trade);
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
-            await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id, url: '/p2p' });
+            await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
             // Because Seller's balance changed, the UserModel pre/post save hook WILL NOT fire from findByIdAndUpdate.
             // So we manually broadcast the new balance to the global market or just personal room.
@@ -433,7 +433,7 @@ class P2PService {
 
         // Notify Seller
         SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_mark_paid', trade);
-        await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'info', { tradeId: trade._id, url: '/p2p' });
+        await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'info', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
         await P2PMessage.create({ tradeId: trade._id, senderId: trade.buyerId, isSystem: true, content: `Buyer marked payment as sent.TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'} ` });
 
@@ -739,8 +739,8 @@ class P2PService {
             const msg = `Admin resolved dispute: ${resolution === 'RELEASE_TO_BUYER' ? 'Funds released to Buyer' : 'Funds refunded to Seller'} `;
             SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade);
             SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
-            await NotificationService.send(trade.buyerId, msg, 'info', { url: '/p2p' });
-            await NotificationService.send(trade.sellerId, msg, 'info', { url: '/p2p' });
+            await NotificationService.send(trade.buyerId, msg, 'info', { url: `/p2p?tradeId=${trade._id}` });
+            await NotificationService.send(trade.sellerId, msg, 'info', { url: `/p2p?tradeId=${trade._id}` });
 
             return trade;
         });

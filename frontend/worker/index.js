@@ -7,7 +7,8 @@ self.addEventListener('push', function (event) {
             body: data.body || 'New update from USA Affiliate',
             icon: '/networking_globe.png',
             badge: '/networking_globe.png',
-            vibrate: [100, 50, 100],
+            vibrate: [200, 100, 200], // [FIX] Heavier background vibration
+            requireInteraction: true, // [FIX] Forces notification to stay until tapped
             data: {
                 url: data.url || '/'
             },
