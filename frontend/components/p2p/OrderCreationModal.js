@@ -34,7 +34,9 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!amount || !details || !rate) return toast.error("Fill all fields");
+        // If it's a BUY Ad, the Maker is paying, so they don't provide account details to receive funds
+        if (adMode === 'BUY' && (!amount || !rate)) return toast.error("Fill limit and rate");
+        if (adMode === 'SELL' && (!amount || !details || !rate)) return toast.error("Fill all fields");
         setLoading(true);
         try {
             await api.post('/p2p/order', {
@@ -43,7 +45,7 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                 rate: Number(rate),
                 fiatCurrency: fiatCurrency,
                 paymentMethod: method,
-                paymentDetails: details
+                paymentDetails: adMode === 'BUY' ? 'Pending Taker Info' : details // [FIX] Maker doesn't provide this for BUY ads
             });
             toast.success(`${adMode === 'BUY' ? 'Buy' : 'Sell'} Ad Created Successfully!`);
             onSuccess(adMode);
@@ -173,18 +175,20 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                             </select>
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
-                                {adMode === 'BUY' ? 'My Account Details' : 'Payment Instructions'}
-                            </label>
-                            <input
-                                type="text"
-                                value={details}
-                                onChange={e => setDetails(e.target.value)}
-                                className={`w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white outline-none transition font-mono ${adMode === 'BUY' ? 'focus:border-blue-500' : 'focus:border-emerald-500'}`}
-                                placeholder="017XXXXXXXX"
-                            />
-                        </div>
+                        {adMode === 'SELL' && (
+                            <div className="space-y-1">
+                                <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
+                                    Payment Instructions
+                                </label>
+                                <input
+                                    type="text"
+                                    value={details}
+                                    onChange={e => setDetails(e.target.value)}
+                                    className="w-full bg-[#111927] border border-white/10 rounded-xl p-3 text-white outline-none transition font-mono focus:border-emerald-500"
+                                    placeholder="e.g. 017XXXXXX (bKash Personal)"
+                                />
+                            </div>
+                        )}
 
                         <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 flex gap-3 items-center">
                             <span className="text-xl">🔥</span>

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 const P2POrder = require('./P2POrderModel');
 const P2PTrade = require('./P2PTradeModel');
 const P2PMessage = require('./P2PMessageModel');
@@ -79,7 +79,7 @@ class P2PService {
     }
 
     // --- 3. INITIATE TRADE (Match & Lock Escrow) ---
-    async initiateTrade(takerId, orderId, requestedAmount, takerPaymentDetails) {
+    async initiateTrade(takerId, orderId, requestedAmount) {
         if (!requestedAmount || requestedAmount <= 0) throw new Error("Invalid amount requested");
 
         return await TransactionHelper.runTransaction(async (session) => {
@@ -146,7 +146,6 @@ class P2PService {
                 sellerId: sellerId,
                 buyerId: buyerId,
                 amount: requestedAmount,
-                takerPaymentDetails: takerPaymentDetails || null, // [NEW] Save Seller's receiving info
                 status: 'CREATED',
                 expiresAt: expiresAt
             }], { session });
@@ -684,7 +683,7 @@ class P2PService {
         await P2POrder.findByIdAndUpdate(trade.orderId, { status: 'DISPUTE' });
 
         const reporterRole = trade.sellerId.toString() === userId.toString() ? 'Seller' : 'Buyer';
-        this.addSystemMessage(trade._id, `⚠️ Trade put on HOLD.${reporterRole} reported an issue: "${reason}".Admin will review this chat shortly.`);
+        this.addSystemMessage(trade._id, `ΓÜá∩╕Å Trade put on HOLD.${reporterRole} reported an issue: "${reason}".Admin will review this chat shortly.`);
 
         // Broadcast
         SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_trade_dispute', trade);
@@ -802,7 +801,7 @@ class P2PService {
                 try {
                     await this.cancelTrade(trade.sellerId, trade._id);
                     // P2PMessage creation is not critical enough to fail the cancellation, but we still log it.
-                    await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `⏳ TRADE AUTO - CANCELLED due to inactivity.Escrow returned.` });
+                    await P2PMessage.create({ tradeId: trade._id, senderId: trade.sellerId, isSystem: true, content: `ΓÅ│ TRADE AUTO - CANCELLED due to inactivity.Escrow returned.` });
                     return true;
                 } catch (e) {
                     console.error(`[P2P Auto - Cancel] Failed to cancel trade ${trade._id}: `, e.message);

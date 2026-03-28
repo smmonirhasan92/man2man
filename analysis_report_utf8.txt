@@ -1,0 +1,9 @@
+--- STARTING CODEBASE ANALYSIS ---
+\n[1] UNUSED BACKEND DEPENDENCIES:
+@google/generative-ai, axios, node-llama-cpp, redis, seedrandom, simple-statistics, xss-clean
+\n[2] ROOT CLUTTER (Debug scripts, logs, old configs):
+Found 398 files that are likely unnecessary in production/clean repo.
+.git_log.txt, .git_status.txt, adminController_vps.js, admin_logs.txt, analysis_report.txt, analyze_codebase.js, analyze_connection.js, api_logs.txt, audit_deps_vps.js, audit_final.js, audit_history.js, audit_nginx_vps.js, audit_pm2_vps.js, audit_vps.js, audit_vps_paths.js, auth_logs.txt, aviator_error.log, backend_errors.txt, backend_out.txt, backend_pm2_logs.txt ...and more.
+\n[3] UNUSED CONTROLLERS:
+PlanController.js, settingController.js, walletController_append.js
+\n--- ANALYSIS COMPLETE ---

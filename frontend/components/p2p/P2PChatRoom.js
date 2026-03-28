@@ -177,11 +177,19 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     const playDing = () => {
-        notify('New P2P Message', 'You have received a new message in your trade.', '/p2p', '/sounds/click.mp3');
+        if (notificationAudio.current) {
+            notificationAudio.current.currentTime = 0;
+            notificationAudio.current.play().catch(e => console.log('Audio Blocked:', e));
+        }
+        notify('New P2P Message', 'You have received a new message in your trade.');
     };
 
     const playSuccess = () => {
-        notify('Trade Updated', 'This trade has been marked as paid or completed.', '/p2p', '/sounds/success.mp3');
+        if (successAudio.current) {
+            successAudio.current.currentTime = 0;
+            successAudio.current.play().catch(e => console.log('Audio Blocked:', e));
+        }
+        notify('Trade Updated', 'This trade has been marked as paid or completed.');
     };
 
     const sendMessage = async () => {
@@ -381,7 +389,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                             <div id="step-1-copy" onClick={copyPaymentInfo} className="cursor-pointer group flex-1">
                                 <div className="text-[10px] text-[#848e9c] mb-0.5">Transfer To (Tap to Copy)</div>
                                 <div className="text-lg font-mono font-black text-[#eaeaec] flex items-center gap-1.5">
-                                    {trade.orderId.paymentDetails || "Contact Seller"}
+                                    {trade.orderId.type === 'BUY' ? trade.takerPaymentDetails : trade.orderId.paymentDetails || "Contact Seller"}
                                 </div>
                                 <div className="text-[10px] text-[#848e9c] uppercase mt-0.5 flex items-center gap-1">
                                     <span className="border border-[#2b3139] px-1 rounded">{trade.orderId.paymentMethod}</span>

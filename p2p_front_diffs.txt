@@ -1,0 +1,23 @@
+commit d5b18faa955002657858e653172e70e4c44e9cfd
+Author: Gemini Agent <deploy-bot@gemini.ai>
+Date:   Wed Feb 4 19:16:21 2026 +0800
+
+    Build: Final Clean Source (v1.0)
+
+diff --git a/frontend/app/p2p/page.js b/frontend/app/p2p/page.js
+new file mode 100644
+index 0000000..fdf34e7
+--- /dev/null
++++ b/frontend/app/p2p/page.js
+@@ -0,0 +1,11 @@
++'use client';
++import AuthGuard from '../../components/AuthGuard';
++import P2PDashboard from '../../components/p2p/P2PDashboard';
++
++export default function P2PPage() {
++    return (
++        <AuthGuard>
++            <P2PDashboard />
++        </AuthGuard>
++    );
++}

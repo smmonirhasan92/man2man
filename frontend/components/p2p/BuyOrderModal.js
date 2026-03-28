@@ -3,6 +3,7 @@ import { X, DollarSign, Wallet } from 'lucide-react';
 
 export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, currentUserBalance = 0 }) {
     const [amount, setAmount] = useState('');
+    const [takerPaymentDetails, setTakerPaymentDetails] = useState('');
 
     if (!isOpen || !order) return null;
 
@@ -17,7 +18,10 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
         e.preventDefault();
         const numAmount = Number(amount);
         if (numAmount > 0 && numAmount <= maxLimit) {
-            onConfirm(numAmount);
+            if (order.type === 'BUY' && !takerPaymentDetails.trim()) {
+                return; // HTML5 required attribute handles the UI block
+            }
+            onConfirm(numAmount, takerPaymentDetails);
         }
     };
 
@@ -99,6 +103,23 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
                                     MAX
                                 </button>
                             </div>
+
+                            {order.type === 'BUY' && (
+                                <div className="mb-8 group">
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                                        Your Receiving Account ({order.paymentMethod})
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={takerPaymentDetails}
+                                        onChange={(e) => setTakerPaymentDetails(e.target.value)}
+                                        placeholder={`Enter your ${order.paymentMethod} account details...`}
+                                        className="w-full bg-[#1e293b] border border-slate-600 rounded-xl px-4 py-3 text-white font-bold tracking-wide focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-slate-500 shadow-inner"
+                                    />
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-1 px-1">The Buyer will send {order.fiatCurrency || 'BDT'} to this account.</p>
+                                </div>
+                            )}
 
                             {/* LIVE CALCULATION DISPLAY */}
                             {amount && Number(amount) > 0 && (

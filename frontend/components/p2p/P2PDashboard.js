@@ -64,45 +64,11 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 // [NEW] Trigger Rating Modal
                 setRatingTradeId(trade._id);
             });
-            // [NEW] Real-time Push Notification for Seller when Buyer hits "Start Trade"
+            // [NEW] Real-time Refresh on Trade Start
             socket.on('p2p_trade_start', (trade) => {
-                // If I am the seller and a trade just started, show push notification
+                // Background refresh only. Prevent double notification since backend sends native Push/Ding.
                 if (trade.sellerId === user?._id) {
-                    // playSound(); // [REMOVED] NotificationContext already handles generic 'notification' event
-
-                    toast.custom((t) => (
-                        <div className={`${t.visible ? 'animate-in slide-in-from-top-4 fade-in' : 'animate-out slide-out-to-top-4 fade-out'} max-w-sm w-full bg-emerald-900 border border-emerald-500 shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-                            <div className="flex-1 w-0 p-4">
-                                <div className="flex items-start">
-                                    <div className="flex-shrink-0 pt-0.5">
-                                        <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center animate-pulse">
-                                            <span className="text-xl">💰</span>
-                                        </div>
-                                    </div>
-                                    <div className="ml-3 flex-1">
-                                        <p className="text-sm font-black text-white">New Trade Started!</p>
-                                        <p className="mt-1 text-xs text-emerald-200 font-bold">A buyer wants to pay for {trade.amount} NXS. Please review the payment.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex border-l border-emerald-500/30">
-                                <button
-                                    onClick={() => {
-                                        toast.dismiss(t.id);
-                                        setActiveTradeId(trade._id); // Jump directly into chat
-                                    }}
-                                    className="w-full border border-transparent rounded-none rounded-r-2xl p-4 flex items-center justify-center text-sm font-black text-emerald-300 hover:text-white hover:bg-emerald-800 transition focus:outline-none"
-                                >
-                                    View
-                                </button>
-                            </div>
-                        </div>
-                    ), {
-                        duration: 8000, // Stay on screen for 8s
-                        position: 'top-center'
-                    });
-
-                    fetchOrders(); // Refresh background list
+                    fetchOrders();
                 }
             });
         }
@@ -187,7 +153,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
         setBuyModalConfig({ isOpen: true, order });
     };
 
-    const confirmTrade = (requestedAmount) => {
+    const confirmTrade = (requestedAmount, takerPaymentDetails) => {
         const order = buyModalConfig.order;
         const actionWord = order.type === 'SELL' ? 'buy' : 'sell';
 
@@ -200,7 +166,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             confirmText: 'Confirm Trade',
             onConfirm: async () => {
                 try {
-                    const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount });
+                    const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount, takerPaymentDetails });
                     if (res.data.success) {
                         setActiveTradeId(res.data.trade._id);
                         localStorage.setItem('active_p2p_trade', res.data.trade._id);

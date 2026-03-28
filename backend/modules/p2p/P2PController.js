@@ -109,8 +109,8 @@ class P2PController {
     // POST /api/p2p/buy/:orderId
     async initiateTrade(req, res) {
         try {
-            const { requestedAmount } = req.body; // New field for partial buying
-            const trade = await P2PService.initiateTrade(req.user.user.id, req.params.orderId, requestedAmount);
+            const { requestedAmount, takerPaymentDetails } = req.body; // Expanded to accept taker's payment info
+            const trade = await P2PService.initiateTrade(req.user.user.id, req.params.orderId, requestedAmount, takerPaymentDetails);
             res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });

@@ -20,6 +20,7 @@ const P2PTradeSchema = new mongoose.Schema({
     paymentProofUrl: { type: String }, // Optional
     txId: { type: String }, // New
     senderNumber: { type: String }, // New
+    takerPaymentDetails: { type: String }, // [NEW] Seller's receiving info when initiating trade against a BUY Ad
     disputeReason: { type: String },
     disputeRaisedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Tracks who initiated the Tribunal
 
