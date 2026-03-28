@@ -58,8 +58,9 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     const copyPaymentInfo = () => {
-        if (trade?.orderId?.paymentDetails) {
-            navigator.clipboard.writeText(trade.orderId.paymentDetails);
+        const textToCopy = trade?.orderId?.type === 'BUY' ? trade?.takerPaymentDetails : trade?.orderId?.paymentDetails;
+        if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy);
             toast.success("Number Copied!");
         }
     };
@@ -342,8 +343,8 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
-            <audio ref={notificationAudio} src="/sounds/notification.mp3" preload="auto" />
-            <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
+            <audio ref={notificationAudio} src="/sounds/chat.mp3" preload="auto" />
+            <audio ref={successAudio} src="/sounds/loud_alert.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (
@@ -382,24 +383,33 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             {isBuyer && trade.status === 'CREATED' && (
                 <div className="shrink-0 p-3 bg-[#181a20] border-b border-[#2b3139]">
                     <div className="bg-[#0b0e11] border border-[#2b3139] rounded-lg p-3 relative">
-                        <div className="absolute top-0 right-0 bg-[#2b3139] text-[9px] font-bold px-2 py-0.5 rounded-bl-lg text-[#848e9c]">
-                            PAYMENT INFO
+                        <div className={`absolute top-0 right-0 text-[10px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider ${trade.transactionType === 'CASH_OUT' ? 'bg-[#f6465d]/20 text-[#f6465d]' : 'bg-[#2b3139] text-[#848e9c]'}`}>
+                            {trade.transactionType === 'CASH_OUT' ? 'Agent Cash Out' : 'Send Money'}
                         </div>
-                        <div className="flex justify-between items-end">
-                            <div id="step-1-copy" onClick={copyPaymentInfo} className="cursor-pointer group flex-1">
-                                <div className="text-[10px] text-[#848e9c] mb-0.5">Transfer To (Tap to Copy)</div>
-                                <div className="text-lg font-mono font-black text-[#eaeaec] flex items-center gap-1.5">
+                        <div className="flex justify-between items-end mt-3">
+                            <div id="step-1-copy" onClick={copyPaymentInfo} className="cursor-pointer group flex-1 hover:bg-[#2b3139]/30 rounded p-1 -ml-1 transition-all">
+                                <div className="text-[10px] text-[#848e9c] mb-0.5 uppercase tracking-widest font-bold flex items-center gap-1.5"><Shield className="w-3 h-3 text-[#fcd535]" /> Transfer To (Tap to Copy)</div>
+                                <div className="text-xl font-mono font-black text-blue-400 flex items-center gap-1.5 drop-shadow-md">
                                     {trade.orderId.type === 'BUY' ? trade.takerPaymentDetails : trade.orderId.paymentDetails || "Contact Seller"}
                                 </div>
-                                <div className="text-[10px] text-[#848e9c] uppercase mt-0.5 flex items-center gap-1">
-                                    <span className="border border-[#2b3139] px-1 rounded">{trade.orderId.paymentMethod}</span>
+                                <div className="text-[10px] uppercase mt-1.5 flex items-center gap-1 font-black">
+                                    <span className="border border-[#2b3139] px-2 py-0.5 rounded text-emerald-400 bg-emerald-400/10 shadow-inner">{trade.orderId.paymentMethod}</span>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-[10px] text-[#848e9c]">$1 USD (50 NXS) = {trade.orderId.rate || 1.3} {trade.orderId.fiatCurrency || 'BDT'}</div>
-                                <div className="text-[10px] text-[#848e9c] mt-1">Total Amount</div>
-                                <div className="text-xl font-black text-[#0ecb81] leading-none">
-                                    {((trade.amount / 50) * (trade.orderId.rate || 1.3)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px]">{trade.orderId.fiatCurrency || 'BDT'}</span>
+                                <div className="text-[10px] text-[#848e9c] font-black tracking-wide">$1 USD = {trade.orderId.rate || 1.3} {trade.orderId.fiatCurrency || 'BDT'}</div>
+                                {trade.transactionType === 'CASH_OUT' && (
+                                    <div className="text-[9px] text-[#f6465d] uppercase font-black tracking-widest animate-pulse mt-1">+1.85% Cash Out Fee</div>
+                                )}
+                                <div className="text-[10px] text-[#848e9c] mt-1 font-bold uppercase tracking-widest">Total Must Pay</div>
+                                <div className="text-[22px] font-black text-[#0ecb81] leading-none drop-shadow-md">
+                                    {(() => {
+                                        let baseFiat = (trade.amount / 50) * (trade.orderId.rate || 1.3);
+                                        if (trade.transactionType === 'CASH_OUT') {
+                                            baseFiat += baseFiat * 0.0185;
+                                        }
+                                        return baseFiat.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                                    })()} <span className="text-[11px] text-[#848e9c]">{trade.orderId.fiatCurrency || 'BDT'}</span>
                                 </div>
                             </div>
                         </div>

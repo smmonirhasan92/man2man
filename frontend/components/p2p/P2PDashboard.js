@@ -126,9 +126,13 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 const res = await api.get('/p2p/my-orders');
                 setOrders(res.data);
                 setHasMore(false);
-            } else if (mode === 'history') {
+            } else if (mode === 'active' || mode === 'history') {
                 const res = await api.get('/p2p/my-trades');
-                setOrders(res.data);
+                if (mode === 'active') {
+                    setOrders(res.data.filter(t => ['CREATED', 'PAID', 'AWAITING_ADMIN', 'DISPUTED'].includes(t.status)));
+                } else {
+                    setOrders(res.data.filter(t => ['COMPLETED', 'CANCELLED', 'RESOLVED_BUYER', 'RESOLVED_SELLER'].includes(t.status)));
+                }
                 setHasMore(false);
             }
         } catch (e) {
@@ -155,7 +159,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
         setBuyModalConfig({ isOpen: true, order });
     };
 
-    const confirmTrade = (requestedAmount, takerPaymentDetails) => {
+    const confirmTrade = (requestedAmount, takerPaymentDetails, transactionType) => {
         const order = buyModalConfig.order;
         const actionWord = order.type === 'SELL' ? 'buy' : 'sell';
 
@@ -168,7 +172,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             confirmText: 'Confirm Trade',
             onConfirm: async () => {
                 try {
-                    const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount, takerPaymentDetails });
+                    const res = await api.post(`/p2p/buy/${order._id}`, { requestedAmount, takerPaymentDetails, transactionType });
                     if (res.data.success) {
                         toast.success("Trade Started Successfully!");
                         router.push(`/p2p?tradeId=${res.data.trade._id}`); // [FIX] Auto-Jump securely via URL
@@ -302,7 +306,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             </div>
 
             {/* Price Chart */}
-            {(mode === 'buy' || mode === 'sell' || mode === 'history') && marketStats?.chartData && marketStats.chartData.length > 0 && (
+            {(mode === 'buy' || mode === 'sell' || mode === 'active' || mode === 'history') && marketStats?.chartData && marketStats.chartData.length > 0 && (
                 <div className="bg-[#181a20] border-b border-[#2b3139] px-2 py-4 h-[140px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={marketStats.chartData}>
@@ -340,13 +344,13 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
             {/* Sleek Tabs */}
             <div className="flex bg-[#181a20] px-3 overflow-x-auto scrollbar-none border-b border-[#2b3139]">
-                {['buy', 'sell', 'my_ads', 'history'].map(t => (
+                {['buy', 'sell', 'active', 'my_ads', 'history'].map(t => (
                     <button
                         key={t}
                         onClick={() => setMode(t)}
                         className={`px-4 py-3 text-sm font-bold tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : 'text-[#fcd535]') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
                     >
-                        {t === 'my_ads' ? 'MY ADS' : t.toUpperCase()}
+                        {t.replace('_', ' ').toUpperCase()}
                         {mode === t && (
                             <div className={`absolute bottom-0 left-0 w-full h-[2px] ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : 'bg-[#fcd535]'}`} />
                         )}
@@ -403,9 +407,9 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
             {/* Order List */}
             <div className="pb-32 px-1">
-                {mode === 'history' ? (
+                {mode === 'active' || mode === 'history' ? (
                     loading ? <P2PSkeleton /> :
-                        orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Trade History</div> :
+                        orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Trades Found</div> :
                             orders.map(trade => (
                                 <div key={trade._id} className="bg-[#181a20] mb-2 p-3 flex flex-col hover:bg-[#1e2329] transition group cursor-pointer" onClick={() => { setActiveTradeId(trade._id); localStorage.setItem('active_p2p_trade', trade._id); }}>
                                     <div className="flex justify-between items-center mb-2">
