@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const stakingPoolSchema = new mongoose.mongoose.Schema({
+const stakingPoolSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,

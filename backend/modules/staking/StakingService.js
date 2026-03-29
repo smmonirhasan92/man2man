@@ -51,12 +51,12 @@ class StakingService {
             const expectedReward = parseFloat((amount * (pool.rewardPercentage / 100)).toFixed(6));
 
             // Deduct main, Add to staked
-            await User.findByIdAndUpdate(userId, {
+            const userUpd = await User.findByIdAndUpdate(userId, {
                 $inc: {
                     'wallet.main': -amount,
                     'wallet.staked': amount
                 }
-            }, { session });
+            }, { session, new: true });
 
             // Create Stake Record
             const stake = await UserStake.create([{
@@ -79,6 +79,13 @@ class StakingService {
                 currency: 'NXS'
             }], { session });
 
+            // [SOCKET] Real-time Balance Update
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, userUpd.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `balance_update`, userUpd.wallet);
+            } catch (e) { }
+
             return stake[0];
         });
     }
@@ -100,13 +107,13 @@ class StakingService {
             // Mature! Claim Principal + Profit
             const totalToCredit = stake.stakedAmount + stake.expectedReward;
 
-            await User.findByIdAndUpdate(userId, {
+            const userUpd = await User.findByIdAndUpdate(userId, {
                 $inc: {
                     'wallet.staked': -stake.stakedAmount,
                     'wallet.main': totalToCredit,
                     'wallet.total_earned_staking': stake.expectedReward
                 }
-            }, { session });
+            }, { session, new: true });
 
             // Mark completed
             stake.status = 'COMPLETED';
@@ -135,6 +142,13 @@ class StakingService {
                 }
             ], { session });
 
+            // [SOCKET] Real-time Balance Update
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, userUpd.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `balance_update`, userUpd.wallet);
+            } catch (e) { }
+
             return stake;
         });
     }
@@ -157,12 +171,12 @@ class StakingService {
             const penaltyAmount = parseFloat((stake.stakedAmount * PENALTY_PERCENT).toFixed(6));
             const refundAmount = parseFloat((stake.stakedAmount - penaltyAmount).toFixed(6));
 
-            await User.findByIdAndUpdate(userId, {
+            const userUpd = await User.findByIdAndUpdate(userId, {
                 $inc: {
                     'wallet.staked': -stake.stakedAmount,
                     'wallet.main': refundAmount // Only return 95%
                 }
-            }, { session });
+            }, { session, new: true });
 
             // Mark cancelled
             stake.status = 'CANCELLED';
@@ -191,6 +205,13 @@ class StakingService {
                 }
             ], { session });
 
+            // [SOCKET] Real-time Balance Update
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.broadcast(`user_${userId}`, `balance_update_${userId}`, userUpd.wallet.main);
+                SocketService.broadcast(`user_${userId}`, `balance_update`, userUpd.wallet);
+            } catch (e) { }
+
             return stake;
         });
     }
@@ -201,8 +222,6 @@ class StakingService {
             .populate('poolId', 'name durationDays rewardPercentage badgeColor bgClass')
             .sort({ createdAt: -1 });
     }
-
-    // Auto-complete could go here, but user requested manual 'Claim' button, so we skip cron job.
 }
 
 module.exports = new StakingService();
