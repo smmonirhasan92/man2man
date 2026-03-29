@@ -7,9 +7,13 @@ async function masterFix() {
         await ssh.connect({ host: '76.13.244.202', username: 'root', password: 'Sir@@@admin123' });
         
         console.log('1. Clearing duplicate PM2 apps & killing blocked ports');
-        await ssh.execCommand('pm2 delete all');
+        await ssh.execCommand('pm2 delete all', { cwd: '/var/www/man2man' });
         await ssh.execCommand('fuser -k 3000/tcp');
         await ssh.execCommand('fuser -k 5050/tcp');
+        
+        console.log('1.5 Pulling the latest fixed codebase');
+        const git = await ssh.execCommand('git fetch origin main && git reset --hard origin/main', { cwd: '/var/www/man2man' });
+        console.log(git.stdout);
         
         console.log('2. Removing broken Next.js build cache');
         await ssh.execCommand('rm -rf /var/www/man2man/frontend/.next /var/www/man2man/frontend/node_modules/.cache');

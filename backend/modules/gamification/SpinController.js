@@ -61,7 +61,7 @@ Object.keys(TIERS).forEach(tierKey => {
 exports.spinLuckTest = async (req, res) => {
     try {
         const { tier } = req.body;
-        const userId = req.user.id;
+        const userId = req.user.user.id;
 
         if (!tier || !TIERS[tier]) {
             return res.status(400).json({ success: false, message: 'Invalid tier selected.' });
@@ -79,15 +79,28 @@ exports.spinLuckTest = async (req, res) => {
         const netChange = winAmt - cost;
 
         const result = await TransactionHelper.runTransaction(async (session) => {
-            // 1. Atomic User Balance Update
+            // 1. Fetch User
             const User = require('../user/UserModel');
-            const user = await User.findOneAndUpdate(
-                { _id: userId, 'wallet.main': { $gte: cost } }, // Ensure they can pay the cost
-                { $inc: { 'wallet.main': netChange } },
-                { new: true, session }
-            );
+            const user = await User.findById(userId).session(session);
+            
+            if (!user) throw new Error('User not found');
 
-            if (!user) throw new Error('Insufficient Balance');
+            // Force casting to number to fix any MongoDB data type issues resulting from admin bypasses
+            let currentMain = parseFloat(user.wallet?.main || 0);
+
+            if (currentMain < cost) {
+                console.warn(`[DEBUG] Insufficient Balance. Current: ${currentMain}, Cost: ${cost}`);
+                throw new Error('Insufficient Balance');
+            }
+
+            // Apply net change
+            currentMain = currentMain + netChange;
+            
+            // Re-assign explicitly
+            if (!user.wallet) user.wallet = {};
+            user.wallet.main = currentMain;
+            
+            await user.save({ session });
 
             // 2. Log Ledger 
             const TransactionLedger = require('../wallet/TransactionLedgerModel');
