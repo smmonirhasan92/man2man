@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -24,6 +24,15 @@ import VPSConnectModal from '../../components/VPSConnectModal';
 import api from '../../services/api';
 
 export default function DashboardPage() {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+
+    if (!mounted) return (
+         <div className="min-h-screen font-sans bg-[#0A2540] relative">
+            <DashboardSkeleton />
+        </div>
+    );
+
     return (
         <GlobalErrorBoundary>
             <DashboardContent />

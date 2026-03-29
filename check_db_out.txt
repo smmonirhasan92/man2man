@@ -1,0 +1,218 @@
+[PM2][WARN] Applications man2man-backend, man2man-frontend not running, starting...
+[PM2] App [man2man-backend] launched (1 instances)
+[PM2] App [man2man-frontend] launched (1 instances)
+┌────┬─────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ man2man-backend     │ default     │ 1.0.0   │ fork    │ 1276235  │ 0s     │ 0    │ online    │ 0%       │ 24.8mb   │ root     │ disabled │
+│ 1  │ man2man-frontend    │ default     │ N/A     │ fork    │ 1276236  │ 0s     │ 0    │ online    │ 0%       │ 19.1mb   │ root     │ disabled │
+└────┴─────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+
+--- BACKEND LOGS ---
+[TAILING] Tailing last 100 lines for [man2man-backend] process (change the value with --lines option)
+/root/.pm2/logs/man2man-backend-error-0.log last 100 lines:
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:299026) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:299026) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+0|man2man- | ⚠️ Transaction Failed: Transaction validation failed: type: `staking_deposit` is not a valid enum value for path `type`.. Retrying without transaction...
+0|man2man- | ⚠️ Transaction Failed: Transaction validation failed: type: `staking_deposit` is not a valid enum value for path `type`.. Retrying without transaction...
+0|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+0|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+0|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+0|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:299296) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:299296) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+0|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+0|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+0|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+0|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:299573) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:299573) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+0|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+0|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+0|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+0|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:299848) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:299848) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+0|man2man- | ⚠️ Transaction Failed: Daily Free Gift already opened. Try again in 24 hours.. Retrying without transaction...
+0|man2man- | [GIFT_BOX] Open Error: Daily Free Gift already opened. Try again in 24 hours.
+0|man2man- | ⚠️ Transaction Failed: Daily Free Gift already opened. Try again in 24 hours.. Retrying without transaction...
+0|man2man- | [GIFT_BOX] Open Error: Daily Free Gift already opened. Try again in 24 hours.
+0|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+0|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+0|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+0|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:301688) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:301688) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+0|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+0|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+0|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+0|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:316547) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:316547) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+0|man2man- | [AI] ❌ Init Error: Error: Model file not found at: /var/www/man2man/backend/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+0|man2man- |     at /var/www/man2man/backend/modules/ai/SystemBrainService.js:21:23
+0|man2man- |     at initAI (/var/www/man2man/backend/modules/ai/SystemBrainService.js:48:7)
+0|man2man- |     at Object.<anonymous> (/var/www/man2man/backend/modules/ai/SystemBrainService.js:54:1)
+0|man2man- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|man2man- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|man2man- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|man2man- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|man2man- |     at Module.require (node:internal/modules/cjs/loader:1289:19)
+0|man2man- |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+0|man2man- |     at require (node:internal/modules/helpers:182:18)
+0|man2man- | (node:1276235) [MONGOOSE] Warning: Duplicate schema index on {"synthetic_phone":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+0|man2man- | (Use `node --trace-warnings ...` to show where the warning was created)
+0|man2man- | (node:1276235) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+
+/root/.pm2/logs/man2man-backend-out-0.log last 100 lines:
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: c0CEAahELNJs0i1vAAAH
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: FaRJ-zkRxmCTnJ3LAAAJ
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: 5yoHNBMxcr-muj2rAAAL
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: Sdb4ILQFkTODi1oLAAAN
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: _suPTd3WiyXfVLMgAAAP
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1360a37de0366f5e48dca","role":"agent"},"iat":1774759287,"exp":1774845687}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1360a37de0366f5e48dca","role":"agent"},"iat":1774759287,"exp":1774845687}
+0|man2man- | SIGTERM/SIGINT received. Shutting down gracefully...
+0|man2man- | [BOOT] Server starting... PORT=5050
+0|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+0|man2man- | DEBUG: transactionRoutes.js Loaded
+0|man2man- | [AI] 🚀 Initializing Engine (v3)...
+0|man2man- | ✅ NotificationService: Socket.io Initialized
+0|man2man- | [DEBUG] Connecting to DB...
+0|man2man- | MongoDB Connected: 127.0.0.1
+0|man2man- | MongoDB Atlas Connected Successfully
+0|man2man- | Database Name: universal_game_core_v1
+0|man2man- | ℹ️ Redis URL missing or invalid (must start with redis://). Running in Cache-Free Mode.
+0|man2man- | Server (HTTP + Socket.io) is running on port 5050
+0|man2man- | VERSION: 5050 - STABLE LOGGING - CORE MODULES ONLY
+0|man2man- | [SOCKET] Client connected to /system namespace: 6vnlu4RIezrv1ND9AAAB
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: cbksv_xOLK-JRrZAAAAD
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: EHlUfeTplUS8BjxVAAAF
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: WhdmNvN4UbvUmEiPAAAH
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"6999bc09d20696c20b901a8b","role":"super_admin"},"iat":1774699888,"exp":1774786288}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"6999bc09d20696c20b901a8b","role":"super_admin"},"iat":1774699888,"exp":1774786288}
+0|man2man- | [SOCKET] Client connected to /system namespace: vsiP3MvrxXT3mJL8AAAJ
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: MGTDjrY9-z15i3oJAAAL
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | [SOCKET] Client connected to /system namespace: 3nLigtBlkP8d_zlLAAAN
+0|man2man- | [TRACER] GET /api/auth/me
+0|man2man- | [TRACER] Host: usaaffiliatemarketing.com
+0|man2man- | [RAW_REQ] GET /api/auth/me
+0|man2man- | DEBUG MIDDLEWARE DECODED: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | DEBUG MIDDLEWARE REQ.USER: {"user":{"id":"69b1257e37de0366f5e48916","role":"agent"},"iat":1774766520,"exp":1774852920}
+0|man2man- | SIGTERM/SIGINT received. Shutting down gracefully...
+0|man2man- | [BOOT] Server starting... PORT=5050
+0|man2man- | ✅ NotificationService: Web Push (VAPID) Initialized
+0|man2man- | DEBUG: transactionRoutes.js Loaded
+0|man2man- | [AI] 🚀 Initializing Engine (v3)...
+0|man2man- | ✅ NotificationService: Socket.io Initialized
+0|man2man- | [DEBUG] Connecting to DB...
+0|man2man- | MongoDB Connected: 127.0.0.1
+0|man2man- | MongoDB Atlas Connected Successfully
+0|man2man- | Database Name: universal_game_core_v1
+0|man2man- | ℹ️ Redis URL missing or invalid (must start with redis://). Running in Cache-Free Mode.
+0|man2man- | Server (HTTP + Socket.io) is running on port 5050
+0|man2man- | VERSION: 5050 - STABLE LOGGING - CORE MODULES ONLY
+

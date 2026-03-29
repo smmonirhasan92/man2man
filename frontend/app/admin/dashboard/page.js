@@ -86,6 +86,11 @@ export default function AdminDashboard() {
         });
     };
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+
+    if (!mounted) return <div className="min-h-screen bg-[#050505]" />;
+
     return (
         <div className="min-h-screen bg-[#050505] font-sans pb-20 text-white">
             {/* BACKGROUND VFX */}

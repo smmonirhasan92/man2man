@@ -230,10 +230,10 @@ export function NotificationProvider({ children }) {
             {isClient && (
                 <>
                     <audio id="global-audio-info" preload="auto">
-                        <source src="/sounds/chat.mp3" type="audio/mpeg" />
+                        <source src="/sounds/notification.mp3" type="audio/mpeg" />
                     </audio>
                     <audio id="global-audio-success" preload="auto">
-                        <source src="/sounds/loud_alert.mp3" type="audio/mpeg" />
+                        <source src="/sounds/success.mp3" type="audio/mpeg" />
                     </audio>
                     <audio id="global-audio-error" preload="auto">
                         <source src="/sounds/error.mp3" type="audio/mpeg" />
