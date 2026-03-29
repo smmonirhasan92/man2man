@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Sparkles, X, ChevronRight, Coins, Lock, Timer } from 'lucide-react';
+import { Gift, Sparkles, X, ChevronRight, Coins, Shield, Timer } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -12,13 +12,20 @@ const TIERS = [
     { id: 'gold', name: 'Gold Box', cost: 10, color: 'amber', icon: '👑', desc: 'Up to 100 NXS' }
 ];
 
-export default function GiftBox({ user, onBalanceUpdate }) {
+export default function GiftBox({ onBalanceUpdate }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isOpening, setIsOpening] = useState(false);
     const [reward, setReward] = useState(null);
     const [selectedTier, setSelectedTier] = useState(null);
+    const [hasMounted, setHasMounted] = useState(false);
+
+    // Hydration guard
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     const handleOpenBox = async (tier) => {
+        if (isOpening) return;
         try {
             setSelectedTier(tier);
             setIsOpening(true);
@@ -26,12 +33,13 @@ export default function GiftBox({ user, onBalanceUpdate }) {
             const res = await api.post('/game/open-gift', { tier: tier.id });
             
             if (res.data.success) {
-                // Simulate "wait" for animation
+                // Ensure a smooth experience with a deliberate delay for animation
                 setTimeout(() => {
                     setReward(res.data.reward);
                     setIsOpening(false);
-                    onBalanceUpdate(res.data.newBalance);
-                    toast.success(`You won ${res.data.reward.amountNXS} NXS!`, { icon: '🎉' });
+                    if (typeof onBalanceUpdate === 'function') {
+                        onBalanceUpdate(); // Re-fetch user data
+                    }
                 }, 2000);
             }
         } catch (err) {
@@ -41,128 +49,131 @@ export default function GiftBox({ user, onBalanceUpdate }) {
         }
     };
 
-    const reset = () => {
+    const closeAll = () => {
+        if (isOpening) return;
+        setIsOpen(false);
         setReward(null);
         setSelectedTier(null);
-        setIsOpening(false);
     };
+
+    if (!hasMounted) return null;
 
     return (
         <>
-            {/* Floating Entry Point */}
-            <motion.button
-                onClick={() => setIsOpen(true)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="fixed bottom-24 right-6 z-40 w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(244,63,94,0.4)] border-2 border-white/20"
+            {/* The Floating Gift Icon - Pinned at bottom right */}
+            <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="fixed bottom-24 right-4 z-[9999]"
             >
-                <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-20 pointer-events-none"></div>
-                <Gift className="text-white w-7 h-7" />
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-rose-600 shadow-sm">
-                    <Sparkles size={10} className="text-rose-700 animate-pulse" />
-                </div>
-            </motion.button>
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="relative group w-14 h-14 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 hover:scale-110 active:scale-95 transition-all duration-300"
+                >
+                    <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-20 pointer-events-none"></div>
+                    <Gift className="text-white w-7 h-7" />
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-rose-600 shadow-sm animate-bounce">
+                        <Sparkles size={10} className="text-rose-700" />
+                    </div>
+                </button>
+            </motion.div>
 
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 overflow-hidden">
+                        {/* Backdrop - Safe Close Click */}
                         <motion.div 
                             initial={{ opacity: 0 }} 
                             animate={{ opacity: 1 }} 
                             exit={{ opacity: 0 }}
-                            onClick={() => !isOpening && setIsOpen(false)}
-                            className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+                            onClick={closeAll}
+                            className="absolute inset-0 bg-black/90 backdrop-blur-md"
                         />
                         
                         <motion.div
-                            initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                            className="relative w-full max-w-sm bg-[#0f172a] rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative w-full max-w-[360px] bg-[#0f172a] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden"
                         >
-                            {/* Modal Header */}
-                            <div className="p-6 pb-0 flex items-center justify-between">
-                                <h3 className="text-lg font-black text-white uppercase tracking-widest">Mystery Vault</h3>
-                                <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400">
-                                    <X size={18} />
-                                </button>
-                            </div>
+                            {/* Simple Close X */}
+                            <button 
+                                onClick={closeAll}
+                                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-white z-10"
+                                disabled={isOpening}
+                            >
+                                <X size={18} />
+                            </button>
 
-                            <div className="p-6">
+                            {/* Reward OR Selection Screen */}
+                            <div className="p-8">
                                 {!selectedTier ? (
-                                    <div className="grid grid-cols-1 gap-3">
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">Select your prize tier</p>
-                                        {TIERS.map((t) => (
-                                            <button
-                                                key={t.id}
-                                                onClick={() => handleOpenBox(t)}
-                                                className={`group relative flex items-center justify-between p-4 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300 overflow-hidden`}
-                                            >
-                                                <div className="flex items-center gap-4 relative z-10">
-                                                    <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-lg">
-                                                        {t.icon}
+                                    <div className="space-y-4">
+                                        <div className="mb-2">
+                                            <h3 className="text-lg font-black text-white uppercase tracking-widest">Mystery Vault</h3>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Select your prize tier</p>
+                                        </div>
+                                        
+                                        <div className="grid gap-3">
+                                            {TIERS.map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => handleOpenBox(t)}
+                                                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all text-left"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-2xl">{t.icon}</span>
+                                                        <div>
+                                                            <div className="text-white font-bold text-sm uppercase">{t.name}</div>
+                                                            <div className="text-slate-500 text-[9px] uppercase tracking-wider">{t.desc}</div>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-left">
-                                                        <h4 className="text-white font-black text-sm uppercase tracking-tight">{t.name}</h4>
-                                                        <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">{t.desc}</p>
+                                                    <div className="text-right">
+                                                        <div className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${t.cost === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}`}>
+                                                            {t.cost === 0 ? 'FREE' : `${t.cost} NXS`}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex flex-col items-end relative z-10">
-                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${t.cost === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}`}>
-                                                        {t.cost === 0 ? 'FREE' : `${t.cost} NXS`}
-                                                    </span>
-                                                    <ChevronRight size={16} className="text-slate-600 group-hover:translate-x-1 group-hover:text-white transition-all mt-1" />
-                                                </div>
-                                                <div className={`absolute inset-0 bg-gradient-to-r from-${t.color}-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-                                            </button>
-                                        ))}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-8">
+                                    <div className="flex flex-col items-center justify-center py-6 text-center">
                                         <AnimatePresence mode="wait">
                                             {isOpening ? (
                                                 <motion.div
                                                     key="opening"
-                                                    initial={{ rotate: 0 }}
-                                                    animate={{ rotate: [-5, 5, -5, 5, 0], scale: [1, 1.1, 1] }}
-                                                    transition={{ repeat: Infinity, duration: 0.5 }}
+                                                    animate={{ rotate: [-2, 2, -2, 2, 0], scale: [1, 1.05, 1] }}
+                                                    transition={{ repeat: Infinity, duration: 0.4 }}
                                                     className="flex flex-col items-center gap-6"
                                                 >
-                                                    <div className="w-32 h-32 bg-gradient-to-br from-pink-500 to-rose-600 rounded-[2.5rem] flex items-center justify-center shadow-2xl border-4 border-white/20">
-                                                        <Gift size={64} className="text-white animate-bounce" />
+                                                    <div className="w-28 h-28 bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl flex items-center justify-center shadow-xl border-4 border-white/10">
+                                                        <Gift size={50} className="text-white animate-pulse" />
                                                     </div>
-                                                    <div className="text-center">
-                                                        <p className="text-white font-black uppercase tracking-[0.3em] text-xs animate-pulse">Unlocking {selectedTier.name}...</p>
-                                                        <p className="text-slate-500 text-[10px] uppercase font-bold mt-2">Checking probability matrices</p>
-                                                    </div>
+                                                    <div className="text-[10px] text-white font-black uppercase tracking-[0.4em] animate-pulse">Unlocking...</div>
                                                 </motion.div>
                                             ) : (
                                                 <motion.div
                                                     key="reward"
-                                                    initial={{ scale: 0.5, opacity: 0 }}
+                                                    initial={{ scale: 0.8, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
-                                                    className="flex flex-col items-center gap-4 text-center"
+                                                    className="space-y-6"
                                                 >
-                                                    <div className="relative">
-                                                        <motion.div 
-                                                            animate={{ rotate: 360 }} 
-                                                            transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
-                                                            className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-full blur-2xl opacity-40"
-                                                        />
-                                                        <div className="relative w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center border-4 border-yellow-400/50 shadow-2xl">
-                                                            <Coins size={48} className="text-yellow-400" />
-                                                        </div>
+                                                    <div className="relative w-28 h-28 bg-slate-800 rounded-full mx-auto flex items-center justify-center border-4 border-yellow-500/50 shadow-lg">
+                                                        <Coins size={44} className="text-yellow-400" />
+                                                        <Sparkles className="absolute -top-2 -right-2 text-yellow-400 animate-pulse" />
                                                     </div>
+                                                    
                                                     <div>
-                                                        <h2 className="text-2xl font-black text-white tracking-widest uppercase">YOU WON!</h2>
-                                                        <div className="text-4xl font-black text-emerald-400 my-2">+{reward?.amountNXS} <span className="text-xs opacity-50">NXS</span></div>
-                                                        <p className="text-slate-400 text-[10px] uppercase font-black bg-white/5 py-1 px-3 rounded-full mt-2 tracking-widest">{reward?.label}</p>
+                                                        <div className="text-slate-500 text-[10px] uppercase font-black tracking-widest mb-1">{reward?.label || 'Victory!'}</div>
+                                                        <div className="text-3xl font-black text-emerald-400">+{reward?.amountNXS || 0} <span className="text-xs opacity-50">NXS</span></div>
                                                     </div>
+
                                                     <button 
-                                                        onClick={reset}
-                                                        className="mt-6 w-full py-4 bg-emerald-600 text-white font-black uppercase tracking-widest text-[11px] rounded-2xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/40"
+                                                        onClick={closeAll}
+                                                        className="w-full py-4 bg-emerald-600 text-white font-black uppercase tracking-widest text-[11px] rounded-xl hover:bg-emerald-500 transition shadow-lg"
                                                     >
-                                                        Collect Reward
+                                                        Collect & Close
                                                     </button>
                                                 </motion.div>
                                             )}
@@ -171,13 +182,13 @@ export default function GiftBox({ user, onBalanceUpdate }) {
                                 )}
                             </div>
 
-                            {/* Footer hint */}
-                            <div className="bg-white/5 p-4 flex items-center justify-center gap-6 border-t border-white/5">
-                                <div className="flex items-center gap-1.5 opacity-30">
+                            {/* Trust Footer */}
+                            <div className="bg-white/5 p-4 flex items-center justify-center gap-6 border-t border-white/5 opacity-40">
+                                <div className="flex items-center gap-1.5">
                                     <Shield size={12} className="text-emerald-400" />
                                     <span className="text-[8px] font-bold text-white uppercase tracking-widest">Secure RNG</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 opacity-30">
+                                <div className="flex items-center gap-1.5">
                                     <Timer size={12} className="text-blue-400" />
                                     <span className="text-[8px] font-bold text-white uppercase tracking-widest">Provably Fair</span>
                                 </div>
