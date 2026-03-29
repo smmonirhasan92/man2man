@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
 const TIERS = {
   bronze: {
@@ -58,6 +59,7 @@ const TIERS = {
 };
 
 export default function LuckTestClient({ onBalanceUpdate }) {
+  const { user } = useAuth();
   const [tier, setTier] = useState('bronze');
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
