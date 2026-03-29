@@ -2,8 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../../../services/api';
-import StakingDashboard from '../../../components/staking/StakingDashboard';
+import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
+
+const StakingDashboard = dynamic(() => import('../../../components/staking/StakingDashboard'), { 
+    ssr: false,
+    loading: () => <div className="min-h-[400px] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+    </div>
+});
 
 export default function InvestPage() {
     const router = useRouter();
