@@ -1,0 +1,104 @@
+[TAILING] Tailing last 50 lines for [frontend] process (change the value with --lines option)
+/root/.pm2/logs/frontend-out.log last 50 lines:
+2|frontend |    - Local:         http://localhost:3000
+2|frontend |    - Network:       http://76.13.244.202:3000
+2|frontend | 
+2|frontend |  ✓ Starting...
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend |    ▲ Next.js 16.0.8
+2|frontend |    - Local:         http://localhost:3000
+2|frontend |    - Network:       http://76.13.244.202:3000
+2|frontend | 
+2|frontend |  ✓ Starting...
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+2|frontend |    ▲ Next.js 16.0.8
+2|frontend |    - Local:         http://localhost:3000
+2|frontend |    - Network:       http://76.13.244.202:3000
+2|frontend | 
+2|frontend |  ✓ Starting...
+2|frontend | 
+2|frontend | > frontend@0.6.5 start
+2|frontend | > next start
+2|frontend | 
+
+/root/.pm2/logs/frontend-error.log last 50 lines:
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_42_443Z-debug-0.log
+2|frontend | npm error code ENOENT
+2|frontend | npm error syscall open
+2|frontend | npm error path /root/package.json
+2|frontend | npm error errno -2
+2|frontend | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/root/package.json'
+2|frontend | npm error enoent This is related to npm not being able to find a file.
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_42_630Z-debug-0.log
+2|frontend | npm error code ENOENT
+2|frontend | npm error syscall open
+2|frontend | npm error path /root/package.json
+2|frontend | npm error errno -2
+2|frontend | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/root/package.json'
+2|frontend | npm error enoent This is related to npm not being able to find a file.
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_42_795Z-debug-0.log
+2|frontend | npm error code ENOENT
+2|frontend | npm error syscall open
+2|frontend | npm error path /root/package.json
+2|frontend | npm error errno -2
+2|frontend | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/root/package.json'
+2|frontend | npm error enoent This is related to npm not being able to find a file.
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_42_982Z-debug-0.log
+2|frontend | npm error code ENOENT
+2|frontend | npm error syscall open
+2|frontend | npm error path /root/package.json
+2|frontend | npm error errno -2
+2|frontend | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/root/package.json'
+2|frontend | npm error enoent This is related to npm not being able to find a file.
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_43_142Z-debug-0.log
+2|frontend | npm error code ENOENT
+2|frontend | npm error syscall open
+2|frontend | npm error path /root/package.json
+2|frontend | npm error errno -2
+2|frontend | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/root/package.json'
+2|frontend | npm error enoent This is related to npm not being able to find a file.
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_43_311Z-debug-0.log
+2|frontend | npm error code ENOENT
+2|frontend | npm error syscall open
+2|frontend | npm error path /root/package.json
+2|frontend | npm error errno -2
+2|frontend | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/root/package.json'
+2|frontend | npm error enoent This is related to npm not being able to find a file.
+2|frontend | npm error enoent
+2|frontend | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-29T09_32_43_485Z-debug-0.log

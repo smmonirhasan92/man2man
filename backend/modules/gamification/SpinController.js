@@ -72,66 +72,68 @@ exports.spinLuckTest = async (req, res) => {
 
         // Pick a random outcome from the shuffled pool
         const pool = generatedPools[tier];
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        const winOutcome = pool[randomIndex];
-
+        const winOutcome = pool[Math.floor(Math.random() * pool.length)];
         const winAmt = winOutcome.amountNXS;
-        const netChange = winAmt - cost;
 
         const result = await TransactionHelper.runTransaction(async (session) => {
-            // 1. Fetch User
             const User = require('../user/UserModel');
             const user = await User.findById(userId).session(session);
-            
             if (!user) throw new Error('User not found');
 
-            // Force casting to number to fix any MongoDB data type issues resulting from admin bypasses
             let currentMain = parseFloat(user.wallet?.main || 0);
+            if (currentMain < cost) throw new Error('Insufficient Balance');
 
-            if (currentMain < cost) {
-                console.warn(`[DEBUG] Insufficient Balance. Current: ${currentMain}, Cost: ${cost}`);
-                throw new Error('Insufficient Balance');
+            // --- 1. DEDUCT COST ---
+            currentMain -= cost;
+            
+            // --- 2. ADD WIN (IF ANY) ---
+            if (winAmt > 0) {
+                currentMain += winAmt;
             }
 
-            // Apply net change
-            currentMain = currentMain + netChange;
-            
-            // Re-assign explicitly
-            if (!user.wallet) user.wallet = {};
             user.wallet.main = currentMain;
-            
             await user.save({ session });
 
-            // 2. Log Ledger 
             const TransactionLedger = require('../wallet/TransactionLedgerModel');
-            const trxId = `SPIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-            const balAfter = user.wallet.main || 0;
-            const balBefore = balAfter - netChange; // Reverse math to find previous balance
+            const trxId = `SPIN_${Date.now()}`;
 
+            // Log Deduction
             await TransactionLedger.create([{
                 userId,
-                type: netChange >= 0 ? 'credit' : 'debit',
-                amount: netChange,
-                fee: 0,
-                balanceBefore: balBefore,
-                balanceAfter: balAfter,
-                description: `Luck Test: ${tier} result (${winOutcome.label})`,
-                transactionId: trxId
+                type: 'debit',
+                amount: cost,
+                balanceBefore: currentMain + cost - (winAmt > 0 ? winAmt : 0),
+                balanceAfter: currentMain - (winAmt > 0 ? winAmt : 0),
+                description: `Luck Test: ${tier} spin cost`,
+                transactionId: `${trxId}_COST`
             }], { session });
 
-            // 3. Log UI Transaction
+            // Log Win (If Any)
+            if (winAmt > 0) {
+                await TransactionLedger.create([{
+                    userId,
+                    type: 'credit',
+                    amount: winAmt,
+                    balanceBefore: currentMain - winAmt,
+                    balanceAfter: currentMain,
+                    description: `Luck Test: ${tier} reward (${winOutcome.label})`,
+                    transactionId: `${trxId}_WIN`
+                }], { session });
+            }
+
+            // UI Log (Single Outcome)
             await Transaction.create([{
                 userId,
-                type: winAmt > 0 ? 'game_win' : 'game_loss',
-                amount: netChange, // Show net impact
+                type: winAmt > cost ? 'game_win' : (winAmt === cost ? 'game_neutral' : 'game_loss'),
+                amount: winAmt - cost, // Net for the summary
                 status: 'completed',
-                description: `Luck Test: ${tier} Spin`,
+                description: `Luck Test: ${winOutcome.label}`,
                 source: 'game',
-                recipientDetails: winOutcome.label,
-                transactionId: trxId + '_UI'
+                recipientDetails: `Win: ${winAmt} NXS (Cost: ${cost})`,
+                transactionId: `${trxId}_UI`
             }], { session });
 
-            return { winOutcome, newBalance: balAfter };
+            return { winOutcome, newBalance: currentMain };
         });
 
         // Invalidate Redis profile outside of session

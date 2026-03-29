@@ -9,7 +9,7 @@ const TransactionSchema = new mongoose.Schema({
             'withdraw', 'recharge', 'send_money', 'cash_out', 'add_money', 'deposit',
             'mobile_recharge', 'commission', 'admin_credit', 'admin_debit',
             'purchase', 'task_reward', 'referral_bonus', 'activation_fee',
-            'wallet_transfer', 'game_win', 'game_loss', 'game_bet',
+            'wallet_transfer', 'game_win', 'game_loss', 'game_bet', 'game_neutral',
             'lottery_buy', 'lottery_win', 'fee', 'internal_transfer',
             'agent_recharge', 'agent_withdraw', 'agent_sell', 'admin_settlement', 'admin_adjustment',
             'referral_commission', 'plan_purchase',

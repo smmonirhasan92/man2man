@@ -15,8 +15,9 @@ async function deployReal() {
         
         const commands = [
             `cd ${rootDir} && git fetch --all && git reset --hard origin/main`,
-            `cd ${rootDir}/frontend && npm i && npm run build`,
-            `fuser -k 3000/tcp || true`, // Clear any blocked process on port 3000
+            `cd ${rootDir}/frontend && npm i --force`, // Ensure clean install
+            `cd ${rootDir}/frontend && export NODE_OPTIONS=--max_old_space_size=2048 && npm run build`, // Expanded memory to prevent VPS crashing
+            `fuser -k 3000/tcp || true`,
             `pm2 restart all || (pm2 start npm --name "frontend" -- start)`
         ];
 

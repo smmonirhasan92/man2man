@@ -29,9 +29,7 @@ async function runTransaction(callback) {
         // Relaxed check: Retry on ANY error that looks like a transaction issue
         const strError = error.toString();
         const isTransactionError = error.code === 20 ||
-            strError.includes('Transaction numbers are only allowed') ||
-            strError.includes('OutputCharacterCount') || // artifacts?
-            true; // FORCE RETRY for dev stability if transaction fails
+            strError.includes('Transaction numbers are only allowed');
 
         if (isTransactionError) {
             console.warn(`⚠️ Transaction Failed: ${error.message}. Retrying without transaction...`);
