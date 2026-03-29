@@ -13,7 +13,9 @@ const TransactionSchema = new mongoose.Schema({
             'lottery_buy', 'lottery_win', 'fee', 'internal_transfer',
             'agent_recharge', 'agent_withdraw', 'agent_sell', 'admin_settlement', 'admin_adjustment',
             'referral_commission', 'plan_purchase',
-            'p2p_sell', 'p2p_buy', 'admin_commission' // Added P2P
+            'p2p_sell', 'p2p_buy', 'admin_commission', // Added P2P
+            'staking_deposit', 'staking_reward', 'staking_withdrawal', // Added Staking
+            'staking_principal_return', 'staking_early_withdrawal' // Added More Staking
         ],
         required: true
     },
