@@ -16,7 +16,7 @@ async function deploy() {
             { id: 'GIT', cmd: 'cd /var/www/man2man && git pull origin main' },
             { id: 'NPM', cmd: 'cd /var/www/man2man && npm install' },
             { id: 'BUILD', cmd: 'cd /var/www/man2man/frontend && NODE_OPTIONS="--max-old-space-size=4096" npm run build', timeout: 900000 },
-            { id: 'PM2', cmd: 'pm2 restart all' }
+            { id: 'RESTART', cmd: 'pm2 restart all' }
         ];
 
         for (const item of commands) {
