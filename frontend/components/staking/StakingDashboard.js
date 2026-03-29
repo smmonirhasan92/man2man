@@ -5,6 +5,7 @@ import StakeModal from './StakeModal';
 import toast from 'react-hot-toast';
 
 export default function StakingDashboard({ userWallet }) {
+    const [hasMounted, setHasMounted] = useState(false);
     const [pools, setPools] = useState([]);
     const [myStakes, setMyStakes] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -13,6 +14,7 @@ export default function StakingDashboard({ userWallet }) {
     const [actionLoading, setActionLoading] = useState(null);
 
     useEffect(() => {
+        setHasMounted(true);
         fetchData();
     }, []);
 
@@ -194,27 +196,27 @@ export default function StakingDashboard({ userWallet }) {
                                                 </div>
                                                 <div>
                                                     <div className="text-[10px] text-slate-500 uppercase font-black">Start Date</div>
-                                                    <div className="text-slate-300 text-xs mt-1">{new Date(stake.lockedAt).toLocaleDateString()}</div>
+                                                    <div className="text-slate-300 text-xs mt-1">{hasMounted ? new Date(stake.lockedAt).toLocaleDateString() : '...'}</div>
                                                 </div>
                                                 <div>
                                                     <div className="text-[10px] text-slate-500 uppercase font-black">Unlock Date</div>
-                                                    <div className="text-slate-300 text-xs mt-1">{new Date(stake.unlocksAt).toLocaleDateString()}</div>
+                                                    <div className="text-slate-300 text-xs mt-1">{hasMounted ? new Date(stake.unlocksAt).toLocaleDateString() : '...'}</div>
                                                 </div>
                                             </div>
 
                                             {/* Progress Bar (Only for ACTIVE) */}
-                                            {stake.status === 'ACTIVE' && (
+                                            {stake.status === 'ACTIVE' && hasMounted && (
                                                 <div className="mt-5">
                                                     <div className="flex justify-between text-xs font-bold mb-1.5">
                                                         <span className="text-slate-400 flex items-center gap-1">
-                                                            ⏱️ {isMatured ? 'Matured!' : `${daysRemaining} Days Left`}
+                                                            ⏱️ {getProgress(stake) >= 100 ? 'Matured!' : `${getDaysRemaining(stake.unlocksAt)} Days Left`}
                                                         </span>
-                                                        <span className="text-emerald-400">{progress.toFixed(0)}%</span>
+                                                        <span className="text-emerald-400">{getProgress(stake).toFixed(0)}%</span>
                                                     </div>
                                                     <div className="h-2 w-full bg-[#0f172a] rounded-full overflow-hidden">
                                                         <div
-                                                            className={`h-full rounded-full transition-all duration-1000 ${isMatured ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`}
-                                                            style={{ width: `${progress}%` }}
+                                                            className={`h-full rounded-full transition-all duration-1000 ${getProgress(stake) >= 100 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`}
+                                                            style={{ width: `${getProgress(stake)}%` }}
                                                         ></div>
                                                     </div>
                                                 </div>
