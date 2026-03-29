@@ -1,15 +1,15 @@
 'use client';
 import Link from 'next/link';
-import { Home, Wallet, User, Globe, Users } from 'lucide-react';
+import { Home, ClipboardList, User, Globe, Users } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { memo, useEffect, useState, useMemo } from 'react';
 
 /**
- * [V7.0] Optimized Bottom Navigation
- * Features:
- * 1. 5 Keys: Home, Invite, Market (Center FAB), Wallet, Profile.
- * 2. Direct Profile Access: Triggers GlobalProfileDrawer directly.
- * 3. Mobile Optimized: Balanced spacing and premium indicators.
+ * [V7.2 PROFESSIONAL] Optimized Bottom Navigation
+ * Changes:
+ * 1. Removed Wallet (Redundant with P2P/Market functions).
+ * 2. Added TASKS (Direct access to core earning engine).
+ * 3. Navigation: Home, Tasks, Market (FAB), Invite, Profile.
  */
 function BottomNav() {
     const pathname = usePathname();
@@ -27,15 +27,13 @@ function BottomNav() {
 
     if (isHidden) return null;
 
-    // [V7.0] Optimized Nav Items (5-Key Balanced Layout)
     const navItems = [
         { name: 'Home', href: '/dashboard', icon: Home },
-        { name: 'Invite', href: '/profile', icon: Users }, // Redirect to profile info/referral section
+        { name: 'Tasks', href: '/tasks', icon: ClipboardList }, // Direct access to earnings
         { name: 'Market', href: '/p2p', icon: Globe, isFab: true },
-        { name: 'Wallet', href: '/wallet/recharge', icon: Wallet },
+        { name: 'Invite', href: '/profile', icon: Users }, // Referral/Team access
         { name: 'Profile', 
           action: () => {
-             // Directly trigger the global profile drawer
              window.dispatchEvent(new CustomEvent('toggle-profile-drawer'));
           }, 
           icon: User 
@@ -51,7 +49,7 @@ function BottomNav() {
 
                 {navItems.map((item, index) => {
                     const Icon = item.icon;
-                    const isActive = item.href ? pathname === item.href : false; // Only highlight actual links
+                    const isActive = item.href ? pathname === item.href : false;
 
                     if (item.isFab) {
                         return (
