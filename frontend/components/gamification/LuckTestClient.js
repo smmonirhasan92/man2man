@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
 const SPIN_DURATION_MS = 5000;
+const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
   bronze: {
@@ -60,7 +61,6 @@ const TIERS = {
   }
 };
 
-// --- Result Overlay Component --- (NO BENGALI)
 function ResultOverlay({ result, onClose }) {
   if (!result) return null;
   const isWin = result.amountNXS > 0;
@@ -112,6 +112,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [popup, setPopup] = useState(null);
+  const [isPreloading, setIsPreloading] = useState(false);
   
   const rotationRef = useRef(0);
   const config = TIERS[tier];
@@ -122,26 +123,24 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   };
 
   const doSpin = async () => {
-    if (spinning) return;
-    setSpinning(true);
+    if (spinning || isPreloading) return;
+    setIsPreloading(true);
     setPopup(null);
-
-    // Initial spin (teaser)
-    const teaserRotation = rotationRef.current + 720; 
-    setRotation(teaserRotation);
 
     let apiResult = null;
     try {
       const { data } = await api.post('/game/luck-test', { tier });
       apiResult = data;
     } catch (err) {
-      setSpinning(false);
-      setRotation(rotationRef.current);
+      setIsPreloading(false);
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
     }
 
-    // Logic: Map backend amount to wheel segments
+    // API success - start the physical spin
+    setIsPreloading(false);
+    setSpinning(true);
+
     const winAmount = apiResult.result.amountNXS;
     const matchingIndices = [];
     config.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
@@ -151,24 +150,31 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
       : config.values.indexOf(0);
 
-    const sliceAngle = 360 / config.segments.length;
-    const centerOfSlice = targetIdx * sliceAngle + sliceAngle / 2;
+    /**
+     * PRECISION MATH:
+     * Pointer is at TOP (0 degrees).
+     * Slices are drawn starting from Top-Center.
+     * So Center of Slice 0 is exactly 0 degrees?
+     * Let's change drawing start to (-PI/2 - sliceRad/2).
+     * Then Center of Slice 0 is exactly at -90deg (Top).
+     * THEN: To land on index i, we rotate the wheel COUNTER-CLOCKWISE by (i * 45).
+     * Which is rotation = (current - i*45).
+     * To keep growing for CSS spin: rotation = (current + ExtraLoops - i*45).
+     */
+    const extraLoops = 6 * 360;
+    const currentBase = rotationRef.current - (rotationRef.current % 360); // normalize
+    const targetAngle = currentBase + extraLoops - (targetIdx * SLICE_DEG);
     
-    // Final Calculation for exactly landing at top pointer (0 deg)
-    // Formula: prevRotation + extraLoops + (360 - centerOfSlice)
-    const extraLoops = 5 * 360;
-    const randomOffset = (Math.random() * 20) - 10; // offset within slice
-    const destinationAngle = teaserRotation + extraLoops + (360 - centerOfSlice) + randomOffset;
-    
-    rotationRef.current = destinationAngle;
-    setRotation(destinationAngle);
+    // Safety check: ensure targetAngle > rotationRef.current
+    const finalAngle = targetAngle > rotationRef.current ? targetAngle : targetAngle + 360;
 
-    // Wait for animation to end
+    rotationRef.current = finalAngle;
+    setRotation(finalAngle);
+
     setTimeout(() => {
       setSpinning(false);
       setPopup(apiResult.result);
       
-      // Postponed balance update
       if (apiResult.newBalance !== undefined) {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('balance_update', { detail: apiResult.newBalance }));
@@ -187,7 +193,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       
       <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30">
         
-        {/* Header - Premium Minimalist */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/5 text-orange-400 flex items-center justify-center text-2xl shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-orange-500/10">
@@ -214,8 +220,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
               <button 
                 key={t}
                 onClick={() => handleTierSelect(t)}
-                disabled={spinning}
-                className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden group
+                disabled={spinning || isPreloading}
+                className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden
                   ${active ? `${tCfg.tabActiveBg} scale-105 shadow-xl` : 'bg-[#151B2B] border-white/5 hover:border-white/10'}
                 `}
               >
@@ -228,9 +234,9 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           })}
         </div>
 
-        {/* Wheel Section - Premium Metallic */}
+        {/* Wheel Section */}
         <div className="flex flex-col items-center mb-8">
-          <div className="relative w-[240px] h-[240px] mb-8">
+          <div className={`relative w-[240px] h-[240px] mb-8 ${isPreloading ? 'animate-pulse scale-95' : ''} transition-all duration-300`}>
             {/* The Outer Rim */}
             <div className="absolute inset-0 rounded-full border-[8px] border-[#1E293B] shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)]" />
             
@@ -245,11 +251,13 @@ export default function LuckTestClient({ onBalanceUpdate }) {
               className="w-full h-full drop-shadow-2xl"
               style={{
                 transform: `rotate(${rotation}deg)`,
-                transition: `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.12, 0.8, 0.2, 1)`
+                transition: spinning ? `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.12, 0.8, 0.2, 1)` : 'none'
               }}
             >
               {config.segments.map((color, i) => {
-                const start = i * sliceRad - Math.PI / 2;
+                // STARTING ANGLE ADJUSTMENT: -90 (top) - 22.5 (half slice) 
+                // ensures Slice 0 Center is at exactly -90 (TOP).
+                const start = (i * sliceRad) - (Math.PI / 2) - (sliceRad / 2);
                 const end = start + sliceRad;
                 const x1 = cx + r * Math.cos(start);
                 const y1 = cy + r * Math.sin(start);
@@ -279,7 +287,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                   </g>
                 );
               })}
-              {/* Hub */}
               <circle cx={cx} cy={cy} r="26" fill="#0B0F1A" stroke="#1E293B" strokeWidth="4" />
               <circle cx={cx} cy={cy} r="18" fill="url(#hubGrad)" />
               <defs>
@@ -293,12 +300,12 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
           <button 
             onClick={doSpin}
-            disabled={spinning}
-            className={`w-full py-5 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all duration-300 tracking-[0.1em] uppercase relative overflow-hidden group
-              ${spinning ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : `bg-gradient-to-r ${config.btnClass} ${config.textClass} hover:opacity-90 active:scale-[0.98] shadow-orange-500/10`}
+            disabled={spinning || isPreloading}
+            className={`w-full py-5 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all duration-300 tracking-[0.1em] uppercase relative overflow-hidden
+              ${(spinning || isPreloading) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : `bg-gradient-to-r ${config.btnClass} ${config.textClass} hover:opacity-90 active:scale-[0.98] shadow-orange-500/10`}
             `}
           >
-            {spinning ? 'WINNING...' : 'TAP TO SPIN'}
+            {isPreloading ? 'PREPARING...' : spinning ? 'WINNING...' : 'TAP TO SPIN'}
           </button>
           
           <div className="mt-6 flex flex-col items-center gap-1 opacity-40">
@@ -307,7 +314,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           </div>
         </div>
 
-        {/* Prize Table - Transparent Modern */}
+        {/* Prize Table */}
         <div className="bg-[#151B2B]/60 rounded-[2rem] p-6 border border-white/5 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{config.prizesTitle}</h3>
