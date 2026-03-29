@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProfileDrawer from './dashboard/ProfileDrawer';
 import { useAuth } from '../hooks/useAuth';
 import { usePathname } from 'next/navigation';
