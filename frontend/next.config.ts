@@ -62,7 +62,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  transpilePackages: ['framer-motion', 'lucide-react', 'react-hot-toast'],
+  transpilePackages: ['framer-motion', 'lucide-react', 'react-hot-toast', 'phaser', 'p5', 'react-p5'],
   /* config options here */
   turbopack: {},
   typescript: {
