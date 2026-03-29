@@ -11,14 +11,14 @@ const TIERS = {
     rtp: '85%', jackpot: '10¢',
     prizesTitle: 'Bronze Prize Table',
     prizes: [
-      { label: '🎉 Jackpot',  chance: '2%',  amt: '10¢', cls: 'text-[#B8860B]' },
-      { label: '🥇 Medium',   chance: '10%', amt: '4¢',  cls: 'text-[#2E8B57]'  },
-      { label: '🔄 Refund',   chance: '40%', amt: '2¢',  cls: 'text-slate-500'  },
-      { label: '💰 Small',    chance: '30%', amt: '1¢',  cls: 'text-slate-500'   },
-      { label: '🚫 Miss',     chance: '18%', amt: '0¢',  cls: 'text-slate-400'    },
+      { label: '🎉 Jackpot',  chance: '2%',  amt: '5 NXS', cls: 'text-[#B8860B]' },
+      { label: '🥇 Medium',   chance: '10%', amt: '2 NXS',  cls: 'text-[#2E8B57]'  },
+      { label: '🔄 Refund',   chance: '40%', amt: '1 NXS',  cls: 'text-slate-500'  },
+      { label: '💰 Small',    chance: '30%', amt: '0.5 NXS',  cls: 'text-slate-500'   },
+      { label: '🚫 Miss',     chance: '18%', amt: '0 NXS',  cls: 'text-slate-400'    },
     ],
     segments: ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#264653','#F4A261','#2A9D8F','#E9C46A'],
-    labels:   ['10¢','4¢','2¢','1¢','0¢','2¢','1¢','4¢'],
+    labels:   ['5 NXS','2 NXS','1 NXS','0.5 NXS','0 NXS','1 NXS','0.5 NXS','2 NXS'],
     values:   [5, 2, 1, 0.5, 0, 1, 0.5, 2] // NXS equivalents
   },
   silver: {
@@ -28,14 +28,14 @@ const TIERS = {
     rtp: '84%', jackpot: '25¢',
     prizesTitle: 'Silver Prize Table',
     prizes: [
-      { label: '🎉 Jackpot',  chance: '2%',  amt: '25¢', cls: 'text-[#B8860B]' },
-      { label: '🥇 Medium',   chance: '15%', amt: '10¢', cls: 'text-[#2E8B57]'  },
-      { label: '🔄 Refund',   chance: '30%', amt: '5¢',  cls: 'text-slate-500'  },
-      { label: '💰 Small',    chance: '35%', amt: '2¢',  cls: 'text-slate-500'   },
-      { label: '🚫 Miss',     chance: '18%', amt: '0¢',  cls: 'text-slate-400'    },
+      { label: '🎉 Jackpot',  chance: '2%',  amt: '12.5 NXS', cls: 'text-[#B8860B]' },
+      { label: '🥇 Medium',   chance: '15%', amt: '5 NXS', cls: 'text-[#2E8B57]'  },
+      { label: '🔄 Refund',   chance: '30%', amt: '2.5 NXS',  cls: 'text-slate-500'  },
+      { label: '💰 Small',    chance: '35%', amt: '1 NXS',  cls: 'text-slate-500'   },
+      { label: '🚫 Miss',     chance: '18%', amt: '0 NXS',  cls: 'text-slate-400'    },
     ],
     segments: ['#8D8D8D','#B0B0B0','#5E5E5E','#C8C8C8','#333','#9A9A9A','#6E6E6E','#B8B8B8'],
-    labels:   ['25¢','10¢','5¢','2¢','0¢','5¢','2¢','10¢'],
+    labels:   ['12.5 NXS','5 NXS','2.5 NXS','1 NXS','0 NXS','2.5 NXS','1 NXS','5 NXS'],
     values:   [12.5, 5, 2.5, 1, 0, 2.5, 1, 5]
   },
   gold: {
@@ -45,14 +45,14 @@ const TIERS = {
     rtp: '85%', jackpot: '50¢',
     prizesTitle: 'Gold Prize Table',
     prizes: [
-      { label: '👑 Super Jackpot', chance: '1%',  amt: '50¢', cls: 'text-[#B8860B]' },
-      { label: '🥇 Medium',        chance: '15%', amt: '20¢', cls: 'text-[#2E8B57]'  },
-      { label: '🔄 Refund',        chance: '30%', amt: '10¢', cls: 'text-slate-500'  },
-      { label: '💰 Small',         chance: '40%', amt: '5¢',  cls: 'text-slate-500'   },
-      { label: '🚫 Miss',          chance: '14%', amt: '0¢',  cls: 'text-slate-400'    },
+      { label: '👑 Super Jackpot', chance: '1%',  amt: '25 NXS', cls: 'text-[#B8860B]' },
+      { label: '🥇 Medium',        chance: '15%', amt: '10 NXS', cls: 'text-[#2E8B57]'  },
+      { label: '🔄 Refund',        chance: '30%', amt: '5 NXS',  cls: 'text-slate-500'  },
+      { label: '💰 Small',         chance: '40%', amt: '2.5 NXS',  cls: 'text-slate-500'   },
+      { label: '🚫 Miss',          chance: '14%', amt: '0 NXS',  cls: 'text-slate-400'    },
     ],
     segments: ['#DAA520','#B8860B','#FFD700','#8B6914','#F5C842','#B8860B','#DAA520','#FFD700'],
-    labels:   ['50¢','20¢','10¢','5¢','0¢','10¢','5¢','20¢'],
+    labels:   ['25 NXS','10 NXS','5 NXS','2.5 NXS','0 NXS','5 NXS','2.5 NXS','10 NXS'],
     values:   [25, 10, 5, 2.5, 0, 5, 2.5, 10]
   }
 };
@@ -281,7 +281,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         </div>
         <div className="bg-slate-800 p-3 rounded-xl border border-slate-700">
           <p className="text-[10px] text-slate-500 tracking-wider uppercase mb-1">Top Jackpot</p>
-          <p className="text-lg font-mono font-bold text-emerald-400">{cfg.jackpot}</p>
+          <p className="text-lg font-mono font-bold text-emerald-400">{cfg.jackpot.replace('¢','').split(' ')[0]} NXS</p>
         </div>
       </div>
 

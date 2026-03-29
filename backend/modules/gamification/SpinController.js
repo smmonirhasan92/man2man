@@ -82,8 +82,8 @@ exports.spinLuckTest = async (req, res) => {
             // 1. Atomic User Balance Update
             const User = require('../user/UserModel');
             const user = await User.findOneAndUpdate(
-                { _id: userId, 'wallet.income': { $gte: cost } }, // Ensure they can pay the cost
-                { $inc: { 'wallet.income': netChange } },
+                { _id: userId, 'wallet.main': { $gte: cost } }, // Ensure they can pay the cost
+                { $inc: { 'wallet.main': netChange } },
                 { new: true, session }
             );
 
@@ -92,7 +92,7 @@ exports.spinLuckTest = async (req, res) => {
             // 2. Log Ledger 
             const TransactionLedger = require('../wallet/TransactionLedgerModel');
             const trxId = `SPIN_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-            const balAfter = user.wallet.income || 0;
+            const balAfter = user.wallet.main || 0;
             const balBefore = balAfter - netChange; // Reverse math to find previous balance
 
             await TransactionLedger.create([{
@@ -137,7 +137,7 @@ exports.spinLuckTest = async (req, res) => {
 
     } catch (error) {
         if (error.message === 'Insufficient Balance') {
-            return res.status(400).json({ success: false, message: 'Insufficient Income Balance' });
+            return res.status(400).json({ success: false, message: 'Insufficient Main Balance (NXS)' });
         }
         console.error('LuckTest Spin Error:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
