@@ -27,12 +27,11 @@ jobs:
            NODE_OPTIONS: "--max_old_space_size=2048"
 
       - name: Deploy via SFTP
-        uses: wlxcc/SFTP-Deploy-Action@v1.2.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          username: ${{ secrets.FTP_USERNAME }}
           server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local_path: './frontend/out/*'
-          remote_path: '/home/zizocom/public_html'
-          sftp_only: true
-          delete_remote_files: true
+          local-dir: './frontend/out/'
+          server-dir: '/home/zizocom/public_html/'
+          dry-run: false
