@@ -18,6 +18,7 @@ import UnifiedWallet from '../../components/layout/UnifiedWallet';
 import WalletSwap from '../../components/wallet/WalletSwap';
 import ProfileDrawer from '../../components/dashboard/ProfileDrawer';
 import P2PDashboard from '../../components/p2p/P2PDashboard';
+import GiftBox from '../../components/gamification/GiftBox';
 import NodeCarousel from '../../components/dashboard/NodeCarousel';
 import VPSConnectModal from '../../components/VPSConnectModal';
 import api from '../../services/api';
@@ -265,6 +266,9 @@ function DashboardContent() {
                     </div>
                     <p className="text-[10px] text-slate-500 font-mono">SECURED BY USA AFFILIATE BLOCKCHAIN</p>
                 </div>
+
+                {/* Daily Mystery Gift Box Overlay */}
+                <GiftBox user={user} onBalanceUpdate={fetchUser} />
 
                 <AnimatePresence>
                     {connectingNode && (
