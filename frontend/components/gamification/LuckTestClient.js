@@ -279,9 +279,20 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           <p className="text-[10px] text-slate-500 tracking-wider uppercase mb-1">Win Rate</p>
           <p className="text-lg font-mono font-bold text-slate-300">{cfg.rtp}</p>
         </div>
-        <div className="bg-slate-800 p-3 rounded-xl border border-slate-700">
+        <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 h-full flex flex-col justify-between">
           <p className="text-[10px] text-slate-500 tracking-wider uppercase mb-1">Top Jackpot</p>
           <p className="text-lg font-mono font-bold text-emerald-400">{cfg.jackpot.replace('¢','').split(' ')[0]} NXS</p>
+        </div>
+      </div>
+
+      {/* NEW: User Balance Display */}
+      <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 mb-6 flex justify-between items-center">
+        <div>
+          <p className="text-[10px] text-emerald-500/80 tracking-widest uppercase font-black">Your Main Balance</p>
+          <h4 className="text-xl font-mono font-black text-white">{user?.wallet?.main || '0.00'} NXS</h4>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+          <span className="text-emerald-400 font-bold">$</span>
         </div>
       </div>
 
