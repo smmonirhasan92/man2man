@@ -4,7 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
-const SPIN_DURATION_MS = 5000; // how long the wheel spins
+const SPIN_DURATION_MS = 5000;
 
 const TIERS = {
   bronze: {
@@ -14,11 +14,11 @@ const TIERS = {
     rtp: '85%', jackpot: '10¢',
     prizesTitle: 'Bronze Prize Table',
     prizes: [
-      { label: '🎉 Jackpot',  chance: 'RARE',  amt: '5 NXS',   cls: 'text-[#B8860B]' },
-      { label: '🥇 Medium',   chance: 'BOOST', amt: '2 NXS',   cls: 'text-[#2E8B57]'  },
-      { label: '🔄 Refund',   chance: 'HIGH',  amt: '1 NXS',   cls: 'text-slate-500'  },
-      { label: '💰 Small',    chance: 'BEST',  amt: '0.5 NXS', cls: 'text-slate-500'   },
-      { label: '🚫 Miss',     chance: 'LOW',   amt: '0 NXS',   cls: 'text-slate-400'    },
+      { label: 'Jackpot',  chance: 'RARE',  amt: '5 NXS',   cls: 'text-[#B8860B]' },
+      { label: 'Medium',   chance: 'BOOST', amt: '2 NXS',   cls: 'text-[#2E8B57]'  },
+      { label: 'Refund',   chance: 'HIGH',  amt: '1 NXS',   cls: 'text-slate-500'  },
+      { label: 'Small',    chance: 'BEST',  amt: '0.5 NXS', cls: 'text-slate-500'   },
+      { label: 'Miss',     chance: 'LOW',   amt: '0 NXS',   cls: 'text-slate-400'    },
     ],
     segments: ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#264653','#F4A261','#2A9D8F','#E9C46A'],
     labels:   ['5 NXS','2 NXS','1 NXS','0.5 NXS','0 NXS','1 NXS','0.5 NXS','2 NXS'],
@@ -31,11 +31,11 @@ const TIERS = {
     rtp: '84%', jackpot: '25¢',
     prizesTitle: 'Silver Prize Table',
     prizes: [
-      { label: '🎉 Jackpot',  chance: 'RARE',  amt: '12.5 NXS', cls: 'text-[#B8860B]' },
-      { label: '🥇 Medium',   chance: 'BOOST', amt: '5 NXS',    cls: 'text-[#2E8B57]'  },
-      { label: '🔄 Refund',   chance: 'HIGH',  amt: '2.5 NXS',  cls: 'text-slate-500'  },
-      { label: '💰 Small',    chance: 'BEST',  amt: '1 NXS',    cls: 'text-slate-500'   },
-      { label: '🚫 Miss',     chance: 'LOW',   amt: '0 NXS',    cls: 'text-slate-400'    },
+      { label: 'Jackpot',  chance: 'RARE',  amt: '12.5 NXS', cls: 'text-[#B8860B]' },
+      { label: 'Medium',   chance: 'BOOST', amt: '5 NXS',    cls: 'text-[#2E8B57]'  },
+      { label: 'Refund',   chance: 'HIGH',  amt: '2.5 NXS',  cls: 'text-slate-500'  },
+      { label: 'Small',    chance: 'BEST',  amt: '1 NXS',    cls: 'text-slate-500'   },
+      { label: 'Miss',     chance: 'LOW',   amt: '0 NXS',    cls: 'text-slate-400'    },
     ],
     segments: ['#8D8D8D','#B0B0B0','#5E5E5E','#C8C8C8','#333','#9A9A9A','#6E6E6E','#B8B8B8'],
     labels:   ['12.5 NXS','5 NXS','2.5 NXS','1 NXS','0 NXS','2.5 NXS','1 NXS','5 NXS'],
@@ -48,11 +48,11 @@ const TIERS = {
     rtp: '85%', jackpot: '50¢',
     prizesTitle: 'Gold Prize Table',
     prizes: [
-      { label: '👑 Super Jackpot', chance: 'ELITE',  amt: '25 NXS',  cls: 'text-[#B8860B]' },
-      { label: '🥇 Medium',        chance: 'MEGA',   amt: '10 NXS',  cls: 'text-[#2E8B57]'  },
-      { label: '🔄 Refund',        chance: 'HIGH',   amt: '5 NXS',   cls: 'text-slate-500'  },
-      { label: '💰 Small',         chance: 'GOOD',   amt: '2.5 NXS', cls: 'text-slate-500'   },
-      { label: '🚫 Miss',          chance: 'MIN',    amt: '0 NXS',   cls: 'text-slate-400'    },
+      { label: 'Super Jackpot', chance: 'ELITE',  amt: '25 NXS',  cls: 'text-[#B8860B]' },
+      { label: 'Medium',        chance: 'MEGA',   amt: '10 NXS',  cls: 'text-[#2E8B57]'  },
+      { label: 'Refund',        chance: 'HIGH',   amt: '5 NXS',   cls: 'text-slate-500'  },
+      { label: 'Small',         chance: 'GOOD',   amt: '2.5 NXS', cls: 'text-slate-500'   },
+      { label: 'Miss',          chance: 'MIN',    amt: '0 NXS',   cls: 'text-slate-400'    },
     ],
     segments: ['#DAA520','#B8860B','#FFD700','#8B6914','#F5C842','#B8860B','#DAA520','#FFD700'],
     labels:   ['25 NXS','10 NXS','5 NXS','2.5 NXS','0 NXS','5 NXS','2.5 NXS','10 NXS'],
@@ -60,142 +60,61 @@ const TIERS = {
   }
 };
 
-// ── Result Overlay / Popup ──────────────────────────────────────────────────
+// --- Result Overlay Component --- (NO BENGALI)
 function ResultOverlay({ result, onClose }) {
   if (!result) return null;
   const isWin = result.amountNXS > 0;
   const isJackpot = result.cls === 'jackpot';
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          animation: 'popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          background: isJackpot
-            ? 'linear-gradient(135deg, #1a0a00, #3B2A00)'
-            : isWin
-            ? 'linear-gradient(135deg, #022c22, #064e3b)'
-            : 'linear-gradient(135deg, #0f172a, #1e293b)',
-          border: isJackpot
-            ? '2px solid #FFD700'
-            : isWin
-            ? '2px solid #10b981'
-            : '2px solid #475569',
-          borderRadius: '1.5rem',
-          padding: '2rem 2.5rem',
-          maxWidth: '320px',
-          width: '90%',
-          textAlign: 'center',
-          position: 'relative',
-          boxShadow: isJackpot
-            ? '0 0 60px rgba(255,215,0,0.4), 0 20px 60px rgba(0,0,0,0.6)'
-            : isWin
-            ? '0 0 40px rgba(16,185,129,0.3), 0 20px 60px rgba(0,0,0,0.6)'
-            : '0 20px 60px rgba(0,0,0,0.6)',
-        }}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+      <div 
+        className={`relative max-w-[340px] w-[90%] p-8 rounded-[2.5rem] border text-center shadow-2xl transition-all scale-110
+          ${isJackpot ? 'bg-gradient-to-br from-[#1A0F00] to-[#3B2A00] border-[#FFD700]/50' : 
+            isWin ? 'bg-gradient-to-br from-[#022C22] to-[#064E3B] border-emerald-500/30' : 
+            'bg-gradient-to-br from-[#0F172A] to-[#1E293B] border-slate-700'
+          }`}
       >
-        {/* Glow ring for jackpot */}
-        {isJackpot && (
-          <div style={{
-            position: 'absolute', inset: '-4px', borderRadius: '1.7rem',
-            background: 'transparent',
-            border: '2px solid rgba(255,215,0,0.3)',
-            animation: 'pulse 1.5s ease-in-out infinite',
-            pointerEvents: 'none',
-          }} />
-        )}
-
-        {/* Icon */}
-        <div style={{ fontSize: '4rem', marginBottom: '0.75rem', lineHeight: 1 }}>
-          {isJackpot ? '👑' : isWin ? '🎉' : '😔'}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl drop-shadow-lg">
+          {isJackpot ? '🏆' : isWin ? '🎉' : '🍀'}
         </div>
-
-        {/* Title */}
-        <h2 style={{
-          fontSize: '1.4rem', fontWeight: 900,
-          color: isJackpot ? '#FFD700' : isWin ? '#34d399' : '#94a3b8',
-          letterSpacing: '-0.02em', marginBottom: '0.4rem',
-        }}>
-          {isJackpot ? 'JACKPOT!' : isWin ? 'You Won!' : 'লেগে থাকো! 💪'}
+        
+        <h2 className={`mt-4 text-2xl font-black tracking-tight ${isJackpot ? 'text-[#FFD700]' : isWin ? 'text-emerald-400' : 'text-slate-400'}`}>
+          {isJackpot ? 'JACKPOT WINNER!' : isWin ? 'Nice Win!' : 'Keep Playing!'}
         </h2>
-
-        {/* Amount */}
-        <div style={{
-          fontSize: isWin ? '2.5rem' : '1.6rem',
-          fontWeight: 900,
-          fontFamily: 'monospace',
-          color: isJackpot ? '#FFD700' : isWin ? '#ecfdf5' : '#64748b',
-          letterSpacing: '-0.03em',
-          marginBottom: '0.5rem',
-        }}>
-          {isWin ? `+${result.amountNXS} NXS` : result.label}
+        
+        <div className={`mt-2 text-4xl font-mono font-black ${isJackpot ? 'text-[#FFD700]' : isWin ? 'text-white' : 'text-slate-500'}`}>
+          {isWin ? `+${result.amountNXS} NXS` : 'BETTER LUCK'}
         </div>
-
-        {/* Sub-label */}
-        <p style={{
-          fontSize: '0.75rem',
-          color: isWin ? '#6ee7b7' : '#475569',
-          marginBottom: '1.5rem',
-        }}>
-          {isWin
-            ? `Your balance has been updated · Landed on "${result.label}"`
-            : 'হাল ছেড়ো না — সফলতা একটু দূরে! আরেকবার চেষ্টা করো 🔥'}
+        
+        <p className="mt-2 text-sm text-slate-400">
+          {isWin ? `Landed on "${result.label}" - Reward credited!` : 'Stay persistent! Success is just a spin away.'}
         </p>
 
-        {/* Close button */}
-        <button
+        <button 
           onClick={onClose}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            borderRadius: '0.75rem',
-            border: 'none',
-            fontWeight: 800,
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            background: isJackpot
-              ? 'linear-gradient(135deg, #B8860B, #FFD700)'
-              : isWin
-              ? 'linear-gradient(135deg, #059669, #34d399)'
-              : '#334155',
-            color: isJackpot ? '#3B2A00' : '#fff',
-            letterSpacing: '0.05em',
-          }}
+          className={`mt-8 w-full py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 active:scale-95 transition-all
+            ${isJackpot ? 'bg-gradient-to-r from-[#B8860B] to-[#FFD700] text-[#3B2A00]' : 
+              isWin ? 'bg-gradient-to-r from-emerald-600 to-emerald-400 text-white' : 
+              'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
         >
-          {isWin ? 'Awesome! 🚀' : 'আবার চেষ্টা করো! 🔄'}
+          {isWin ? 'Great! 🚀' : 'Try Again'}
         </button>
       </div>
-
-      <style>{`
-        @keyframes popIn {
-          from { transform: scale(0.6); opacity: 0; }
-          to   { transform: scale(1);   opacity: 1; }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50%       { opacity: 0.8; transform: scale(1.02); }
-        }
-      `}</style>
     </div>
   );
 }
 
-// ── Main Component ──────────────────────────────────────────────────────────
 export default function LuckTestClient({ onBalanceUpdate }) {
   const { user } = useAuth();
-  const [tier, setTier]         = useState('bronze');
+  const [tier, setTier] = useState('bronze');
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [popup, setPopup]       = useState(null); // holds the result object when showing overlay
-
-  const rotationRef = useRef(0); // track accumulated rotation without re-renders
-
-  const cfg = TIERS[tier];
+  const [popup, setPopup] = useState(null);
+  
+  const rotationRef = useRef(0);
+  const config = TIERS[tier];
 
   const handleTierSelect = (t) => {
     if (spinning) return;
@@ -207,209 +126,203 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setSpinning(true);
     setPopup(null);
 
-    // ── Step 1: kick off a fast teaser spin immediately ──────────────────
-    // This keeps the wheel moving while we wait for the API response
-    const teaserBase = rotationRef.current + 720; // 2 fast loops
-    setRotation(teaserBase);
+    // Initial spin (teaser)
+    const teaserRotation = rotationRef.current + 720; 
+    setRotation(teaserRotation);
 
-    let apiData = null;
+    let apiResult = null;
     try {
-      const res = await api.post('/game/luck-test', { tier });
-      apiData = res.data; // { success, result: { amountNXS, label, cls }, newBalance }
+      const { data } = await api.post('/game/luck-test', { tier });
+      apiResult = data;
     } catch (err) {
-      // API failed — stop teaser spin and show toast
       setSpinning(false);
       setRotation(rotationRef.current);
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
     }
 
-    // ── Step 2: calculate the EXACT final angle for the winning segment ──
-    const winAmount = apiData.result.amountNXS;
-
-    // Find which segment indices on the wheel match the win amount
+    // Logic: Map backend amount to wheel segments
+    const winAmount = apiResult.result.amountNXS;
     const matchingIndices = [];
-    cfg.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
-    const targetIndex = matchingIndices.length > 0
-      ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)]
-      : cfg.values.indexOf(0); // fallback to first '0 NXS' segment
+    config.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
+    
+    // Choose a random index if multiple exist for same value
+    const targetIdx = matchingIndices.length > 0 
+      ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
+      : config.values.indexOf(0);
 
-    const sliceAngle  = 360 / cfg.segments.length;
-    const centerOfSlice = targetIndex * sliceAngle + sliceAngle / 2;
-
-    // The pointer is at the TOP. We want `centerOfSlice` degrees to be at TOP.
-    // Wheel rotates clockwise: to bring segment at `centerOfSlice` to 0° (top),
-    // we need to rotate by (360 - centerOfSlice).
-    // Add extra full loops so it looks like a real spin.
+    const sliceAngle = 360 / config.segments.length;
+    const centerOfSlice = targetIdx * sliceAngle + sliceAngle / 2;
+    
+    // Final Calculation for exactly landing at top pointer (0 deg)
+    // Formula: prevRotation + extraLoops + (360 - centerOfSlice)
     const extraLoops = 5 * 360;
-    const smallJitter = (Math.random() * 16) - 8; // ±8° within the slice
-    const finalAngleDelta = extraLoops + (360 - centerOfSlice) + smallJitter;
+    const randomOffset = (Math.random() * 20) - 10; // offset within slice
+    const destinationAngle = teaserRotation + extraLoops + (360 - centerOfSlice) + randomOffset;
+    
+    rotationRef.current = destinationAngle;
+    setRotation(destinationAngle);
 
-    const newTotalRotation = teaserBase + finalAngleDelta;
-    rotationRef.current = newTotalRotation;
-    setRotation(newTotalRotation);
-
-    // ── Step 3: wait for the wheel animation to finish, THEN show popup ──
+    // Wait for animation to end
     setTimeout(() => {
       setSpinning(false);
-      setPopup(apiData.result);   // show overlay
-
-      // Update parent balance display
-      const newBalance = apiData.newBalance;
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('balance_update', { detail: newBalance }));
-      }
-      if (onBalanceUpdate && newBalance !== undefined) {
-        onBalanceUpdate(newBalance);
+      setPopup(apiResult.result);
+      
+      // Postponed balance update
+      if (apiResult.newBalance !== undefined) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('balance_update', { detail: apiResult.newBalance }));
+        }
+        if (onBalanceUpdate) onBalanceUpdate(apiResult.newBalance);
       }
     }, SPIN_DURATION_MS);
   };
 
   const cx = 110, cy = 110, r = 104;
-  const sliceRad = (2 * Math.PI) / cfg.segments.length;
+  const sliceRad = (2 * Math.PI) / config.segments.length;
 
   return (
     <>
-      {/* Result Overlay */}
       <ResultOverlay result={popup} onClose={() => setPopup(null)} />
-
-      <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-slate-900 min-h-screen text-slate-200 font-sans">
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center text-xl shadow-lg border border-orange-500/20">
-            🎰
+      
+      <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30">
+        
+        {/* Header - Premium Minimalist */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/5 text-orange-400 flex items-center justify-center text-2xl shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-orange-500/10">
+              🎰
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-white leading-none tracking-tight">LUCK TEST</h1>
+              <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Premium Rewards</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-tight leading-tight">Luck Test</h1>
-            <p className="text-xs text-slate-400">Spin &amp; Win — Choose your risk</p>
-          </div>
-        </div>
-
-        {/* Balance */}
-        <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 mb-6 flex justify-between items-center shadow-lg">
-          <div>
-            <p className="text-[10px] text-emerald-500/80 tracking-widest uppercase font-black">Your Main Balance</p>
-            <h4 className="text-lg font-mono font-black text-white">{user?.wallet?.main || '0.00'} NXS</h4>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-            <span className="text-emerald-400 font-bold text-sm">$</span>
+          
+          <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner">
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
+            <h4 className="text-md font-mono font-black text-emerald-400">{user?.wallet?.main || '0.00'} <span className="text-[10px] text-slate-400">NXS</span></h4>
           </div>
         </div>
 
-        {/* Tier Tabs */}
-        <div className="grid grid-cols-3 gap-2 mb-8">
+        {/* Tier Control */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
           {['bronze', 'silver', 'gold'].map((t) => {
             const tCfg = TIERS[t];
-            const isActive = tier === t;
-            const emojis = { bronze: '🥉', silver: '🥈', gold: '🥇' };
+            const active = tier === t;
             return (
-              <button
+              <button 
                 key={t}
                 onClick={() => handleTierSelect(t)}
                 disabled={spinning}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${
-                  isActive ? tCfg.tabActiveBg : 'bg-slate-800 border-slate-700 hover:bg-slate-700'
-                } ${spinning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden group
+                  ${active ? `${tCfg.tabActiveBg} scale-105 shadow-xl` : 'bg-[#151B2B] border-white/5 hover:border-white/10'}
+                `}
               >
-                <span className="text-2xl mb-1 drop-shadow-sm">{emojis[t]}</span>
-                <span className={`text-[11px] font-bold uppercase tracking-wider ${isActive ? tCfg.tabActiveText : 'text-slate-300'}`}>
-                  {tCfg.name}
-                </span>
-                <span className={`text-[9px] font-mono mt-0.5 ${isActive ? 'opacity-80' : 'text-slate-500'}`}>
-                  {tCfg.cost}
-                </span>
+                {active && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+                <span className="text-2xl mb-1 filter drop-shadow-md">{t === 'bronze' ? '🥉' : t === 'silver' ? '🥈' : '🥇'}</span>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${active ? tCfg.tabActiveText : 'text-slate-500'}`}>{tCfg.name}</span>
+                <span className={`text-[11px] font-mono mt-0.5 font-bold ${active ? 'opacity-80' : 'text-slate-400'}`}>{tCfg.cost}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Wheel + Button */}
-        <div className="flex flex-col items-center justify-center mb-8 relative">
-          <div className="relative w-[220px] h-[220px]">
-            {/* Pointer */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-x-[12px] border-x-transparent border-t-[28px] border-t-white z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"></div>
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-x-[10px] border-x-transparent border-t-[24px] border-t-slate-800 z-10"></div>
+        {/* Wheel Section - Premium Metallic */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative w-[240px] h-[240px] mb-8">
+            {/* The Outer Rim */}
+            <div className="absolute inset-0 rounded-full border-[8px] border-[#1E293B] shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)]" />
+            
+            {/* The Pointer */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+              <div className="w-0 h-0 border-x-[14px] border-x-transparent border-t-[32px] border-t-white filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
+              <div className="absolute top-0 w-0 h-0 border-x-[10px] border-x-transparent border-t-[24px] border-t-orange-500" />
+            </div>
 
-            <svg width="220" height="220" viewBox="0 0 220 220" className="w-full h-full drop-shadow-2xl">
-              <circle cx={cx} cy={cy} r={r} fill="#E0E0E0" opacity="0.1" />
-              <g style={{
+            <svg 
+              width="240" height="240" viewBox="0 0 220 220" 
+              className="w-full h-full drop-shadow-2xl"
+              style={{
                 transform: `rotate(${rotation}deg)`,
-                transformOrigin: '110px 110px',
-                transition: `transform ${SPIN_DURATION_MS / 1000}s cubic-bezier(0.12, 0.8, 0.2, 1)`,
-              }}>
-                {cfg.segments.map((color, i) => {
-                  const start = i * sliceRad - Math.PI / 2;
-                  const end   = start + sliceRad;
-                  const x1 = cx + r * Math.cos(start);
-                  const y1 = cy + r * Math.sin(start);
-                  const x2 = cx + r * Math.cos(end);
-                  const y2 = cy + r * Math.sin(end);
-                  const mid = start + sliceRad / 2;
-                  const tx  = cx + 64 * Math.cos(mid);
-                  const ty  = cy + 64 * Math.sin(mid);
-                  return (
-                    <g key={`seg-${i}`}>
-                      <path d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`} fill={color} stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-                      <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="12" fontWeight="700" fontFamily="monospace"
-                        transform={`rotate(${(mid * 180 / Math.PI) + 90}, ${tx}, ${ty})`}>
-                        {cfg.labels[i]}
-                      </text>
-                    </g>
-                  );
-                })}
-              </g>
-              <circle cx={cx} cy={cy} r="24" fill="#1E293B" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
-              <text x={cx} y={cy + 3} textAnchor="middle" dominantBaseline="middle" fill="#94A3B8" fontSize="10" fontWeight="900" style={{ letterSpacing: '1px' }}>
-                SPIN
-              </text>
+                transition: `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.12, 0.8, 0.2, 1)`
+              }}
+            >
+              {config.segments.map((color, i) => {
+                const start = i * sliceRad - Math.PI / 2;
+                const end = start + sliceRad;
+                const x1 = cx + r * Math.cos(start);
+                const y1 = cy + r * Math.sin(start);
+                const x2 = cx + r * Math.cos(end);
+                const y2 = cy + r * Math.sin(end);
+                const mid = start + sliceRad / 2;
+                const tx = cx + 68 * Math.cos(mid);
+                const ty = cy + 68 * Math.sin(mid);
+
+                return (
+                  <g key={i}>
+                    <path 
+                      d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`} 
+                      fill={color} 
+                      stroke="rgba(255,255,255,0.05)" 
+                      strokeWidth="1"
+                    />
+                    <text 
+                      x={tx} y={ty} 
+                      textAnchor="middle" dominantBaseline="middle" 
+                      fill="white" fontSize="11" fontWeight="900" 
+                      transform={`rotate(${(mid * 180 / Math.PI) + 90}, ${tx}, ${ty})`}
+                      className="drop-shadow-sm font-mono"
+                    >
+                      {config.labels[i]}
+                    </text>
+                  </g>
+                );
+              })}
+              {/* Hub */}
+              <circle cx={cx} cy={cy} r="26" fill="#0B0F1A" stroke="#1E293B" strokeWidth="4" />
+              <circle cx={cx} cy={cy} r="18" fill="url(#hubGrad)" />
+              <defs>
+                <linearGradient id="hubGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#334155" />
+                  <stop offset="100%" stopColor="#0B0F1A" />
+                </linearGradient>
+              </defs>
             </svg>
           </div>
 
-          {/* Spin button */}
-          <button
+          <button 
             onClick={doSpin}
             disabled={spinning}
-            className={`w-full py-4 rounded-2xl font-black text-lg shadow-2xl transition-all duration-300 tracking-wider uppercase mb-2 ${
-              spinning
-                ? 'bg-slate-700 cursor-not-allowed text-slate-500'
-                : `bg-gradient-to-br ${cfg.btnClass} ${cfg.textClass} hover:scale-[1.02] active:scale-95`
-            }`}
+            className={`w-full py-5 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all duration-300 tracking-[0.1em] uppercase relative overflow-hidden group
+              ${spinning ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : `bg-gradient-to-r ${config.btnClass} ${config.textClass} hover:opacity-90 active:scale-[0.98] shadow-orange-500/10`}
+            `}
           >
-            {spinning ? '⏳ Testing Luck...' : 'Spin Now'}
+            {spinning ? 'WINNING...' : 'TAP TO SPIN'}
           </button>
-          <p className="text-[10px] text-slate-500 text-center font-bold animate-pulse mb-6 tracking-wide">
-            SPIN MORE, WIN MORE! 🚀
-          </p>
-          <p className="mt-3 text-[11px] text-slate-500 font-mono tracking-tight bg-slate-800/50 px-3 py-1 rounded-full">
-            {cfg.costLabel}
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-slate-800 p-3 rounded-xl border border-slate-700">
-            <p className="text-[10px] text-slate-500 tracking-wider uppercase mb-1">Luck Factor</p>
-            <p className="text-lg font-mono font-bold text-slate-300">92% Match</p>
-          </div>
-          <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 h-full flex flex-col justify-between">
-            <p className="text-[10px] text-slate-500 tracking-wider uppercase mb-1">Top Jackpot</p>
-            <p className="text-lg font-mono font-bold text-emerald-400">
-              {cfg.jackpot.replace('¢', '').split(' ')[0]} NXS
-            </p>
+          
+          <div className="mt-6 flex flex-col items-center gap-1 opacity-40">
+            <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Test Your Luck Factor Today</p>
+            <div className="w-12 h-1 bg-gradient-to-r from-transparent via-slate-500 to-transparent" />
           </div>
         </div>
 
-        {/* Prize Table */}
-        <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 mb-6 shadow-inner">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-3">{cfg.prizesTitle}</h3>
-          <div className="space-y-2">
-            {cfg.prizes.map((p, i) => (
-              <div key={i} className="flex items-center justify-between text-xs pb-2 border-b border-slate-700/50 last:border-0 last:pb-0">
-                <span className="text-slate-200 font-medium">{p.label}</span>
+        {/* Prize Table - Transparent Modern */}
+        <div className="bg-[#151B2B]/60 rounded-[2rem] p-6 border border-white/5 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
+            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{config.prizesTitle}</h3>
+            <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">{config.rtp} RTP</span>
+          </div>
+          <div className="space-y-3">
+            {config.prizes.map((p, i) => (
+              <div key={i} className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <div className={`w-1.5 h-1.5 rounded-full ${i===0 ? 'bg-orange-400' : 'bg-slate-600'}`} />
+                  <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{p.label}</span>
+                </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-slate-500 font-mono text-[11px]">{p.chance}</span>
-                  <span className={`font-mono font-bold w-14 text-right ${p.cls}`}>{p.amt}</span>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{p.chance}</span>
+                  <span className={`text-xs font-mono font-black w-16 text-right ${p.cls}`}>{p.amt}</span>
                 </div>
               </div>
             ))}
