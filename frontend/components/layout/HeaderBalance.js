@@ -33,7 +33,7 @@ export default function HeaderBalance({ balance }) {
         currencyLabel = 'USD';
     } else {
         // USC Mode
-        displayValue = rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        displayValue = rawBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         currencySymbol = <USCIcon className="w-5 h-5" />;
         currencyLabel = 'USC';
     }

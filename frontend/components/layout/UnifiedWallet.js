@@ -19,7 +19,7 @@ export default function UnifiedWallet({ balance, income }) {
 
     // Main Calculations
     const mainUsd = (rawBalance / rate).toFixed(2);
-    const mainNxs = rawBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const mainNxs = rawBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
     // Income Calculations
     const incomeUsd = (rawIncome * 0.02).toFixed(2);
