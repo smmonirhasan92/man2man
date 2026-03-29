@@ -43,64 +43,56 @@ class NotificationService {
 
             // 2. Emit Real-time via Socket.io
             if (io) {
-                // To support both general IO and Namespace, check method availability
-                // Namespaces also use .to()
-
-                // Room name convention: "user_<userId>"
-                const dynamicTitle = metadata.title || (message.includes('!') ? message.split('!')[0] : 'Trade Update');
+                const dynamicTitle = metadata.title || (message.includes('!') ? message.split('!')[0] : 'Update');
                 
                 io.to(`user_${userId}`).emit('notification', {
                     _id: notif._id,
                     title: dynamicTitle,
                     message: notif.message,
                     type: notif.type,
-                    url: notif.metadata?.url || null, // [FIX] Pipe URI for deep link
+                    url: notif.metadata?.url || null,
                     createdAt: notif.createdAt
                 });
                 console.log(`[Notification] Sent to user_${userId}: ${message}`);
-            } else {
-                console.warn('[Notification] Socket.io not initialized, skipping real-time emit.');
             }
-            // 3. Send Web Push Notification to OS Layer
-            const User = require('../user/UserModel');
-            const user = await User.findById(userId);
 
-            if (user && user.pushSubscriptions && user.pushSubscriptions.length > 0) {
-                const dynamicTitle = metadata.title || (message.includes('!') ? message.split('!')[0] : 'Trade Update');
-                
-                const payload = JSON.stringify({
-                    title: dynamicTitle,
-                    body: message,
-                    type: type,
-                    url: metadata.url || '/'
-                });
+            // 3. Send Web Push Notification to OS Layer (Suppress if skipPush is true)
+            const skipPush = metadata.skipPush || false;
 
-                let subscriptionNeedsSave = false;
-                for (const sub of user.pushSubscriptions) {
-                    try {
-                        await webpush.sendNotification(sub, payload);
-                        console.log(`[WebPush] Sent OS notification to ${user.username}`);
-                    } catch (e) {
-                        // 410 Gone or 404 Not Found means the user revoked permissions or subscription expired
-                        if (e.statusCode === 410 || e.statusCode === 404) {
-                            console.log(`[WebPush] Removing expired subscription for ${user.username}`);
-                            user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
-                            subscriptionNeedsSave = true;
-                        } else {
-                            console.error("[WebPush Error]", e.message);
+            if (!skipPush) {
+                const User = require('../user/UserModel');
+                const user = await User.findById(userId);
+
+                if (user && user.pushSubscriptions && user.pushSubscriptions.length > 0) {
+                    const dynamicTitle = metadata.title || (message.includes('!') ? message.split('!')[0] : 'Update');
+                    const payload = JSON.stringify({
+                        title: dynamicTitle,
+                        body: message,
+                        type: type,
+                        url: metadata.url || '/'
+                    });
+
+                    let subscriptionNeedsSave = false;
+                    for (const sub of user.pushSubscriptions) {
+                        try {
+                            await webpush.sendNotification(sub, payload);
+                        } catch (e) {
+                            if (e.statusCode === 410 || e.statusCode === 404) {
+                                user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
+                                subscriptionNeedsSave = true;
+                            }
                         }
                     }
-                }
 
-                if (subscriptionNeedsSave) {
-                    await user.save();
+                    if (subscriptionNeedsSave) {
+                        await user.save();
+                    }
                 }
             }
 
             return notif;
         } catch (err) {
             console.error('[Notification] Error:', err);
-            // Don't crash the main process if notification fails
         }
     }
 

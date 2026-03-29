@@ -356,8 +356,8 @@ class TaskService {
             // [SECURITY FIX] Removed Daily Task Referral Bonus
             // User Strategy: Prevent infinite liability generation. Referral commission is now strictly One-Time on package buys.
 
-            // Notify User
-            await NotificationService.send(userId, `✅ Task Reward: +${earnerNetIncome.toFixed(4)} NXS`, 'success');
+            // Notify User (In-app only to avoid annoying pushes)
+            await NotificationService.send(userId, `✅ Task Reward: +${earnerNetIncome.toFixed(4)} NXS`, 'success', { skipPush: true });
 
             // [SOCKET] Real-time Balance Update
             const SocketService = require('../common/SocketService');

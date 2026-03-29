@@ -61,10 +61,29 @@ const TIERS = {
   }
 };
 
-function ResultOverlay({ result, onClose }) {
+/** 
+ * --- HELPER: Sound Engine ---
+ * Expects audio files in /sounds/ folder of the public directory.
+ */
+const playAudio = (file, muted) => {
+  if (muted || typeof window === 'undefined') return;
+  const audio = new Audio(`/sounds/${file}`);
+  audio.volume = 0.5;
+  audio.play().catch(() => {
+    // Silence errors if files are missing
+    console.warn(`[SoundEngine] File not found: /sounds/${file}. Please upload to public/sounds/.`);
+  });
+};
+
+function ResultOverlay({ result, onClose, muted }) {
   if (!result) return null;
   const isWin = result.amountNXS > 0;
   const isJackpot = result.cls === 'jackpot';
+
+  useEffect(() => {
+    if (isWin) playAudio('win.mp3', muted);
+    else playAudio('loss.mp3', muted);
+  }, [isWin, muted]);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -113,14 +132,48 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [rotation, setRotation] = useState(0);
   const [popup, setPopup] = useState(null);
   const [isPreloading, setIsPreloading] = useState(false);
+  const [muted, setMuted] = useState(false);
   
   const rotationRef = useRef(0);
+  const lastTickIdx = useRef(-1);
   const config = TIERS[tier];
+
+  // Load mute state
+  useEffect(() => {
+    const saved = localStorage.getItem('game_muted');
+    if (saved === 'true') setMuted(true);
+  }, []);
+
+  const toggleMute = () => {
+    const newVal = !muted;
+    setMuted(newVal);
+    localStorage.setItem('game_muted', String(newVal));
+  };
 
   const handleTierSelect = (t) => {
     if (spinning) return;
     setTier(t);
   };
+
+  /**
+   * Ticking Sound Processor
+   * Monitors the rotation degrees to play 'tick.mp3' when crossing segment boundaries.
+   */
+  useEffect(() => {
+    if (!spinning) return;
+    const interval = setInterval(() => {
+      // Current logical rotation index (0-7)
+      // Since SVG index 0 is at top, we check rotation % 360
+      const currentDeg = (rotation - rotationRef.current) % 360;
+      const stepIdx = Math.floor(Math.abs(currentDeg) / SLICE_DEG);
+      
+      if (stepIdx !== lastTickIdx.current) {
+        playAudio('tick.mp3', muted);
+        lastTickIdx.current = stepIdx;
+      }
+    }, 50);
+    return () => clearInterval(interval);
+  }, [spinning, rotation, muted]);
 
   const doSpin = async () => {
     if (spinning || isPreloading) return;
@@ -137,35 +190,22 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       return;
     }
 
-    // API success - start the physical spin
     setIsPreloading(false);
     setSpinning(true);
+    playAudio('spin.mp3', muted);
 
     const winAmount = apiResult.result.amountNXS;
     const matchingIndices = [];
     config.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
     
-    // Choose a random index if multiple exist for same value
     const targetIdx = matchingIndices.length > 0 
       ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
       : config.values.indexOf(0);
 
-    /**
-     * PRECISION MATH:
-     * Pointer is at TOP (0 degrees).
-     * Slices are drawn starting from Top-Center.
-     * So Center of Slice 0 is exactly 0 degrees?
-     * Let's change drawing start to (-PI/2 - sliceRad/2).
-     * Then Center of Slice 0 is exactly at -90deg (Top).
-     * THEN: To land on index i, we rotate the wheel COUNTER-CLOCKWISE by (i * 45).
-     * Which is rotation = (current - i*45).
-     * To keep growing for CSS spin: rotation = (current + ExtraLoops - i*45).
-     */
     const extraLoops = 6 * 360;
-    const currentBase = rotationRef.current - (rotationRef.current % 360); // normalize
+    const currentBase = rotationRef.current - (rotationRef.current % 360);
     const targetAngle = currentBase + extraLoops - (targetIdx * SLICE_DEG);
     
-    // Safety check: ensure targetAngle > rotationRef.current
     const finalAngle = targetAngle > rotationRef.current ? targetAngle : targetAngle + 360;
 
     rotationRef.current = finalAngle;
@@ -189,7 +229,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
   return (
     <>
-      <ResultOverlay result={popup} onClose={() => setPopup(null)} />
+      <ResultOverlay result={popup} onClose={() => setPopup(null)} muted={muted} />
       
       <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30">
         
@@ -205,9 +245,17 @@ export default function LuckTestClient({ onBalanceUpdate }) {
             </div>
           </div>
           
-          <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner">
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
-            <h4 className="text-md font-mono font-black text-emerald-400">{user?.wallet?.main || '0.00'} <span className="text-[10px] text-slate-400">NXS</span></h4>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={toggleMute}
+              className="p-2 rounded-xl bg-[#151B2B] border border-white/5 text-slate-400 hover:text-white transition-colors"
+            >
+              {muted ? '🔇' : '🔊'}
+            </button>
+            <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner">
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
+              <h4 className="text-md font-mono font-black text-emerald-400">{user?.wallet?.main || '0.00'}</h4>
+            </div>
           </div>
         </div>
 
@@ -237,10 +285,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         {/* Wheel Section */}
         <div className="flex flex-col items-center mb-8">
           <div className={`relative w-[240px] h-[240px] mb-8 ${isPreloading ? 'animate-pulse scale-95' : ''} transition-all duration-300`}>
-            {/* The Outer Rim */}
             <div className="absolute inset-0 rounded-full border-[8px] border-[#1E293B] shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)]" />
             
-            {/* The Pointer */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
               <div className="w-0 h-0 border-x-[14px] border-x-transparent border-t-[32px] border-t-white filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
               <div className="absolute top-0 w-0 h-0 border-x-[10px] border-x-transparent border-t-[24px] border-t-orange-500" />
@@ -255,8 +301,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
               }}
             >
               {config.segments.map((color, i) => {
-                // STARTING ANGLE ADJUSTMENT: -90 (top) - 22.5 (half slice) 
-                // ensures Slice 0 Center is at exactly -90 (TOP).
                 const start = (i * sliceRad) - (Math.PI / 2) - (sliceRad / 2);
                 const end = start + sliceRad;
                 const x1 = cx + r * Math.cos(start);
@@ -307,11 +351,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           >
             {isPreloading ? 'PREPARING...' : spinning ? 'WINNING...' : 'TAP TO SPIN'}
           </button>
-          
-          <div className="mt-6 flex flex-col items-center gap-1 opacity-40">
-            <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Test Your Luck Factor Today</p>
-            <div className="w-12 h-1 bg-gradient-to-r from-transparent via-slate-500 to-transparent" />
-          </div>
         </div>
 
         {/* Prize Table */}
