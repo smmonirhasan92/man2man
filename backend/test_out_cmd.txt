@@ -1,9 +1,0 @@
-OK: ../modules/user/UserModel
-OK: ../modules/wallet/TransactionModel
-MISSING: ../modules/wallet/WithdrawalModel
-MISSING: ../modules/wallet/DepositModel
-OK: ../modules/p2p/P2POrderModel
-MISSING: ../modules/p2p/P2PAdModel
-MISSING: ../modules/game/LotteryTicketModel
-MISSING: ../modules/task/TaskHistoryModel
-OK: ../modules/notification/NotificationModel

@@ -132,17 +132,18 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [rotation, setRotation] = useState(0);
   const [popup, setPopup] = useState(null);
   const [isPreloading, setIsPreloading] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('game_muted') === 'true';
+    }
+    return false;
+  });
   
   const rotationRef = useRef(0);
   const lastTickIdx = useRef(-1);
   const config = TIERS[tier];
 
-  // Load mute state
-  useEffect(() => {
-    const saved = localStorage.getItem('game_muted');
-    if (saved === 'true') setMuted(true);
-  }, []);
+  // Load mute state removed from useEffect to avoid cascading renders
 
   const toggleMute = () => {
     const newVal = !muted;
