@@ -224,20 +224,31 @@ function DashboardContent() {
                 <WalletSwap user={user} onSuccess={fetchUser} />
 
 
-                {/* Grid Functions */}
+                {/* Grid Functions [V7.0 PRO] */}
                 <div className="w-full px-6 mb-8 mt-4">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Discover Options</h3>
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 px-1">Discover Options</h3>
                     <div className="grid grid-cols-3 gap-3">
+                        {/* Core Features */}
                         <FolderCard href="/dashboard/invest" icon={DollarSign} label="Invest" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
+                        
                         <div className="relative group">
                             <FolderCard href="/dashboard/luck-test" icon={Gamepad2} label="Luck Test" color="text-orange-400" gradient="from-orange-600/20 to-orange-900/40" border="border-orange-500/30" />
-                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-orange-500 to-red-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-bounce">NEW</div>
                         </div>
-                        <FolderCard href="/p2p" icon={Server} label="P2P Market" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
+
+                        <div className="relative group">
+                            <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
+                        </div>
+
+                        {/* Mystery Box (Replaced Floating Bubble) */}
+                        <div className="relative group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('toggle-mystery-box'))}>
+                            <FolderCard href="#" icon={Gift} label="Gift Box" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-pink-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-rose-500 to-red-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-bounce">FREE</div>
+                        </div>
 
                         <FolderCard href="/history" icon={Briefcase} label="History" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-white/20" />
+                        
                         <FolderCard href="/profile" icon={Users} label="Invite" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-white/20" />
-                        <FolderCard href="/support" icon={LifeBuoy} label="Support" color="text-cyan-400" gradient="from-cyan-600/20 to-cyan-900/40" border="border-white/20" />
                     </div>
                 </div>
 
@@ -267,7 +278,7 @@ function DashboardContent() {
                     <p className="text-[10px] text-slate-500 font-mono">SECURED BY USA AFFILIATE BLOCKCHAIN</p>
                 </div>
 
-                {/* Daily Mystery Gift Box Overlay */}
+                {/* Daily Mystery Gift Box Overlay (Now triggered by Grid) */}
                 <GiftBox user={user} onBalanceUpdate={fetchUser} />
 
                 <AnimatePresence>

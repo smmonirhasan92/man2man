@@ -9,6 +9,13 @@ export default function GlobalProfileDrawer() {
     const { user, logout } = useAuth();
     const pathname = usePathname();
 
+    // [NEW] Global Toggle Listener for Direct Nav Access
+    useEffect(() => {
+        const handleToggle = () => setIsOpen(prev => !prev);
+        window.addEventListener('toggle-profile-drawer', handleToggle);
+        return () => window.removeEventListener('toggle-profile-drawer', handleToggle);
+    }, []);
+
     // Don't show on login/register/admin pages
     // [FIX] Strict checks for root/auth, startsWith only for Admin
     const isPublicOrAdmin = pathname === '/' || pathname === '/login' || pathname === '/register' || pathname?.startsWith('/admin');
