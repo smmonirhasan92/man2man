@@ -190,14 +190,17 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     const targetIdx = apiResult.result.sliceIndex;
     const winAmount = apiResult.result.amountNXS;
 
-    // Accurate Rotation Math:
+    // [P#1] CSS-based Modular Align Math guarantee
     const loops = 3600; 
-    const jitter = Math.floor(Math.random() * 20) - 10; 
-    const targetAngle = loops + 90 - (targetIdx * SLICE_DEG) + jitter;
+    const currentMod = rotationRef.current % 360;
+    const jitter = Math.floor(Math.random() * 20) - 10;
     
-    const totalRotation = rotationRef.current + targetAngle;
-    rotationRef.current = totalRotation;
-    console.log(`[LuckTest] TargetIdx: ${targetIdx}, Spin Result: ${winAmount} NXS`);
+    // nextRotation: ensure we advance forward, subtract target offset (targetIdx*45)
+    const nextRotation = rotationRef.current + loops + (360 - currentMod) - (targetIdx * SLICE_DEG) + jitter;
+    rotationRef.current = nextRotation;
+    const totalRotation = nextRotation;
+    
+    console.log(`[LuckTest] TargetIdx: ${targetIdx}, Spin Result: ${winAmount} NXS, Rotation: ${nextRotation}`);
     setRotation(totalRotation);
 
     setTimeout(() => {
@@ -275,66 +278,40 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         {/* Wheel Section */}
         <div className="flex flex-col items-center mb-8">
           <div className={`relative w-[240px] h-[240px] mb-8 ${isPreloading ? 'scale-95 grayscale' : ''} transition-all duration-300`}>
-            {/* Outer Ring */}
-            <div className="absolute inset-0 rounded-full border-[8px] border-[#1E293B] shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)]" />
+            {/* CSS Powered Wheel Mechanics */}
+            <div 
+              className="absolute inset-[6px] rounded-full overflow-hidden"
+              style={{
+                transform: `rotate(${rotation - 22.5}deg)`,
+                transition: spinning ? `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.1, 0.7, 0.2, 1)` : 'none',
+                background: `conic-gradient(${config.slices.map((s, i) => `${s.color} ${i*45}deg ${(i+1)*45}deg`).join(', ')})`
+              }}
+            >
+              <div className="absolute inset-0 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] z-10 pointer-events-none" />
+              {config.slices.map((slice, i) => (
+                <div 
+                  key={i} 
+                  className="absolute inset-0 flex items-start justify-center pt-3 drop-shadow-md z-0"
+                  style={{ transform: `rotate(${i * 45 + 22.5}deg)` }}
+                >
+                  <span className="text-white text-[10px] font-mono font-black" style={{ transform: 'rotate(0)' }}>{slice.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Outer Ring Overlay */}
+            <div className="absolute inset-0 rounded-full border-[8px] border-[#1E293B] shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)] z-20 pointer-events-none" />
             
+            {/* Center Hub */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[52px] h-[52px] bg-[#0B0F1A] rounded-full z-20 flex items-center justify-center border-[4px] border-[#1E293B] shadow-[0_0_15px_rgba(0,0,0,0.8)]">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#334155] to-[#0B0F1A]" />
+            </div>
+
             {/* Pointer (Orange Arrow) */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
               <div className="w-0 h-0 border-x-[14px] border-x-transparent border-t-[32px] border-t-white filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
               <div className="absolute top-0 w-0 h-0 border-x-[10px] border-x-transparent border-t-[24px] border-t-orange-500" />
             </div>
-
-            <svg 
-              width="240" height="240" viewBox="0 0 220 220" 
-              className="w-full h-full drop-shadow-2xl"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                transition: spinning ? `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.1, 0.7, 0.2, 1)` : 'none'
-              }}
-            >
-              <defs>
-                <linearGradient id="hubGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#334155" />
-                  <stop offset="100%" stopColor="#0B0F1A" />
-                </linearGradient>
-              </defs>
-              {config.slices.map((slice, i) => {
-                const step = (2 * Math.PI) / 8;
-                const start = (i * step) - (Math.PI / 2) - (step / 2);
-                const end = start + step;
-                
-                const x1 = cx + r * Math.cos(start);
-                const y1 = cy + r * Math.sin(start);
-                const x2 = cx + r * Math.cos(end);
-                const y2 = cy + r * Math.sin(end);
-                
-                const mid = start + step / 2;
-                const tx = cx + 65 * Math.cos(mid);
-                const ty = cy + 65 * Math.sin(mid);
-
-                return (
-                  <g key={i}>
-                    <path 
-                      d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`} 
-                      fill={slice.color} 
-                      stroke="rgba(0,0,0,0.2)" 
-                      strokeWidth="1"
-                    />
-                    <text 
-                      x={tx} y={ty} 
-                      textAnchor="middle" dominantBaseline="middle" 
-                      fill="white" fontSize="10" fontWeight="900" 
-                      transform={`rotate(${(mid * 180 / Math.PI) + 90}, ${tx}, ${ty})`}
-                      className="drop-shadow-sm font-mono"
-                    >
-                      {slice.label}
-                    </text>
-                  </g>
-                );
-              })}
-              <circle cx={cx} cy={cy} r="26" fill="#0B0F1A" stroke="#1E293B" strokeWidth="4" />
-              <circle cx={cx} cy={cy} r="18" fill="url(#hubGrad)" />
-            </svg>
           </div>
 
           <button

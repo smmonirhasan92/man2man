@@ -4,8 +4,7 @@ conn.on('ready', () => {
     console.log('SSH connection to VPS established');
     const cmds = "export NODE_OPTIONS=\"--max-old-space-size=2048\" && cd /var/www/man2man && git pull origin main && npm install && pm2 restart backend && pm2 restart frontend || pm2 restart all";
     
-    // According to deploy script: "Ensure `npm run build` is always executed in the `frontend` folder"
-    const fullCmd = "export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && \\. \"$NVM_DIR/nvm.sh\" && cd /var/www/man2man && git pull origin main && npm install && cd frontend && npm run build && pm2 restart all";
+    const fullCmd = "cd /var/www/man2man && git stash && git pull origin main && npm install && cd frontend && export NODE_OPTIONS='--max-old-space-size=2048' && rm -rf .next && npm run build && cd .. && pm2 restart all";
 
     conn.exec(fullCmd, { pty: true }, (err, stream) => {
         if (err) throw err;
