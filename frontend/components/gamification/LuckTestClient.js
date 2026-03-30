@@ -9,57 +9,79 @@ const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
   bronze: {
-    name: 'Bronze', cost: '1 NXS', costLabel: 'Cost: 1 NXS = $0.02',
+    name: 'Bronze', cost: 1, costLabel: 'Cost: 1 NXS = $0.02',
     btnClass: 'from-[#CD7F32] to-[#E8A55A]', textClass: 'text-white',
     tabActiveBg: 'bg-[#FFF4EA] border-[#CD7F32]', tabActiveText: 'text-[#8B4513]',
     rtp: '85%', jackpot: '10¢',
     prizesTitle: 'Bronze Prize Table',
     prizes: [
-      { label: 'Jackpot',  chance: 'RARE',  amt: '5 NXS',   cls: 'text-[#B8860B]' },
-      { label: 'Medium',   chance: 'BOOST', amt: '2 NXS',   cls: 'text-[#2E8B57]'  },
-      { label: 'Refund',   chance: 'HIGH',  amt: '1 NXS',   cls: 'text-slate-500'  },
-      { label: 'Small',    chance: 'BEST',  amt: '0.5 NXS', cls: 'text-slate-500'   },
-      { label: 'Miss',     chance: 'LOW',   amt: '0 NXS',   cls: 'text-slate-400'    },
+      { label: 'Jackpot',  chance: 'RARE',  amt: '5 NXS',   cls: 'text-[#B8860B] bg-[#B8860B]' },
+      { label: 'Medium',   chance: 'BOOST', amt: '2 NXS',   cls: 'text-[#2E8B57] bg-[#2E8B57]'  },
+      { label: 'Refund',   chance: 'HIGH',  amt: '1 NXS',   cls: 'text-slate-500 bg-slate-500'  },
+      { label: 'Small',    chance: 'BEST',  amt: '0.5 NXS', cls: 'text-slate-500 bg-slate-500'   },
+      { label: 'Miss',     chance: 'LOW',   amt: '0 NXS',   cls: 'text-slate-400 bg-slate-400'    },
     ],
-    segments: ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#264653','#F4A261','#2A9D8F','#E9C46A'],
-    labels:   ['5 NXS','2 NXS','1 NXS','0.5 NXS','0 NXS','1 NXS','0.5 NXS','2 NXS'],
-    values:   [5, 2, 1, 0.5, 0, 1, 0.5, 2]
+    slices: [
+      { label: '5 NXS', value: 5, color: '#F4A261' },
+      { label: '2 NXS', value: 2, color: '#E76F51' },
+      { label: '1 NXS', value: 1, color: '#2A9D8F' },
+      { label: '0.5 NXS', value: 0.5, color: '#E9C46A' },
+      { label: '0 NXS', value: 0, color: '#264653' },
+      { label: '1 NXS', value: 1, color: '#F4A261' },
+      { label: '0.5 NXS', value: 0.5, color: '#2A9D8F' },
+      { label: '2 NXS', value: 2, color: '#E9C46A' }
+    ]
   },
   silver: {
-    name: 'Silver', cost: '2.5 NXS', costLabel: 'Cost: 2.5 NXS = $0.05',
+    name: 'Silver', cost: 2.5, costLabel: 'Cost: 2.5 NXS = $0.05',
     btnClass: 'from-[#909090] to-[#C0C0C0]', textClass: 'text-white',
     tabActiveBg: 'bg-[#F5F5F5] border-[#A0A0A0]', tabActiveText: 'text-[#444]',
     rtp: '84%', jackpot: '25¢',
     prizesTitle: 'Silver Prize Table',
     prizes: [
-      { label: 'Jackpot',  chance: 'RARE',  amt: '12.5 NXS', cls: 'text-[#B8860B]' },
-      { label: 'Medium',   chance: 'BOOST', amt: '5 NXS',    cls: 'text-[#2E8B57]'  },
-      { label: 'Refund',   chance: 'HIGH',  amt: '2.5 NXS',  cls: 'text-slate-500'  },
-      { label: 'Small',    chance: 'BEST',  amt: '1 NXS',    cls: 'text-slate-500'   },
-      { label: 'Miss',     chance: 'LOW',   amt: '0 NXS',    cls: 'text-slate-400'    },
+      { label: 'Jackpot',  chance: 'RARE',  amt: '12.5 NXS', cls: 'text-[#B8860B] bg-[#B8860B]' },
+      { label: 'Medium',   chance: 'BOOST', amt: '5 NXS',    cls: 'text-[#2E8B57] bg-[#2E8B57]'  },
+      { label: 'Refund',   chance: 'HIGH',  amt: '2.5 NXS',  cls: 'text-slate-500 bg-slate-500'  },
+      { label: 'Small',    chance: 'BEST',  amt: '1 NXS',    cls: 'text-slate-500 bg-slate-500'   },
+      { label: 'Miss',     chance: 'LOW',   amt: '0 NXS',    cls: 'text-slate-400 bg-slate-400'    },
     ],
-    segments: ['#8D8D8D','#B0B0B0','#5E5E5E','#C8C8C8','#333','#9A9A9A','#6E6E6E','#B8B8B8'],
-    labels:   ['12.5 NXS','5 NXS','2.5 NXS','1 NXS','0 NXS','2.5 NXS','1 NXS','5 NXS'],
-    values:   [12.5, 5, 2.5, 1, 0, 2.5, 1, 5]
+    slices: [
+      { label: '12.5 NXS', value: 12.5, color: '#8D8D8D' },
+      { label: '5 NXS', value: 5, color: '#B0B0B0' },
+      { label: '2.5 NXS', value: 2.5, color: '#5E5E5E' },
+      { label: '1 NXS', value: 1, color: '#C8C8C8' },
+      { label: '0 NXS', value: 0, color: '#333' },
+      { label: '2.5 NXS', value: 2.5, color: '#9A9A9A' },
+      { label: '1 NXS', value: 1, color: '#6E6E6E' },
+      { label: '5 NXS', value: 5, color: '#B8B8B8' }
+    ]
   },
   gold: {
-    name: 'Gold', cost: '5 NXS', costLabel: 'Cost: 5 NXS = $0.10',
+    name: 'Gold', cost: 5, costLabel: 'Cost: 5 NXS = $0.10',
     btnClass: 'from-[#B8860B] to-[#FFD700]', textClass: 'text-[#3B2A00]',
     tabActiveBg: 'bg-[#FFFBE6] border-[#DAA520]', tabActiveText: 'text-[#856404]',
     rtp: '85%', jackpot: '50¢',
     prizesTitle: 'Gold Prize Table',
     prizes: [
-      { label: 'Super Jackpot', chance: 'ELITE',  amt: '25 NXS',  cls: 'text-[#B8860B]' },
-      { label: 'Medium',        chance: 'MEGA',   amt: '10 NXS',  cls: 'text-[#2E8B57]'  },
-      { label: 'Refund',        chance: 'HIGH',   amt: '5 NXS',   cls: 'text-slate-500'  },
-      { label: 'Small',         chance: 'GOOD',   amt: '2.5 NXS', cls: 'text-slate-500'   },
-      { label: 'Miss',          chance: 'MIN',    amt: '0 NXS',   cls: 'text-slate-400'    },
+      { label: 'Super Jackpot', chance: 'ELITE',  amt: '25 NXS',  cls: 'text-[#B8860B] bg-[#B8860B]' },
+      { label: 'Medium',        chance: 'MEGA',   amt: '10 NXS',  cls: 'text-[#2E8B57] bg-[#2E8B57]'  },
+      { label: 'Refund',        chance: 'HIGH',   amt: '5 NXS',   cls: 'text-slate-500 bg-slate-500'  },
+      { label: 'Small',         chance: 'GOOD',   amt: '2.5 NXS', cls: 'text-slate-500 bg-slate-500'   },
+      { label: 'Miss',          chance: 'MIN',    amt: '0 NXS',   cls: 'text-slate-400 bg-slate-400'    },
     ],
-    segments: ['#DAA520','#B8860B','#FFD700','#8B6914','#F5C842','#B8860B','#DAA520','#FFD700'],
-    labels:   ['25 NXS','10 NXS','5 NXS','2.5 NXS','0 NXS','5 NXS','2.5 NXS','10 NXS'],
-    values:   [25, 10, 5, 2.5, 0, 5, 2.5, 10]
+    slices: [
+      { label: '25 NXS', value: 25, color: '#DAA520' },
+      { label: '10 NXS', value: 10, color: '#B8860B' },
+      { label: '5 NXS', value: 5, color: '#FFD700' },
+      { label: '2.5 NXS', value: 2.5, color: '#8B6914' },
+      { label: '0 NXS', value: 0, color: '#F5C842' },
+      { label: '5 NXS', value: 5, color: '#B8860B' },
+      { label: '2.5 NXS', value: 2.5, color: '#DAA520' },
+      { label: '10 NXS', value: 10, color: '#FFD700' }
+    ]
   }
 };
+
 
 /** 
  * --- HELPER: Sound Engine ---
@@ -75,15 +97,11 @@ const playAudio = (file, muted) => {
   });
 };
 
-function ResultOverlay({ result, onClose, muted }) {
+function ResultOverlay({ result, onClose }) {
   if (!result) return null;
   const isWin = result.amountNXS > 0;
   const isJackpot = result.cls === 'jackpot';
 
-  useEffect(() => {
-    if (isWin) playAudio('win.mp3', muted);
-    else playAudio('loss.mp3', muted);
-  }, [isWin, muted]);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -132,6 +150,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [rotation, setRotation] = useState(0);
   const [popup, setPopup] = useState(null);
   const [isPreloading, setIsPreloading] = useState(false);
+  const [displayBalance, setDisplayBalance] = useState(null);
   const [muted, setMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('game_muted') === 'true';
@@ -140,8 +159,15 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   });
   
   const rotationRef = useRef(0);
-  const lastTickIdx = useRef(-1);
   const config = TIERS[tier];
+
+  // Sync initial balance
+  useEffect(() => {
+    if (user?.wallet?.main && !spinning && !popup) {
+      setDisplayBalance(user.wallet.main);
+    }
+  }, [user?.wallet?.main, spinning, popup]);
+
 
   // Load mute state removed from useEffect to avoid cascading renders
 
@@ -160,68 +186,71 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   // Using a single hum at start and a chime at end for professional feel.
 
   const doSpin = async () => {
-    // --- [STEP 1: PRE-DEDUCTION] ---
-    const costValue = parseFloat(config.cost);
-    if (user?.wallet) {
-      const tempBalance = parseFloat(user.wallet.main || 0) - costValue;
-      window.dispatchEvent(new CustomEvent('balance_update', { detail: tempBalance }));
-    }
-
+    setIsPreloading(true);
+    
     let apiResult = null;
     try {
       const { data } = await api.post('/game/luck-test', { tier });
       apiResult = data;
     } catch (err) {
       setIsPreloading(false);
-      if (typeof window !== 'undefined') window.location.reload(); 
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
     }
 
-    // --- [STEP 2: FAST SYNC] ---
-    if (apiResult.newBalance !== undefined) {
-      const finalBal = apiResult.newBalance;
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('balance_update', { detail: finalBal }));
-      }
-      if (onBalanceUpdate) onBalanceUpdate(finalBal);
-    }
-
+    // --- [STEP 1: VISUAL CUT] ---
+    const costValue = config.cost;
+    const currentBalance = parseFloat(displayBalance || user?.wallet?.main || 0);
+    const balanceAfterCut = currentBalance - costValue;
+    setDisplayBalance(balanceAfterCut.toFixed(2));
+    
     setIsPreloading(false);
     setSpinning(true);
-    playAudio('spin.mp3', muted); // Start Hum
+    playAudio('spin.mp3', muted);
 
     const winAmount = apiResult.result.amountNXS;
+    // Find matching slices
     const matchingIndices = [];
-    config.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
-    
+    config.slices.forEach((s, idx) => {
+      if (s.value === winAmount) matchingIndices.push(idx);
+    });
+
     const targetIdx = matchingIndices.length > 0 
       ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
-      : config.values.indexOf(0);
+      : 4; // Fallback to Index 4 (usually 0 NXS)
 
-    const extraLoops = 10 * 360; // Smooth and long tension
-    const currentBase = rotationRef.current - (rotationRef.current % 360);
-    const targetAngle = currentBase + extraLoops - (targetIdx * SLICE_DEG);
+    // Accurate Rotation Math:
+    // Slice 0 is at Top [0 deg]. 
+    // Pointer is at Top [0 deg].
+    const loops = 3600; // 10 loops
+    const jitter = Math.floor(Math.random() * 20) - 10; // Random offset ±10deg
+    const targetAngle = loops - (targetIdx * SLICE_DEG) + jitter;
     
-    const finalAngle = targetAngle > rotationRef.current ? targetAngle : targetAngle + 360;
-
-    rotationRef.current = finalAngle;
-    setRotation(finalAngle);
+    // Smoothly increment from current cumulative rotation
+    const totalRotation = rotationRef.current + targetAngle;
+    rotationRef.current = totalRotation;
+    setRotation(totalRotation);
 
     setTimeout(() => {
       setSpinning(false);
       setPopup(apiResult.result);
+      
+      // --- [STEP 2: EARNED REWARD SYNC] ---
+      const finalServerBalance = apiResult.newBalance;
+      setDisplayBalance(finalServerBalance);
+      if (onBalanceUpdate) onBalanceUpdate(finalServerBalance);
+      
       if (winAmount > 0) playAudio('win.mp3', muted);
       else playAudio('loss.mp3', muted);
     }, SPIN_DURATION_MS);
   };
 
+
   const cx = 110, cy = 110, r = 104;
-  const sliceRad = (2 * Math.PI) / config.segments.length;
 
   return (
     <>
-      <ResultOverlay result={popup} onClose={() => setPopup(null)} muted={muted} />
+      <ResultOverlay result={popup} onClose={() => setPopup(null)} />
       
       <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30">
         
@@ -233,7 +262,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
             </div>
             <div>
               <h1 className="text-xl font-black text-white leading-none tracking-tight">LUCK TEST</h1>
-              <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Premium Rewards</p>
+              <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Guaranteed Fairness</p>
             </div>
           </div>
           
@@ -246,7 +275,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
             </button>
             <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner">
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
-              <h4 className="text-md font-mono font-black text-emerald-400">{user?.wallet?.main || '0.00'}</h4>
+              <h4 className="text-md font-mono font-black text-emerald-400">{displayBalance || '0.00'}</h4>
             </div>
           </div>
         </div>
@@ -268,7 +297,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                 {active && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
                 <span className="text-2xl mb-1 filter drop-shadow-md">{t === 'bronze' ? '🥉' : t === 'silver' ? '🥈' : '🥇'}</span>
                 <span className={`text-[10px] font-black uppercase tracking-wider ${active ? tCfg.tabActiveText : 'text-slate-500'}`}>{tCfg.name}</span>
-                <span className={`text-[11px] font-mono mt-0.5 font-bold ${active ? 'opacity-80' : 'text-slate-400'}`}>{tCfg.cost}</span>
+                <span className={`text-[11px] font-mono mt-0.5 font-bold ${active ? 'opacity-80' : 'text-slate-400'}`}>{tCfg.cost} NXS</span>
               </button>
             );
           })}
@@ -276,9 +305,11 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
         {/* Wheel Section */}
         <div className="flex flex-col items-center mb-8">
-          <div className={`relative w-[240px] h-[240px] mb-8 ${isPreloading ? 'animate-pulse scale-95' : ''} transition-all duration-300`}>
+          <div className={`relative w-[240px] h-[240px] mb-8 ${isPreloading ? 'scale-95 grayscale' : ''} transition-all duration-300`}>
+            {/* Outer Ring */}
             <div className="absolute inset-0 rounded-full border-[8px] border-[#1E293B] shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(255,255,255,0.05)]" />
             
+            {/* Pointer (Orange Arrow) */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
               <div className="w-0 h-0 border-x-[14px] border-x-transparent border-t-[32px] border-t-white filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
               <div className="absolute top-0 w-0 h-0 border-x-[10px] border-x-transparent border-t-[24px] border-t-orange-500" />
@@ -289,52 +320,55 @@ export default function LuckTestClient({ onBalanceUpdate }) {
               className="w-full h-full drop-shadow-2xl"
               style={{
                 transform: `rotate(${rotation}deg)`,
-                transition: spinning ? `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.12, 0.8, 0.2, 1)` : 'none'
+                transition: spinning ? `transform ${SPIN_DURATION_MS/1000}s cubic-bezier(0.1, 0.7, 0.2, 1)` : 'none'
               }}
             >
-              {config.segments.map((color, i) => {
-                const start = (i * sliceRad) - (Math.PI / 2) - (sliceRad / 2);
-                const end = start + sliceRad;
-                const x1 = cx + r * Math.cos(start);
-                const y1 = cy + r * Math.sin(start);
-                const x2 = cx + r * Math.cos(end);
-                const y2 = cy + r * Math.sin(end);
-                const mid = start + sliceRad / 2;
-                const tx = cx + 68 * Math.cos(mid);
-                const ty = cy + 68 * Math.sin(mid);
-
-                return (
-                  <g key={i}>
-                    <path 
-                      d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`} 
-                      fill={color} 
-                      stroke="rgba(255,255,255,0.05)" 
-                      strokeWidth="1"
-                    />
-                    <text 
-                      x={tx} y={ty} 
-                      textAnchor="middle" dominantBaseline="middle" 
-                      fill="white" fontSize="11" fontWeight="900" 
-                      transform={`rotate(${(mid * 180 / Math.PI) + 90}, ${tx}, ${ty})`}
-                      className="drop-shadow-sm font-mono"
-                    >
-                      {config.labels[i]}
-                    </text>
-                  </g>
-                );
-              })}
-              <circle cx={cx} cy={cy} r="26" fill="#0B0F1A" stroke="#1E293B" strokeWidth="4" />
-              <circle cx={cx} cy={cy} r="18" fill="url(#hubGrad)" />
               <defs>
                 <linearGradient id="hubGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#334155" />
                   <stop offset="100%" stopColor="#0B0F1A" />
                 </linearGradient>
               </defs>
+              {config.slices.map((slice, i) => {
+                const step = (2 * Math.PI) / 8;
+                const start = (i * step) - (Math.PI / 2) - (step / 2);
+                const end = start + step;
+                
+                const x1 = cx + r * Math.cos(start);
+                const y1 = cy + r * Math.sin(start);
+                const x2 = cx + r * Math.cos(end);
+                const y2 = cy + r * Math.sin(end);
+                
+                const mid = start + step / 2;
+                const tx = cx + 65 * Math.cos(mid);
+                const ty = cy + 65 * Math.sin(mid);
+
+                return (
+                  <g key={i}>
+                    <path 
+                      d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`} 
+                      fill={slice.color} 
+                      stroke="rgba(0,0,0,0.2)" 
+                      strokeWidth="1"
+                    />
+                    <text 
+                      x={tx} y={ty} 
+                      textAnchor="middle" dominantBaseline="middle" 
+                      fill="white" fontSize="10" fontWeight="900" 
+                      transform={`rotate(${(mid * 180 / Math.PI) + 90}, ${tx}, ${ty})`}
+                      className="drop-shadow-sm font-mono"
+                    >
+                      {slice.label}
+                    </text>
+                  </g>
+                );
+              })}
+              <circle cx={cx} cy={cy} r="26" fill="#0B0F1A" stroke="#1E293B" strokeWidth="4" />
+              <circle cx={cx} cy={cy} r="18" fill="url(#hubGrad)" />
             </svg>
           </div>
 
-          <button 
+          <button
             onClick={doSpin}
             disabled={spinning || isPreloading}
             className={`w-full py-5 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all duration-300 tracking-[0.1em] uppercase relative overflow-hidden
@@ -355,12 +389,12 @@ export default function LuckTestClient({ onBalanceUpdate }) {
             {config.prizes.map((p, i) => (
               <div key={i} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
-                  <div className={`w-1.5 h-1.5 rounded-full ${i===0 ? 'bg-orange-400' : 'bg-slate-600'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full ${p.cls.split(' ').pop()} shadow-[0_0_8px_currentColor]`} />
                   <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{p.label}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{p.chance}</span>
-                  <span className={`text-xs font-mono font-black w-16 text-right ${p.cls}`}>{p.amt}</span>
+                  <span className={`text-xs font-mono font-black w-16 text-right ${p.cls.split(' ')[0]}`}>{p.amt}</span>
                 </div>
               </div>
             ))}
@@ -371,3 +405,4 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     </>
   );
 }
+
