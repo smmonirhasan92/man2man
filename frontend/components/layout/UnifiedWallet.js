@@ -28,13 +28,13 @@ export default function UnifiedWallet({ balance, income }) {
     return (
         <div 
             onClick={toggleMode}
-            className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-3 py-2.5 backdrop-blur-md shadow-2xl relative overflow-hidden group transition-all hover:bg-white/10 cursor-pointer select-none"
+            className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-md shadow-2xl relative overflow-hidden group transition-all hover:bg-white/10 cursor-pointer select-none gap-3"
         >
             {/* Subtle Gradient Glow */}
             <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
             
             {/* Main Assets Section */}
-            <div className="flex flex-col items-start w-1/2">
+            <div className="flex flex-col items-start min-w-0">
                 <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.05em] truncate">
                         {viewMode === 0 ? 'USD Balance' : viewMode === 1 ? 'NXS Balance' : 'Balance'}
@@ -42,11 +42,11 @@ export default function UnifiedWallet({ balance, income }) {
                 </div>
                 <div className="flex items-center gap-1">
                     {viewMode === 0 ? (
-                        <span className="text-emerald-400 font-bold text-[15px]">$</span>
+                        <span className="text-emerald-400 font-bold text-[18px]">$</span>
                     ) : viewMode === 1 ? (
-                        <USCIcon className="w-3.5 h-3.5" />
+                        <USCIcon className="w-4 h-4" />
                     ) : null}
-                    <span className="text-base font-black text-white font-mono leading-none tracking-tight">
+                    <span className="text-lg font-black text-white font-mono leading-none tracking-tight">
                         {viewMode === 0 ? mainUsd : viewMode === 1 ? mainNxs : '••••••'}
                     </span>
                     {viewMode === 2 && <EyeOff size={10} className="text-slate-500 ml-1" />}
@@ -54,7 +54,7 @@ export default function UnifiedWallet({ balance, income }) {
             </div>
 
             {/* Income Section */}
-            <div className="flex flex-col items-end text-right w-1/2">
+            <div className="flex flex-col items-end text-right min-w-0">
                 <div className="flex items-center justify-end gap-1 mb-1">
                     <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-[0.05em] truncate">
                         {viewMode === 1 ? 'NXS Incom' : 'Income'}

@@ -140,7 +140,7 @@ function DashboardContent() {
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">
 
                 {/* Header */}
-                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between">
+                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                             <Shield size={16} className="text-emerald-500" />
