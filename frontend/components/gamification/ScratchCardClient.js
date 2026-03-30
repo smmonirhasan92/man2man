@@ -113,12 +113,12 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto relative pt-4 pb-20 font-sans px-4 h-[100dvh] flex flex-col justify-center overflow-hidden">
+    <div className="w-full max-w-md mx-auto relative pt-4 pb-32 font-sans px-4 min-h-[100dvh]">
         {/* Main Frame Container as requested by user */}
-        <div className="flex-1 max-h-[800px] bg-[#0F172A]/80 border border-slate-700/50 rounded-[2rem] p-4 sm:p-5 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden">
+        <div className="w-full bg-[#0F172A]/80 border border-slate-700/50 rounded-[2rem] p-4 sm:p-5 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-visible">
             
             {/* Ambient Background Glow for the frame */}
-            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 opacity-20 bg-gradient-to-b ${TIERS[tier].btnClass} blur-[50px] pointer-events-none`}></div>
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 opacity-20 bg-gradient-to-b ${TIERS[tier].btnClass} blur-[50px] pointer-events-none rounded-[2rem]`}></div>
 
             {/* Header Section */}
             <div className="flex items-center justify-between mb-4 relative z-10">
@@ -148,7 +148,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
             </div>
 
             {/* Tier Selector */}
-            <div className="flex gap-2 justify-center mb-5 shrink-0 relative z-10">
+            <div className="flex gap-2 justify-center mb-6 shrink-0 relative z-10">
               {Object.entries(TIERS).map(([t, info]) => (
                 <button
                   key={t}
@@ -169,12 +169,12 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
             </div>
 
             {/* The Flip Card Container */}
-            <div className="relative w-full flex-1 min-h-[250px] [perspective:1200px] z-10 flex items-center justify-center group/card">
+            <div className="relative w-full [perspective:1200px] z-10 flex items-center justify-center mb-5 mt-2">
                 <motion.div
                     animate={{ rotateY: gameState === 'REVEALED' ? 180 : 0 }}
                     transition={{ duration: 0.7, type: 'spring', stiffness: 80, damping: 15 }}
                     style={{ transformStyle: 'preserve-3d' }}
-                    className="w-full max-w-[320px] aspect-[4/5] sm:aspect-square relative rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-[4px] border-[#1E293B] bg-[#0A0F1A]"
+                    className="w-full max-w-[300px] aspect-[4/5] sm:aspect-square relative rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-[4px] border-[#1E293B] bg-[#0A0F1A]"
                 >
                     {/* Back of Card (Prize) */}
                     <div 
@@ -243,11 +243,11 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                     <motion.div 
                         initial={{ opacity: 0, y: 10 }} 
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute bottom-[-10px] w-full flex justify-center z-30"
+                        className="absolute -bottom-5 w-full flex justify-center z-30 pointer-events-none"
                     >
                         <button 
                             onClick={buyCard}
-                            className={`px-8 py-3.5 w-11/12 max-w-[280px] rounded-2xl font-black text-lg sm:text-xlt tracking-tight shadow-[0_15px_30px_rgba(0,0,0,0.6)] border border-white/30 hover:-translate-y-1 active:translate-y-1 transition-all bg-gradient-to-r ${TIERS[tier].btnClass} ${TIERS[tier].textClass}`}
+                            className={`pointer-events-auto px-8 py-3.5 w-11/12 max-w-[260px] rounded-2xl font-black text-lg sm:text-xlt tracking-tight shadow-[0_15px_30px_rgba(0,0,0,0.6)] border border-white/30 hover:-translate-y-1 active:translate-y-1 transition-all bg-gradient-to-r ${TIERS[tier].btnClass} ${TIERS[tier].textClass}`}
                         >
                             {gameState === 'REVEALED' ? 'Play Again' : `Buy For ${TIERS[tier].cost} NXS`}
                         </button>
