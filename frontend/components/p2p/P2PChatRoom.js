@@ -109,7 +109,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             if (String(updatedTrade._id) === String(tradeId)) {
                 fetchTradeData();
                 toast.error('Trade Frozen by Tribunal.');
-                notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.', '/p2p', '/sounds/error.mp3');
+                notify('Trade Disputed', 'A Tribunal dispute has been opened for this trade.', '/p2p', '/sounds/error-v2.mp3');
             }
         };
 
@@ -346,8 +346,8 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
-            <audio ref={notificationAudio} src="/sounds/sms.mp3" preload="auto" />
-            <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
+            <audio ref={notificationAudio} src="/sounds/sms-v2.mp3" preload="auto" />
+            <audio ref={successAudio} src="/sounds/success-v2.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (

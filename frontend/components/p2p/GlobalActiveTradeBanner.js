@@ -48,21 +48,21 @@ export default function GlobalActiveTradeBanner() {
             const handleTradeStart = (data) => {
                 if (isRelevant(data)) {
                     checkActiveTrades();
-                    notify('New Trade Match!', 'Someone matched your P2P Ad.', '/p2p', '/sounds/p2p-alert.mp3');
+                    notify('New Trade Match!', 'Someone matched your P2P Ad.', '/p2p', '/sounds/p2p-alert-v2.mp3');
                 }
             };
 
             const handleMarkPaid = (data) => {
                 if (isRelevant(data)) {
                     checkActiveTrades();
-                    notify('Payment Sent', 'Buyer marked as PAID. Time to verify.', '/p2p', '/sounds/mark-paid.mp3');
+                    notify('Payment Sent', 'Buyer marked as PAID. Time to verify.', '/p2p', '/sounds/mark-paid-v2.mp3');
                 }
             };
 
             const handleCompleted = (data) => {
                 if (isRelevant(data)) {
                     checkActiveTrades();
-                    notify('Trade Completed', 'Assets have been released successfully.', '/p2p', '/sounds/trade-complete.mp3');
+                    notify('Trade Completed', 'Assets have been released successfully.', '/p2p', '/sounds/trade-complete-v2.mp3');
                 }
             };
             

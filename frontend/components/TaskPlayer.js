@@ -8,7 +8,7 @@ import confetti from 'canvas-confetti';
 // Quick fire-and-forget sound helper
 const playSound = (name) => {
     try {
-        const a = new Audio(`/sounds/${name}.mp3`);
+        const a = new Audio(`/sounds/${name}-v2.mp3`);
         a.volume = 0.7;
         a.play().catch(() => { });
     } catch (e) { }

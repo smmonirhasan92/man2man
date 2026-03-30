@@ -210,7 +210,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     }
     setIsPreloading(false);
     setSpinning(true);
-    audioQueue.play('spin.mp3', muted);
+    audioQueue.play('spin-v2.mp3', muted);
 
     // [P#1] Use Server-Side Index for 100% Precision
     const targetIdx = apiResult.result.sliceIndex;
@@ -247,8 +247,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       setDisplayBalance(finalServerBalance);
       if (onBalanceUpdate) onBalanceUpdate(finalServerBalance);
       
-      if (winAmount > 0) audioQueue.play('win.mp3', muted);
-      else audioQueue.play('loss.mp3', muted);
+      if (winAmount > 0) audioQueue.play('win-v2.mp3', muted);
+      else audioQueue.play('loss-v2.mp3', muted);
     }, SPIN_DURATION_MS);
   };
 

@@ -20,8 +20,8 @@ class AnimationManager {
             // Preload sounds (replace with actual URLs if available, using placeholders or data URIs for now)
             // Using simple beep/synth for now if no assets, or just logs if strictly no assets provided.
             // Ideally should be real files in /public/sounds/
-            this.sounds.success = new Audio('/sounds/success.mp3');
-            this.sounds.coin = new Audio('/sounds/coin.mp3');
+            this.sounds.success = new Audio('/sounds/success-v2.mp3');
+            this.sounds.coin = new Audio('/sounds/coin.mp3'); // Coin doesn't have a -v2 judging by the dir list, let's keep it untouched
             this.initialized = true;
         }
     }

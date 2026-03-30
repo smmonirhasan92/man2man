@@ -9,6 +9,8 @@ self.addEventListener('push', function (event) {
             badge: '/networking_globe.png',
             vibrate: [200, 100, 200], // [FIX] Heavier background vibration
             requireInteraction: true, // [FIX] Forces notification to stay until tapped
+            silent: false, // Enforce audible alerting on Android Chrome
+            sound: '/sounds/p2p-alert-v2.mp3', // Trigger explicit cache-busted sound
             data: {
                 url: data.url || '/'
             },

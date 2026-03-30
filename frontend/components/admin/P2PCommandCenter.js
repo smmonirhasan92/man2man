@@ -125,7 +125,7 @@ export default function P2PCommandCenter() {
 
     return (
         <div className="h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 text-white font-sans">
-            <audio ref={audioRef} src="/sounds/alert.mp3" preload="auto" />
+            <audio ref={audioRef} src="/sounds/p2p-alert-v2.mp3" preload="auto" />
 
             {/* LEFT: INBOX */}
             <div className={`w-full md:w-1/3 bg-[#111] border border-white/10 rounded-2xl flex flex-col overflow-hidden ${selectedTrade && isMobileView ? 'hidden' : 'flex'}`}>

@@ -9,7 +9,7 @@ export function useNotification() {
     // Initialize audio and strict permission on mount
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            audioRef.current = new Audio('/sounds/notification.mp3');
+            audioRef.current = new Audio('/sounds/notification-v2.mp3');
             audioRef.current.volume = 0.8;
 
             if ('Notification' in window) {

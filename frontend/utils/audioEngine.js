@@ -12,16 +12,15 @@ class AudioEngine {
         if (typeof window === 'undefined' || this.initialized) return;
 
         const soundConfig = {
-            click: '/sounds/click.mp3',
-            spin: '/sounds/spin.mp3', // Placeholder if spin specific exists
-            card_flip: '/sounds/card-flip.mp3',
-            success: '/sounds/success.mp3',
-            win: '/sounds/win.mp3',
-            bgm: '/sounds/bgm_loop.mp3'
+            click: '/sounds/click-v2.mp3',
+            spin: '/sounds/spin-v2.mp3', // Placeholder if spin specific exists
+            card_flip: '/sounds/card-flip-v2.mp3',
+            success: '/sounds/success-v2.mp3',
+            win: '/sounds/win-v2.mp3',
+            bgm: '/sounds/bgm_loop-v2.mp3'
         };
 
         // Fallback mapping if specific files are missing (based on list_dir check)
-        // For now assuming the files from useSuperAceSound exist or mapped close enough.
 
         Object.keys(soundConfig).forEach(key => {
             this.sounds[key] = new Howl({

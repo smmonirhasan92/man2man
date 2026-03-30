@@ -16,7 +16,7 @@ export const useGameSound = (enabled = true) => {
         ];
 
         soundFiles.forEach(sound => {
-            const audio = new Audio(`/sounds/${sound}.mp3`);
+            const audio = new Audio(`/sounds/${sound}-v2.mp3`);
             audio.preload = 'auto';
             audio.volume = 0.5;
             audioRefs.current[sound] = audio;
@@ -43,7 +43,7 @@ export const useGameSound = (enabled = true) => {
         } else {
             // Fallback for lazy loading or missing preload
             try {
-                const tempAudio = new Audio(`/sounds/${name}.mp3`);
+                const tempAudio = new Audio(`/sounds/${name}-v2.mp3`);
                 tempAudio.volume = volume;
                 tempAudio.play().catch(() => { });
             } catch (e) {
