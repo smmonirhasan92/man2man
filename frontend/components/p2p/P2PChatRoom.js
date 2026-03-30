@@ -346,7 +346,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
 
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
-            <audio ref={notificationAudio} src="/sounds/click.mp3" preload="auto" />
+            <audio ref={notificationAudio} src="/sounds/sms.mp3" preload="auto" />
             <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
@@ -549,7 +549,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             </div>
 
             {/* 3. Action Bar (Fixed at bottom) */}
-            <div className="shrink-0 bg-[#181a20] border-t border-[#2b3139]">
+            <div className="shrink-0 bg-[#181a20] border-t border-[#2b3139] pb-10 pt-1">
                 {/* Proof Panel (Buyer) - Integrated Inline Confirmation */}
                 {trade.status === 'CREATED' && isBuyer && (
                     <div id="step-2-proof" className="p-3 border-b border-[#2b3139] bg-[#0b0e11]/30">

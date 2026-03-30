@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSocket } from '../../hooks/useSocket';
 import { Zap, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotification } from '../../hooks/useNotification';
 
 export default function GlobalActiveTradeBanner() {
     const [activeTrade, setActiveTrade] = useState(null);
@@ -12,6 +13,7 @@ export default function GlobalActiveTradeBanner() {
     const router = useRouter();
     const { user } = useAuth();
     const systemSocket = useSocket('/system');
+    const { notify } = useNotification();
 
     // Re-fetch trades on mount and socket events
     const checkActiveTrades = async () => {
@@ -39,23 +41,41 @@ export default function GlobalActiveTradeBanner() {
         checkActiveTrades();
 
         if (systemSocket) {
-            const handleEvent = (data) => {
-                // To avoid redundant refetches, only fetch if the auth user is involved
-                if (!data || data.sellerId === user?._id || data.buyerId === user?._id || data.tradeId) {
+            const isRelevant = (data) => {
+                return !data || data.sellerId === user?._id || data.buyerId === user?._id || data.tradeId;
+            };
+
+            const handleTradeStart = (data) => {
+                if (isRelevant(data)) {
                     checkActiveTrades();
+                    notify('New Trade Match!', 'Someone matched your P2P Ad.', '/p2p', '/sounds/p2p-alert.mp3');
+                }
+            };
+
+            const handleMarkPaid = (data) => {
+                if (isRelevant(data)) {
+                    checkActiveTrades();
+                    notify('Payment Sent', 'Buyer marked as PAID. Time to verify.', '/p2p', '/sounds/mark-paid.mp3');
+                }
+            };
+
+            const handleCompleted = (data) => {
+                if (isRelevant(data)) {
+                    checkActiveTrades();
+                    notify('Trade Completed', 'Assets have been released successfully.', '/p2p', '/sounds/trade-complete.mp3');
                 }
             };
             
-            systemSocket.on('p2p_trade_start', handleEvent);
-            systemSocket.on('p2p_mark_paid', handleEvent);
-            systemSocket.on('p2p_completed', handleEvent);
-            systemSocket.on('p2p_alert', handleEvent);
+            systemSocket.on('p2p_trade_start', handleTradeStart);
+            systemSocket.on('p2p_mark_paid', handleMarkPaid);
+            systemSocket.on('p2p_completed', handleCompleted);
+            systemSocket.on('p2p_alert', handleTradeStart);
 
             return () => {
-                systemSocket.off('p2p_trade_start', handleEvent);
-                systemSocket.off('p2p_mark_paid', handleEvent);
-                systemSocket.off('p2p_completed', handleEvent);
-                systemSocket.off('p2p_alert', handleEvent);
+                systemSocket.off('p2p_trade_start', handleTradeStart);
+                systemSocket.off('p2p_mark_paid', handleMarkPaid);
+                systemSocket.off('p2p_completed', handleCompleted);
+                systemSocket.off('p2p_alert', handleTradeStart);
             };
         }
     }, [systemSocket, user]);

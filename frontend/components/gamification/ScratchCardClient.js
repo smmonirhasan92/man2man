@@ -95,7 +95,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
       setGameState('REVEALED');
       
       setTimeout(() => {
-          playSound(prizeData?.amountNXS > 0 ? 'win' : 'lose');
+          playSound(prizeData?.amountNXS > 0 ? 'win' : 'loss');
           
           if (typeof window !== 'undefined') {
             window.isLuckTestAnimating = false;
