@@ -156,33 +156,14 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setTier(t);
   };
 
-  /**
-   * Ticking Sound Processor
-   * Monitors the rotation degrees to play 'tick.mp3' when crossing segment boundaries.
-   */
-  useEffect(() => {
-    if (!spinning) return;
-    const interval = setInterval(() => {
-      // Current logical rotation index (0-7)
-      // Since SVG index 0 is at top, we check rotation % 360
-      const currentDeg = (rotation - rotationRef.current) % 360;
-      const stepIdx = Math.floor(Math.abs(currentDeg) / SLICE_DEG);
-      
-      if (stepIdx !== lastTickIdx.current) {
-        playAudio('tick.mp3', muted);
-        lastTickIdx.current = stepIdx;
-      }
-    }, 50);
-    return () => clearInterval(interval);
-  }, [spinning, rotation, muted]);
+  // [UI SYNC] Removed ticking interval to avoid sound clutter with long samples.
+  // Using a single hum at start and a chime at end for professional feel.
 
   const doSpin = async () => {
     // --- [STEP 1: PRE-DEDUCTION] ---
-    // Visually deduct the cost immediately for instant feedback
-    const costValue = parseFloat(config.cost); // "1 NXS" -> 1
+    const costValue = parseFloat(config.cost);
     if (user?.wallet) {
       const tempBalance = parseFloat(user.wallet.main || 0) - costValue;
-      // Emit a local event to update the display balance immediately
       window.dispatchEvent(new CustomEvent('balance_update', { detail: tempBalance }));
     }
 
@@ -192,14 +173,12 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       apiResult = data;
     } catch (err) {
       setIsPreloading(false);
-      // Revert deduction on error by refreshing user
       if (typeof window !== 'undefined') window.location.reload(); 
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
     }
 
     // --- [STEP 2: FAST SYNC] ---
-    // Update the actual global state immediately after API returns
     if (apiResult.newBalance !== undefined) {
       const finalBal = apiResult.newBalance;
       if (typeof window !== 'undefined') {
@@ -210,17 +189,9 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
     setIsPreloading(false);
     setSpinning(true);
-    playAudio('spin.mp3', muted);
-
-    // [AUDIO SYNC] Start a repeating "tick" sound for the duration of the spin
-    const tickInterval = setInterval(() => {
-      if (rotationRef.current % (SLICE_DEG / 2) < 5) {
-        playAudio('tick.mp3', muted);
-      }
-    }, 100);
+    playAudio('spin.mp3', muted); // Start Hum
 
     const winAmount = apiResult.result.amountNXS;
-    // ... logic for target indices ...
     const matchingIndices = [];
     config.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
     
@@ -228,7 +199,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
       : config.values.indexOf(0);
 
-    const extraLoops = 8 * 360; // More loops for more tension
+    const extraLoops = 10 * 360; // Smooth and long tension
     const currentBase = rotationRef.current - (rotationRef.current % 360);
     const targetAngle = currentBase + extraLoops - (targetIdx * SLICE_DEG);
     
@@ -238,7 +209,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setRotation(finalAngle);
 
     setTimeout(() => {
-      clearInterval(tickInterval);
       setSpinning(false);
       setPopup(apiResult.result);
       if (winAmount > 0) playAudio('win.mp3', muted);
