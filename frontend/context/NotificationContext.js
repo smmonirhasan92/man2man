@@ -104,6 +104,7 @@ export function NotificationProvider({ children }) {
                 let audioNode = document.getElementById('global-audio-info');
                 if (type === 'success') audioNode = document.getElementById('global-audio-success');
                 if (type === 'error') audioNode = document.getElementById('global-audio-error');
+                if (type === 'chat') audioNode = document.getElementById('global-audio-chat');
 
                 if (audioNode) {
                     audioNode.currentTime = 0;
@@ -238,6 +239,9 @@ export function NotificationProvider({ children }) {
                     </audio>
                     <audio id="global-audio-error" preload="auto">
                         <source src="/sounds/error.mp3" type="audio/mpeg" />
+                    </audio>
+                    <audio id="global-audio-chat" preload="auto">
+                        <source src="/sounds/click.mp3" type="audio/mpeg" />
                     </audio>
                 </>
             )}

@@ -91,11 +91,17 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         };
 
         const handleMarkPaid = (updatedTrade) => {
-            if (String(updatedTrade._id) === String(tradeId)) fetchTradeData();
+            if (String(updatedTrade._id) === String(tradeId)) {
+                fetchTradeData();
+                playSuccess();
+            }
         };
 
         const handleCompleted = (updatedTrade) => {
-            if (String(updatedTrade._id) === String(tradeId)) fetchTradeData();
+            if (String(updatedTrade._id) === String(tradeId)) {
+                fetchTradeData();
+                playSuccess();
+            }
         };
 
         const handleDispute = (updatedTrade) => {
@@ -340,7 +346,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     return (
         <div className="fixed inset-0 z-[99999] flex flex-col h-[100dvh] bg-[#0b0e11] text-[#eaeaec] font-sans w-full sm:max-w-md mx-auto full-screen-app overflow-hidden">
             <audio ref={notificationAudio} src="/sounds/click.mp3" preload="auto" />
-            <audio ref={successAudio} src="/sounds/notification.mp3" preload="auto" />
+            <audio ref={successAudio} src="/sounds/success.mp3" preload="auto" />
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (
