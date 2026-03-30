@@ -82,9 +82,10 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                     return [...prev, msg];
                 });
                 scrollToBottom();
-                const senderStr = typeof msg.senderId === 'object' ? msg.senderId?._id?.toString() : msg.senderId?.toString();
-                const userStr = user?._id?.toString();
-                if (senderStr && userStr && senderStr !== userStr) {
+                const parsedSenderId = msg.senderId?._id ? String(msg.senderId._id) : String(msg.senderId);
+                const currentUserStr = String(user?._id || user?.id);
+                
+                if (parsedSenderId && currentUserStr && parsedSenderId !== currentUserStr) {
                     playDing();
                 }
             }

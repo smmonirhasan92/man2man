@@ -164,7 +164,7 @@ class P2PService {
                 source: 'transaction',
                 status: 'completed',
                 currency: 'NXS'
-            }], { session });
+            }], { session, ordered: true });
 
             // We do NOT mark order as LOCKED anymore, because it's a Live Listing that others can still buy from until balance is 0.
             // But we will update the stated max limit
@@ -339,7 +339,7 @@ class P2PService {
                 description: `P2P Sell Order Cancelled(Refund)`,
                 source: 'transaction', // [HISTORY FIX]
                 status: 'completed'
-            }], { session });
+            }], { session, ordered: true });
 
             return order;
         });
@@ -378,7 +378,7 @@ class P2PService {
                 source: 'transaction',
                 status: 'completed',
                 currency: 'NXS'
-            }], { session });
+            }], { session, ordered: true });
 
             // 3. Restore Order Limit so it's visible again
             const order = await P2POrder.findById(trade.orderId).session(session);
@@ -519,7 +519,7 @@ class P2PService {
                 source: 'system',
                 status: 'completed',
                 currency: 'NXS'
-            }], { session });
+            }], { session, ordered: true });
 
             // 4. Close Trade
             trade.status = 'COMPLETED';
@@ -564,7 +564,7 @@ class P2PService {
                 });
             }
 
-            await Transaction.create(transactionLogs, { session });
+            await Transaction.create(transactionLogs, { session, ordered: true });
 
             return trade;
         }).then(async (trade) => {
