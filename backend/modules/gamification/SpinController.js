@@ -91,7 +91,7 @@ exports.spinLuckTest = async (req, res) => {
             // --- 2. UPDATE USER RECORD (SINGLE SAVE) ---
             user.wallet.main = finalBalance;
             user.markModified('wallet.main'); // CRITICAL: Explicitly notify Mongoose of nested change
-            await user.save({ session });
+            await user.save(session ? { session } : undefined);
 
             // --- 3. LOG LEDGER (TWO ENTRIES FOR TRANSPARENCY) ---
             const TransactionLedger = require('../wallet/TransactionLedgerModel');
@@ -103,7 +103,7 @@ exports.spinLuckTest = async (req, res) => {
                 balanceBefore: initialBalance, balanceAfter: balanceAfterDeduct,
                 description: `Luck Test: ${tier} spin cost`,
                 transactionId: `${trxId}_COST`
-            }], { session });
+            }], session ? { session } : undefined);
 
             // Entry B: The Win (if any)
             if (winAmt > 0) {
@@ -112,7 +112,7 @@ exports.spinLuckTest = async (req, res) => {
                     balanceBefore: balanceAfterDeduct, balanceAfter: finalBalance,
                     description: `Luck Test: ${tier} reward (${winOutcome.label})`,
                     transactionId: `${trxId}_WIN`
-                }], { session });
+                }], session ? { session } : undefined);
             }
 
             // Entry C: UI Transaction Record (Net Result for Dashboard)
@@ -125,7 +125,7 @@ exports.spinLuckTest = async (req, res) => {
                 source: 'game',
                 recipientDetails: `Win: ${winAmt} NXS (Cost: ${cost})`,
                 transactionId: `${trxId}_UI`
-            }], { session });
+            }], session ? { session } : undefined);
 
             return { winOutcome, newBalance: finalBalance, trxId };
         });

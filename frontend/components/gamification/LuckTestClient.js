@@ -375,3 +375,23 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   );
 }
 
+function ResultOverlay({ result, onClose }) {
+  if (!result) return null;
+  const isWin = result.amountNXS > 0;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+      <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+        <div className="text-6xl mb-4">{isWin ? '🎉' : '😢'}</div>
+        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
+          {isWin ? 'You Won!' : 'Better Luck Next Time'}
+        </h2>
+        <p className="text-slate-400 mb-6">
+          {isWin ? `You received ${result.amountNXS} NXS from the ${result.label} prize.` : 'The spin resulted in a Miss. No rewards this time.'}
+        </p>
+        <button onClick={onClose} className="w-full py-3 rounded-xl font-bold bg-white/10 text-white hover:bg-white/20 transition-colors">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  );
+}
