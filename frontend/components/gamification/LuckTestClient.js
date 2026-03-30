@@ -167,6 +167,13 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   };
 
   const doSpin = async () => {
+    // [P#2] SERVER SPOILER GUARD (ACTIVATE PRE-FLIGHT)
+    // Instantly lock all global socket interceptions before the network hits the backend.
+    if (typeof window !== 'undefined') {
+      window.isLuckTestAnimating = true;
+      window.deferredLuckTestBalance = null;
+    }
+
     // [P#3] VISUAL OPTIMISTIC DEDUCTION (Upfront Betting Action)
     // Physically deducts the cost directly upon tapping to enforce true UI flow.
     let baselineBalance = displayBalance;
@@ -176,7 +183,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       const predicted = parseFloat((baselineBalance - currentCost).toFixed(2));
       setDisplayBalance(predicted);
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('balance_update', { detail: { main: predicted } }));
+        window.dispatchEvent(new CustomEvent('balance_update', { detail: predicted }));
       }
     }
 
@@ -187,23 +194,19 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       const { data } = await api.post('/game/luck-test', { tier });
       apiResult = data;
     } catch (err) {
-      // API Failure: Visually revert back optimistic cost lock
+      // API Failure: Unlock Guard and Visually revert optimistic cost
+      if (typeof window !== 'undefined') {
+        window.isLuckTestAnimating = false;
+      }
       if (baselineBalance !== null) {
         setDisplayBalance(baselineBalance);
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('balance_update', { detail: { main: baselineBalance } }));
+          window.dispatchEvent(new CustomEvent('balance_update', { detail: baselineBalance }));
         }
       }
       setIsPreloading(false);
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
-    }
-
-    // [P#2] SERVER SPOILER GUARD
-    // Prevents upcoming Socket.io payloads from altering the screen prematurely.
-    if (typeof window !== 'undefined') {
-      window.isLuckTestAnimating = true;
-      window.deferredLuckTestBalance = null;
     }
     setIsPreloading(false);
     setSpinning(true);
