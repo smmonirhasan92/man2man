@@ -38,6 +38,13 @@ export const useAuth = () => {
         const handleBalanceUpdate = (data) => {
             console.log('[SOCKET] Balance Update Received:', data);
 
+            // [SPOILER_GUARD] Prevent balance from natively changing until reel stops
+            if (typeof window !== 'undefined' && window.isLuckTestAnimating) {
+                console.log('[SPOILER_GUARD] Wheel spinning. Caching balance data in temporary variable.');
+                window.deferredLuckTestBalance = data;
+                return;
+            }
+
             setUser(prev => {
                 if (!prev) return prev;
                 

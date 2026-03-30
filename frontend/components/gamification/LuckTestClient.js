@@ -181,6 +181,10 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
     // [P#2] Delay Balance Update (Do NOT deduct visually at start)
     // We wait for the celebration to update the UI balance.
+    if (typeof window !== 'undefined') {
+      window.isLuckTestAnimating = true;
+      window.deferredLuckTestBalance = null;
+    }
     
     setIsPreloading(false);
     setSpinning(true);
@@ -208,6 +212,15 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       setPopup(apiResult.result);
       
       // Update balance ONLY after spin finishes
+      if (typeof window !== 'undefined') {
+        window.isLuckTestAnimating = false;
+        if (window.deferredLuckTestBalance) {
+           const tmpDetails = window.deferredLuckTestBalance;
+           window.deferredLuckTestBalance = null;
+           window.dispatchEvent(new CustomEvent('balance_update', { detail: tmpDetails }));
+        }
+      }
+      
       const finalServerBalance = apiResult.newBalance;
       setDisplayBalance(finalServerBalance);
       if (onBalanceUpdate) onBalanceUpdate(finalServerBalance);
