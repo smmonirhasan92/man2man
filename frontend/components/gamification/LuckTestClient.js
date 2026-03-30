@@ -163,6 +163,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
   // Sync initial balance
   useEffect(() => {
+    // We only sync with the global user object if NOT spinning and NOT showing a result
+    // This prevents the header balance from flickering back to old/intermediate values
     if (user?.wallet?.main && !spinning && !popup) {
       setDisplayBalance(user.wallet.main);
     }
@@ -219,16 +221,17 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
       : 4; // Fallback to Index 4 (usually 0 NXS)
 
-    // Accurate Rotation Math:
-    // Slice 0 is at Top [0 deg]. 
-    // Pointer is at Top [0 deg].
-    const loops = 3600; // 10 loops
-    const jitter = Math.floor(Math.random() * 20) - 10; // Random offset ±10deg
-    const targetAngle = loops - (targetIdx * SLICE_DEG) + jitter;
+    // Accurate Rotation Math (FIXED 90-DEG OFFSET):
+    // SVG Mid-point for idx=0 is at -90 deg. To bring it to TOP (0 deg), we rotate +90.
+    const loops = 3600; 
+    const jitter = Math.floor(Math.random() * 20) - 10; 
     
-    // Smoothly increment from current cumulative rotation
+    // Formula: Target = 90 (Offset) - (Index * SliceDeg)
+    const targetAngle = loops + 90 - (targetIdx * SLICE_DEG) + jitter;
+    
     const totalRotation = rotationRef.current + targetAngle;
     rotationRef.current = totalRotation;
+    console.log(`[LuckTest] Result: ${winAmount} NXS, Index: ${targetIdx}, Rotation: ${totalRotation}`);
     setRotation(totalRotation);
 
     setTimeout(() => {

@@ -90,6 +90,7 @@ exports.spinLuckTest = async (req, res) => {
 
             // --- 2. UPDATE USER RECORD (SINGLE SAVE) ---
             user.wallet.main = finalBalance;
+            user.markModified('wallet.main'); // CRITICAL: Explicitly notify Mongoose of nested change
             await user.save({ session });
 
             // --- 3. LOG LEDGER (TWO ENTRIES FOR TRANSPARENCY) ---
