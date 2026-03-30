@@ -166,76 +166,74 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
           ))}
         </div>
 
-        {/* The Click-Reveal Card Container */}
-        <div className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.6)] border-[4px] border-[#1E293B] bg-[#0A0F1A]">
-            
-            {/* The Revealed Prize Underneath */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0">
-                {prizeData ? (
-                    <motion.div 
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={gameState === 'REVEALED' ? { scale: 1, opacity: 1 } : { scale: 0.5, opacity: 0 }}
-                        transition={{ type: 'spring', bounce: 0.5 }}
-                        className="flex flex-col items-center justify-center w-full"
-                    >
-                        {prizeData.amountNXS > 0 ? (
-                           <div className="bg-amber-400/20 w-24 h-24 rounded-full flex items-center justify-center mb-4 animate-bounce shadow-[0_0_30px_rgba(251,191,36,0.5)]">
-                               <Coins size={50} className="text-amber-400 drop-shadow-lg" />
-                           </div>
-                        ) : (
-                           <div className="bg-slate-700/50 w-24 h-24 rounded-full flex items-center justify-center mb-4 relative z-10">
-                               <AlertCircle size={50} className="text-slate-400" />
-                           </div>
-                        )}
-                        <span className="text-3xl font-black text-white font-sans drop-shadow-lg uppercase tracking-tight relative z-10">{prizeData.label}</span>
-                        <span className={`text-2xl font-black mt-2 font-mono relative z-10 ${prizeData.amountNXS > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
-                            {prizeData.amountNXS > 0 ? `+${prizeData.amountNXS} NXS` : '0 NXS'}
-                        </span>
-                    </motion.div>
-                ) : (
-                    <div className="text-slate-600 font-mono animate-pulse">Awaiting Unlock...</div>
-                )}
-                
-                {/* Background Pattern for the revealed back part */}
-                <div className={`absolute inset-0 ${TIERS[tier].bgPattern} opacity-50 z-0`} />
-            </div>
-
-            {/* The Animated Cover Mask */}
-            <AnimatePresence>
-                {gameState !== 'REVEALED' && (
-                    <motion.div 
-                        exit={{ y: "-100%", opacity: 0, scale: 1.1 }}
-                        transition={{ duration: 0.6, ease: "easeInOut" }}
-                        className={`absolute inset-0 z-10 bg-gradient-to-br ${TIERS[tier].cardCover} shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center p-6 ${gameState === 'READY_TO_REVEAL' ? 'cursor-pointer' : ''}`}
-                        onClick={handleRevealClick}
-                    >
-                        {/* Interactive Design on the Cover */}
-                        <div className="w-full h-full border-2 border-dashed border-white/30 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
-                             {/* Glossy Overlay */}
-                             <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
-
-                             <Gift size={64} className="text-white/80 drop-shadow-lg mb-6 animate-pulse" />
-                             
-                             {gameState === 'READY_TO_REVEAL' ? (
-                                 <motion.button 
-                                     animate={{ scale: [1, 1.1, 1] }} 
-                                     transition={{ repeat: Infinity, duration: 1.5 }}
-                                     className="bg-white text-slate-900 px-6 py-3 rounded-full font-black text-lg uppercase tracking-widest shadow-2xl flex items-center gap-2"
-                                 >
-                                     <Pointer size={20} /> Tap To Open
-                                 </motion.button>
-                             ) : gameState === 'BOUGHT' ? (
-                                 <div className="text-white/80 font-bold font-mono animate-pulse">Preparing Reward...</div>
-                             ) : (
-                                 <div className="text-center">
-                                     <h3 className="text-2xl font-black text-white uppercase tracking-tight drop-shadow-md mb-2">Mystery Reward</h3>
-                                     <p className="text-white/80 text-sm font-medium px-4">Buy the card below to unlock this locked prize box.</p>
-                                 </div>
-                             )}
+        {/* The Flip Card Container */}
+        <div className="relative w-full aspect-[3/4] perspective-[1000px]">
+            <motion.div
+                animate={{ rotateY: gameState === 'REVEALED' ? 180 : 0 }}
+                transition={{ duration: 0.8, type: 'spring', bounce: 0.3 }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className="w-full h-full relative rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.6)] border-[4px] border-[#1E293B] bg-[#0A0F1A]"
+            >
+                {/* Back of Card (Prize) */}
+                <div 
+                    className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 rounded-3xl overflow-hidden"
+                    style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                >
+                    {prizeData ? (
+                        <div className="flex flex-col items-center justify-center w-full z-10">
+                            {prizeData.amountNXS > 0 ? (
+                               <div className="bg-amber-400/20 w-24 h-24 rounded-full flex items-center justify-center mb-4 animate-bounce shadow-[0_0_30px_rgba(251,191,36,0.5)]">
+                                   <Coins size={50} className="text-amber-400 drop-shadow-lg" />
+                               </div>
+                            ) : (
+                               <div className="bg-slate-700/50 w-24 h-24 rounded-full flex items-center justify-center mb-4">
+                                   <AlertCircle size={50} className="text-slate-400" />
+                               </div>
+                            )}
+                            <span className="text-3xl font-black text-white font-sans drop-shadow-lg uppercase tracking-tight">{prizeData.label}</span>
+                            <span className={`text-2xl font-black mt-2 font-mono ${prizeData.amountNXS > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
+                                {prizeData.amountNXS > 0 ? `+${prizeData.amountNXS} NXS` : '0 NXS'}
+                            </span>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    ) : (
+                        <div className="text-slate-600 font-mono animate-pulse z-10">Awaiting Unlock...</div>
+                    )}
+                    
+                    {/* Background Pattern for the revealed back part */}
+                    <div className={`absolute inset-0 ${TIERS[tier].bgPattern} opacity-50 z-0`} />
+                </div>
+
+                {/* Front of Card (Cover) */}
+                <div 
+                    className={`absolute inset-0 z-10 bg-gradient-to-br ${TIERS[tier].cardCover} shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center p-6 rounded-3xl overflow-hidden ${gameState === 'READY_TO_REVEAL' ? 'cursor-pointer' : ''}`}
+                    style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                    onClick={handleRevealClick}
+                >
+                    <div className="w-full h-full border-2 border-dashed border-white/30 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                         {/* Glossy Overlay */}
+                         <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
+
+                         <Gift size={64} className="text-white/80 drop-shadow-lg mb-6 animate-pulse" />
+                         
+                         {gameState === 'READY_TO_REVEAL' ? (
+                             <motion.button 
+                                 animate={{ scale: [1, 1.1, 1] }} 
+                                 transition={{ repeat: Infinity, duration: 1.5 }}
+                                 className="bg-white text-slate-900 px-6 py-3 rounded-full font-black text-lg uppercase tracking-widest shadow-2xl flex items-center gap-2"
+                             >
+                                 <Pointer size={20} /> Tap To Flip
+                             </motion.button>
+                         ) : gameState === 'BOUGHT' ? (
+                             <div className="text-white/80 font-bold font-mono animate-pulse">Preparing Reward...</div>
+                         ) : (
+                             <div className="text-center">
+                                 <h3 className="text-2xl font-black text-white uppercase tracking-tight drop-shadow-md mb-2">Mystery Reward</h3>
+                                 <p className="text-white/80 text-sm font-medium px-4">Buy the card below to unlock this locked prize box.</p>
+                             </div>
+                         )}
+                    </div>
+                </div>
+            </motion.div>
 
             {/* Idle Overlay Button to Buy */}
             {(gameState === 'IDLE' || gameState === 'REVEALED') && (
