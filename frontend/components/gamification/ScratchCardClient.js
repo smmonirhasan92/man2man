@@ -4,7 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { Gift, Coins, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
-import useAudioQueue from '../../hooks/useAudioQueue';
+import useGameSound from '../../hooks/useGameSound';
 import Link from 'next/link';
 
 const TIERS = {
@@ -35,7 +35,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   const [prizeData, setPrizeData] = useState(null);
   
   const canvasRef = useRef(null);
-  const audioQueue = useAudioQueue();
+  const { play: playSound } = useGameSound();
   const ctxRef = useRef(null);
   
   const [isDrawing, setIsDrawing] = useState(false);
@@ -164,7 +164,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
 
   const revealCard = () => {
       setGameState('REVEALED');
-      audioQueue.play(prizeData?.amountNXS > 0 ? 'win.mp3' : 'lose.mp3', false);
+      playSound(prizeData?.amountNXS > 0 ? 'win' : 'lose');
       
       // Clear the remaining canvas instantly
       const canvas = canvasRef.current;
@@ -228,7 +228,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
     ctx.fill();
     
     // Play sound occasionally
-    if (Math.random() < 0.1) audioQueue.play('pop.mp3', false);
+    if (Math.random() < 0.1) playSound('click');
   };
 
   return (
