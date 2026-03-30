@@ -179,10 +179,15 @@ class P2PService {
 
             return trade[0];
         }).then(async (trade) => {
+            const makerId = trade.sellerId.toString() === takerId.toString() ? trade.buyerId : trade.sellerId;
+            const notifMsg = trade.sellerId.toString() === makerId.toString() 
+                ? `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`
+                : `New P2P Match! Seller accepted your BUY listing for ${trade.amount} NXS`;
+
             // Notify System & Users out of session
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_trade_start', trade);
+            SocketService.broadcast(`user_${makerId}`, 'p2p_trade_start', trade);
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
-            await NotificationService.send(trade.sellerId, `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`, 'success', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
+            await NotificationService.send(makerId, notifMsg, 'success', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
             // Because Seller's balance changed, the UserModel pre/post save hook WILL NOT fire from findByIdAndUpdate.
             // So we manually broadcast the new balance to the global market or just personal room.
