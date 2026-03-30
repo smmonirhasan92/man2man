@@ -663,7 +663,7 @@ class P2PService {
         })
             .populate('sellerId', 'username')
             .populate('buyerId', 'username')
-            .populate('orderId', 'paymentMethod amount') // Populate order details
+            .populate('orderId', 'type paymentMethod amount') // Populate order details with type
             .sort({ createdAt: -1 });
     }
 
@@ -679,7 +679,7 @@ class P2PService {
         return await P2PTrade.findById(tradeId)
             .populate('sellerId', 'username primary_phone')
             .populate('buyerId', 'username')
-            .populate('orderId', 'paymentMethod paymentDetails rate amount transactionType'); // [FIX v3.0] Hydrate parent order transaction mode
+            .populate('orderId', 'type paymentMethod paymentDetails rate amount transactionType'); // [FIX v3.0] Hydrate parent order transaction mode
     }
 
     // --- USER INITIATES DISPUTE (TRIBUNAL) ---
