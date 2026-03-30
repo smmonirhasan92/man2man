@@ -61,10 +61,6 @@ export default function UnifiedWallet({ balance, income }) {
                     </span>
                     {viewMode !== 2 && <TrendingUp size={10} className="text-emerald-500" />}
                 </div>
-                <div className="absolute top-1/2 left-4 -translate-y-1/2 flex flex-col">
-                    <span className="text-[10px] font-black tracking-tighter text-white opacity-20 uppercase">USA AFFILIATE v7.2</span>
-                    <span className="text-[7px] font-bold tracking-widest text-[#5de0e6] opacity-40 uppercase">Professional Build</span>
-                </div>
                 <div className="flex items-center justify-end gap-1">
                     <span className="text-[14px] font-black text-emerald-400 font-mono leading-none tracking-tight">
                         {viewMode === 0 ? `$${incomeUsd}` : viewMode === 1 ? incomeNxs : '••••'}

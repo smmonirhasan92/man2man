@@ -147,7 +147,7 @@ function DashboardContent() {
                         </div>
                         <div>
                             <h2 className="text-xs font-black text-white tracking-wide leading-none uppercase">
-                                SECURE GATEWAY 🇺🇸
+                                SECURE 🇺🇸
                             </h2>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-400 font-mono flex items-center gap-1 border border-emerald-500/20">
