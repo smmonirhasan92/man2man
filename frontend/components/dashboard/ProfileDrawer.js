@@ -69,10 +69,9 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                     {/* Tabs */}
                     <div className="flex p-1 bg-slate-900 rounded-xl mb-6">
                         <button
-                            onClick={() => setActiveTab('otp')}
-                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'otp' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                            className="flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg"
                         >
-                            <MessageSquare size={14} /> OTP Inbox
+                            <MessageSquare size={14} /> Recent Activity
                         </button>
                     </div>
 

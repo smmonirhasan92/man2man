@@ -257,7 +257,7 @@ function DashboardContent() {
 
                         <FolderCard href="/history" icon={Briefcase} label="History" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-white/20" />
                         
-                        <FolderCard href="/profile" icon={Users} label="Invite" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-white/20" />
+                        <FolderCard href="#" icon={Lock} label="Upcoming" color="text-slate-400" gradient="from-slate-600/20 to-slate-900/40" border="border-white/10" />
                     </div>
                 </div>
 

@@ -101,7 +101,7 @@ exports.spinLuckTest = async (req, res) => {
             await TransactionLedger.create([{
                 userId,
                 type: 'debit',
-                amount: cost,
+                amount: -cost,
                 balanceBefore: currentMain + cost - (winAmt > 0 ? winAmt : 0),
                 balanceAfter: currentMain - (winAmt > 0 ? winAmt : 0),
                 description: `Luck Test: ${tier} spin cost`,
