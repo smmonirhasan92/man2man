@@ -2,40 +2,37 @@ const WalletService = require('../wallet/WalletService');
 const Transaction = require('../wallet/TransactionModel');
 const TransactionHelper = require('../common/TransactionHelper');
 
-// Mathematical Blueprints (RTP 82-85%, Edge 15-18%)
+// Mathematical Blueprints (RTP 93-95%, Edge 5-7%) High Volatility Action
 const TIERS = {
     bronze: {
-        cost: 50, // 1 NXS (50 cents USD mathematically in backend? Wait, no. 1 USD = 50 NXS in app? Let me check NXS mapping.)
-        // Wait, 1 USD = 50 NXS. 
-        // 1 NXS = 2 cents USD ($0.02).
-        // Let's use precise NXS amounts for deductions.
+        cost: 50, // 1 NXS
         costNXS: 1,
         outcomes: [
-            { label: 'Jackpot', amountNXS: 5, chance: 2, cls: 'jackpot' },   // 5 NXS = 10c
-            { label: 'Medium', amountNXS: 2, chance: 10, cls: 'medium' },    // 2 NXS = 4c
-            { label: 'Refund', amountNXS: 1, chance: 40, cls: 'refund' },    // 1 NXS = 2c
-            { label: 'Small', amountNXS: 0.5, chance: 30, cls: 'small' },    // 0.5 NXS = 1c
-            { label: 'Miss', amountNXS: 0, chance: 18, cls: 'loss' }
+            { label: 'Jackpot', amountNXS: 5, chance: 5, cls: 'jackpot' },
+            { label: 'Medium', amountNXS: 2, chance: 20, cls: 'medium' },
+            { label: 'Refund', amountNXS: 1, chance: 20, cls: 'refund' },
+            { label: 'Small', amountNXS: 0.5, chance: 15, cls: 'small' },
+            { label: 'Miss', amountNXS: 0, chance: 40, cls: 'loss' }
         ]
     },
     silver: {
         costNXS: 2.5, // 5 cents
         outcomes: [
-            { label: 'Jackpot', amountNXS: 12.5, chance: 2, cls: 'jackpot' },// 12.5 NXS = 25c
-            { label: 'Medium', amountNXS: 5, chance: 15, cls: 'medium' },    // 5 NXS = 10c
-            { label: 'Refund', amountNXS: 2.5, chance: 30, cls: 'refund' },  // 2.5 NXS = 5c
-            { label: 'Small', amountNXS: 1, chance: 35, cls: 'small' },      // 1 NXS = 2c
-            { label: 'Miss', amountNXS: 0, chance: 18, cls: 'loss' }
+            { label: 'Jackpot', amountNXS: 12.5, chance: 5, cls: 'jackpot' },
+            { label: 'Medium', amountNXS: 5, chance: 22, cls: 'medium' },
+            { label: 'Refund', amountNXS: 2.5, chance: 20, cls: 'refund' },
+            { label: 'Small', amountNXS: 1, chance: 10, cls: 'small' },
+            { label: 'Miss', amountNXS: 0, chance: 43, cls: 'loss' }
         ]
     },
     gold: {
         costNXS: 5, // 10 cents
         outcomes: [
-            { label: 'Super Jackpot', amountNXS: 25, chance: 1, cls: 'jackpot' }, // 25 NXS = 50c
-            { label: 'Medium', amountNXS: 10, chance: 15, cls: 'medium' },   // 10 NXS = 20c
-            { label: 'Refund', amountNXS: 5, chance: 30, cls: 'refund' },    // 5 NXS = 10c
-            { label: 'Small', amountNXS: 2.5, chance: 40, cls: 'small' },    // 2.5 NXS = 5c
-            { label: 'Miss', amountNXS: 0, chance: 14, cls: 'loss' }
+            { label: 'Super Jackpot', amountNXS: 25, chance: 5, cls: 'jackpot' },
+            { label: 'Medium', amountNXS: 10, chance: 25, cls: 'medium' },
+            { label: 'Refund', amountNXS: 5, chance: 15, cls: 'refund' },
+            { label: 'Small', amountNXS: 2.5, chance: 10, cls: 'small' },
+            { label: 'Miss', amountNXS: 0, chance: 45, cls: 'loss' }
         ]
     }
 };

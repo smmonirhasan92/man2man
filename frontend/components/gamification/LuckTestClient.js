@@ -167,25 +167,44 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   };
 
   const doSpin = async () => {
-    setIsPreloading(true);
+    // [P#3] VISUAL OPTIMISTIC DEDUCTION (Upfront Betting Action)
+    // Physically deducts the cost directly upon tapping to enforce true UI flow.
+    let baselineBalance = displayBalance;
+    const currentCost = TIERS[tier].cost;
     
+    if (baselineBalance !== null && baselineBalance >= currentCost) {
+      const predicted = parseFloat((baselineBalance - currentCost).toFixed(2));
+      setDisplayBalance(predicted);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('balance_update', { detail: { main: predicted } }));
+      }
+    }
+
+    setIsPreloading(true);
     let apiResult = null;
+    
     try {
       const { data } = await api.post('/game/luck-test', { tier });
       apiResult = data;
     } catch (err) {
+      // API Failure: Visually revert back optimistic cost lock
+      if (baselineBalance !== null) {
+        setDisplayBalance(baselineBalance);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('balance_update', { detail: { main: baselineBalance } }));
+        }
+      }
       setIsPreloading(false);
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
     }
 
-    // [P#2] Delay Balance Update (Do NOT deduct visually at start)
-    // We wait for the celebration to update the UI balance.
+    // [P#2] SERVER SPOILER GUARD
+    // Prevents upcoming Socket.io payloads from altering the screen prematurely.
     if (typeof window !== 'undefined') {
       window.isLuckTestAnimating = true;
       window.deferredLuckTestBalance = null;
     }
-    
     setIsPreloading(false);
     setSpinning(true);
     audioQueue.play('spin.mp3', muted);
