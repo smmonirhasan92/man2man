@@ -127,8 +127,15 @@ exports.spinLuckTest = async (req, res) => {
                 transactionId: `${trxId}_UI`
             }], { session });
 
-            return { winOutcome, newBalance: finalBalance };
+            return { winOutcome, newBalance: finalBalance, trxId };
         });
+
+        // --- [NEW: POST-TRANSACTION INTEGRITY VERIFY] ---
+        try {
+            await verifySpinTransaction(userId, result.trxId, result.newBalance);
+        } catch (e) {
+            console.error('[CRITICAL] LuckTest Integrity Check Failed', e);
+        }
 
         // Invalidate Redis profile outside of session
         try {
@@ -140,7 +147,10 @@ exports.spinLuckTest = async (req, res) => {
         return res.json({
             success: true,
             tier: tier,
-            result: winOutcome,
+            result: {
+                ...result.winOutcome,
+                sliceIndex: result.winOutcome.index // Pass the exact slice index for visual sync
+            },
             newBalance: result.newBalance
         });
 
@@ -152,3 +162,31 @@ exports.spinLuckTest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
+/**
+ * [P#3] Verify Transaction Integrity
+ * Cross-checks the ledger entries with the final reported balance.
+ */
+async function verifySpinTransaction(userId, trxId, expectedBalance) {
+    const TransactionLedger = require('../wallet/TransactionLedgerModel');
+    
+    // Fetch all entries for this spin
+    const entries = await TransactionLedger.find({
+        transactionId: new RegExp(`^${trxId}`)
+    }).sort({ createdAt: -1 });
+
+    if (entries.length === 0) return false;
+
+    // Check if the latest entry's balanceAfter matches expectedBalance
+    const lastEntryBalance = parseFloat(entries[0].balanceAfter);
+    const diff = Math.abs(lastEntryBalance - expectedBalance);
+
+    if (diff > 0.0001) {
+        console.error(`[TX_VERIFY] MISMATCH! Expected: ${expectedBalance}, Got: ${lastEntryBalance}`);
+        // Here we could trigger an admin alert service
+        return false;
+    }
+    
+    console.log(`[TX_VERIFY] ✅ Transaction ${trxId} verified successfully`);
+    return true;
+}

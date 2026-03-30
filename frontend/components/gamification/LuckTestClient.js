@@ -84,64 +84,36 @@ const TIERS = {
 
 
 /** 
- * --- HELPER: Sound Engine ---
- * Expects audio files in /sounds/ folder of the public directory.
+ * [P#6] Audio Queue System
+ * Prevents sound conflicts and ensures professional playback.
  */
-const playAudio = (file, muted) => {
-  if (muted || typeof window === 'undefined') return;
-  const audio = new Audio(`/sounds/${file}`);
-  audio.volume = 0.5;
-  audio.play().catch(() => {
-    // Silence errors if files are missing
-    console.warn(`[SoundEngine] File not found: /sounds/${file}. Please upload to public/sounds/.`);
-  });
-};
-
-function ResultOverlay({ result, onClose }) {
-  if (!result) return null;
-  const isWin = result.amountNXS > 0;
-  const isJackpot = result.cls === 'jackpot';
-
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div 
-        className={`relative max-w-[340px] w-[90%] p-8 rounded-[2.5rem] border text-center shadow-2xl transition-all scale-110
-          ${isJackpot ? 'bg-gradient-to-br from-[#1A0F00] to-[#3B2A00] border-[#FFD700]/50' : 
-            isWin ? 'bg-gradient-to-br from-[#022C22] to-[#064E3B] border-emerald-500/30' : 
-            'bg-gradient-to-br from-[#0F172A] to-[#1E293B] border-slate-700'
-          }`}
-      >
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl drop-shadow-lg">
-          {isJackpot ? '🏆' : isWin ? '🎉' : '🍀'}
-        </div>
-        
-        <h2 className={`mt-4 text-2xl font-black tracking-tight ${isJackpot ? 'text-[#FFD700]' : isWin ? 'text-emerald-400' : 'text-slate-400'}`}>
-          {isJackpot ? 'JACKPOT WINNER!' : isWin ? 'Nice Win!' : 'Keep Playing!'}
-        </h2>
-        
-        <div className={`mt-2 text-4xl font-mono font-black ${isJackpot ? 'text-[#FFD700]' : isWin ? 'text-white' : 'text-slate-500'}`}>
-          {isWin ? `+${result.amountNXS} NXS` : 'BETTER LUCK'}
-        </div>
-        
-        <p className="mt-2 text-sm text-slate-400">
-          {isWin ? `Landed on "${result.label}" - Reward credited!` : 'Stay persistent! Success is just a spin away.'}
-        </p>
-
-        <button 
-          onClick={onClose}
-          className={`mt-8 w-full py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 active:scale-95 transition-all
-            ${isJackpot ? 'bg-gradient-to-r from-[#B8860B] to-[#FFD700] text-[#3B2A00]' : 
-              isWin ? 'bg-gradient-to-r from-emerald-600 to-emerald-400 text-white' : 
-              'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-        >
-          {isWin ? 'Great! 🚀' : 'Try Again'}
-        </button>
-      </div>
-    </div>
-  );
+class AudioQueue {
+  constructor() {
+    this.queue = [];
+    this.isPlaying = false;
+  }
+  async play(file, muted) {
+    if (muted || typeof window === 'undefined') return;
+    this.queue.push(file);
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    while (this.queue.length > 0) {
+      const audioFile = this.queue.shift();
+      try {
+        const audio = new Audio(`/sounds/${audioFile}`);
+        audio.volume = 0.5;
+        await new Promise((resolve) => {
+          audio.onended = resolve;
+          audio.onerror = resolve;
+          audio.play().catch(resolve);
+        });
+      } catch (e) { console.warn(`Audio failed: ${audioFile}`); }
+    }
+    this.isPlaying = false;
+  }
 }
+
+const audioQueue = new AudioQueue();
 
 export default function LuckTestClient({ onBalanceUpdate }) {
   const { user } = useAuth();
@@ -163,15 +135,25 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
   // Sync initial balance
   useEffect(() => {
-    // We only sync with the global user object if NOT spinning and NOT showing a result
-    // This prevents the header balance from flickering back to old/intermediate values
     if (user?.wallet?.main && !spinning && !popup) {
       setDisplayBalance(user.wallet.main);
     }
   }, [user?.wallet?.main, spinning, popup]);
 
-
-  // Load mute state removed from useEffect to avoid cascading renders
+  // [P#7] Background Wallet Sync (Periodic Refresh)
+  useEffect(() => {
+    const syncInterval = setInterval(async () => {
+      if (!spinning && !popup) {
+        try {
+          const { data } = await api.get('/user/profile');
+          if (data.success) {
+            setDisplayBalance(data.user.wallet.main);
+          }
+        } catch (err) { console.error('Balance sync failed:', err); }
+      }
+    }, 30000); // 30 seconds
+    return () => clearInterval(syncInterval);
+  }, [spinning, popup]);
 
   const toggleMute = () => {
     const newVal = !muted;
@@ -183,9 +165,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     if (spinning) return;
     setTier(t);
   };
-
-  // [UI SYNC] Removed ticking interval to avoid sound clutter with long samples.
-  // Using a single hum at start and a chime at end for professional feel.
 
   const doSpin = async () => {
     setIsPreloading(true);
@@ -200,51 +179,38 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       return;
     }
 
-    // --- [STEP 1: VISUAL CUT] ---
-    const costValue = config.cost;
-    const currentBalance = parseFloat(displayBalance || user?.wallet?.main || 0);
-    const balanceAfterCut = currentBalance - costValue;
-    setDisplayBalance(balanceAfterCut.toFixed(2));
+    // [P#2] Delay Balance Update (Do NOT deduct visually at start)
+    // We wait for the celebration to update the UI balance.
     
     setIsPreloading(false);
     setSpinning(true);
-    playAudio('spin.mp3', muted);
+    audioQueue.play('spin.mp3', muted);
 
+    // [P#1] Use Server-Side Index for 100% Precision
+    const targetIdx = apiResult.result.sliceIndex;
     const winAmount = apiResult.result.amountNXS;
-    // Find matching slices
-    const matchingIndices = [];
-    config.slices.forEach((s, idx) => {
-      if (s.value === winAmount) matchingIndices.push(idx);
-    });
 
-    const targetIdx = matchingIndices.length > 0 
-      ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
-      : 4; // Fallback to Index 4 (usually 0 NXS)
-
-    // Accurate Rotation Math (FIXED 90-DEG OFFSET):
-    // SVG Mid-point for idx=0 is at -90 deg. To bring it to TOP (0 deg), we rotate +90.
+    // Accurate Rotation Math:
     const loops = 3600; 
     const jitter = Math.floor(Math.random() * 20) - 10; 
-    
-    // Formula: Target = 90 (Offset) - (Index * SliceDeg)
     const targetAngle = loops + 90 - (targetIdx * SLICE_DEG) + jitter;
     
     const totalRotation = rotationRef.current + targetAngle;
     rotationRef.current = totalRotation;
-    console.log(`[LuckTest] Result: ${winAmount} NXS, Index: ${targetIdx}, Rotation: ${totalRotation}`);
+    console.log(`[LuckTest] TargetIdx: ${targetIdx}, Spin Result: ${winAmount} NXS`);
     setRotation(totalRotation);
 
     setTimeout(() => {
       setSpinning(false);
       setPopup(apiResult.result);
       
-      // --- [STEP 2: EARNED REWARD SYNC] ---
+      // Update balance ONLY after spin finishes
       const finalServerBalance = apiResult.newBalance;
       setDisplayBalance(finalServerBalance);
       if (onBalanceUpdate) onBalanceUpdate(finalServerBalance);
       
-      if (winAmount > 0) playAudio('win.mp3', muted);
-      else playAudio('loss.mp3', muted);
+      if (winAmount > 0) audioQueue.play('win.mp3', muted);
+      else audioQueue.play('loss.mp3', muted);
     }, SPIN_DURATION_MS);
   };
 

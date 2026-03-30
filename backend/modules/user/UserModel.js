@@ -43,7 +43,7 @@ const UserSchema = new mongoose.Schema({
     adminPin: { type: String, select: false }, // Hashed like password
 
     // [SECURITY] User Transaction PIN (P2P/Withdrawal)
-    transactionPin: { type: String, select: false, default: '123456' }, // Default for migration, user should change
+    transactionPin: { type: String, select: false, default: null }, // Removed '123456' default for P#4 security polish
 
     // Gamification
     xp: { type: Number, default: 0 },
