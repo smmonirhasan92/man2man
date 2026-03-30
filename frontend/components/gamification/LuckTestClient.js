@@ -212,7 +212,15 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setSpinning(true);
     playAudio('spin.mp3', muted);
 
+    // [AUDIO SYNC] Start a repeating "tick" sound for the duration of the spin
+    const tickInterval = setInterval(() => {
+      if (rotationRef.current % (SLICE_DEG / 2) < 5) {
+        playAudio('tick.mp3', muted);
+      }
+    }, 100);
+
     const winAmount = apiResult.result.amountNXS;
+    // ... logic for target indices ...
     const matchingIndices = [];
     config.values.forEach((v, i) => { if (v === winAmount) matchingIndices.push(i); });
     
@@ -220,7 +228,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)] 
       : config.values.indexOf(0);
 
-    const extraLoops = 6 * 360;
+    const extraLoops = 8 * 360; // More loops for more tension
     const currentBase = rotationRef.current - (rotationRef.current % 360);
     const targetAngle = currentBase + extraLoops - (targetIdx * SLICE_DEG);
     
@@ -230,9 +238,11 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setRotation(finalAngle);
 
     setTimeout(() => {
+      clearInterval(tickInterval);
       setSpinning(false);
       setPopup(apiResult.result);
-      // Note: sync already happened after API result for better performance
+      if (winAmount > 0) playAudio('win.mp3', muted);
+      else playAudio('loss.mp3', muted);
     }, SPIN_DURATION_MS);
   };
 

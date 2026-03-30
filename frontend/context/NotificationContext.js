@@ -177,6 +177,7 @@ export function NotificationProvider({ children }) {
 
         socket.on('notification', handleNotification);
         socket.on('wallet:update', handleWalletUpdate);
+        socket.on('balance_update', handleWalletUpdate); // [SYNC] Handle numeric balance updates
         socket.on('config:update', handleConfigUpdate);
 
         return () => {

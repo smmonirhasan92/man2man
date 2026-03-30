@@ -83,49 +83,54 @@ exports.spinLuckTest = async (req, res) => {
             let currentMain = parseFloat(user.wallet?.main || 0);
             if (currentMain < cost) throw new Error('Insufficient Balance');
 
-            // --- 1. DEDUCT COST ---
-            currentMain -= cost;
-            
-            // --- 2. ADD WIN (IF ANY) ---
-            if (winAmt > 0) {
-                currentMain += winAmt;
-            }
+            // --- 0. PRE-DEDUCTION (FOR LEDGER CONSISTENCY) ---
+            const initialBalance = currentMain;
 
+            // --- 1. DEDUCT COST ---
+            // We deduct and save FIRST so the ledger and UI see the "Cut"
+            currentMain -= cost;
             user.wallet.main = currentMain;
             await user.save({ session });
 
             const TransactionLedger = require('../wallet/TransactionLedgerModel');
             const trxId = `SPIN_${Date.now()}`;
 
-            // Log Deduction
+            // Log Deduction Entry
             await TransactionLedger.create([{
                 userId,
                 type: 'debit',
                 amount: -cost,
-                balanceBefore: currentMain + cost - (winAmt > 0 ? winAmt : 0),
-                balanceAfter: currentMain - (winAmt > 0 ? winAmt : 0),
+                balanceBefore: initialBalance,
+                balanceAfter: currentMain,
                 description: `Luck Test: ${tier} spin cost`,
                 transactionId: `${trxId}_COST`
             }], { session });
 
-            // Log Win (If Any)
+            // --- 2. ADD WIN (IF ANY) ---
+            // If there's a reward, we add it and save AGAIN for distinct UI sync
+            const balanceAfterDeduction = currentMain;
             if (winAmt > 0) {
+                currentMain += winAmt;
+                user.wallet.main = currentMain;
+                await user.save({ session });
+
+                // Log Win Entry
                 await TransactionLedger.create([{
                     userId,
                     type: 'credit',
                     amount: winAmt,
-                    balanceBefore: currentMain - winAmt,
+                    balanceBefore: balanceAfterDeduction,
                     balanceAfter: currentMain,
                     description: `Luck Test: ${tier} reward (${winOutcome.label})`,
                     transactionId: `${trxId}_WIN`
                 }], { session });
             }
 
-            // UI Log (Single Outcome)
+            // Sync UI Transaction Record (Final Result)
             await Transaction.create([{
                 userId,
                 type: winAmt > cost ? 'game_win' : (winAmt === cost ? 'game_neutral' : 'game_loss'),
-                amount: winAmt - cost, // Net for the summary
+                amount: winAmt - cost,
                 status: 'completed',
                 description: `Luck Test: ${winOutcome.label}`,
                 source: 'game',
