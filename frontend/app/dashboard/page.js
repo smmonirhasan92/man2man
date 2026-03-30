@@ -245,6 +245,10 @@ function DashboardContent() {
                         </div>
 
                         <div className="relative group">
+                            <FolderCard href="/dashboard/scratch-card" icon={Ticket} label="Scratch Card" color="text-amber-400" gradient="from-amber-600/20 to-amber-900/40" border="border-amber-500/30" />
+                        </div>
+
+                        <div className="relative group">
                             <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
                         </div>
