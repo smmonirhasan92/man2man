@@ -157,7 +157,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
     const pct = (transparentPixels / totalSampled) * 100;
     setScratchedPct(pct);
     
-    if (pct > 55 && gameState === 'SCRATCHING') {
+    if (pct > 30 && gameState === 'SCRATCHING') {
        revealCard();
     }
   };
@@ -224,7 +224,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
     
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(x, y, 24, 0, Math.PI * 2, false);
+    ctx.arc(x, y, 60, 0, Math.PI * 2, false);
     ctx.fill();
     
     // Play sound occasionally
@@ -345,16 +345,16 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
             <div className="mt-6">
                 <div className="flex justify-between items-center mb-2 px-1">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Erasing Foil...</span>
-                    <span className="text-amber-400 text-xs font-black font-mono">{Math.floor(scratchedPct)}% / 55%</span>
+                    <span className="text-amber-400 text-xs font-black font-mono">{Math.floor(scratchedPct)}% / 30%</span>
                 </div>
                 <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-[#1E293B]">
                     <div 
                         className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-150"
-                        style={{ width: `${Math.min(100, (scratchedPct / 55) * 100)}%` }}
+                        style={{ width: `${Math.min(100, (scratchedPct / 30) * 100)}%` }}
                     />
                 </div>
                 <p className="text-center text-slate-500 text-[11px] mt-3 uppercase tracking-widest font-bold">
-                    Wipe away 55% to auto-reveal
+                    Wipe away 30% to auto-reveal
                 </p>
             </div>
         )}
