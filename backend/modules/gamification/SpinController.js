@@ -80,53 +80,41 @@ exports.spinLuckTest = async (req, res) => {
             const user = await User.findById(userId).session(session);
             if (!user) throw new Error('User not found');
 
-            let currentMain = parseFloat(user.wallet?.main || 0);
-            if (currentMain < cost) throw new Error('Insufficient Balance');
+            const initialBalance = parseFloat(user.wallet?.main || 0);
+            if (initialBalance < cost) throw new Error('Insufficient Balance');
 
-            // --- 0. PRE-DEDUCTION (FOR LEDGER CONSISTENCY) ---
-            const initialBalance = currentMain;
+            // --- 1. CALCULATE FINAL BALANCE ---
+            // Atomically calculate the end state: (Initial - Cost + Win)
+            const balanceAfterDeduct = initialBalance - cost;
+            const finalBalance = balanceAfterDeduct + winAmt;
 
-            // --- 1. DEDUCT COST ---
-            // We deduct and save FIRST so the ledger and UI see the "Cut"
-            currentMain -= cost;
-            user.wallet.main = currentMain;
+            // --- 2. UPDATE USER RECORD (SINGLE SAVE) ---
+            user.wallet.main = finalBalance;
             await user.save({ session });
 
+            // --- 3. LOG LEDGER (TWO ENTRIES FOR TRANSPARENCY) ---
             const TransactionLedger = require('../wallet/TransactionLedgerModel');
             const trxId = `SPIN_${Date.now()}`;
 
-            // Log Deduction Entry
+            // Entry A: The Cost
             await TransactionLedger.create([{
-                userId,
-                type: 'debit',
-                amount: -cost,
-                balanceBefore: initialBalance,
-                balanceAfter: currentMain,
+                userId, type: 'debit', amount: -cost,
+                balanceBefore: initialBalance, balanceAfter: balanceAfterDeduct,
                 description: `Luck Test: ${tier} spin cost`,
                 transactionId: `${trxId}_COST`
             }], { session });
 
-            // --- 2. ADD WIN (IF ANY) ---
-            // If there's a reward, we add it and save AGAIN for distinct UI sync
-            const balanceAfterDeduction = currentMain;
+            // Entry B: The Win (if any)
             if (winAmt > 0) {
-                currentMain += winAmt;
-                user.wallet.main = currentMain;
-                await user.save({ session });
-
-                // Log Win Entry
                 await TransactionLedger.create([{
-                    userId,
-                    type: 'credit',
-                    amount: winAmt,
-                    balanceBefore: balanceAfterDeduction,
-                    balanceAfter: currentMain,
+                    userId, type: 'credit', amount: winAmt,
+                    balanceBefore: balanceAfterDeduct, balanceAfter: finalBalance,
                     description: `Luck Test: ${tier} reward (${winOutcome.label})`,
                     transactionId: `${trxId}_WIN`
                 }], { session });
             }
 
-            // Sync UI Transaction Record (Final Result)
+            // Entry C: UI Transaction Record (Net Result for Dashboard)
             await Transaction.create([{
                 userId,
                 type: winAmt > cost ? 'game_win' : (winAmt === cost ? 'game_neutral' : 'game_loss'),
@@ -138,7 +126,7 @@ exports.spinLuckTest = async (req, res) => {
                 transactionId: `${trxId}_UI`
             }], { session });
 
-            return { winOutcome, newBalance: currentMain };
+            return { winOutcome, newBalance: finalBalance };
         });
 
         // Invalidate Redis profile outside of session
