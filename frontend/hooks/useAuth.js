@@ -34,35 +34,36 @@ export const useAuth = () => {
         // Prevents duplicate listeners from Sidebar/Header/Game causing render spam.
         // Game components update balance via API response mainly.
         // [ENABLED] Real-time Balance Sync
+        // [PERFORMANCE FIX] Real-time Balance Sync
         const handleBalanceUpdate = (data) => {
-            console.log('[SOCKET] Balance Update:', data);
-
-            // Handle both simple number (legacy) and object formats
-            let newIncome = 0;
-            let newMain = 0;
-            let newGame = 0;
-
-            if (typeof data === 'number') {
-                newIncome = data; // Assume income if single number
-            } else if (typeof data === 'object') {
-                newIncome = data.income || data.wallet?.income || 0;
-                newMain = data.main || data.wallet?.main || 0;
-                newGame = data.game || data.wallet?.game || 0;
-            }
+            console.log('[SOCKET] Balance Update Received:', data);
 
             setUser(prev => {
                 if (!prev) return prev;
+                
+                let updatedWallet = { ...prev.wallet };
+
+                if (typeof data === 'number') {
+                    // Legacy check: If it's just a number, it's often the main balance or income.
+                    // To be safe, we check the global "balance_update" vs user-specific.
+                    // But for this app, single number usually means Main Balance (NXS).
+                    updatedWallet.main = data;
+                } else if (typeof data === 'object' && data !== null) {
+                    // New format: can be { main, income, game } or { wallet: { ... } }
+                    const source = data.wallet || data;
+                    if (source.main !== undefined) updatedWallet.main = source.main;
+                    if (source.income !== undefined) updatedWallet.income = source.income;
+                    if (source.game !== undefined) updatedWallet.game = source.game;
+                    if (source.purchase !== undefined) updatedWallet.purchase = source.purchase;
+                    if (source.agent !== undefined) updatedWallet.agent = source.agent;
+                }
+
                 return {
                     ...prev,
-                    wallet: {
-                        ...prev.wallet,
-                        income: newIncome || prev.wallet?.income, // Update if present
-                        main: newMain || prev.wallet?.main,       // Update if present
-                        game: newGame || prev.wallet?.game        // [FIX] Update Game Wallet
-                    },
-                    // Update legacy/aliased fields if they exist
-                    wallet_balance: (newMain || prev.wallet?.main) || prev.wallet_balance,
-                    game_balance: (newGame || prev.wallet?.game) || prev.game_balance // [FIX] Update Legacy Game Balance
+                    wallet: updatedWallet,
+                    // Sync legacy top-level fields for total compatibility
+                    wallet_balance: updatedWallet.main,
+                    game_balance: updatedWallet.game
                 };
             });
         };
@@ -71,9 +72,14 @@ export const useAuth = () => {
         socket.on('balance_update', handleBalanceUpdate);
         socket.on(`balance_update_${user.id}`, handleBalanceUpdate);
 
+        // [LOCAL SYNC] Listen for immediate UI events from games
+        const handleLocalUpdate = (e) => handleBalanceUpdate(e.detail);
+        window.addEventListener('balance_update', handleLocalUpdate);
+
         return () => {
             socket.off('balance_update', handleBalanceUpdate);
             socket.off(`balance_update_${user.id}`, handleBalanceUpdate);
+            window.removeEventListener('balance_update', handleLocalUpdate);
         };
 
     }, [socket, user?.id]);

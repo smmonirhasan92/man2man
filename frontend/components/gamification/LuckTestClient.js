@@ -177,9 +177,14 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   }, [spinning, rotation, muted]);
 
   const doSpin = async () => {
-    if (spinning || isPreloading) return;
-    setIsPreloading(true);
-    setPopup(null);
+    // --- [STEP 1: PRE-DEDUCTION] ---
+    // Visually deduct the cost immediately for instant feedback
+    const costValue = parseFloat(config.cost); // "1 NXS" -> 1
+    if (user?.wallet) {
+      const tempBalance = parseFloat(user.wallet.main || 0) - costValue;
+      // Emit a local event to update the display balance immediately
+      window.dispatchEvent(new CustomEvent('balance_update', { detail: tempBalance }));
+    }
 
     let apiResult = null;
     try {
@@ -187,8 +192,20 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       apiResult = data;
     } catch (err) {
       setIsPreloading(false);
+      // Revert deduction on error by refreshing user
+      if (typeof window !== 'undefined') window.location.reload(); 
       toast.error(err.response?.data?.message || 'Transaction Failed');
       return;
+    }
+
+    // --- [STEP 2: FAST SYNC] ---
+    // Update the actual global state immediately after API returns
+    if (apiResult.newBalance !== undefined) {
+      const finalBal = apiResult.newBalance;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('balance_update', { detail: finalBal }));
+      }
+      if (onBalanceUpdate) onBalanceUpdate(finalBal);
     }
 
     setIsPreloading(false);
@@ -215,13 +232,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setTimeout(() => {
       setSpinning(false);
       setPopup(apiResult.result);
-      
-      if (apiResult.newBalance !== undefined) {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('balance_update', { detail: apiResult.newBalance }));
-        }
-        if (onBalanceUpdate) onBalanceUpdate(apiResult.newBalance);
-      }
+      // Note: sync already happened after API result for better performance
     }, SPIN_DURATION_MS);
   };
 
