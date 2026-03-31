@@ -1,9 +1,8 @@
-FROM node:20-alpine AS builder
-
+FROM node:20 AS builder
 WORKDIR /app
 
-# Require git to pull dependencies and native compilation for sharp/swc
-RUN apk add --no-cache git python3 make g++ build-base
+# Using standard debian node image avoids alpine compatibility issues with sharp/swc
+# Git, python3, g++, make are included in standard image out of the box.
 
 # Next.js build requires API tracking args at build time
 ARG NEXT_PUBLIC_API_URL
@@ -19,7 +18,7 @@ COPY . .
 RUN npm run build
 
 # Secondary runner image for smaller size
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
 

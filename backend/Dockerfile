@@ -1,9 +1,8 @@
-FROM node:20-alpine
-
+FROM node:20
 WORKDIR /app
 
-# Required for npm dependencies fetching from git, and native compilation (node-gyp/node-llama-cpp)
-RUN apk add --no-cache git python3 make g++ build-base
+# Using standard debian node image avoids alpine compatibility issues with native node-gyp bindings
+# No need for apk add since git, python3, g++, make are included in standard image
 
 # Copy package info first to leverage Docker layer caching
 COPY package*.json ./
