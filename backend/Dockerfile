@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Required for npm dependencies fetching from git repositories or simple-git usage
+RUN apk add --no-cache git
+
 # Copy package info first to leverage Docker layer caching
 COPY package*.json ./
 

@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Require git to pull dependencies and during build if any package relies on git command
+RUN apk add --no-cache git
+
 # Next.js build requires API tracking args at build time
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
