@@ -17,7 +17,7 @@ services:
     environment:
       - NODE_ENV=production
       # 14GB safety trick: Connect to the system-level MongoDB & Redis on the Ubuntu VPS host!
-      - MONGO_URI=mongodb://host.docker.internal:27017/universal_game_core_v1
+      - MONGODB_URI=mongodb://host.docker.internal:27017/universal_game_core_v1
       - REDIS_URL=redis://host.docker.internal:6379
       # Force UTC server to run node-cron tasks exactly in Dhaka timezone
       - TZ=Asia/Dhaka
