@@ -23,7 +23,7 @@ services:
     ports:
       - "5050:5050"
     env_file:
-      - .env 
+      - ./backend/.env 
     environment:
       - PORT=5050
       - NODE_ENV=development
