@@ -7,7 +7,7 @@ COPY package*.json ./
 
 # Install dependencies for production (ignores devDependencies)
 # We avoid caching node_modules so we get a clean slate
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy backend source code
 COPY . .
