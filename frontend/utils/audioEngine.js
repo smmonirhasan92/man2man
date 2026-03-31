@@ -12,12 +12,12 @@ class AudioEngine {
         if (typeof window === 'undefined' || this.initialized) return;
 
         const soundConfig = {
-            click: '/sounds/click-v2.mp3',
+            click: '/sounds/tick-v2.mp3',
             spin: '/sounds/spin-v2.mp3', // Placeholder if spin specific exists
-            card_flip: '/sounds/card-flip-v2.mp3',
+            card_flip: '/sounds/tick-v2.mp3',
             success: '/sounds/success-v2.mp3',
             win: '/sounds/win-v2.mp3',
-            bgm: '/sounds/bgm_loop-v2.mp3'
+            bgm: '/sounds/spin-v2.mp3'
         };
 
         // Fallback mapping if specific files are missing (based on list_dir check)

@@ -241,7 +241,7 @@ export function NotificationProvider({ children }) {
                         <source src="/sounds/error-v2.mp3" type="audio/mpeg" />
                     </audio>
                     <audio id="global-audio-chat" preload="auto">
-                        <source src="/sounds/click-v2.mp3" type="audio/mpeg" />
+                        <source src="/sounds/tick-v2.mp3" type="audio/mpeg" />
                     </audio>
                 </>
             )}
