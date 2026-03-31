@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USA Affiliate Marketing | System Maintenance</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-grad-1: #0f172a;
+            --bg-grad-2: #1e1b4b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glow Effects */
+        .glow {
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            background: var(--primary);
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: pulse 8s ease-in-out infinite alternate;
+            z-index: 1;
+        }
+        
+        .glow:nth-child(2) {
+            top: -10vw;
+            right: -10vw;
+            background: #ec4899;
+            animation-delay: -4s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8) translate(0, 0); opacity: 0.1; }
+            100% { transform: scale(1.2) translate(50px, -50px); opacity: 0.2; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 600px;
+            padding: 3rem;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            position: relative;
+        }
+
+        /* Gear spinning animation */
+        .icon-wrapper svg {
+            width: 40px;
+            height: 40px;
+            color: #818cf8;
+            animation: spin 6s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .status-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 99px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: #10b981;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #e2e8f0;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 2rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 30%;
+            background: linear-gradient(90deg, #4f46e5, #ec4899);
+            border-radius: 4px;
+            animation: moveProgress 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes moveProgress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(330%); }
+        }
+
+        /* Auto-refresh meta tag visually explained */
+        .refresh-text {
+            display: block;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+    <!-- Auto refresh the page every 3 seconds to catch when docker is back up -->
+    <meta http-equiv="refresh" content="3">
+</head>
+<body>
+    <div class="glow"></div>
+    <div class="glow"></div>
+
+    <div class="container">
+        <div class="icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </div>
+
+        <h1>System Update in Progress</h1>
+        <p>We are deploying a seamless update to enhance your experience exactly right now. The platform will automatically reconnect in a few seconds.</p>
+
+        <div class="status-box">
+            <div class="status-dot"></div>
+            <span class="status-text">Deploying Zero-Downtime Patch</span>
+        </div>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+
+        <span class="refresh-text">This page will automatically refresh down to the live site.</span>
+    </div>
+</body>
+</html>
