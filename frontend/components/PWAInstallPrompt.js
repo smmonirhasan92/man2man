@@ -16,7 +16,7 @@ export default function PWAInstallPrompt() {
         setIsIOS(ios);
 
         // Preload sound
-        audioRef.current = new Audio('/sounds/notification.mp3');
+        audioRef.current = new Audio('/sounds/notification-v2.mp3');
         audioRef.current.volume = 0.5;
 
         const handler = (e) => {
