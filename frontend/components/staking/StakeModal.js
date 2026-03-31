@@ -20,7 +20,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
     if (!isOpen || !pool) return null;
 
     const maxAmount = userBalance || 0;
-    const isValid = amount && Number(amount) >= pool.minAmount && Number(amount) <= maxAmount;
+    const isValid = amount && Number(amount) >= Math.max(5, pool.minAmount) && Number(amount) <= maxAmount;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -55,12 +55,12 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                             <span className="font-black text-emerald-400 text-lg">+{pool.rewardPercentage}%</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-400">Available Balance</span>
+                            <span className="text-slate-400">Income Wallet</span>
                             <span className="font-bold text-white">{maxAmount.toFixed(2)} NXS</span>
                         </div>
                         <div className="flex justify-between items-center text-sm mt-2">
                             <span className="text-slate-400">Minimum Lock</span>
-                            <span className="font-bold text-white">{pool.minAmount} NXS</span>
+                            <span className="font-bold text-white">{Math.max(5, pool.minAmount)} NXS</span>
                         </div>
                     </div>
 
@@ -96,9 +96,15 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-emerald-400 font-bold flex items-center gap-1">
-                                        📈 Expected Profit:
+                                        📈 Total Profit:
                                     </span>
                                     <span className="font-bold text-emerald-400">+{expectedProfit} NXS</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] mt-1">
+                                    <span className="text-emerald-500/70 font-bold flex items-center gap-1 uppercase tracking-widest">
+                                        ⏱️ Daily Payout:
+                                    </span>
+                                    <span className="font-bold text-emerald-500/90">+{(expectedProfit / pool.durationDays).toFixed(2)} NXS/Day</span>
                                 </div>
                                 <div className="h-px bg-slate-700/50 my-2"></div>
                                 <div className="flex justify-between items-center font-black">
@@ -111,7 +117,7 @@ export default function StakeModal({ isOpen, onClose, pool, userBalance, onConfi
                         <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl mb-6 flex gap-2 items-start">
                             <span className="text-yellow-500 flex-shrink-0 mt-0.5 font-bold">⚠️</span>
                             <p className="text-[11px] text-yellow-500/90 font-bold leading-relaxed">
-                                Early withdrawal incurs a <span className="text-white">5% penalty</span> on principal and forfeits all rewards. Funds will be locked for exactly {pool.durationDays} days.
+                                Early withdrawal incurs a <span className="text-white">5% penalty</span> on principal and <span className="text-white">CLAWS BACK</span> any daily profits already paid to you. Funds will be locked for exactly {pool.durationDays} days.
                             </p>
                         </div>
 

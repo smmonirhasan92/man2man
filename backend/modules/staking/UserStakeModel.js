@@ -25,6 +25,13 @@ const userStakeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    lastProcessedDate: {
+        type: Date
+    },
+    accumulatedPaid: {
+        type: Number,
+        default: 0
+    },
     unlocksAt: {
         type: Date,
         required: true

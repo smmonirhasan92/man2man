@@ -17,9 +17,9 @@ class StakingService {
         const count = await StakingPool.countDocuments();
         if (count === 0) {
             await StakingPool.insertMany([
-                { name: '7 Days Hold', durationDays: 7, rewardPercentage: 2, minAmount: 10, badgeColor: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
-                { name: '15 Days Hold', durationDays: 15, rewardPercentage: 5, minAmount: 50, badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-                { name: '30 Days Hold', durationDays: 30, rewardPercentage: 12, minAmount: 100, badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20' }
+                { name: 'Starter Tier', durationDays: 10, rewardPercentage: 20, minAmount: 50, badgeColor: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
+                { name: 'Growth Tier', durationDays: 20, rewardPercentage: 40, minAmount: 100, badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+                { name: 'Pro Tier', durationDays: 30, rewardPercentage: 43.33, minAmount: 300, badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20' }
             ]);
             console.log("[STAKING] Seeded default investment pools.");
         }
@@ -41,8 +41,11 @@ class StakingService {
             const user = await User.findById(userId).session(session);
             if (!user) throw new Error("User not found");
 
-            if (user.wallet.main < amount) {
-                throw new Error(`Insufficient main balance. You have ${user.wallet.main} NXS available.`);
+            if (user.wallet.income < 5) {
+                throw new Error("Income Wallet balance must exceed $5.00 NXS to engage in any investments.");
+            }
+            if (user.wallet.income < amount) {
+                throw new Error(`Insufficient income balance. You have ${user.wallet.income} NXS available.`);
             }
 
             // Calculate exact unlock date and rewards
@@ -50,10 +53,10 @@ class StakingService {
             const unlocksAt = new Date(now.getTime() + (pool.durationDays * 24 * 60 * 60 * 1000));
             const expectedReward = parseFloat((amount * (pool.rewardPercentage / 100)).toFixed(6));
 
-            // Deduct main, Add to staked
+            // Deduct from Income, Add to staked
             const userUpd = await User.findByIdAndUpdate(userId, {
                 $inc: {
-                    'wallet.main': -amount,
+                    'wallet.income': -amount,
                     'wallet.staked': amount
                 }
             }, { session, new: true });
@@ -104,14 +107,13 @@ class StakingService {
                 throw new Error("This investment has not matured yet. Use Early Withdrawal if you need funds urgently.");
             }
 
-            // Mature! Claim Principal + Profit
-            const totalToCredit = stake.stakedAmount + stake.expectedReward;
+            // Mature! Claim Principal ONLY (Profits were already paid out daily by the cron job)
+            const totalToCredit = stake.stakedAmount;
 
             const userUpd = await User.findByIdAndUpdate(userId, {
                 $inc: {
                     'wallet.staked': -stake.stakedAmount,
-                    'wallet.main': totalToCredit,
-                    'wallet.total_earned_staking': stake.expectedReward
+                    'wallet.main': totalToCredit
                 }
             }, { session, new: true });
 
@@ -127,15 +129,6 @@ class StakingService {
                     amount: stake.stakedAmount,
                     type: 'staking_principal_return',
                     description: `Staking Principal Returned (${stake.poolId.name})`,
-                    source: 'system',
-                    status: 'completed',
-                    currency: 'NXS'
-                },
-                {
-                    userId,
-                    amount: stake.expectedReward,
-                    type: 'staking_reward',
-                    description: `Staking Profit Earned (${stake.poolId.name})`,
                     source: 'system',
                     status: 'completed',
                     currency: 'NXS'
@@ -166,15 +159,19 @@ class StakingService {
                 throw new Error("This investment has already matured. Please use the Claim button instead.");
             }
 
-            // Early Withdrawal Penalty: 5% of principal, forfeit all rewards
+            // Early Withdrawal Penalty: 5% of principal AND forfeit all previously paid daily rewards
             const PENALTY_PERCENT = 0.05;
             const penaltyAmount = parseFloat((stake.stakedAmount * PENALTY_PERCENT).toFixed(6));
-            const refundAmount = parseFloat((stake.stakedAmount - penaltyAmount).toFixed(6));
+            
+            const alreadyPaidOut = stake.accumulatedPaid || 0;
+            // Clawback logic ensures they don't get away with free daily profit if they back out early
+            const refundAmount = parseFloat((stake.stakedAmount - penaltyAmount - alreadyPaidOut).toFixed(6));
+            const finalRefund = Math.max(0, refundAmount);
 
             const userUpd = await User.findByIdAndUpdate(userId, {
                 $inc: {
                     'wallet.staked': -stake.stakedAmount,
-                    'wallet.main': refundAmount // Only return 95%
+                    'wallet.main': finalRefund 
                 }
             }, { session, new: true });
 

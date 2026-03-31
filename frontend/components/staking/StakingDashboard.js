@@ -75,7 +75,7 @@ export default function StakingDashboard({ userWallet }) {
     };
 
     const handleEarlyWithdraw = async (stakeId) => {
-        if (!confirm("WARNING: You will lose 5% of your principal. Rewards will be forfeited. Continue?")) return;
+        if (!confirm("WARNING: You will forfeit a 5% penalty AND any daily profits already paid out to you. Continue?")) return;
 
         try {
             setActionLoading(stakeId);
@@ -253,6 +253,7 @@ export default function StakingDashboard({ userWallet }) {
                                                 <div>
                                                     <div className="text-[10px] text-emerald-500 uppercase font-black tracking-widest mb-2 opacity-60">Est. Return</div>
                                                     <div className="text-emerald-400 font-black text-lg">+{formatNXS(stake.expectedReward)} <span className="text-[10px] opacity-40">NXS</span></div>
+                                                    <div className="text-[9px] text-emerald-500/80 font-bold tracking-widest mt-1">PAID: {formatNXS(stake.accumulatedPaid || 0)} NXS</div>
                                                 </div>
                                                 <div>
                                                     <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2 opacity-60">Start Date</div>
@@ -330,7 +331,7 @@ export default function StakingDashboard({ userWallet }) {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 pool={selectedPool}
-                userBalance={userWallet?.main || 0}
+                userBalance={userWallet?.income || 0}
                 onConfirm={handleStakeConfirm}
             />
         </div>

@@ -47,6 +47,9 @@ const initPulse = () => {
 
                 // Dailys (Midnight Check)
                 if (now.getHours() === 0) {
+                    // [STAKING] Process Daily Profit Returns
+                    await require('../staking/StakingCron').processDailyReturns();
+
                     // await require('../bonus/HoldingBonusService').processDailyRewards();
 
                     // Weekly Royal Dividend (Sunday 00:00)
