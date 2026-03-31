@@ -18,7 +18,9 @@ async function initAI() {
             console.log("[AI] 🚀 Initializing Engine (v3)...");
 
             if (!fs.existsSync(modelPath)) {
-                throw new Error("Model file not found at: " + modelPath);
+                console.warn("[AI] ⚠️ Model file not found at: " + modelPath + ". AI features will be disabled.");
+                initPromise = null;
+                return;
             }
 
             const llamaCpp = await import('node-llama-cpp');
