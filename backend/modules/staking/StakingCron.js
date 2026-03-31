@@ -52,7 +52,7 @@ class StakingCron {
                             source: 'system',
                             status: 'completed',
                             currency: 'NXS'
-                        }], { session });
+                        }], { session, ordered: true });
 
                         if (SocketService.getIO()) {
                             SocketService.broadcast(`user_${stake.userId}`, `balance_update`, userUpd.wallet);

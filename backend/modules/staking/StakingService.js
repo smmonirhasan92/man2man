@@ -69,7 +69,7 @@ class StakingService {
                 expectedReward,
                 lockedAt: now,
                 unlocksAt
-            }], { session });
+            }], { session, ordered: true });
 
             // Create Transaction Log
             await Transaction.create([{
@@ -80,7 +80,7 @@ class StakingService {
                 source: 'system',
                 status: 'completed',
                 currency: 'NXS'
-            }], { session });
+            }], { session, ordered: true });
 
             // [SOCKET] Real-time Balance Update
             try {
@@ -133,7 +133,7 @@ class StakingService {
                     status: 'completed',
                     currency: 'NXS'
                 }
-            ], { session });
+            ], { session, ordered: true });
 
             // [SOCKET] Real-time Balance Update
             try {
@@ -200,7 +200,7 @@ class StakingService {
                     status: 'completed',
                     currency: 'NXS'
                 }
-            ], { session });
+            ], { session, ordered: true });
 
             // [SOCKET] Real-time Balance Update
             try {
