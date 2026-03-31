@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Default API URL for local PC
+        - NEXT_PUBLIC_API_URL=http://localhost:5050
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development 
+      - NEXT_PUBLIC_API_URL=http://localhost:5050
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"
+    env_file:
+      - .env 
+    environment:
+      - PORT=5050
+      - NODE_ENV=development
+      # Database and Redis must route to the host machine
+      - MONGO_URI=mongodb://host.docker.internal:27017/usa-affiliate
+      - REDIS_URL=redis://host.docker.internal:6379
+      # Set timezone to ensure node-cron jobs run perfectly to Bangladesh time
+      - TZ=Asia/Dhaka
+    volumes:
+      # CRITICAL: Maps the uploads folder so user files are not deleted on rebuild
+      - ./uploads:/app/uploads
+      # Preserves text logs written by winston
+      - ./logs:/app/logs
+    extra_hosts:
+      # Allows connecting to the Native PC localhost
+      - "host.docker.internal:host-gateway"

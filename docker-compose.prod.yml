@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  frontend:
+    restart: always # Critical for server stability
+    build:
+      context: ./frontend
+      args:
+        # Override for the live VPS public API URL
+        - NEXT_PUBLIC_API_URL=https://api.man2man.xyz
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.man2man.xyz
+
+  backend:
+    restart: always # Critical for server stability
+    environment:
+      - NODE_ENV=production
+      # 14GB safety trick: Connect to the system-level MongoDB & Redis on the Ubuntu VPS host!
+      - MONGO_URI=mongodb://host.docker.internal:27017/usa-affiliate
+      - REDIS_URL=redis://host.docker.internal:6379
+      # Force UTC server to run node-cron tasks exactly in Dhaka timezone
+      - TZ=Asia/Dhaka
+    volumes:
+      # CRITICAL: Prevent 14GB data / user uploads from being deleted on VPS Docker rebuilds
+      - ./uploads:/app/uploads
+      # Persist the Winson / Node server logs in host
+      - ./logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,58 @@
+name: Deploy Docker to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows clicking an explicit "Run" button in GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          script: |
+            echo "============ [ STARTING VPS DEPLOYMENT ] ============"
+            
+            # --- FOLDER DETECTION ---
+            # Try to auto-detect the project path
+            PROJECT_DIR=""
+            if [ -d "/home/zizocom/public_html" ]; then
+              PROJECT_DIR="/home/zizocom/public_html"
+            elif [ -d "/var/www/man2man" ]; then
+              PROJECT_DIR="/var/www/man2man"
+            elif [ -d "/root/man2man" ]; then
+              PROJECT_DIR="/root/man2man"
+            else
+              echo "Error: Could not locate your project directory."
+              echo "Please update the cd command inside .github/workflows/docker-deploy.yml"
+              exit 1
+            fi
+            
+            echo "Navigating to code at: $PROJECT_DIR"
+            cd "$PROJECT_DIR"
+            
+            # --- PULL CODE ---
+            echo "Fetching latest main branch..."
+            git reset --hard HEAD
+            git pull origin main
+            
+            # --- ZERO DOWNTIME DOCKER DEPLOY ---
+            echo "Building new images seamlessly..."
+            # 1. Build the new images in the background first
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+            
+            echo "Swapping Active Containers..."
+            # 2. Swap containers! Because Compose is smart, the downtime is purely the restart fraction
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+            
+            # --- CLEANUP ---
+            echo "Cleaning up dangling old images..."
+            docker image prune -f
+            
+            echo "============ [ DEPLOYMENT FINISHED! ] ============"
