@@ -16,9 +16,9 @@ services:
     restart: always # Critical for server stability
     environment:
       - NODE_ENV=production
-      # 14GB safety trick: Connect to the system-level MongoDB & Redis on the Ubuntu VPS host!
-      - MONGODB_URI=mongodb://host.docker.internal:27017/universal_game_core_v1
-      - REDIS_URL=redis://host.docker.internal:6379
+      # [FIX] Using the explicit docker0 bridge IP (172.17.0.1) since host.docker.internal is not resolving on this host.
+      - MONGODB_URI=mongodb://172.17.0.1:27017/universal_game_core_v1
+      - REDIS_URL=redis://172.17.0.1:6379
       # Force UTC server to run node-cron tasks exactly in Dhaka timezone
       - TZ=Asia/Dhaka
     volumes:
