@@ -2,8 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Required for npm dependencies fetching from git repositories or simple-git usage
-RUN apk add --no-cache git
+# Required for npm dependencies fetching from git, and native compilation (node-gyp/node-llama-cpp)
+RUN apk add --no-cache git python3 make g++ build-base
 
 # Copy package info first to leverage Docker layer caching
 COPY package*.json ./

@@ -2,8 +2,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Require git to pull dependencies and during build if any package relies on git command
-RUN apk add --no-cache git
+# Require git to pull dependencies and native compilation for sharp/swc
+RUN apk add --no-cache git python3 make g++ build-base
 
 # Next.js build requires API tracking args at build time
 ARG NEXT_PUBLIC_API_URL
