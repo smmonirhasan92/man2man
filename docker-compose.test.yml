@@ -80,6 +80,11 @@ services:
       - REDIS_URL=redis://76.13.244.202:6379
       - TZ=Asia/Dhaka
       - CLIENT_URL=http://76.13.244.202
+      - JWT_SECRET=supersecretkeyremitwallet123
+      - GEMINI_API_KEY=AIzaSyApJEjpj_V2QT4SksDi-Lu00WEuUFpz4dE
+      - SUPER_ADMIN_SEC_KEY_1=1111
+      - SUPER_ADMIN_SEC_KEY_2=2222
+      - SUPER_ADMIN_SEC_KEY_3=3333
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
