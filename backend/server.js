@@ -157,21 +157,24 @@ const io = new Server(server, {
             const allowedOrigins = [
                 "https://usaaffiliatemarketing.com",
                 "https://usa-affiliate.vercel.app",
+                "http://76.13.244.202", // Hardcoded for test VPS stability
                 "http://localhost:3000",
                 "http://localhost:3010",
                 "http://localhost:3011",
                 process.env.CLIENT_URL
             ].filter(Boolean);
 
-            if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+            if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production' || origin.includes('76.13.244.202')) {
                 callback(null, true);
             } else {
+                console.error(`[CORS REJECTED] Origin: ${origin}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
         methods: ["GET", "POST"],
         credentials: true
-    }
+    },
+    transports: ['websocket', 'polling']
 });
 
 // --- SOCKET ARCHITECTURE ---
