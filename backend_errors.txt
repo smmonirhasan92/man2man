@@ -1,0 +1,33 @@
+--- SSH Connection Established ---
+Executing: docker logs m2m-backend-test 2>&1 | tail -30
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/health - Host: localhost:5011
+[FALLBACK 404] No route matched for /api/health
+[TRACER] GET /api/health - Host: localhost:5011
+[FALLBACK 404] No route matched for /api/health
+[TRACER] GET /api/lottery/history - Host: 76.13.244.202
+[TRACER] GET /api/lottery/active - Host: 76.13.244.202
+[TRACER] GET /api/lottery/history - Host: 76.13.244.202
+[TRACER] GET /api/lottery/history - Host: 76.13.244.202
+[TRACER] GET /api/lottery/active - Host: 76.13.244.202
+[TRACER] GET /api/health - Host: localhost:5011
+[FALLBACK 404] No route matched for /api/health
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+FATAL: JWT_SECRET is not defined in .env
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/p2p/my-trades - Host: 76.13.244.202
+[TRACER] GET /api/auth/me - Host: 76.13.244.202
+FATAL: JWT_SECRET is not defined in .env
+[TRACER] GET /api/health - Host: localhost:5011
+[FALLBACK 404] No route matched for /api/health
+--- Command Finished with code: 0 ---

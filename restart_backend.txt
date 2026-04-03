@@ -1,0 +1,7 @@
+--- SSH Connection Established ---
+Executing: cd /var/www/man2man && git pull origin main && docker compose -f docker-compose.test.yml restart m2m-backend-test
+Updating 1a74fa3..ffc4f40
+Fast-forward
+ docker-compose.test.yml | 5 +++++
+ 1 file changed, 5 insertions(+)
+--- Command Finished with code: 0 ---
