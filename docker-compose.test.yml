@@ -28,7 +28,7 @@ services:
     container_name: m2m-mongodb-test
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - "27017:27017" # Standard port for the test network
+      - "27018:27017" # Standard port for the test network
     volumes:
       - m2m_test_data:/data/db
     healthcheck:
