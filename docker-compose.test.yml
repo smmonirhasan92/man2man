@@ -8,14 +8,14 @@ services:
       args:
         # [CRITICAL FIX] NEXT_PUBLIC_* MUST be build args, not just environment vars.
         # Next.js compiles these into the JS bundle at build time.
-        - NEXT_PUBLIC_API_URL=http://76.13.244.202:5011
+        - NEXT_PUBLIC_API_URL=http://76.13.244.202/api
     container_name: m2m-frontend-test
     ports:
       - "3011:3011"
     environment:
       - PORT=3011
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://76.13.244.202:5011
+      - NEXT_PUBLIC_API_URL=http://76.13.244.202/api
       - TZ=Asia/Dhaka
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3011"]
@@ -79,7 +79,7 @@ services:
       - MONGODB_URI=mongodb://m2m-mongodb-test:27017/universal_game_core_docker?replicaSet=rs0
       - REDIS_URL=redis://76.13.244.202:6379
       - TZ=Asia/Dhaka
-      - CLIENT_URL=http://76.13.244.202:3011
+      - CLIENT_URL=http://76.13.244.202
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
