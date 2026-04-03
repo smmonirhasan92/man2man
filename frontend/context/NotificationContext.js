@@ -189,6 +189,10 @@ export function NotificationProvider({ children }) {
             socket.off('config:update', handleConfigUpdate);
         };
     }, [socket]); // [FIX] Removed refreshUser from dependency array to prevent infinite loop
+    
+    // [FIX] Hydration Mismatch Safeguard
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
 
     // Custom Styles for Premium Feel
     const premiumStyle = {
@@ -217,20 +221,23 @@ export function NotificationProvider({ children }) {
     return (
         <NotificationContext.Provider value={{ showError, showSuccess }}>
             {children}
-            {/* Global Toaster with Premium Config */}
-            <Toaster
-                position="top-center"
-                toastOptions={{
-                    duration: 4000,
-                    style: {
-                        background: '#333',
-                        color: '#fff',
-                    },
-                }}
-            />
-            {/* INVISIBLE GLOBAL AUDIO ELEMENTS TO PREVENT AUTOPLAY STUTTERS */}
-            {isClient && (
+            
+            {/* [FIX] ALL CLIENT-ONLY UI ELEMENTS IN ONE CONDITION TO PREVENT HYDRATION MISMATCH */}
+            {mounted && (
                 <>
+                    {/* Global Toaster with Premium Config */}
+                    <Toaster
+                        position="top-center"
+                        toastOptions={{
+                            duration: 4000,
+                            style: {
+                                background: '#333',
+                                color: '#fff',
+                            },
+                        }}
+                    />
+
+                    {/* INVISIBLE GLOBAL AUDIO ELEMENTS TO PREVENT AUTOPLAY STUTTERS */}
                     <audio id="global-audio-info" preload="auto">
                         <source src="/sounds/notification-v2.mp3" type="audio/mpeg" />
                     </audio>

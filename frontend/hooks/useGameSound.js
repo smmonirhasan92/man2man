@@ -8,7 +8,7 @@ export const useGameSound = (enabled = true) => {
         const soundFiles = [
             'click',
             'win',
-            'lose',
+            'loss',
             'success',
             'notification',
             'card-flip',
@@ -16,7 +16,11 @@ export const useGameSound = (enabled = true) => {
         ];
 
         soundFiles.forEach(sound => {
-            const audio = new Audio(`/sounds/${sound}-v2.mp3`);
+            let filename = `${sound}-v2.mp3`;
+            // [FIX] Map missing assets to existing high-quality tick sound
+            if (sound === 'click' || sound === 'card-flip') filename = 'tick-v2.mp3';
+            
+            const audio = new Audio(`/sounds/${filename}`);
             audio.preload = 'auto';
             audio.volume = 0.5;
             audioRefs.current[sound] = audio;

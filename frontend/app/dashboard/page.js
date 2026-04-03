@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -261,7 +261,7 @@ function DashboardContent() {
 
                         <FolderCard href="/history" icon={Briefcase} label="History" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-white/20" />
                         
-                        <FolderCard href="#" icon={Lock} label="Upcoming" color="text-slate-400" gradient="from-slate-600/20 to-slate-900/40" border="border-white/10" />
+                        <FolderCard href="#" icon={Zap} label="AI Node Center" color="text-yellow-400" gradient="from-yellow-600/20 to-yellow-900/40" border="border-yellow-500/30" onClick={() => toast('AI Deployment Center: Beta coming soon!', { icon: '🚀', style: { borderRadius: '10px', background: '#333', color: '#fff' } })} />
                     </div>
                 </div>
 

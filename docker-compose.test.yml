@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  m2m-frontend-test:
+    restart: always
+    build:
+      context: ./frontend
+      args:
+        # [CRITICAL FIX] NEXT_PUBLIC_* MUST be build args, not just environment vars.
+        # Next.js compiles these into the JS bundle at build time.
+        - NEXT_PUBLIC_API_URL=http://76.13.244.202:5011
+    container_name: m2m-frontend-test
+    ports:
+      - "3011:3011"
+    environment:
+      - PORT=3011
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://76.13.244.202:5011
+      - TZ=Asia/Dhaka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3011"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  m2m-mongodb-test:
+    image: mongo:latest
+    container_name: m2m-mongodb-test
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017" # Standard port for the test network
+    volumes:
+      - m2m_test_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27017", "--eval", "db.adminCommand('ping').ok", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  m2m-mongodb-init-test:
+    image: mongo:latest
+    container_name: m2m-mongodb-init-test
+    depends_on:
+      m2m-mongodb-test:
+        condition: service_healthy
+    command: >
+      mongosh --host m2m-mongodb-test:27017 --eval
+      "let count = 0;
+       while (count < 20) {
+         try {
+           rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'm2m-mongodb-test:27017' }] });
+           print('[INIT] ✅ Replica Set rs0 initiated successfully.');
+           quit(0);
+         } catch(e) {
+           if (e.message.includes('already')) {
+             print('[INIT] ℹ️ Replica Set already initialized.');
+             quit(0);
+           }
+           print('[INIT] ⏳ Waiting... (' + e.message + ')');
+           sleep(2000);
+           count++;
+         }
+       }
+       quit(1);"
+    restart: "no"
+
+  m2m-backend-test:
+    restart: always
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: m2m-backend-test
+    ports:
+      - "5011:5011"
+    environment:
+      - PORT=5011
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://m2m-mongodb-test:27017/universal_game_core_docker?replicaSet=rs0
+      - REDIS_URL=redis://76.13.244.202:6379
+      - TZ=Asia/Dhaka
+      - CLIENT_URL=http://76.13.244.202:3011
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      m2m-mongodb-init-test:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5011/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  m2m_test_data:

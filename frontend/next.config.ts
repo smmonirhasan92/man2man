@@ -76,7 +76,10 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https' as const, hostname: 'flagcdn.com' },
       { protocol: 'https' as const, hostname: 'ui-avatars.com' },
-      { protocol: 'https' as const, hostname: 'usaaffiliatemarketing.com' }
+      { protocol: 'https' as const, hostname: 'usaaffiliatemarketing.com' },
+      // [FIX] Allow image loading from IP and localhost for Docker/test setups
+      { protocol: 'http' as const, hostname: '76.13.244.202' },
+      { protocol: 'http' as const, hostname: 'localhost' },
     ]
   },
   trailingSlash: true,

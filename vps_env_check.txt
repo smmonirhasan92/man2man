@@ -1,9 +1,0 @@
-PORT=5050
-DB_URI=mongodb://127.0.0.1:27017/universal_game_core_v1?replicaSet=rs0&directConnection=true?replicaSet=rs0&directConnection=true
-JWT_SECRET=supersecretkeyremitwallet123
-NODE_ENV=production
-GEMINI_API_KEY=AIzaSyApJEjpj_V2QT4SksDi-Lu00WEuUFpz4dE
-SUPER_ADMIN_SEC_KEY_1=1111
-SUPER_ADMIN_SEC_KEY_2=2222
-SUPER_ADMIN_SEC_KEY_3=3333
-VAPID_PUBLIC_KEY=BA-E3dG_kEVVQZYlu1yELQKY-g08TM_3fzoBmYOM6EUVWlcXK-0LKNmL_asu7-Zu1OQa_iWWb6NugwtnBlfSHpM\nVAPID_PRIVATE_KEY=eFT_o7c8jcEoaig75nkj14E26-7VwoGXRBXc6BQBTv8\nVAPID_EMAIL=admin@man2man.host

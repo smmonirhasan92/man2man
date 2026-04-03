@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 async function init() {
     try {
-        // Connect directly without replica set option first to run admin command
-        await mongoose.connect('mongodb://127.0.0.1:27017/admin?directConnection=true');
+        // [FIX] Try 'mongodb' host for Docker, then fallback to 127.0.0.1 for native.
+        const dbHost = process.env.MONGODB_HOST || (process.env.NODE_ENV === 'production' ? 'mongodb' : '127.0.0.1');
+        console.log(`Connecting to ${dbHost} to initiate replica set...`);
+        await mongoose.connect(`mongodb://${dbHost}:27017/admin?directConnection=true`);
         const admin = mongoose.connection.db.admin();
 
         console.log("Initiating Replica Set...");

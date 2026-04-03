@@ -10,9 +10,14 @@ services:
         - NEXT_PUBLIC_API_URL=http://localhost:5050
     ports:
       - "3000:3000"
+    container_name: m2m-frontend-dev
+    command: npm run dev
     environment:
       - NODE_ENV=development 
       - NEXT_PUBLIC_API_URL=http://localhost:5050
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 
@@ -24,15 +29,20 @@ services:
       - "5050:5050"
     env_file:
       - ./backend/.env 
+    container_name: m2m-backend-dev
     environment:
       - PORT=5050
       - NODE_ENV=development
       # Database and Redis must route to the host machine
-      - MONGO_URI=mongodb://host.docker.internal:27017/usa-affiliate
+      - MONGODB_URI=mongodb://host.docker.internal:27017/universal_game_core_v1
       - REDIS_URL=redis://host.docker.internal:6379
       # Set timezone to ensure node-cron jobs run perfectly to Bangladesh time
       - TZ=Asia/Dhaka
+      - CLIENT_URL=http://localhost:3000
     volumes:
+      # Map the code for real-time updates
+      - ./backend:/app
+      - /app/node_modules
       # CRITICAL: Maps the uploads folder so user files are not deleted on rebuild
       - ./uploads:/app/uploads
       # Preserves text logs written by winston

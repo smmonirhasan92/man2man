@@ -32,4 +32,8 @@ COPY --from=builder /app/.next ./.next
 
 EXPOSE 3000
 
+# Healthcheck to ensure frontend is serving pages
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1))" || exit 1
+
 CMD ["npm", "start"]

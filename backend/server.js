@@ -11,51 +11,42 @@ const path = require('path');
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
-app.set('trust proxy', 1); // Trust first Hostinger proxy to properly identify User IPs for rate limiter
-app.disable('x-powered-by'); // Hide Tech Stack
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
-// [DEBUG] Request Tracer - Log EVERYTHING
+// [FIX] GLOBAL UNIVERSAL CORS (ALLOW ALL HEADERS & ORIGINS FOR LOCAL)
 app.use((req, res, next) => {
-    console.log(`[TRACER] ${req.method} ${req.originalUrl}`);
-    console.log(`[TRACER] Host: ${req.headers.host}`);
+    const origin = req.headers.origin || '*';
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    
+    // Dynamically allow ANY headers requested by the browser
+    const requestedHeaders = req.header('Access-Control-Request-Headers');
+    if (requestedHeaders) {
+        res.setHeader('Access-Control-Allow-Headers', requestedHeaders);
+    } else {
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-usa-key, x-usa-identity, x-server-id, Cache-Control, cache-control, expires, Pragma, X-Requested-With');
+    }
+
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '86400');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
+// [DEBUG] Request Tracer
+app.use((req, res, next) => {
+    if (req.method !== 'OPTIONS') {
+        console.log(`[TRACER] ${req.method} ${req.originalUrl} - Host: ${req.headers.host}`);
+    }
     next();
 });
 
 const PORT = process.env.PORT || 10000;
 console.log(`[BOOT] Server starting... PORT=${PORT}`);
-
-app.use((req, res, next) => {
-    // Existing Shield Logic...
-    process.stdout.write(`[RAW_REQ] ${req.method} ${req.url}\n`);
-
-    // --- CLOUDFLARE SHIELD (Stealth Mode) --- [DISABLED]
-    next();
-});
-
-// Core Middleware
-// HARDCODED CORS FOR LOCALHOST STABILITY
-// DYNAMIC CORS origin for local development + Production Vercel
-// [FIX] Accept CLIENT_URL from Env or fallback to known domains
-const ALLOWED_ORIGINS = [
-    "https://usaaffiliatemarketing.com",
-    "https://usa-affiliate.vercel.app",
-    "http://localhost:3000",
-    process.env.CLIENT_URL, // Dynamic from Render Env
-    /\.vercel\.app$/        // [FIX] Allow all Vercel Preview Deployments
-].filter(Boolean); // Remove undefined
-
-app.use(cors({
-    origin: true, // [TEMPORARY CHECK] Reflects the request origin (Effectively allows ALL), while keeping credentials working.
-    // origin: ALLOWED_ORIGINS, // We will revert to this strict list after testing
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-usa-key', 'x-usa-identity'],
-    credentials: true
-}));
-// app.options('*', cors()); // [REMOVED] Causing PathError in Express 5.x. Global middleware handles it.
-
-// Manual OPTIONS handler to ensure Preflight works 100%
-// Manual OPTIONS handler REMOVED in favor of dynamic 'cors' middleware
-// This ensures 127.0.0.1 and localhost both work correctly without conflict.
 
 // Security Middleware (adjusted for dev)
 app.use(helmet({ crossOriginResourcePolicy: false })); // Allow Cross-Origin Resources
@@ -162,12 +153,22 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: [
-            "https://usaaffiliatemarketing.com",
-            "https://usa-affiliate.vercel.app",
-            "http://localhost:3000",
-            process.env.CLIENT_URL
-        ].filter(Boolean),
+        origin: (origin, callback) => {
+            const allowedOrigins = [
+                "https://usaaffiliatemarketing.com",
+                "https://usa-affiliate.vercel.app",
+                "http://localhost:3000",
+                "http://localhost:3010",
+                "http://localhost:3011",
+                process.env.CLIENT_URL
+            ].filter(Boolean);
+
+            if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ["GET", "POST"],
         credentials: true
     }
