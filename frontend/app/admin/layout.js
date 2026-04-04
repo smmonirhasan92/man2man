@@ -18,7 +18,7 @@ export default function AdminLayout({ children }) {
                 {/* Main Content Area */}
                 <main className="flex-1 overflow-y-auto custom-scrollbar p-0 relative">
                     {/* Background Noise/Gradient Shared */}
-                    <div className="fixed inset-0 pointer-events-none opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                    <div className="fixed inset-0 pointer-events-none opacity-10"></div>
                     {children}
                 </main>
 

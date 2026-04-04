@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-[#050505] font-sans pb-20 text-white">
             {/* BACKGROUND VFX */}
-            <div className="fixed inset-0 pointer-events-none opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+            <div className="fixed inset-0 pointer-events-none opacity-20"></div>
 
             {/* Header Section */}
             <header className="bg-[#0D0D0D] border-b border-[#D4AF37]/20 sticky top-0 z-50 backdrop-blur-md bg-opacity-80">

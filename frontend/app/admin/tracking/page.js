@@ -67,7 +67,7 @@ export default function DeviceTrackingPage() {
         <div className="min-h-screen bg-slate-50 font-sans pb-20">
             {/* Header */}
             <div className="bg-[#0f172a] text-white p-5 pt-8 md:p-6 md:pb-12 rounded-b-[2rem] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                <div className="absolute top-0 left-0 w-full h-full opacity-20"></div>
 
                 <div className="relative z-10 max-w-7xl mx-auto mb-6 flex items-center justify-between">
                     <button onClick={() => router.push('/admin/dashboard')} className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/20 transition">
