@@ -2,53 +2,7 @@ version: '3.8'
 
 services:
 
-  # 1. MongoDB - Replica Set Mode
-  mongodb:
-    image: mongo:latest
-    container_name: m2m-mongodb-prod-test
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27019:27017"
-    volumes:
-      - m2m_prod_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--port", "27017", "--eval", "db.adminCommand('ping').ok", "--quiet"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 10s
-
-  # 2. Replica Set Init - One-shot service
-  mongo-init:
-    image: mongo:latest
-    container_name: m2m-mongodb-init
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    # [FIX] Added retry loop to wait for networking to be fully ready inside Docker
-    command: >
-      mongosh --host mongodb:27017 --eval
-      "let count = 0;
-       while (count < 10) {
-         try {
-           rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] });
-           print('[INIT] ✅ Replica Set rs0 initiated successfully.');
-           quit(0);
-         } catch(e) {
-           if (e.message.includes('already')) {
-             print('[INIT] ℹ️ Replica Set already initialized.');
-             quit(0);
-           }
-           print('[INIT] ⏳ Waiting for MongoDB connectivity... (' + e.message + ')');
-           sleep(2000);
-           count++;
-         }
-       }
-       print('[INIT] ❌ ERROR: Timed out waiting for MongoDB.');
-       quit(1);"
-    restart: "no"
-
-  # 3. Backend
+  # 1. Backend
   backend:
     restart: always
     build:
@@ -63,7 +17,8 @@ services:
       - SUPER_ADMIN_SEC_KEY_1=1111
       - SUPER_ADMIN_SEC_KEY_2=2222
       - SUPER_ADMIN_SEC_KEY_3=3333
-      - MONGODB_URI=mongodb://mongodb:27017/universal_game_core_v1?replicaSet=rs0
+      # [POINT TO HOST MONGO] Using the host machine's MongoDB (seen in Compass)
+      - MONGODB_URI=mongodb://host.docker.internal:27017/universal_game_core_v1
       - REDIS_URL=redis://host.docker.internal:6379
       - TZ=Asia/Dhaka
       - CLIENT_URL=http://localhost:3010
@@ -72,18 +27,17 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
-    depends_on:
-      mongo-init:
-        condition: service_completed_successfully
     extra_hosts:
+      # CRITICAL: Allows Docker container to see the Windows Host 'localhost'
       - "host.docker.internal:host-gateway"
 
-  # 4. Frontend
+  # 2. Frontend
   frontend:
     restart: always
     build:
       context: ./frontend
       args:
+        # Build-time API URL for the local simulator
         - NEXT_PUBLIC_API_URL=http://localhost:5010
     container_name: m2m-frontend-prod-test
     environment:
@@ -93,6 +47,9 @@ services:
       - "3010:3000"
     depends_on:
       - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
+  # Internal volume no longer strictly needed if using host MongoDB, but kept for future use if needed
   m2m_prod_data:

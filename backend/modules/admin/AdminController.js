@@ -77,71 +77,100 @@ class AdminController {
     async seedPlansV2(req, res) {
         try {
             const Plan = require('./PlanModel');
+            const TaskAd = require('../task/TaskAdModel');
+            
+            // FINAL PLANS CONFIGURATION (Approved)
             const PLANS = [
-                { price: 500, name: "Student Node" },      // $10
-                { price: 1000, name: "Starter Node" },     // $20
-                { price: 2000, name: "Basic Node" },       // $40
-                { price: 3000, name: "Standard Node" },    // $60
-                { price: 5000, name: "Advanced Node" },    // $100
-                { price: 7000, name: "Pro Node" },         // $140
-                { price: 9000, name: "Business Node" },    // $180
-                { price: 10000, name: "Enterprise Node" }, // $200
-                { price: 12000, name: "Corporate Node" },  // $240
-                { price: 15000, name: "Tycoon Node" }      // $300
+                {
+                    node_code: 'PLAN_V2_01',
+                    name: 'Nano Node',
+                    price: 260,
+                    daily_limit: 5,
+                    task_reward: 3.9,
+                    validity_days: 16,
+                    server_id: 'SERVER_01'
+                },
+                {
+                    node_code: 'PLAN_V2_02',
+                    name: 'Lite Node',
+                    price: 495,
+                    daily_limit: 7,
+                    task_reward: 5.2,
+                    validity_days: 18,
+                    server_id: 'SERVER_02'
+                },
+                {
+                    node_code: 'PLAN_V2_03',
+                    name: 'Turbo Node',
+                    price: 750,
+                    daily_limit: 7,
+                    task_reward: 5.5,
+                    validity_days: 24,
+                    server_id: 'SERVER_03'
+                },
+                {
+                    node_code: 'PLAN_V2_04',
+                    name: 'Ultra Node',
+                    price: 1100,
+                    daily_limit: 8,
+                    task_reward: 5.7,
+                    validity_days: 30,
+                    server_id: 'SERVER_04'
+                },
+                {
+                    node_code: 'PLAN_V2_05',
+                    name: 'Omega Node',
+                    price: 1450,
+                    daily_limit: 9,
+                    task_reward: 5.9,
+                    validity_days: 35,
+                    server_id: 'SERVER_05'
+                }
             ];
-
-            const VALIDITY_DAYS = 35;
-            const ROI_MULTIPLIER = 1.6; // 160%
-            const DAILY_TASKS = 10;
 
             const results = [];
 
             for (let i = 0; i < PLANS.length; i++) {
                 const p = PLANS[i];
-                const planId = `PLAN_V2_${String(i + 1).padStart(2, '0')}`;
-
-                // Calculate Math
-                const totalReturn = p.price * ROI_MULTIPLIER;
-                const dailyRevenue = totalReturn / VALIDITY_DAYS;
-                const perTaskReward = dailyRevenue / DAILY_TASKS;
+                
+                const totalReturn = p.daily_limit * p.task_reward * p.validity_days;
+                const roiPercentage = (totalReturn / p.price) * 100;
 
                 const planData = {
-                    name: `${p.name} ($${p.price * 0.02})`, // Visual helper showing equivalent USD
+                    name: p.name, // Exactly as inputted by user
                     type: 'server',
                     unlock_price: p.price,
-                    price_usd: (p.price * 0.02).toFixed(2), // Convert precisely back to USD value
-                    validity_days: VALIDITY_DAYS,
-                    daily_limit: DAILY_TASKS,
-                    task_reward: parseFloat(perTaskReward.toFixed(4)), // PRE-CALCULATED PRECISION
-                    roi_percentage: ROI_MULTIPLIER * 100,
-                    server_id: `SERVER_${String(i + 1).padStart(2, '0')}`, // Unique Server Group per Plan
-                    node_code: planId,
+                    price_usd: (p.price * 0.02).toFixed(2), // Cosmetic conversion
+                    validity_days: p.validity_days,
+                    daily_limit: p.daily_limit,
+                    task_reward: p.task_reward,
+                    roi_percentage: parseFloat(roiPercentage.toFixed(2)),
+                    server_id: p.server_id,
+                    node_code: p.node_code,
                     features: [
-                        'Dedicated v2 Server',
-                        `${DAILY_TASKS} Tasks Daily`,
-                        `Total Return: ${totalReturn.toFixed(0)} NXS`, // NXS standard
-                        '24/7 Support'
+                        'Dedicated Network Node',
+                        `${p.daily_limit} Guaranteed Tasks Daily`,
+                        `Total Earn: ${totalReturn % 1 === 0 ? totalReturn : totalReturn.toFixed(1)} NXS`,
+                        `Validity: ${p.validity_days} Days`
                     ],
                     is_active: true
                 };
 
                 const updatedPlan = await Plan.findOneAndUpdate(
-                    { node_code: planId },
+                    { node_code: p.node_code },
                     planData,
                     { upsert: true, new: true }
                 );
                 results.push(updatedPlan.name);
 
                 // --- SEED TASKS ---
-                // We keep generic placeholder tasks here but strip any complex logic because Ads will now pull from a global pool.
-                const TaskAd = require('../task/TaskAdModel');
                 const taskCount = await TaskAd.countDocuments({ server_id: updatedPlan.server_id });
 
-                if (taskCount < 5) {
+                if (taskCount < p.daily_limit) {
                     const tasksToSeed = [];
-                    for (let t = 1; t <= 10; t++) {
+                    for (let t = 1; t <= p.daily_limit; t++) {
                         tasksToSeed.push({
-                            title: `Advertiser Clip #${t}`,
+                            title: `Sponsored Content ${p.server_id.replace('SERVER_', '#')}-${t}`,
                             url: "https://google.com",
                             imageUrl: "https://via.placeholder.com/150",
                             duration: 10,
@@ -152,15 +181,21 @@ class AdminController {
                         });
                     }
                     await TaskAd.insertMany(tasksToSeed);
-                    Logger.info(`[ADMIN] Seeded 10 Tasks for ${updatedPlan.server_id}`);
+                    Logger.info(`[ADMIN] Seeded ${p.daily_limit} Tasks for ${updatedPlan.server_id}`);
                 }
             }
 
-            Logger.info(`[ADMIN] Seeded ${results.length} V2 Plans + Tasks via API`);
-            return res.json({ success: true, message: "Safe-Patch V2 Plans & Tasks Seeded Successfully", plans: results });
+            // Disable old plans not in this final list
+            await Plan.updateMany(
+                { node_code: { $nin: PLANS.map(p => p.node_code) } },
+                { $set: { is_active: false } }
+            );
+
+            Logger.info(`[ADMIN] Seeded ${results.length} Final V2 Plans + Tasks via API`);
+            return res.json({ success: true, message: "Final Plans Seeded Successfully", plans: results });
 
         } catch (err) {
-            Logger.error("Failed to seed V2 plans", err);
+            Logger.error("Failed to seed final plans", err);
             return res.status(500).json({ message: err.message });
         }
     }

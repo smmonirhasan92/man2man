@@ -21,20 +21,24 @@ export default function AdminPlansPage() {
         reward_multiplier: 1.00 // Added Default
     });
 
-    useEffect(() => {
-        fetchPlans();
-    }, []);
-
-    const fetchPlans = async () => {
+    const fetchPlans = async (isCancelled = false) => {
         try {
-            const res = await api.get('/plan'); // Use standard Plan endpoint
-            setPlans(res.data);
-            setLoading(false);
+            const res = await api.get('/plan');
+            if (!isCancelled) {
+                setPlans(res.data);
+                setLoading(false);
+            }
         } catch (err) {
-            console.error(err);
-            setLoading(false);
+            console.error("[PLANS_FETCH_ERROR]", err);
+            if (!isCancelled) setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let isCancelled = false;
+        fetchPlans(isCancelled);
+        return () => { isCancelled = true; };
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -122,46 +126,47 @@ export default function AdminPlansPage() {
 
             {/* Plans List - Stacked Flow */}
             <div className="px-6 space-y-4">
-                {plans.map(plan => (
-                    <div
-                        key={plan.id}
-                        className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden group"
-                    >
-                        {/* Color Strip */}
-                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${plan.name === 'VIP' ? 'bg-amber-400' :
-                            plan.name === 'Premium' ? 'bg-purple-500' : 'bg-slate-300'
-                            }`}></div>
+                {plans && plans.length > 0 ? (
+                    plans.map((plan, index) => (
+                        <div
+                            key={plan._id || plan.id || `plan-${index}`}
+                            className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden group"
+                        >
+                            {/* Color Strip */}
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${plan.name === 'VIP' ? 'bg-amber-400' :
+                                plan.name === 'Premium' ? 'bg-purple-500' : 'bg-slate-300'
+                                }`}></div>
 
-                        <div className="flex justify-between items-start">
-                            <div className="flex items-start gap-4">
-                                <div className={`p-3 rounded-xl bg-slate-50 ${plan.name === 'VIP' ? 'text-amber-500' :
-                                    plan.name === 'Premium' ? 'text-purple-600' : 'text-slate-500'
-                                    }`}>
-                                    <Crown className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-slate-800">{plan.name}</h3>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-medium">
-                                            {plan.daily_limit} Limit
-                                        </span>
-                                        <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium">
-                                            {plan.task_reward} NXS /Task
-                                        </span>
-                                        <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">
-                                            {plan.validity_days} Days
-                                        </span>
-                                        {plan.reward_multiplier > 1 && (
-                                            <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium">
-                                                {plan.reward_multiplier}x Reward
-                                            </span>
-                                        )}
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-start gap-4">
+                                    <div className={`p-3 rounded-xl bg-slate-50 ${plan.name === 'VIP' ? 'text-amber-500' :
+                                        plan.name === 'Premium' ? 'text-purple-600' : 'text-slate-500'
+                                        }`}>
+                                        <Crown className="w-6 h-6" />
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-2">
-                                        Max Earn: {(plan.daily_limit * (plan.task_reward * (plan.reward_multiplier || 1)) * plan.validity_days).toFixed(0)} NXS
-                                    </p>
+                                    <div>
+                                        <h3 className="font-bold text-lg text-slate-800">{plan.name}</h3>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-medium">
+                                                {plan.daily_limit} Limit
+                                            </span>
+                                            <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium">
+                                                {plan.task_reward} NXS /Task
+                                            </span>
+                                            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">
+                                                {plan.validity_days} Days
+                                            </span>
+                                            {plan.reward_multiplier > 1 && (
+                                                <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-medium">
+                                                    {plan.reward_multiplier}x Reward
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-2">
+                                            Max Earn: {(Number(plan.daily_limit || 0) * (Number(plan.task_reward || 0) * (Number(plan.reward_multiplier) || 1)) * Number(plan.validity_days || 0)).toFixed(0)} NXS
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
 
                             <div className="text-right">
                                 <div className="text-xl font-bold text-slate-900">
@@ -184,7 +189,13 @@ export default function AdminPlansPage() {
                             </div>
                         </div>
                     </div>
-                ))}
+                    ))
+                ) : (
+                    <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
+                        <div className="text-slate-400 font-bold">No active plans found</div>
+                        <p className="text-xs text-slate-400 mt-1">Add your first node to get started</p>
+                    </div>
+                )}
             </div>
 
             {/* Modal Form */}

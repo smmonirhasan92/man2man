@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Plan = require('./modules/admin/PlanModel');
 const TaskAd = require('./modules/task/TaskAdModel');
-// require('dotenv').config(); // Disabled to prevent overwriting Docker env vars
+require('dotenv').config();
 
 // =============================================================
 // ACCOUNT TIERS — Synced with Live Admin Panel

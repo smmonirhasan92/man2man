@@ -30,7 +30,10 @@ export default function AdminDashboard() {
     const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     useEffect(() => {
+        let isCancelled = false;
+
         const loadData = async () => {
+            if (isCancelled) return;
             try {
                 // 1. Financials
                 const finRes = await api.get('/admin/audit/financial');
@@ -38,23 +41,29 @@ export default function AdminDashboard() {
                 const actual = finRes.data.actual || {};
                 const eco = finRes.data.economics || {};
 
-                setStats({
-                    ...eco, // spreads totalUsers, totalDeposits, totalServerRevenue, etc.
-                    currentLiabilities: overview.current_liabilities || 0,
-                    pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0)
-                });
+                if (!isCancelled) {
+                    setStats({
+                        ...eco,
+                        currentLiabilities: overview.current_liabilities || 0,
+                        pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0)
+                    });
+                }
 
                 // 2. Maintenance Status
                 const sysRes = await api.get('/admin/settings/public');
-                if (sysRes.data.maintenance?.isActive) setMaintenance(true);
+                if (!isCancelled && sysRes.data.maintenance?.isActive) {
+                    setMaintenance(true);
+                }
 
             } catch (err) {
-                console.error(err);
+                console.error("[DASHBOARD_ERROR]", err);
             } finally {
-                setLoading(false);
+                if (!isCancelled) setLoading(false);
             }
         };
+
         loadData();
+        return () => { isCancelled = true; };
     }, []);
 
     const toggleMaintenance = async () => {
