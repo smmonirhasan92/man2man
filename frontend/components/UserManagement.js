@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../services/api';
-import { KeyRound, LineChart, Search, Wallet, Shield, RefreshCw, MapPin, Monitor, Plus, Minus } from 'lucide-react';
+import { KeyRound, LineChart, Search, Wallet, Shield, RefreshCw, MapPin, Monitor, Plus, Minus, Download } from 'lucide-react';
 import USCIcon from './ui/USCIcon';
 import RoleDropdown from './admin/RoleDropdown';
 import UserProfileModal from './admin/UserProfileModal';
@@ -57,6 +57,45 @@ export default function UserManagement() {
         setIsRefreshing(true);
         await fetchUsers();
         setIsRefreshing(false);
+    };
+
+    const handleExportCSV = () => {
+        if (!users || users.length === 0) {
+            toast.error('No users to export');
+            return;
+        }
+        
+        // Define CSV headers
+        const headers = ['ID', 'Full Name', 'Phone', 'Role', 'Status', 'Main Balance', 'Game Balance', 'Referral Code'];
+        
+        // Map user data to CSV rows
+        const csvRows = users.map(u => [
+            u.id || '',
+            `"${u.fullName || ''}"`,
+            `"${u.phone || u.u_ph || ''}"`,
+            u.role || '',
+            u.status || 'Active',
+            (u.wallet?.main ?? u.w_dat?.m ?? 0).toFixed(2),
+            (u.wallet?.game ?? u.w_dat?.g ?? 0).toFixed(2),
+            u.referralCode || ''
+        ]);
+        
+        // Join headers and rows
+        const csvContent = [
+            headers.join(','),
+            ...csvRows.map(r => r.join(','))
+        ].join('\n');
+        
+        // Create Blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `user_database_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('CSV Exported Successfully');
     };
 
     const handleBalanceUpdate = async (e) => {
@@ -140,13 +179,23 @@ export default function UserManagement() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <button
-                    onClick={handleRefresh}
-                    className={`p-4 bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl shadow-xl hover:bg-white transition flex items-center justify-center text-indigo-600 ${isRefreshing ? 'animate-spin' : ''}`}
-                    title="Refresh Data"
-                >
-                    <RefreshCw className="h-6 w-6" />
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExportCSV}
+                        className="p-4 bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl shadow-xl hover:bg-white transition flex items-center justify-center text-emerald-600 gap-2 font-bold text-sm"
+                        title="Export to CSV"
+                    >
+                        <Download className="h-5 w-5" />
+                        <span className="hidden sm:inline">Export CSV</span>
+                    </button>
+                    <button
+                        onClick={handleRefresh}
+                        className={`p-4 bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl shadow-xl hover:bg-white transition flex items-center justify-center text-indigo-600 ${isRefreshing ? 'animate-spin' : ''}`}
+                        title="Refresh Data"
+                    >
+                        <RefreshCw className="h-6 w-6" />
+                    </button>
+                </div>
             </div>
 
             {/* Error State */}
