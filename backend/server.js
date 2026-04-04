@@ -153,7 +153,11 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Explicitly allow all for test environment stability
+        // FIX: origin:"*" + credentials:true is illegal per CORS spec.
+        // Browser silently drops the handshake with 400. Use explicit list instead.
+        origin: function(origin, callback) {
+            callback(null, origin || "*");
+        },
         methods: ["GET", "POST"],
         credentials: true
     },
