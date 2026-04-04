@@ -153,28 +153,12 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: (origin, callback) => {
-            const allowedOrigins = [
-                "https://usaaffiliatemarketing.com",
-                "https://usa-affiliate.vercel.app",
-                "http://76.13.244.202", // Hardcoded for test VPS stability
-                "http://localhost:3000",
-                "http://localhost:3010",
-                "http://localhost:3011",
-                process.env.CLIENT_URL
-            ].filter(Boolean);
-
-            if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production' || origin.includes('76.13.244.202')) {
-                callback(null, true);
-            } else {
-                console.error(`[CORS REJECTED] Origin: ${origin}`);
-                callback(new Error('Not allowed by CORS'));
-            }
-        },
+        origin: "*", // Explicitly allow all for test environment stability
         methods: ["GET", "POST"],
         credentials: true
     },
-    transports: ['websocket', 'polling']
+    allowEIO3: true,
+    transports: ['polling', 'websocket']
 });
 
 // --- SOCKET ARCHITECTURE ---
