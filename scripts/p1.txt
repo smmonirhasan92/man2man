@@ -1,0 +1,27 @@
+﻿1: server {
+2:     server_name usaaffiliatemarketing.com www.usaaffiliatemarketing.com;
+3: 
+4:     # Frontend Routing
+5:     
+6:     # Maintenance Error Page Fallback
+7:     error_page 502 503 504 /maintenance.html;
+8:     location = /maintenance.html {
+9:         root /var/www/man2man;
+10:         internal;
+11:     }
+12: 
+13:     location / {
+14:         proxy_pass http://127.0.0.1:3000;
+15:         proxy_http_version 1.1;
+16:         proxy_set_header Upgrade $http_upgrade;
+17:         proxy_set_header Connection 'upgrade';
+18:         proxy_set_header Host $host;
+19:         proxy_cache_bypass $http_upgrade;
+20:     }
+21: 
+22:     # Backend / API Routing
+23:     location /api {
+24:         proxy_pass http://localhost:5050/api;
+25:         proxy_http_version 1.1;
+26:         proxy_set_header Upgrade $http_upgrade;
+27:         proxy_set_header Connection 'upgrade';

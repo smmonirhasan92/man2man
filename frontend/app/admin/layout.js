@@ -12,7 +12,7 @@ export default function AdminLayout({ children }) {
                 {/* Mobile Header */}
                 <header className="lg:hidden bg-[#0D0D0D] p-4 border-b border-white/10 sticky top-0 z-40 flex justify-between items-center">
                     <h1 className="text-lg font-bold tracking-tight">Admin Console</h1>
-                    <div className="text-xs bg-pink-600/20 text-pink-400 px-3 py-1 rounded-full border border-pink-500/30">v3.0</div>
+                    <div className="text-xs bg-pink-600/20 text-pink-400 px-3 py-1 rounded-full border border-pink-500/30">v3.1 VPS-DOCKER SYNC</div>
                 </header>
 
                 {/* Main Content Area */}

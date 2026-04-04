@@ -16,7 +16,7 @@ try {
 
     console.log('\n🚢 Step 2: Deploying to VPS Server...');
     // This calls our established SSH runner to pull and rebuild
-    const remoteCmd = "cd /var/www/man2man && git pull origin main && docker compose -f docker-compose.test.yml up -d --build m2m-backend-test";
+    const remoteCmd = "cd /var/www/man2man && git pull origin main && docker compose -f docker-compose.test.yml up -d --build m2m-frontend-test m2m-backend-test";
     execSync(`node "${sshRunnerPath}" "${remoteCmd}"`, { stdio: 'inherit' });
 
     console.log('\n✅ DEPLOYMENT SUCCESSFUL!');

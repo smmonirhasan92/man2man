@@ -1,0 +1,28 @@
+﻿28:         proxy_set_header Host $host;
+29:         proxy_cache_bypass $http_upgrade;
+30:     }
+31: 
+32:     # Socket.io Routing
+33:     location /socket.io/ {
+34:         proxy_pass http://localhost:5050;
+35:         proxy_http_version 1.1;
+36:         proxy_set_header Upgrade $http_upgrade;
+37:         proxy_set_header Connection "Upgrade";
+38:         proxy_set_header Host $host;
+39:     }
+40: 
+41:     listen 443 ssl;
+42:     ssl_certificate /etc/letsencrypt/live/usaaffiliatemarketing.com/fullchain.pem;
+43:     ssl_certificate_key /etc/letsencrypt/live/usaaffiliatemarketing.com/privkey.pem;
+44:     include /etc/letsencrypt/options-ssl-nginx.conf;
+45:     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+46: }
+47: 
+48: server {
+49:     if ($host = usaaffiliatemarketing.com) {
+50:         return 301 https://$host$request_uri;
+51:     }
+52:     listen 80;
+53:     server_name usaaffiliatemarketing.com www.usaaffiliatemarketing.com;
+54:     return 404;
+55: }

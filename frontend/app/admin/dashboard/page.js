@@ -106,7 +106,7 @@ export default function AdminDashboard() {
                         <h1 className="text-xl font-black uppercase tracking-widest text-[#D4AF37] flex items-center gap-2">
                             <ShieldCheck className="w-6 h-6" /> Admin Console
                             <span className="ml-4 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-[10px] rounded-md border border-yellow-500/30 animate-pulse">
-                                AI Node Center
+                                AI Node Center v3.1 (SYNCED)
                             </span>
                         </h1>
                     </div>
