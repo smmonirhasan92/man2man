@@ -77,7 +77,7 @@ services:
       - PORT=5011
       - NODE_ENV=production
       - MONGODB_URI=mongodb://m2m-mongodb-test:27017/universal_game_core_docker?replicaSet=rs0
-      - REDIS_URL=redis://76.13.244.202:6379
+      - REDIS_URL=
       - TZ=Asia/Dhaka
       - CLIENT_URL=http://76.13.244.202
       - JWT_SECRET=supersecretkeyremitwallet123
