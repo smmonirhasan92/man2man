@@ -59,4 +59,13 @@ async function runTransaction(callback) {
     }
 }
 
-module.exports = { runTransaction };
+async function checkBalanceSafety(initial, final, threshold = 1000) {
+    const delta = Math.abs(final - initial);
+    if (delta > threshold) {
+        console.error(`🚨 [SECURITY_ALERT] Excessive balance jump detected: ${initial} -> ${final} (Delta: ${delta})`);
+        return false;
+    }
+    return true;
+}
+
+module.exports = { runTransaction, checkBalanceSafety };

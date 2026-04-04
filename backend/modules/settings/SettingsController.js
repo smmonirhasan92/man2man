@@ -31,8 +31,29 @@ exports.getPublicSettings = async (req, res) => {
     }
 };
 
-// Update Settings (Admin Only) - Placeholder for now
+// Update Settings (Admin Only)
 exports.updateSettings = async (req, res) => {
-    // ... Logic to update
-    res.json({ message: 'Settings updated' });
+    try {
+        const { key, value, category, description } = req.body;
+        
+        if (!key || value === undefined) {
+            return res.status(400).json({ success: false, message: 'Key and Value are required' });
+        }
+
+        const setting = await SystemSetting.findOneAndUpdate(
+            { key },
+            { 
+                key, 
+                value, 
+                category: category || 'system',
+                description 
+            },
+            { upsert: true, new: true }
+        );
+
+        res.json({ success: true, message: `Setting '${key}' updated successfully.`, data: setting });
+    } catch (err) {
+        console.error('UpdateSettings Error:', err);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
 };

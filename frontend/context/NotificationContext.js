@@ -149,6 +149,19 @@ export function NotificationProvider({ children }) {
 
         const handleWalletUpdate = (data) => {
             console.log('[SOCKET_CONTEXT] Wallet Update Received');
+
+            // [P#3] SOCKET SPOILER GUARD
+            // If a high-stakes animation is running, do NOT update the UI yet.
+            // This prevents the user from seeing their new balance before the animation finishes.
+            if (typeof window !== 'undefined') {
+                if (window.isLuckTestAnimating || window.isMysteryVaultAnimating) {
+                    console.log('[SOCKET_CONTEXT] Animation in progress. Deferring UI update.');
+                    window.deferredLuckTestBalance = data?.newBalance || data?.amount || data;
+                    window.deferredVaultBalance = data?.newBalance || data?.amount || data;
+                    return; 
+                }
+            }
+
             playSound('success');
 
             if (data?.type === 'withdrawal_completed') {

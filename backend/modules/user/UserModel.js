@@ -146,6 +146,15 @@ const UserSchema = new mongoose.Schema({
     ratingCount: { type: Number, default: 0 },
     isVerifiedMerchant: { type: Boolean, default: false }, // [NEW] Admin assigned verification badge
 
+    // --- Universal Engine Statistics ---
+    gameStats: {
+        totalGamesPlayed: { type: Number, default: 0 },
+        totalGamesWon: { type: Number, default: 0 }, // Rank 1 or 2
+        consecutiveLosses: { type: Number, default: 0 },
+        netProfitLoss: { type: Number, default: 0 }, // Positive = User won more than spent
+        lastWinDate: { type: Date }
+    },
+
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

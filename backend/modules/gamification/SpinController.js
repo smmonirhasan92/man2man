@@ -1,61 +1,24 @@
-const WalletService = require('../wallet/WalletService');
-const Transaction = require('../wallet/TransactionModel');
 const TransactionHelper = require('../common/TransactionHelper');
+const UniversalMatchMaker = require('./UniversalMatchMaker');
+const User = require('../user/UserModel');
 
-// Mathematical Blueprints (RTP 93-95%, Edge 5-7%) High Volatility Action
 const TIERS = {
-    bronze: {
-        cost: 50, // 1 NXS
-        costNXS: 1,
-        outcomes: [
-            { label: 'Jackpot', amountNXS: 5, chance: 5, cls: 'jackpot' },
-            { label: 'Medium', amountNXS: 2, chance: 20, cls: 'medium' },
-            { label: 'Refund', amountNXS: 1, chance: 20, cls: 'refund' },
-            { label: 'Small', amountNXS: 0.5, chance: 15, cls: 'small' },
-            { label: 'Miss', amountNXS: 0, chance: 40, cls: 'loss' }
-        ]
-    },
-    silver: {
-        costNXS: 2.5, // 5 cents
-        outcomes: [
-            { label: 'Jackpot', amountNXS: 12.5, chance: 5, cls: 'jackpot' },
-            { label: 'Medium', amountNXS: 5, chance: 22, cls: 'medium' },
-            { label: 'Refund', amountNXS: 2.5, chance: 20, cls: 'refund' },
-            { label: 'Small', amountNXS: 1, chance: 10, cls: 'small' },
-            { label: 'Miss', amountNXS: 0, chance: 43, cls: 'loss' }
-        ]
-    },
-    gold: {
-        costNXS: 5, // 10 cents
-        outcomes: [
-            { label: 'Super Jackpot', amountNXS: 25, chance: 5, cls: 'jackpot' },
-            { label: 'Medium', amountNXS: 10, chance: 25, cls: 'medium' },
-            { label: 'Refund', amountNXS: 5, chance: 15, cls: 'refund' },
-            { label: 'Small', amountNXS: 2.5, chance: 10, cls: 'small' },
-            { label: 'Miss', amountNXS: 0, chance: 45, cls: 'loss' }
-        ]
-    }
+  bronze: { costNXS: 5, labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
+  silver: { costNXS: 10, labels: { win: 'Silver Jackpot', loss: 'Miss' } },
+  gold: { costNXS: 15, labels: { win: 'Gold Jackpot', loss: 'Miss' } }
 };
 
-// Generate probability pool once
-const generatedPools = {};
-Object.keys(TIERS).forEach(tierKey => {
-    const tier = TIERS[tierKey];
-    const pool = [];
-    tier.outcomes.forEach((outcome, index) => {
-        for (let i = 0; i < outcome.chance; i++) {
-            pool.push({ ...outcome, index });
-        }
-    });
-    // Shuffle the array multiple times for secure randomness
-    for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    generatedPools[tierKey] = pool;
-});
-
+// --- SPIN LOGIC (Luck Test) ---
 exports.spinLuckTest = async (req, res) => {
+    return processGameRequest(req, res, 'spin', 50);
+};
+
+// --- SCRATCH CARD LOGIC ---
+exports.scratchCard = async (req, res) => {
+    return processGameRequest(req, res, 'scratch', 2000); // 2s window
+};
+
+async function processGameRequest(req, res, gameType, windowMs) {
     try {
         const { tier } = req.body;
         const userId = req.user.user.id;
@@ -64,126 +27,69 @@ exports.spinLuckTest = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid tier selected.' });
         }
 
-        const selectedTier = TIERS[tier];
-        const cost = selectedTier.costNXS;
+        const cost = TIERS[tier].costNXS;
 
-        // Pick a random outcome from the shuffled pool
-        const pool = generatedPools[tier];
-        const winOutcome = pool[Math.floor(Math.random() * pool.length)];
-        const winAmt = winOutcome.amountNXS;
+        // Process through Pure Pooling Engine
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, windowMs);
+        const winAmt = matchResult.winAmount;
+
+        // --- MAP DYNAMIC MULTIPLIER TO VISUAL WHEEL SLICE ---
+        const mult = parseFloat((winAmt / cost).toFixed(2));
+        let sliceIndex = 4; // Default to Loss (0)
+        if (mult === 5.0) sliceIndex = 0;
+        else if (mult === 3.0) sliceIndex = 1;
+        else if (mult === 2.5) sliceIndex = 2;
+        else if (mult === 2.0) sliceIndex = 3;
+        else if (mult === 0.0) sliceIndex = 4;
+        else if (mult === 1.5) sliceIndex = 5;
+        else if (mult === 1.0) sliceIndex = 6;
+        else if (mult === 0.5) sliceIndex = 7;
 
         const result = await TransactionHelper.runTransaction(async (session) => {
-            const User = require('../user/UserModel');
             const user = await User.findById(userId).session(session);
-            if (!user) throw new Error('User not found');
+            if (user.wallet.main < cost) throw new Error('Insufficient Balance');
 
-            const initialBalance = parseFloat(user.wallet?.main || 0);
-            if (initialBalance < cost) throw new Error('Insufficient Balance');
+            const initialBalance = user.wallet.main;
+            const finalBalance = initialBalance - cost + winAmt;
 
-            // --- 1. CALCULATE FINAL BALANCE ---
-            // Atomically calculate the end state: (Initial - Cost + Win)
-            const balanceAfterDeduct = initialBalance - cost;
-            const finalBalance = balanceAfterDeduct + winAmt;
+            // [SECURITY] SANITY CHECK
+            const isSafe = await TransactionHelper.checkBalanceSafety(initialBalance, finalBalance);
+            if (!isSafe) throw new Error('Security Alert: Excessive Balance Change Blocked.');
 
-            // --- 2. UPDATE USER RECORD (SINGLE SAVE) ---
             user.wallet.main = finalBalance;
-            user.markModified('wallet.main'); // CRITICAL: Explicitly notify Mongoose of nested change
-            await user.save(session ? { session } : undefined);
 
-            // --- 3. LOG LEDGER (TWO ENTRIES FOR TRANSPARENCY) ---
-            const TransactionLedger = require('../wallet/TransactionLedgerModel');
-            const trxId = `SPIN_${Date.now()}`;
-
-            // Entry A: The Cost
-            await TransactionLedger.create([{
-                userId, type: 'debit', amount: -cost,
-                balanceBefore: initialBalance, balanceAfter: balanceAfterDeduct,
-                description: `Luck Test: ${tier} spin cost`,
-                transactionId: `${trxId}_COST`
-            }], session ? { session } : undefined);
-
-            // Entry B: The Win (if any)
-            if (winAmt > 0) {
-                await TransactionLedger.create([{
-                    userId, type: 'credit', amount: winAmt,
-                    balanceBefore: balanceAfterDeduct, balanceAfter: finalBalance,
-                    description: `Luck Test: ${tier} reward (${winOutcome.label})`,
-                    transactionId: `${trxId}_WIN`
-                }], session ? { session } : undefined);
+            // Stats Update (Real-time P&L Tracking)
+            user.gameStats.totalGamesPlayed += 1;
+            user.gameStats.netProfitLoss += (winAmt - cost);
+            if (matchResult.isWin) {
+                user.gameStats.totalGamesWon += 1;
+                user.gameStats.consecutiveLosses = 0;
+            } else {
+                user.gameStats.consecutiveLosses += 1;
             }
 
-            // Entry C: UI Transaction Record (Net Result for Dashboard)
-            await Transaction.create([{
-                userId,
-                type: winAmt > cost ? 'game_win' : (winAmt === cost ? 'game_neutral' : 'game_loss'),
-                amount: winAmt - cost,
-                status: 'completed',
-                description: `Luck Test: ${winOutcome.label}`,
-                source: 'game',
-                recipientDetails: `Win: ${winAmt} NXS (Cost: ${cost})`,
-                transactionId: `${trxId}_UI`
-            }], session ? { session } : undefined);
+            user.markModified('wallet.main');
+            user.markModified('gameStats');
+            await user.save({ session });
 
-            return { winOutcome, newBalance: finalBalance, trxId };
+            return { winAmt, finalBalance: user.wallet.main };
         });
 
-        // --- [NEW: POST-TRANSACTION INTEGRITY VERIFY] ---
-        try {
-            await verifySpinTransaction(userId, result.trxId, result.newBalance);
-        } catch (e) {
-            console.error('[CRITICAL] LuckTest Integrity Check Failed', e);
-        }
-
-        // Invalidate Redis profile outside of session
-        try {
-            const redisInv = require('../../config/redis');
-            await redisInv.client.del(`user_profile:${userId}`);
-        } catch (e) { }
-
-        // Send back matching UI result
+        // SUCCESS Bridge Response
         return res.json({
             success: true,
-            tier: tier,
+            tier,
+            game: gameType,
             result: {
-                ...result.winOutcome,
-                sliceIndex: result.winOutcome.index // Pass the exact slice index for visual sync
+                label: matchResult.label || (matchResult.isWin ? TIERS[tier].labels.win : TIERS[tier].labels.loss),
+                amountNXS: winAmt,
+                isWin: matchResult.isWin,
+                mode: matchResult.mode,
+                sliceIndex: sliceIndex
             },
-            newBalance: result.newBalance
+            newBalance: result.finalBalance
         });
-
-    } catch (error) {
-        if (error.message === 'Insufficient Balance') {
-            return res.status(400).json({ success: false, message: 'Insufficient Main Balance (NXS)' });
-        }
-        console.error('LuckTest Spin Error:', error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
     }
-};
-
-/**
- * [P#3] Verify Transaction Integrity
- * Cross-checks the ledger entries with the final reported balance.
- */
-async function verifySpinTransaction(userId, trxId, expectedBalance) {
-    const TransactionLedger = require('../wallet/TransactionLedgerModel');
-    
-    // Fetch all entries for this spin
-    const entries = await TransactionLedger.find({
-        transactionId: new RegExp(`^${trxId}`)
-    }).sort({ createdAt: -1 });
-
-    if (entries.length === 0) return false;
-
-    // Check if the latest entry's balanceAfter matches expectedBalance
-    const lastEntryBalance = parseFloat(entries[0].balanceAfter);
-    const diff = Math.abs(lastEntryBalance - expectedBalance);
-
-    if (diff > 0.0001) {
-        console.error(`[TX_VERIFY] MISMATCH! Expected: ${expectedBalance}, Got: ${lastEntryBalance}`);
-        // Here we could trigger an admin alert service
-        return false;
-    }
-    
-    console.log(`[TX_VERIFY] ✅ Transaction ${trxId} verified successfully`);
-    return true;
 }
