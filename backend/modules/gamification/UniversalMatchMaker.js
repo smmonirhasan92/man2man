@@ -48,6 +48,21 @@ class UniversalMatchMaker {
                 } else if (gameType === 'spin') {
                     this.globalSpinPool += rewardPool;
                     this.executeSpinBatch(batch, isDuo);
+                } else {
+                    // Fallback generic logic (e.g. for 'gift' boxes)
+                    if (isDuo) {
+                        const winnerIdx = Math.random() > 0.5 ? 0 : 1;
+                        const loserIdx = winnerIdx === 0 ? 1 : 0;
+                        batch[winnerIdx].resolve(this.generateOutcome(batch[winnerIdx].betAmount * 1.8, 'WIN', 1, rewardPool));
+                        batch[loserIdx].resolve(this.generateOutcome(0, 'LOSS', 8, rewardPool));
+                    } else {
+                        const random = Math.random();
+                        if (random > 0.6) {
+                            batch[0].resolve(this.generateOutcome(batch[0].betAmount * 0.9, 'REFUND', 2, rewardPool));
+                        } else {
+                            batch[0].resolve(this.generateOutcome(0, 'LOSS', 8, rewardPool));
+                        }
+                    }
                 }
             }
         } finally { q.isProcessing = false; }

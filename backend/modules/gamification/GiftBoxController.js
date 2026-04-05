@@ -23,8 +23,14 @@ exports.openGiftBox = async (req, res) => {
         const matchResult = await UniversalMatchMaker.processMatch(userId, cost, 'gift', 1500);
         let winAmt = matchResult.winAmount;
 
-        // [FAIL-SAFE] Explicitly CAP the win to 1.8x of cost as requested (10 NXS -> Max 18 NXS)
-        winAmt = Math.min(winAmt, cost * 1.8);
+        // [FAIL-SAFE] Check Free Tier vs Paid Tier
+        if (cost === 0) {
+            // Free Box gives a fixed random reward between 0.1 and 1.5 NXS
+            winAmt = parseFloat((Math.random() * 1.4 + 0.1).toFixed(2));
+        } else {
+            // Explicitly CAP the win to 1.8x of cost for paid tiers
+            winAmt = Math.min(winAmt, cost * 1.8);
+        }
 
         const resultData = await TransactionHelper.runTransaction(async (session) => {
             const user = await User.findById(userId).session(session);
