@@ -55,7 +55,19 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   const [prizeData, setPrizeData] = useState(null);
   const prizeDataRef = React.useRef(null);
   const [flyingNotes, setFlyingNotes] = useState([]);
+  const [maxSafeWin, setMaxSafeWin] = useState(null);
   const { play: playSound } = useGameSound();
+
+  // Dynamic Vault Status
+  useEffect(() => {
+    const fetchVault = async () => {
+        try {
+            const res = await api.get('/game/vault-status');
+            if (res.data.success) setMaxSafeWin(res.data.maxSafeWin);
+        } catch (e) { }
+    };
+    fetchVault();
+  }, []);
 
   const handleExit = () => {
     if (gameState === 'BOUGHT' || gameState === 'READY_TO_SCRATCH') return;
@@ -234,7 +246,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                 <h1 className="text-2xl font-black text-white mb-0.5 tracking-tighter flex items-center justify-center gap-2 drop-shadow-xl">
                     <Sparkles className="text-amber-400 w-5 h-5 animate-pulse" /> {TIERS[tier].name}
                 </h1>
-                <p className="text-amber-500/60 text-[9px] uppercase tracking-[0.3em] font-black mb-1">{TIERS[tier].slogan}</p>
+                <p className="text-amber-500 text-[10px] uppercase tracking-[0.3em] font-black mb-1 animate-pulse">Win Up to {maxSafeWin ? `${maxSafeWin} NXS` : '...'}</p>
                 <p className="text-slate-500 text-[8px] px-2 uppercase tracking-widest font-bold opacity-40 italic">Global Luck Multiplier: 1:8 Pool Active</p>
             </div>
 

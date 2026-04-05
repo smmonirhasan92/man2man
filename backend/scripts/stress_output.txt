@@ -1,0 +1,14 @@
+﻿=== Staring MongoDB Gamification Engine Stress Test ===
+[INIT] Initial Vault State: Active: 5000, Interest: 500
+[TEST] Emulating 50 concurrent Spin actions...
+
+[RESULT] 50 Matches processed successfully!
+[RESULT] Users won 40 out of 50 spins.
+[RESULT] Total Winnings Given to Users: 595.00 NXS
+
+[FINAL VAULT] Admin Income: 68.00 NXS
+[FINAL VAULT] User Interest Fund: 602.00 NXS
+[FINAL VAULT] Active Pool: 4915.00 NXS
+[FINAL VAULT] Total Bets Tracked: 680.00 NXS
+[FINAL VAULT] Total Payouts Tracked: 595.00 NXS
+[FINAL VAULT] Total Games Played: 50

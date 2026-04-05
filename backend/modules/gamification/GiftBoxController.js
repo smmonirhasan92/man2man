@@ -23,13 +23,17 @@ exports.openGiftBox = async (req, res) => {
         const matchResult = await UniversalMatchMaker.processMatch(userId, cost, 'gift', 1500);
         let winAmt = matchResult.winAmount;
 
-        // [FAIL-SAFE] Check Free Tier vs Paid Tier
+        // Fetch and deduct Free Box directly from User-Interest Fund to keep Admin protected
         if (cost === 0) {
-            // Free Box gives a fixed random reward between 0.1 and 1.5 NXS
-            winAmt = parseFloat((Math.random() * 1.4 + 0.1).toFixed(2));
-        } else {
-            // Explicitly CAP the win to 1.8x of cost for paid tiers
-            winAmt = Math.min(winAmt, cost * 1.8);
+            const GameVault = require('./GameVaultModel');
+            const vault = await GameVault.getMasterVault();
+            winAmt = parseFloat((Math.random() * 0.5 + 0.1).toFixed(2)); // Reduced free tier payload to 0.1-0.6
+            
+            if (vault.balances.userInterest >= winAmt) {
+                await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, { $inc: { 'balances.userInterest': -winAmt }});
+            } else {
+               winAmt = 0; // Vault is empty, Free Box gives nothing!
+            }
         }
 
         const resultData = await TransactionHelper.runTransaction(async (session) => {

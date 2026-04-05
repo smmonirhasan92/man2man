@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, MessageSquare, LogOut, Settings, Copy, Download } from 'lucide-react';
+import { X, MessageSquare, LogOut, Settings, Copy, Download, Headset } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -126,6 +126,10 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                         className="w-full py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition uppercase"
                     >
                         <Download size={14} /> Download Official App
+                    </button>
+
+                    <button onClick={() => router.push('/support')} className="w-full py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
+                        <Headset size={14} /> Contact Support
                     </button>
 
                     <button onClick={logout} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">

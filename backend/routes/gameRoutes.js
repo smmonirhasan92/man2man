@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const spinController = require('../modules/gamification/SpinController');
 const giftBoxController = require('../modules/gamification/GiftBoxController');
+const vaultController = require('../modules/gamification/VaultController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 const crashGameManager = require('../modules/gamification/CrashGameSocket');
@@ -23,16 +24,16 @@ const sessionRestLimiter = (req, res, next) => {
     }
 
     const timePlayed = now - sessionData.startTime;
-    const FIVE_MIN = 5 * 60 * 1000;
-    const EIGHT_MIN = 8 * 60 * 1000;
+    const PLAY_TIME = 20 * 60 * 1000;
+    const TOTAL_WIND = 21 * 60 * 1000;
 
-    if (timePlayed < FIVE_MIN) { // 5 mins unlimited play
+    if (timePlayed < PLAY_TIME) { // 20 mins unlimited play
         return next();
-    } else if (timePlayed < EIGHT_MIN) { // 3 mins cooldown
-        const cooldownRemaining = EIGHT_MIN - timePlayed;
+    } else if (timePlayed < TOTAL_WIND) { // 1 min cooldown
+        const cooldownRemaining = TOTAL_WIND - timePlayed;
         return res.status(429).json({ 
             success: false, 
-            message: 'Take a breath! Next session starts in...', 
+            message: 'Engine over-heat! Standard cooldown active...', 
             cooldownRemaining 
         });
     } else { // Session resets
@@ -40,6 +41,9 @@ const sessionRestLimiter = (req, res, next) => {
         return next();
     }
 };
+
+// Public Vault Status (Max Safe Win Info)
+router.get('/vault-status', authMiddleware, vaultController.getPublicVaultStatus);
 
 // Route for Luck Test (Tiered Spins)
 router.post('/luck-test', authMiddleware, sessionRestLimiter, spinController.spinLuckTest);

@@ -1,20 +1,18 @@
-const SystemSetting = require('../settings/SystemSettingModel');
-const User = require('../user/UserModel');
+const GameVault = require('./GameVaultModel');
 
-/**
- * Universal MatchMaker Engine - V4 (High-Rolling & Retention Optimized)
- * Features: Rolling Trap, Jackpot Gating, and Dynamic Difficulty Scaling (DDS).
- */
 class UniversalMatchMaker {
     constructor() {
         this.queues = {};
         this.DEFAULT_WINDOW_MS = 1500; 
-        this.globalScratchPool = 50000; // Track historical liquidity to allow jackpots
-        this.globalSpinPool = 0; // Strictly 0 so admin never loses. Accumulates from margins.
     }
 
     async processMatch(userId, betAmount, gameType = 'spin', customWindowMs = null) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            const vault = await GameVault.getMasterVault();
+            if (!vault.config.isEnabled) {
+                return reject(new Error('Game engine is currently disabled by admin (Kill Switch).'));
+            }
+
             if (!this.queues[gameType]) {
                 this.queues[gameType] = { players: [], timeout: null, isProcessing: false };
             }
@@ -26,6 +24,18 @@ class UniversalMatchMaker {
         });
     }
 
+    flushQueues() {
+        for (let game in this.queues) {
+            const q = this.queues[game];
+            for (let p of q.players) {
+                p.reject(new Error("Engine flushed by admin. Bet cancelled."));
+            }
+            if (q.timeout) clearTimeout(q.timeout);
+        }
+        this.queues = {};
+        console.log("[UniversalMatchMaker] Queues flushed!");
+    }
+
     async triggerMatch(gameType) {
         const q = this.queues[gameType];
         if (!q || q.isProcessing) return;
@@ -34,154 +44,169 @@ class UniversalMatchMaker {
 
         try {
             while (q.players.length > 0) {
-                // Batching: Duo Preferred, Solo fallback
                 let batch = q.players.length >= 2 ? q.players.splice(0, 2) : q.players.splice(0, 1);
                 const isDuo = batch.length === 2;
                 
+                // 1. Fetch current Vault Snapshot
+                const vault = await GameVault.getMasterVault();
+                
+                // 2. Triple Stream Distribution Setup
                 const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
-                const adminMargin = totalBet * 0.10; // Guaranteed 10% Profit
-                const rewardPool = totalBet - adminMargin; 
+                const adminIncomeIn = totalBet * 0.10;
+                const userInterestIn = totalBet * 0.15;
+                const activePoolIn = totalBet * 0.75;
 
-                if (gameType === 'scratch') {
-                    this.globalScratchPool += rewardPool;
-                    this.executeScratchBatch(batch, isDuo);
-                } else if (gameType === 'spin') {
-                    this.globalSpinPool += rewardPool;
-                    this.executeSpinBatch(batch, isDuo);
-                } else {
-                    // Fallback generic logic (e.g. for 'gift' boxes)
-                    if (isDuo) {
-                        const winnerIdx = Math.random() > 0.5 ? 0 : 1;
-                        const loserIdx = winnerIdx === 0 ? 1 : 0;
-                        batch[winnerIdx].resolve(this.generateOutcome(batch[winnerIdx].betAmount * 1.8, 'WIN', 1, rewardPool));
-                        batch[loserIdx].resolve(this.generateOutcome(0, 'LOSS', 8, rewardPool));
-                    } else {
-                        const random = Math.random();
-                        if (random > 0.6) {
-                            batch[0].resolve(this.generateOutcome(batch[0].betAmount * 0.9, 'REFUND', 2, rewardPool));
+                // Active variables for calculations
+                let currentActivePool = vault.balances.activePool + activePoolIn;
+                let currentUserInterest = vault.balances.userInterest + userInterestIn;
+                const hardStop = vault.config.hardStopLimit;
+                const isTightMode = currentActivePool < vault.config.tightModeThreshold;
+                const houseEdgeModifier = Math.max(0, (100 - (vault.config.houseEdge || 10)) / 90);
+
+                let totalActiveDeduct = 0;
+                let totalInterestDeduct = 0;
+
+                // 3. Process Batch
+                for (let i = 0; i < batch.length; i++) {
+                    const p = batch[i];
+                    let rtpMult = 0.0;
+                    let label = 'LOSS';
+                    let rank = 8;
+
+                    // Get base multiplier based on game logic
+                    if (gameType === 'scratch') {
+                        const res = this.getScratchBaseRTP(p.betAmount, isTightMode, houseEdgeModifier);
+                        rtpMult = res.mult; label = res.label; rank = res.rank;
+                    } else if (gameType === 'spin') {
+                        const res = this.getSpinBaseRTP(isTightMode, houseEdgeModifier);
+                        rtpMult = res.mult; label = res.label; rank = res.rank;
+                    } else { // Fallback / Gift
+                        const res = this.getFallbackBaseRTP(isTightMode, houseEdgeModifier);
+                        rtpMult = res.mult; label = res.label; rank = res.rank;
+                    }
+
+                    // Payout Calculation
+                    let targetPayout = p.betAmount * rtpMult;
+
+                    // Financial Safety Net: Limit Payouts
+                    let actualPayout = targetPayout;
+                    let usedInterest = 0;
+
+                    if (actualPayout > currentActivePool) {
+                        const deficit = actualPayout - currentActivePool;
+                        // Use BOOST from Interest Fund if available
+                        if (currentUserInterest > 0 && !isTightMode) {
+                            usedInterest = Math.min(deficit, currentUserInterest);
+                            actualPayout = currentActivePool + usedInterest;
                         } else {
-                            batch[0].resolve(this.generateOutcome(0, 'LOSS', 8, rewardPool));
+                            // Empty Interest Fund or Tight Mode: Only pay from Active Pool
+                            actualPayout = currentActivePool;
+                            label = 'CONSOLATION (SAFE)';
+                            rank = 3;
                         }
                     }
+
+                    // [V8.0] ABSOLUTE CAP: 100% Interest Fund Exhaustion Guard
+                    if (actualPayout > (currentActivePool + currentUserInterest)) {
+                        actualPayout = currentActivePool + currentUserInterest;
+                    }
+
+                    // HARD STOP PROTECTION (Max Single Win)
+                    if (actualPayout > hardStop) {
+                        actualPayout = hardStop;
+                        usedInterest = Math.min(usedInterest, actualPayout); 
+                    }
+
+                    // Bookkepping
+                    const activePoolPayout = actualPayout - usedInterest;
+                    currentActivePool -= activePoolPayout;
+                    currentUserInterest -= usedInterest;
+                    
+                    totalActiveDeduct += activePoolPayout;
+                    totalInterestDeduct += usedInterest;
+
+                    // Delay resolution
+                    p.finalOutcome = {
+                        winAmount: parseFloat(actualPayout.toFixed(2)),
+                        isWin: actualPayout > 0,
+                        label: label,
+                        rank: rank,
+                        mode: isDuo ? 'p2p' : 'single',
+                        pool: parseFloat(currentActivePool.toFixed(2))
+                    };
                 }
+
+                // 4. Atomic Database Update ($inc)
+                await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
+                    $inc: {
+                        'balances.adminIncome': adminIncomeIn,
+                        'balances.userInterest': userInterestIn - totalInterestDeduct,
+                        'balances.activePool': activePoolIn - totalActiveDeduct,
+                        'stats.totalBetsIn': totalBet,
+                        'stats.totalPayoutsOut': totalActiveDeduct + totalInterestDeduct,
+                        'stats.totalGamesPlayed': batch.length
+                    }
+                });
+
+                // 5. Finalize Promises
+                for (let p of batch) {
+                    p.resolve(p.finalOutcome);
+                }
+
+                // [NEW] Push to Admin Live Feed
+                try {
+                    const SocketService = require('./common/SocketService');
+                    if (SocketService) {
+                        const totalPayoutStr = (totalActiveDeduct + totalInterestDeduct).toFixed(2);
+                        SocketService.broadcast('admin_dashboard', 'activity_feed', {
+                            event: `${batch.length} player(s) played ${gameType.toUpperCase()}`,
+                            payout: totalPayoutStr,
+                            timestamp: Date.now()
+                        });
+                    }
+                } catch(e) { }
+
             }
         } finally { q.isProcessing = false; }
     }
 
-    /**
-     * Optimized Scratch Engine: Distributes rewards with volatility while capping at 90% RTP.
-     */
-    executeScratchBatch(batch, isDuo) {
-        if (!isDuo) {
-            const p = batch[0];
-            const outcome = this.calcWeightedMult(p.betAmount, this.globalScratchPool);
-            this.globalScratchPool = Math.max(0, this.globalScratchPool - outcome.amount);
-            p.resolve(this.generateOutcome(outcome.amount, outcome.label, outcome.rank, this.globalScratchPool));
-            return;
-        }
-
-        // Duo Scratch: Solve for P1, then assign remaining to P2
-        const p1 = batch[0];
-        const p2 = batch[1];
+    getScratchBaseRTP(bet, isTightMode, houseEdgeModifier = 1) {
+        const rng = (Math.random() * 100) / houseEdgeModifier; // Higher edge = lower effective chance
+        let mult = 0; let label = 'LOSS'; let rank = 8;
         
-        const o1 = this.calcWeightedMult(p1.betAmount, this.globalScratchPool);
-        this.globalScratchPool = Math.max(0, this.globalScratchPool - o1.amount);
-        
-        const o2 = this.calcWeightedMult(p2.betAmount, this.globalScratchPool);
-        this.globalScratchPool = Math.max(0, this.globalScratchPool - o2.amount);
-
-        p1.resolve(this.generateOutcome(o1.amount, o1.label, o1.rank, this.globalScratchPool));
-        p2.resolve(this.generateOutcome(o2.amount, o2.label, o2.rank, this.globalScratchPool));
-    }
-
-    calcWeightedMult(bet, pool) {
-        const rng = Math.random() * 100;
-        let mult = 0;
-        let label = 'LOSS';
-        let rank = 8;
-
-        if (rng < 1) { mult = 10.0; label = 'LEGENDARY'; rank = 1; }
-        else if (rng < 5) { mult = 5.0; label = 'EPIC'; rank = 1; }
-        else if (rng < 15) { mult = 2.0; label = 'PROFIT'; rank = 2; }
-        else if (rng < 35) { mult = 1.0; label = 'REFUND'; rank = 2; }
-        else if (rng < 55) { 
-            if (bet === 50) mult = 0.3; // Consolation 15
-            else if (bet === 100) mult = 0.25; // Consolation 25
-            else mult = 0.5; // Default Consolation 0.5x
-            label = 'CONSOLATION'; rank = 3; 
-        }
+        if (rng < 2 && !isTightMode) { mult = 10.0; label = 'LEGENDARY'; rank = 1; }
+        else if (rng < 8 && !isTightMode) { mult = 5.0; label = 'EPIC'; rank = 1; }
+        else if (rng < 20) { mult = 2.0; label = 'PROFIT'; rank = 2; }
+        else if (rng < 45) { mult = 1.0; label = 'REFUND'; rank = 2; }
+        else if (rng < 70) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
         else { mult = 0.0; label = 'LOSS'; rank = 8; }
-
-        // Mandatory Cap: A single payout cannot exceed the entire reward pool of the batch
-        let amount = Math.min(bet * mult, pool);
         
-        // Adjust label if capped significantly
-        if (amount < bet * mult && amount > 0) label = 'MEGA WIN (CAPPED)';
-
-        return { amount, label, rank };
+        // Golden Tiers specifically shouldn't be penalized if tight mode is off
+        return { mult, label, rank };
     }
 
-    /**
-     * Optimized Spin Engine: Strict Zero-Liability. Admin never loses. Single Users don't bleed too fast.
-     */
-    executeSpinBatch(batch, isDuo) {
-        if (!isDuo) {
-            const p = batch[0];
-            const bet = p.betAmount;
-            
-            // Expected Wheel Multipliers: 5.0, 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.0
-            const rng = Math.random() * 100;
-            let mult = 0.0;
-            
-            if (rng < 1) mult = 5.0;           // 1%
-            else if (rng < 5) mult = 3.0;      // 4%
-            else if (rng < 10) mult = 2.5;     // 5%
-            else if (rng < 20) mult = 2.0;     // 10%
-            else if (rng < 40) mult = 1.5;     // 20%
-            else if (rng < 65) mult = 1.0;     // 25% (Extends playtime)
-            else if (rng < 90) mult = 0.5;     // 25% (Extends playtime)
-            else mult = 0.0;                   // 10%
-            
-            let payout = parseFloat((bet * mult).toFixed(2));
-            
-            // [STRICT] Admin Never Loses. Cap payout if globalSpinPool is insufficient.
-            if (payout > this.globalSpinPool) {
-                const possibleMults = [5.0, 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.0];
-                for (let pm of possibleMults) {
-                    if (pm * bet <= this.globalSpinPool) {
-                        mult = pm;
-                        payout = parseFloat((bet * mult).toFixed(2));
-                        break;
-                    }
-                }
-            }
-            
-            this.globalSpinPool = Math.max(0, this.globalSpinPool - payout);
-            p.resolve(this.generateOutcome(payout, mult > 0 ? 'WIN' : 'LOSS', 1, this.globalSpinPool));
-        } else {
-            // Duo Spin logic: one wins 1.8x, other loses, or split.
-            const p1 = batch[0], p2 = batch[1];
-            const winnerIdx = Math.random() > 0.5 ? 0 : 1;
-            const loserIdx = winnerIdx === 0 ? 1 : 0;
-            
-            p1.resolve(this.generateOutcome(p1.betAmount * 1.8, 'WIN', 1, this.globalSpinPool));
-            p2.resolve(this.generateOutcome(0, 'LOSS', 8, this.globalSpinPool));
-        }
+    getSpinBaseRTP(isTightMode, houseEdgeModifier = 1) {
+        const rng = (Math.random() * 100) / houseEdgeModifier;
+        let mult = 0.0; let label = 'LOSS'; let rank = 8;
+        
+        if (rng < 2 && !isTightMode) { mult = 5.0; label = 'JACKPOT'; rank = 1; }
+        else if (rng < 6 && !isTightMode) { mult = 3.0; label = 'MEGA WIN'; rank = 1; }
+        else if (rng < 15) { mult = 2.0; label = 'BIG WIN'; rank = 2; }
+        else if (rng < 30) { mult = 1.5; label = 'PROFIT'; rank = 2; }
+        else if (rng < 55) { mult = 1.0; label = 'REFUND'; rank = 3; }
+        else if (rng < 80) { mult = 0.5; label = 'CONSOLATION'; rank = 4; }
+        else { mult = 0.0; label = 'MISS'; rank = 8; }
+
+        return { mult, label, rank };
     }
 
-
-    generateOutcome(winAmount, label, rank, pool) {
-        return {
-            winAmount: parseFloat(winAmount.toFixed(2)),
-            isWin: winAmount > 0,
-            label,
-            rank,
-            mode: 'p2p-hybrid',
-            pool: parseFloat(pool.toFixed(2))
-        };
+    getFallbackBaseRTP(isTightMode, houseEdgeModifier = 1) {
+        const rng = (Math.random() * 100) / houseEdgeModifier;
+        if (rng < 5 && !isTightMode) return { mult: 3.0, label: 'MEGA BOX', rank: 1 };
+        if (rng < 15) return { mult: 1.5, label: 'LUCKY BOX', rank: 2 };
+        if (rng < 40) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
+        return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
     }
-
-
 }
 
 module.exports = new UniversalMatchMaker();

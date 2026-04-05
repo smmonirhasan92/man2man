@@ -228,6 +228,28 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                     <p className="text-[9px] opacity-60">Normalized Value (USD)</p>
                                 </div>
                             </div>
+
+                            {/* [NEW] ANOMALY ALERT */}
+                            {((profile.financials?.netAccounting || 0) > 100) && (
+                                <div className="mt-4 p-5 rounded-xl border-2 border-red-500 bg-red-950/40 relative overflow-hidden">
+                                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-red-500 blur-2xl opacity-40"></div>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h4 className="text-sm font-black text-red-400 flex items-center gap-2 uppercase tracking-widest">
+                                                <ShieldAlert className="w-5 h-5 animate-pulse" /> ANOMALY DETECTED
+                                            </h4>
+                                            <p className="text-xs text-red-300 mt-1">User has generated highly abnormal net profits (${(profile.financials.netAccounting).toFixed(2)}). This is a statistical anomaly.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleStatusChange('restricted')}
+                                            disabled={profile.status === 'restricted' || profile.status === 'blocked'}
+                                            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.5)] transition whitespace-nowrap shrink-0 disabled:opacity-50"
+                                        >
+                                            {profile.status === 'restricted' ? 'RESTRICTED' : (profile.status === 'blocked' ? 'BLOCKED' : 'QUICK RESTRICT')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* 3.5 [NEW] Purchased Packages History */}

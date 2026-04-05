@@ -28,7 +28,7 @@ const UserSchema = new mongoose.Schema({
     },
 
     // --- Profile ---
-    country: { type: String, required: true },
+    country: { type: String, default: 'Global' },
     photoUrl: { type: String },
     badges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Badge' }],
 

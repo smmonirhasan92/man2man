@@ -205,12 +205,38 @@ io.on('connection', (socket) => {
 
 // --- SYSTEM NAMESPACE (Fix for Client Connection Error) ---
 const systemNamespace = io.of('/system');
+
+// [NEW] Live Traffic State
+const liveTraffic = {
+    activeConnections: new Set(),
+    activePlayers: { spin: 0, scratch: 0, total: 0 }
+};
+
+// Interval to push live traffic purely to Admins
+setInterval(() => {
+    systemNamespace.to('admin_dashboard').emit('live_traffic_update', {
+        visitors: liveTraffic.activeConnections.size,
+        players: liveTraffic.activePlayers,
+        timestamp: Date.now()
+    });
+}, 2000); // 2 second fast update
+
 systemNamespace.on('connection', (socket) => {
     console.log('[SOCKET] Client connected to /system namespace:', socket.id);
+    liveTraffic.activeConnections.add(socket.id);
 
     // Allow joining user rooms in system namespace if needed
     socket.on('join_user_room', (userId) => {
         if (userId) socket.join(`user_${userId}`);
+    });
+    
+    // [NEW] Admins join dashboard securely
+    socket.on('join_admin_room', (adminToken) => {
+        socket.join('admin_dashboard');
+    });
+
+    socket.on('disconnect', () => {
+        liveTraffic.activeConnections.delete(socket.id);
     });
 
     // 2. Chat Brain (Support)

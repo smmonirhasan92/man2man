@@ -188,6 +188,7 @@ export default function AdminDashboard() {
 
                 {/* DASHBOARD GRID (2-Column Strict) */}
                 <div className="grid grid-cols-2 gap-4">
+                    <DashboardCard href="/admin/financial-control" title="Financial Control" description="Live Traffic & Vault" icon={Activity} colorClass="fuchsia" />
                     <DashboardCard href="/admin/transactions" title="Transactions" description="Deposits & Payouts" icon={FileText} colorClass="blue" badge={stats.pendingActions > 0 ? `${stats.pendingActions}` : ''} />
                     <DashboardCard href="/admin/users" title="Manage Users" description="Edit, Ban, Verify" icon={Users} colorClass="indigo" />
                     <DashboardCard href="/admin/agents" title="Agent Network" description="Commission & Trees" icon={Briefcase} colorClass="green" />

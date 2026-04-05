@@ -109,8 +109,22 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     }
     return false;
   });
+  const [maxSafeWin, setMaxSafeWin] = useState(null);
   
   const config = TIERS[tier];
+
+  // Fetch Vault Payout Limits
+  useEffect(() => {
+    const fetchVault = async () => {
+        try {
+            const res = await api.get('/game/vault-status');
+            if (res.data.success) {
+                setMaxSafeWin(res.data.maxSafeWin);
+            }
+        } catch (e) { }
+    };
+    fetchVault();
+  }, []);
 
   // Sync initial balance
   useEffect(() => {
@@ -298,7 +312,9 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                 </div>
                 <div>
                   <h1 className="text-xl font-black text-white leading-none tracking-tight">LUCK TEST</h1>
-                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Guaranteed Fairness</p>
+                  <p className="text-[10px] text-orange-500 mt-1 uppercase tracking-widest font-black animate-pulse">
+                     Win Up to {maxSafeWin ? `${maxSafeWin} NXS` : '...'}
+                  </p>
                 </div>
               </div>
               

@@ -135,9 +135,21 @@ export default function GiftBox({ onBalanceUpdate }) {
   const [phase, setPhase] = useState('select'); // 'select' | 'flying' | 'lock' | 'result'
   const [selectedTier, setSelectedTier] = useState(null);
   const [apiResult, setApiResult] = useState(null);
+  const [maxSafeWin, setMaxSafeWin] = useState(null);
   const [hasMounted, setHasMounted] = useState(false);
   const { play: playSound } = useGameSound();
   const baselineBalanceRef = useRef(null);
+
+  const fetchVaultStatus = async () => {
+    try {
+      const res = await api.get('/game/vault-status');
+      if (res.data.success) {
+        setMaxSafeWin(res.data.maxSafeWin);
+      }
+    } catch (e) {
+      console.error("[GIFT_BOX_VAULT_ERROR]", e);
+    }
+  };
 
   useEffect(() => {
     setHasMounted(true);
@@ -145,6 +157,10 @@ export default function GiftBox({ onBalanceUpdate }) {
     window.addEventListener('toggle-mystery-box', handleToggle);
     return () => window.removeEventListener('toggle-mystery-box', handleToggle);
   }, []);
+
+  useEffect(() => {
+    if (isOpen) fetchVaultStatus();
+  }, [isOpen]);
 
   const handleOpenBox = async (tier) => {
     if (phase !== 'select') return;
@@ -300,7 +316,9 @@ export default function GiftBox({ onBalanceUpdate }) {
                           <span className="text-2xl group-hover:scale-110 transition-transform">{t.icon}</span>
                           <div>
                             <div className="text-white font-bold text-sm uppercase">{t.name}</div>
-                            <div className="text-slate-500 text-[9px] uppercase tracking-wider">{t.desc}</div>
+                            <div className="text-slate-500 text-[9px] uppercase tracking-wider">
+                                {t.id === 'free' ? t.desc : `Up to ${maxSafeWin ? `${maxSafeWin} NXS` : t.maxLabel}`}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">

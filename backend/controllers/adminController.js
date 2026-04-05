@@ -741,3 +741,52 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: "Deletion Failed" });
     }
 };
+
+// [ADMIN] Triple-Tier Game Vault Control
+const GameVault = require('../modules/gamification/GameVaultModel');
+
+exports.getGameVault = async (req, res) => {
+    try {
+        const vault = await GameVault.getMasterVault();
+        res.json(vault);
+    } catch (e) {
+        console.error("Game Vault Error:", e);
+        res.status(500).json({ message: "Failed to fetch Game Vault" });
+    }
+};
+
+exports.updateGameVaultConfig = async (req, res) => {
+    try {
+        const { hardStopLimit, tightModeThreshold, seedAmount, houseEdge, isEnabled } = req.body;
+        const vault = await GameVault.getMasterVault();
+        
+        if (hardStopLimit !== undefined) vault.config.hardStopLimit = Number(hardStopLimit);
+        if (tightModeThreshold !== undefined) vault.config.tightModeThreshold = Number(tightModeThreshold);
+        if (houseEdge !== undefined) vault.config.houseEdge = Number(houseEdge);
+        if (isEnabled !== undefined) vault.config.isEnabled = Boolean(isEnabled);
+        
+        if (seedAmount && Number(seedAmount) > 0) {
+            vault.balances.activePool += Number(seedAmount);
+            vault.stats.totalBetsIn += Number(seedAmount); // Track seeded money to maintain metrics
+        }
+        
+        await vault.save();
+        res.json({ success: true, vault });
+    } catch (e) {
+        console.error("Update Vault Config Error:", e);
+        res.status(500).json({ message: "Failed to update Game Vault configuration." });
+    }
+};
+
+exports.flushSystemCache = async (req, res) => {
+    try {
+        const UniversalMatchMaker = require('../modules/gamification/UniversalMatchMaker');
+        if (UniversalMatchMaker.flushQueues) {
+            UniversalMatchMaker.flushQueues();
+        }
+        res.json({ success: true, message: "System queues and cache flushed successfully." });
+    } catch (e) {
+        console.error("Flush Cache Error:", e);
+        res.status(500).json({ message: "Failed to flush cache" });
+    }
+};

@@ -41,6 +41,11 @@ router.get('/live-vaults', authMiddleware, adminCheck, adminController.getLiveVa
 router.get('/mint-logs', authMiddleware, adminCheck, adminController.getMintLogs);
 router.get('/economy-sheet', authMiddleware, adminCheck, adminController.getEconomyBalanceSheet);
 
+// [NEW] GameVault & Financial Control Center Routes
+router.get('/vault', authMiddleware, adminCheck, adminController.getGameVault);
+router.post('/vault/config', authMiddleware, adminCheck, adminController.updateGameVaultConfig);
+router.post('/vault/emergency', authMiddleware, adminCheck, adminController.flushSystemCache);
+
 // router.get('/recharges', authMiddleware, adminCheck, adminController.getPendingRecharges);
 // router.post('/manage-transaction', authMiddleware, adminCheck, adminController.manageTransaction);
 // router.get('/logs', authMiddleware, adminCheck, adminController.getAuditLogs);

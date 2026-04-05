@@ -1,0 +1,31 @@
+﻿=== Collective Prize Pool Simulation ===
+
+Total Bets Collected from 10 Users: 125 NXS
+
+[Three-Way Distribution Applied]
+1. Admin Income Vault (10%): +12.5 NXS (Risk-Free Profit)
+2. User-Interest Fund (15%): +18.75 NXS (For future surprise jackpots)
+3. Active Prize Pool  (75%): +93.75 NXS (Used for payout of this round)
+
+=== Payout Simulation ===
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé (index) Γöé user      Γöé bet Γöé win   Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé 0       Γöé 'User_1'  Γöé 5   Γöé 10    Γöé
+Γöé 1       Γöé 'User_2'  Γöé 10  Γöé 0     Γöé
+Γöé 2       Γöé 'User_3'  Γöé 25  Γöé 60    Γöé
+Γöé 3       Γöé 'User_4'  Γöé 5   Γöé 0     Γöé
+Γöé 4       Γöé 'User_5'  Γöé 10  Γöé 0     Γöé
+Γöé 5       Γöé 'User_6'  Γöé 25  Γöé 23.75 Γöé
+Γöé 6       Γöé 'User_7'  Γöé 5   Γöé 0     Γöé
+Γöé 7       Γöé 'User_8'  Γöé 10  Γöé 0     Γöé
+Γöé 8       Γöé 'User_9'  Γöé 5   Γöé 0     Γöé
+Γöé 9       Γöé 'User_10' Γöé 25  Γöé 0     Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+=== Final State After 1 Round ===
+Admin Income Vault: 12.5 NXS
+User-Interest Fund: 18.75 NXS
+Remaining Active Pool: 0 NXS (Rolls over to next batch)
+
+Total Money Distributed to Users: 93.75 NXS

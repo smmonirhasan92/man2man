@@ -266,8 +266,8 @@ function DashboardContent() {
                         {/* Dummy Feature for Testing Local-to-VPS Deployment Pipeline */}
                         <FolderCard href="#" icon={Zap} label="AI Note 2" color="text-cyan-400" gradient="from-cyan-600/20 to-cyan-900/40" border="border-cyan-500/30" onClick={() => toast('AI Note 2 deployed successfully via Docker workflow!', { icon: '✅', style: { borderRadius: '10px', background: '#333', color: '#fff' } })} />
 
-                        {/* New Dummy Feature: AI Support Hub */}
-                        <FolderCard href="#" icon={LifeBuoy} label="AI Support Hub" color="text-teal-400" gradient="from-teal-600/20 to-teal-900/40" border="border-teal-500/30" onClick={() => toast('AI Support Hub accessed! System test successful.', { icon: '🤖', style: { borderRadius: '10px', background: '#333', color: '#fff' } })} />
+                        {/* Support Restored */}
+                        <FolderCard href="/support" icon={LifeBuoy} label="Support" color="text-teal-400" gradient="from-teal-600/20 to-teal-900/40" border="border-teal-500/30" />
                     </div>
                 </div>
 
