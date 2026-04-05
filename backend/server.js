@@ -100,6 +100,7 @@ const userRoutes = require('./routes/userRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const settingsRoutes = require('./modules/settings/SettingsRoutes');
+const withdrawalRoutes = require('./modules/wallet/withdrawal.routes');
 // const supportRoutes = require('./routes/supportRoutes'); // [REMOVED] Moved to safe-init block below
 
 
@@ -109,6 +110,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/transaction', transactionRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/task', taskRoutes);
 app.use('/api/admin', adminRoutes);
@@ -177,6 +179,7 @@ NotificationService.init(io.of('/system'));
 
 // Store io in app
 app.set('io', io);
+app.set('systemIo', io.of('/system'));
 
 // --- GLOBAL CONNECTION HANDLER ---
 io.on('connection', (socket) => {

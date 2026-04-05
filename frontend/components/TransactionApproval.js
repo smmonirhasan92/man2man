@@ -6,6 +6,7 @@ import api from '../services/api';
 import Link from 'next/link';
 import { useNotification } from '../context/NotificationContext';
 import ConfirmationModal from './ui/ConfirmationModal';
+import { useSocket } from '../hooks/useSocket';
 
 export default function TransactionApproval() {
     const { showSuccess, showError } = useNotification();
@@ -13,12 +14,30 @@ export default function TransactionApproval() {
     const [agents, setAgents] = useState([]);
     const [selectedAgent, setSelectedAgent] = useState({});
     const [loading, setLoading] = useState(true);
+    const socket = useSocket('/system');
+
+    useEffect(() => {
+        if (socket) {
+            socket.on('transaction_update', (data) => {
+                console.log('[ADMIN SOCKET] Transaction Update Received:', data);
+                fetchTransactions(); // Refresh data
+                // Play notification sound for admin
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                audio.play().catch(e => console.warn("Admin audio blocked", e));
+            });
+
+            return () => {
+                socket.off('transaction_update');
+            };
+        }
+    }, [socket]);
 
     // Modal State
     const [approvalModal, setApprovalModal] = useState({ show: false, transactionId: null, type: null });
     const [bonusAmount, setBonusAmount] = useState('');
     const [adminComment, setAdminComment] = useState('');
     const [receivedAgent, setReceivedAgent] = useState('');
+    const [secKeys, setSecKeys] = useState({ k1: '', k2: '', k3: '' });
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
 
     useEffect(() => {
@@ -76,9 +95,12 @@ export default function TransactionApproval() {
             await api.post('/transactions/complete', {
                 transactionId: approvalModal.transactionId,
                 status: 'completed',
-                comment: adminComment || 'Admin Approved',
                 bonusAmount,
-                receivedByAgentId: receivedAgent
+                adminComment,
+                agentId: receivedAgent,
+                secKey1: secKeys.k1,
+                secKey2: secKeys.k2,
+                secKey3: secKeys.k3
             });
             showSuccess('Transaction Approved!');
             setApprovalModal({ show: false, transactionId: null, type: null });
@@ -116,6 +138,20 @@ export default function TransactionApproval() {
         });
     };
 
+    const handleSendBitukwiReply = async (userId, number) => {
+        if (!userId || !number) return;
+        try {
+            await api.post('/support/admin/initiate', {
+                targetUserId: userId,
+                message: `Hello! For your Deposit/Buy NXS request, please send money to our Official Number: ${number}. After payment, please provide the TrxID here or update the transaction proof.`
+            });
+            showSuccess(`Instructions sent to user!`);
+        } catch (err) {
+            console.error(err);
+            showError('Failed to send reply');
+        }
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
@@ -146,6 +182,8 @@ export default function TransactionApproval() {
                             onAssign={handleAssign}
                             onApprove={openApprovalModal}
                             onReject={handleReject}
+                            onSendReply={handleSendBitukwiReply}
+                            onRefresh={fetchTransactions}
                         />
                     ))
                 )}
@@ -162,6 +200,8 @@ export default function TransactionApproval() {
                 receivedAgent={receivedAgent}
                 setReceivedAgent={setReceivedAgent}
                 agents={agents}
+                secKeys={secKeys}
+                setSecKeys={setSecKeys}
             />
 
             <div className="fixed bottom-6 right-6 z-20">

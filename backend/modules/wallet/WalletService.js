@@ -356,19 +356,21 @@ class WalletService {
     }
 
     // Request Recharge (Add Money)
-    static async requestRecharge(userId, amount, method, transactionId, recipientDetails, receivedByAgentId, proofImagePath, ip = 'unknown') {
+    static async requestRecharge(userId, amount, method, transactionId, recipientDetails, receivedByAgentId, proofImagePath, ip = 'unknown', status = 'pending') {
         try {
-            // Check for duplicate TrxID on Active Transactions
-            const exists = await Transaction.findOne({ transactionId });
-            if (exists) throw new Error('Transaction ID already used.');
+            // Check for duplicate TrxID on Active Transactions (if provided)
+            if (transactionId) {
+                const exists = await Transaction.findOne({ transactionId });
+                if (exists) throw new Error('Transaction ID already used.');
+            }
 
             const transaction = await Transaction.create({
                 userId,
                 type: 'add_money',
                 amount: parseFloat(amount),
-                status: 'pending',
+                status: status || 'pending',
                 recipientDetails: recipientDetails || `Method: ${method}`,
-                transactionId: transactionId,
+                transactionId: transactionId || undefined,
                 proofImage: proofImagePath,
                 assignedAgentId: receivedByAgentId || null,
                 receivedByAgentId: receivedByAgentId || null
@@ -380,6 +382,32 @@ class WalletService {
             console.error('WalletService Error:', error);
             throw error;
         }
+    }
+
+    static async provideInstructions(transactionId, adminInstructions) {
+        const transaction = await Transaction.findById(transactionId);
+        if (!transaction) throw new Error('Transaction not found');
+        if (transaction.status !== 'pending_instructions') throw new Error('Invalid transaction state');
+
+        transaction.adminInstructions = adminInstructions;
+        transaction.status = 'awaiting_payment';
+        await transaction.save();
+
+        return transaction;
+    }
+
+    static async submitProof(transactionId, proofTxID, proofImage) {
+        const transaction = await Transaction.findById(transactionId);
+        if (!transaction) throw new Error('Transaction not found');
+        if (transaction.status !== 'awaiting_payment') throw new Error('Invalid transaction state');
+
+        if (proofTxID) transaction.proofTxID = proofTxID;
+        if (proofImage) transaction.proofImage = proofImage;
+        
+        transaction.status = 'final_review';
+        await transaction.save();
+
+        return transaction;
     }
 }
 

@@ -140,21 +140,21 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
                                         <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Initial Stock</p>
-                                        <p className="text-lg font-black text-white">${profile.agentAudit.initialDebt?.toFixed(2)}</p>
+                                        <p className="text-lg font-black text-white">${(profile.agentAudit?.initialDebt || 0).toFixed(2)}</p>
                                     </div>
                                     <div>
                                         <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">P2P Sales (BDT)</p>
-                                        <p className="text-lg font-black text-emerald-400">${(profile.agentAudit.p2pSales / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
+                                        <p className="text-lg font-black text-emerald-400">${((profile.agentAudit?.p2pSales || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
                                     </div>
                                     <div>
                                         <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Remaining Debt</p>
-                                        <p className="text-lg font-black text-rose-400">${profile.agentAudit.netLiability?.toFixed(2)}</p>
+                                        <p className="text-lg font-black text-rose-400">${(profile.agentAudit?.netLiability || 0).toFixed(2)}</p>
                                     </div>
                                 </div>
                                 <div className="mt-4 h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
                                     <div 
                                         className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-1000"
-                                        style={{ width: `${Math.min(100, (profile.agentAudit.p2pSales / (profile.agentAudit.initialDebt * 50 || 1)) * 100)}%` }}
+                                        style={{ width: `${Math.min(100, ((profile.agentAudit?.p2pSales || 0) / (profile.agentAudit?.initialDebt * 50 || 1)) * 100)}%` }}
                                     ></div>
                                 </div>
                             </div>
@@ -238,7 +238,7 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                             <h4 className="text-sm font-black text-red-400 flex items-center gap-2 uppercase tracking-widest">
                                                 <ShieldAlert className="w-5 h-5 animate-pulse" /> ANOMALY DETECTED
                                             </h4>
-                                            <p className="text-xs text-red-300 mt-1">User has generated highly abnormal net profits (${(profile.financials.netAccounting).toFixed(2)}). This is a statistical anomaly.</p>
+                                            <p className="text-xs text-red-300 mt-1">User has generated highly abnormal net profits (${(profile.financials?.netAccounting || 0).toFixed(2)}). This is a statistical anomaly.</p>
                                         </div>
                                         <button 
                                             onClick={() => handleStatusChange('restricted')}

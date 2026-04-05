@@ -212,42 +212,44 @@ exports.requestTopup = async (req, res) => {
 
 // Request Withdraw
 exports.requestWithdraw = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const TransactionHelper = require('../modules/common/TransactionHelper');
     try {
         const { amount, method, accountDetails } = req.body;
         const agentId = req.user.user.id;
         const parsedAmount = parseFloat(amount);
 
-        if (isNaN(parsedAmount) || parsedAmount <= 0) throw new Error('Invalid Amount');
-
-        const agent = await User.findById(agentId).session(session);
-        if (!agent) throw new Error('Agent not found');
-
-        if ((agent.wallet.agent || 0) < parsedAmount) {
-            throw new Error('Insufficient Stock Balance');
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            return res.status(400).json({ message: 'Invalid Amount' });
         }
 
-        agent.wallet.agent = (agent.wallet.agent || 0) - parsedAmount;
-        await agent.save({ session });
+        let savedTransaction;
+        await TransactionHelper.runTransaction(async (session) => {
+            const opts = session ? { session } : {};
 
-        const transaction = await new Transaction({
-            userId: agentId,
-            type: 'agent_withdraw',
-            amount: -parsedAmount,
-            status: 'pending',
-            recipientDetails: `${method}: ${accountDetails}`,
-            description: 'Agent Stock Withdrawal'
-        }).save({ session });
+            const agent = await User.findById(agentId).setOptions(opts);
+            if (!agent) throw new Error('Agent not found');
 
-        await session.commitTransaction();
-        res.json({ message: 'Withdrawal request sent', transaction, newBalance: agent.wallet.main });
+            if ((agent.wallet.agent || 0) < parsedAmount) {
+                throw new Error('Insufficient Stock Balance');
+            }
+
+            agent.wallet.agent = (agent.wallet.agent || 0) - parsedAmount;
+            await agent.save(opts);
+
+            savedTransaction = await new Transaction({
+                userId: agentId,
+                type: 'agent_withdraw',
+                amount: -parsedAmount,
+                status: 'pending',
+                recipientDetails: `${method}: ${accountDetails}`,
+                description: 'Agent Stock Withdrawal'
+            }).save(opts);
+        });
+
+        res.json({ message: 'Withdrawal request sent', transaction: savedTransaction });
 
     } catch (err) {
-        await session.abortTransaction();
         res.status(500).json({ message: err.message || 'Server Error' });
-    } finally {
-        session.endSession();
     }
 };
 

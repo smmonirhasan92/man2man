@@ -21,88 +21,67 @@ class WithdrawalService {
 
             // 1. Idempotency Check
             if (idempotencyKey) {
-                const existing = await Transaction.findOne({ 'metadata.idempotencyKey': idempotencyKey }).setOptions(opts);
+                const existing = await Transaction.findOne({ 'metadata.idempotencyKey': idempotencyKey });
                 if (existing) {
                     Logger.warn(`[WITHDRAWAL] Duplicate Request Ignored (Key: ${idempotencyKey})`);
                     return existing;
                 }
             }
 
-            // --- DYNAMIC MINIMUM WITHDRAWAL THRESHOLD ---
-            const PlanService = require('../plan/PlanService');
-            const activePlans = await PlanService.getActivePlans(userId);
-            let minWithdrawalUsd = 5; // System Default: $5
-
-            if (activePlans && activePlans.length > 0) {
-                const Plan = require('../../modules/admin/PlanModel');
-                const planDetails = await Plan.findById(activePlans[0].planId).setOptions(opts);
-                if (planDetails && planDetails.min_withdrawal) {
-                    minWithdrawalUsd = planDetails.min_withdrawal;
-                }
-            }
-
-            // Assuming 50 NXS = 1 USD in this platform (as per hardcoded hint "50 NXS ($1.00 USD)")
-            const minWithdrawalNxs = minWithdrawalUsd * 50;
-
+            // 2. Minimum Withdrawal Threshold (default 250 NXS = $5)
+            const minWithdrawalNxs = 250;
             if (amount < minWithdrawalNxs) {
-                throw new Error(`Minimum withdrawal limit is ${minWithdrawalNxs} NXS ($${minWithdrawalUsd} USD) based on your current package.`);
+                throw new Error(`⚠️ সর্বনিম্ন উইথড্রয়াল সীমা ${minWithdrawalNxs} NXS। অনুগ্রহ করে আরও ব্যালেন্স জমা করুন।`);
             }
 
-            const fee = 0; // Fee is 0 on withdrawal execution
-
-            // [TURNOVER CHECK]
+            // 3. Turnover Guard
             const TurnoverService = require('./TurnoverService');
             const eligibility = await TurnoverService.checkWithdrawalEligibility(userId);
-            let status = agentId ? 'pending_admin_approval' : 'pending';
-            let adminComment = null;
-
             if (!eligibility.allowed) {
-                console.log(`[WITHDRAWAL] Turnover Not Met for ${userId}. BLOCKED.`);
-                throw new Error(`Turnover Requirement Not Met! You must wager ৳${eligibility.stats.remaining.toLocaleString()} more to withdraw.`);
+                throw new Error(eligibility.message);
             }
 
-            // 2. Atomic Balance Check & Deduct from MAIN WALLET ONLY
-            const dbKey = 'wallet.main'; // STRICT
-            const deductionAmount = amount; // Net Deduction
-
-            // [FIX] Read current balance using Session explicitly
-            const userCheck = await User.findById(userId).select(dbKey).session(session);
-            if (!userCheck || (userCheck.wallet.main || 0) < deductionAmount) {
-                throw new Error(`Insufficient Main Wallet Balance.`);
+            // 4. Balance Check & Deduct
+            const user = await User.findById(userId);
+            if (!user) throw new Error('ইউজার পাওয়া যায়নি!');
+            if ((user.wallet.main || 0) < amount) {
+                throw new Error(`❌ অপর্যাপ্ত মেইন ওয়ালেট ব্যালেন্স! আপনার ব্যালেন্স: ${(user.wallet.main || 0).toFixed(2)} NXS`);
             }
 
-            const update = { $inc: { [dbKey]: -deductionAmount } };
-            const user = await User.findOneAndUpdate({ _id: userId }, update, { new: true, ...opts });
+            user.wallet.main -= amount;
+            await user.save(opts);
 
-            // [REDIS] Invalidate Cache
+            // 5. Invalidate Redis Cache
             try {
                 const redisInv = require('../../config/redis');
-                await redisInv.client.del(`user_profile:${userId}`);
+                if (redisInv.client && redisInv.client.isOpen) {
+                    await redisInv.client.del(`user_profile:${userId}`);
+                }
             } catch (e) { }
 
-            // 3. Create Transaction
-            const txn = await Transaction.create([{
+            // 6. Create Transaction Record
+            const status = agentId ? 'pending_admin_approval' : 'pending';
+            const [txn] = await Transaction.create([{
                 userId,
                 type: 'withdraw',
                 amount: -amount,
-                status: status,
-                adminComment: adminComment,
+                status,
+                adminComment: null,
                 recipientDetails: `[${deliveryTime}] ${method} - ${details}`,
                 description: `Withdrawal Request (Main Wallet)`,
-                fee: fee,
+                fee: 0,
                 metadata: {
                     idempotencyKey,
                     agentId,
                     deliveryTime,
-                    netPayout: amount, // No fee deduction here
+                    netPayout: amount,
                     sourceWallet: 'main',
                     turnoverStats: eligibility.stats
                 }
             }], opts);
 
-            Logger.info(`[WITHDRAWAL] User ${userId} req ${amount} (${deliveryTime}) from MAIN. Net: ${amount}`);
-
-            return txn[0];
+            Logger.info(`[WITHDRAWAL] User ${userId} requested ${amount} NXS from MAIN.`);
+            return txn;
         });
     }
 }

@@ -635,7 +635,7 @@ exports.getUserDetails = async (req, res) => {
             totalP2PSent: nxs_p2pOut[0]?.total || 0,
             p2pNet: (nxs_p2pIn[0]?.total || 0) - (nxs_p2pOut[0]?.total || 0),
             currencyRatio: NXS_RATIO,
-            netAccounting: netAccounting.toFixed(2),
+            netAccounting: parseFloat(netAccounting.toFixed(2)), // [FIX] Must be Number, not String
             positionLabel: isAgent ? "Agent Debt (Owes System)" : "System Liability (Owes User)"
         };
 
@@ -650,8 +650,12 @@ exports.getUserDetails = async (req, res) => {
             .lean();
 
         // UI Mapping Fixes
-        user.phone = user.primary_phone; // UI expects user.phone
+        user.phone = user.primary_phone || user.phone || 'N/A'; // UI expects user.phone
         user.referrals = { count: user.referralCount || 0 }; // UI expects profile.referrals.count
+        // [FIX] Ensure wallet.game exists to prevent frontend crash
+        if (user.wallet && user.wallet.game === undefined) {
+            user.wallet.game = 0;
+        }
 
         // [AGENT REQ] Debt vs Recovery Audit
         const initialDebtAgg = await TransactionLedger.aggregate([

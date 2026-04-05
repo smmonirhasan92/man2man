@@ -115,19 +115,77 @@ exports.mobileRecharge = exports.requestWithdrawal;
 // Request Recharge
 exports.requestRecharge = async (req, res) => {
     try {
-        const { amount, method, transactionId, recipientDetails, receivedByAgentId } = req.body;
+        const { amount, method, transactionId, recipientDetails, receivedByAgentId, status } = req.body;
 
-        if (!transactionId || transactionId.length < 8) {
-            return res.status(400).json({ message: 'Valid Transaction ID (TrxID) is required.' });
+        // Relax TrxID for P2P Hub (Initial status: pending_instructions)
+        const targetStatus = status || 'pending';
+        if (targetStatus !== 'pending_instructions') {
+            if (!transactionId || transactionId.length < 8) {
+                return res.status(400).json({ message: 'Valid Transaction ID (TrxID) is required.' });
+            }
         }
 
         const result = await WalletService.requestRecharge(
-            req.user.user.id, amount, method, transactionId, recipientDetails, receivedByAgentId, null, req.ip
+            req.user.user.id, amount, method, transactionId, recipientDetails, receivedByAgentId, null, req.ip, targetStatus
         );
         res.status(201).json({ message: 'Deposit Request Submitted', transaction: result });
     } catch (err) {
         console.error('Recharge Error:', err);
         res.status(500).json({ message: 'Server Error', error: err.message }); // Exposed for debugging
+    }
+};
+
+// [P2P FLOW] Step 2: Admin provides Bkash/Nagad number
+exports.provideInstructions = async (req, res) => {
+    try {
+        const { transactionId, adminInstructions } = req.body;
+        if (!transactionId || !adminInstructions) {
+            return res.status(400).json({ message: 'Transaction ID and Payment Number are required' });
+        }
+
+        const result = await WalletService.provideInstructions(transactionId, adminInstructions);
+        
+        // 3. Emit Real-time Update to User Room
+        const SocketService = require('../common/SocketService');
+        if (result && result.userId) {
+            SocketService.broadcast(`user_${result.userId}`, 'transaction_update', { 
+                transactionId, 
+                status: 'awaiting_payment',
+                message: 'Payment instructions received!'
+            });
+        }
+        
+        res.json({ message: 'আপনার পেমেন্ট ইনস্ট্রাকশন ইউজারের কাছে পাঠানো হয়েছে।', transaction: result });
+    } catch (err) {
+        console.error('ProvideInstructions CRASH:', err);
+        res.status(500).json({ message: 'সার্ভার এরর! ইনস্ট্রাকশন পাঠানো সম্ভব হচ্ছে না।', stack: err.stack });
+    }
+};
+
+// [P2P FLOW] Step 3: User submits proof of payment (TxID/Image)
+exports.submitProof = async (req, res) => {
+    try {
+        const { transactionId, proofTxID } = req.body;
+        const proofImage = req.file ? req.file.path : null;
+
+        if (!transactionId || (!proofTxID && !proofImage)) {
+            return res.status(400).json({ message: 'Transaction ID and either TxID or Screenshot is required' });
+        }
+
+        const result = await WalletService.submitProof(transactionId, proofTxID, proofImage);
+        
+        // 3. Emit Real-time Update to Admin Room
+        const SocketService = require('../common/SocketService');
+        SocketService.broadcast('admin_dashboard', 'transaction_update', { 
+            transactionId, 
+            status: 'final_review',
+            message: 'New payment proof submitted!'
+        });
+
+        res.json({ message: 'Proof submitted for review', transaction: result });
+    } catch (err) {
+        console.error('SubmitProof Error:', err);
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 };
 
@@ -146,7 +204,7 @@ exports.transferToMain = async (req, res) => {
         if (amountFloat < 250) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Minimum transfer amount is 250 NXS ($5.00 USD). Please accumulate more earnings." 
+                message: "⚠️ সর্বনিম্ন ট্রান্সফার সীমা ২৫০ NXS ($৫.০০ USD)। অনুগ্রহ করে আরও ইনকাম জমা করুন।" 
             });
         }
 
@@ -156,7 +214,7 @@ exports.transferToMain = async (req, res) => {
             const lockKey = `lock:swap:${userId}`;
             const isLocked = await client.get(lockKey);
             if (isLocked) {
-                return res.status(429).json({ message: "Please wait 5 seconds between swaps." });
+                return res.status(429).json({ message: "⏳ অনুগ্রহ করে ৫ সেকেন্ড অপেক্ষা করুন। বারবার সোয়াপ (Swap) করার চেষ্টা করবেন না।" });
             }
             await client.setEx(lockKey, 5, 'LOCKED');
         }

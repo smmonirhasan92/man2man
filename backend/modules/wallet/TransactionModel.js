@@ -38,13 +38,15 @@ const TransactionSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['pending', 'completed', 'rejected', 'pending_admin_approval', 'pending_agent_action', 'pending_admin_review'],
+        enum: ['pending', 'pending_instructions', 'awaiting_payment', 'final_review', 'completed', 'rejected', 'expired', 'pending_admin_approval', 'pending_agent_action', 'pending_admin_review'],
         default: 'pending'
     },
 
     // Flexible Metadata Replacement for specific SQL columns
     description: { type: String },
     recipientDetails: { type: String }, // For send_money, mobile_recharge
+    adminInstructions: { type: String }, // [NEW] Bkash/Nagad Number provided by admin
+    proofTxID: { type: String },        // [NEW] User provided TxID
     proofImage: { type: String },       // For recharge
     adminComment: { type: String },
     balanceAfter: { type: Number },     // [FIX] Post-transaction balance snapshot (used by TaskServiceV2)

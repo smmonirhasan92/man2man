@@ -14,7 +14,9 @@ export default function ApprovalModal({
     setAdminComment,
     receivedAgent,
     setReceivedAgent,
-    agents
+    agents,
+    secKeys = { k1: '', k2: '', k3: '' },
+    setSecKeys
 }) {
     if (!show) return null;
 
@@ -26,16 +28,25 @@ export default function ApprovalModal({
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Bonus Amount</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex justify-between">
+                            <span>Bonus Amount</span>
+                            <span className="text-[10px] text-emerald-600">Rate: 2.54 BDT</span>
+                        </label>
                         <div className="relative">
-                            <span className="absolute left-4 top-3.5 text-slate-400 font-bold">$</span>
+                            <span className="absolute left-4 top-3.5 text-emerald-600 font-black text-[10px]">NXS</span>
                             <input
                                 type="number"
-                                className="w-full bg-slate-50 border border-slate-200 p-3 pl-8 rounded-xl text-slate-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none font-bold transition-all"
-                                placeholder="0.00"
+                                className="w-full bg-slate-50 border border-slate-200 p-3 pl-12 rounded-xl text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none font-black transition-all"
+                                placeholder="0"
                                 value={bonusAmount}
                                 onChange={(e) => setBonusAmount(e.target.value)}
                             />
+                            {bonusAmount > 0 && (
+                                <div className="mt-2 p-2 bg-emerald-50 rounded-lg border border-emerald-100 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
+                                    <span className="text-[9px] font-black text-emerald-700 uppercase">Est. Payable</span>
+                                    <span className="text-xs font-black text-emerald-700">{(bonusAmount * 2.54).toLocaleString()} BDT</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -54,7 +65,7 @@ export default function ApprovalModal({
                         </div>
                     </div>
 
-                    <div>
+                    <div className="mt-4">
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Admin Comment</label>
                         <div className="bg-white rounded-xl overflow-hidden border border-slate-200 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500/20 transition-all">
                             <ReactQuill
@@ -66,6 +77,36 @@ export default function ApprovalModal({
                                     toolbar: false
                                 }}
                                 placeholder="Add a note..."
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-[8px] font-black text-red-500 uppercase tracking-[0.2em] mb-2 opacity-80">Super Admin Security Keys (Req. for Balance)</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            <input
+                                type="password"
+                                maxLength={4}
+                                className="w-full bg-red-50/30 border border-red-100 p-2 rounded-lg text-center text-xs font-black text-red-600 focus:border-red-500 outline-none transition-all placeholder:text-red-200"
+                                placeholder="K1"
+                                value={secKeys.k1}
+                                onChange={(e) => setSecKeys({...secKeys, k1: e.target.value})}
+                            />
+                            <input
+                                type="password"
+                                maxLength={4}
+                                className="w-full bg-red-50/30 border border-red-100 p-2 rounded-lg text-center text-xs font-black text-red-600 focus:border-red-500 outline-none transition-all placeholder:text-red-200"
+                                placeholder="K2"
+                                value={secKeys.k2}
+                                onChange={(e) => setSecKeys({...secKeys, k2: e.target.value})}
+                            />
+                            <input
+                                type="password"
+                                maxLength={4}
+                                className="w-full bg-red-50/30 border border-red-100 p-2 rounded-lg text-center text-xs font-black text-red-600 focus:border-red-500 outline-none transition-all placeholder:text-red-200"
+                                placeholder="K3"
+                                value={secKeys.k3}
+                                onChange={(e) => setSecKeys({...secKeys, k3: e.target.value})}
                             />
                         </div>
                     </div>

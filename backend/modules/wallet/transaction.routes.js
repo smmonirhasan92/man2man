@@ -19,6 +19,8 @@ router.post('/mobile-recharge', authMiddleware, safe(walletController.mobileRech
 router.get('/history', authMiddleware, safe(transactionController.getHistory, 'transactionController.getHistory'));
 
 router.post('/add-money', authMiddleware, upload.single('proofImage'), safe(walletController.requestRecharge, 'walletController.requestRecharge'));
+router.post('/provide-instructions', authMiddleware, safe(walletController.provideInstructions, 'walletController.provideInstructions'));
+router.post('/submit-proof', authMiddleware, upload.single('proofImage'), safe(walletController.submitProof, 'walletController.submitProof'));
 
 // Sys Settings
 router.get('/settings/payment', safe(transactionController.getPaymentSettings, 'transactionController.getPaymentSettings'));

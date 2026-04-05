@@ -144,7 +144,7 @@ export default function FinancialControlCenter() {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                             <Globe className="w-5 h-5 text-blue-400 mb-2" />
                             <h3 className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Live Visitors</h3>
-                            <p className="text-4xl font-black text-white mt-1">{traffic.visitors} <span className="text-sm text-blue-400 font-bold ml-1 animate-pulse">Online</span></p>
+                            <p className="text-4xl font-black text-white mt-1">{traffic.visitors} <span className="text-[10px] text-blue-400 font-bold ml-1 animate-pulse px-2 py-0.5 bg-blue-500/10 rounded-full">ACTIVE</span></p>
                         </div>
                         <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
@@ -165,12 +165,12 @@ export default function FinancialControlCenter() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-[#050505] border border-green-500/30 p-5 rounded-2xl">
                             <h3 className="text-xs text-green-500 font-bold uppercase tracking-widest mb-1">Admin Income (10%)</h3>
-                            <p className="text-3xl font-black text-green-400">${balancesObj.adminIncome.toFixed(2)}</p>
+                            <p className="text-3xl font-black text-green-400">{balancesObj.adminIncome.toFixed(2)} <span className="text-xs font-bold text-green-500/50">NXS</span></p>
                             <p className="text-[10px] text-slate-500 mt-2">Risk-free guaranteed profit.</p>
                         </div>
                         <div className="bg-[#050505] border border-blue-500/30 p-5 rounded-2xl">
                             <h3 className="text-xs text-blue-500 font-bold uppercase tracking-widest mb-1">Active Payout Pool (75%)</h3>
-                            <p className="text-3xl font-black text-blue-400">${balancesObj.activePool.toFixed(2)}</p>
+                            <p className="text-3xl font-black text-blue-400">{balancesObj.activePool.toFixed(2)} <span className="text-xs font-bold text-blue-500/50">NXS</span></p>
                             <p className="text-[10px] text-slate-500 mt-2">Fund for user winnings.</p>
                             <form onSubmit={handleSeedVault} className="mt-4 flex gap-2">
                                 <input type="number" value={seedAmount} onChange={e => setSeedAmount(e.target.value)} placeholder="Seed Capital" className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs" />
@@ -179,7 +179,7 @@ export default function FinancialControlCenter() {
                         </div>
                         <div className="bg-[#050505] border border-purple-500/30 p-5 rounded-2xl">
                             <h3 className="text-xs text-purple-500 font-bold uppercase tracking-widest mb-1">Interest Fund (15%)</h3>
-                            <p className="text-3xl font-black text-purple-400">${balancesObj.userInterest.toFixed(2)}</p>
+                            <p className="text-3xl font-black text-purple-400">{balancesObj.userInterest.toFixed(2)} <span className="text-xs font-bold text-purple-500/50">NXS</span></p>
                             <p className="text-[10px] text-slate-500 mt-2">Safety net for abnormal wins.</p>
                         </div>
                     </div>
@@ -228,15 +228,15 @@ export default function FinancialControlCenter() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center border-b border-white/5 pb-2">
                                 <span className="text-sm font-medium text-slate-300">Total Wagered In</span>
-                                <span className="font-mono font-bold text-emerald-400 flex items-center"><ArrowUpRight className="w-3 h-3 mr-1" />{(statsObj.totalBetsIn || 0).toFixed(2)}</span>
+                                <span className="font-mono font-bold text-emerald-400 flex items-center"><ArrowUpRight className="w-3 h-3 mr-1" />{(statsObj.totalBetsIn || 0).toFixed(2)} NXS</span>
                             </div>
                             <div className="flex justify-between items-center border-b border-white/5 pb-2">
                                 <span className="text-sm font-medium text-slate-300">Total Payouts Out</span>
-                                <span className="font-mono font-bold text-rose-400 flex items-center"><ArrowDownRight className="w-3 h-3 mr-1" />{(statsObj.totalPayoutsOut || 0).toFixed(2)}</span>
+                                <span className="font-mono font-bold text-rose-400 flex items-center"><ArrowDownRight className="w-3 h-3 mr-1" />{(statsObj.totalPayoutsOut || 0).toFixed(2)} NXS</span>
                             </div>
                             <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
                                 <span className="text-xs font-bold text-slate-400 uppercase">Gross Profit</span>
-                                <span className={`font-black tracking-wider ${netPlatform >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{netPlatform >= 0 ? '+' : ''}{netPlatform.toFixed(2)}</span>
+                                <span className={`font-black tracking-wider ${netPlatform >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{netPlatform >= 0 ? '+' : ''}{netPlatform.toFixed(2)} NXS</span>
                             </div>
                         </div>
                     </div>

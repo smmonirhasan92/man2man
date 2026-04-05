@@ -1,4 +1,7 @@
 import React from 'react';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
+import { CheckCircle } from 'lucide-react';
 
 export default function TransactionCard({
     trx,
@@ -7,104 +10,147 @@ export default function TransactionCard({
     onSelectAgent,
     onAssign,
     onApprove,
-    onReject
+    onReject,
+    onView,
+    onRefresh
 }) {
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleString('en-US', {
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+    const [adminMsg, setAdminMsg] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+
+    // [SOUND] Admin Alert for New Requests
+    React.useEffect(() => {
+        if (trx.status === 'pending_instructions') {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(() => {});
+        }
+    }, [trx.status]);
+
+    const handleProvideInstructions = async () => {
+        if (!adminMsg) return toast.error('Please enter a number');
+        setLoading(true);
+        try {
+            await api.post('/transactions/provide-instructions', { 
+                transactionId: trx._id, 
+                adminInstructions: adminMsg 
+            });
+            toast.success('Number sent to user!');
+            if (onRefresh) onRefresh(); 
+        } catch (e) { toast.error('Failed to send'); }
+        finally { setLoading(false); }
     };
 
     return (
-        <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-            {/* Decorative Blur */}
-            <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full mix-blend-multiply opacity-5 blur-2xl ${trx.type === 'add_money' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+        <div className="bg-[#111111] border border-white/5 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group hover:border-[#D4AF37]/30 transition-all duration-500 mb-6">
+            {/* Status Badge */}
+            <div className="absolute top-8 right-8 flex flex-col items-end gap-2">
+                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${
+                    trx.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                    trx.status === 'rejected' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                    trx.status === 'final_review' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20 animate-pulse' :
+                    trx.status === 'awaiting_payment' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                    'bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20'
+                }`}>
+                    {trx.status?.replace('_', ' ') || 'pending'}
+                </span>
+                {trx.status === 'expired' && <span className="text-[9px] text-red-500 font-black animate-bounce uppercase tracking-tighter">Time Expired (20m)</span>}
+            </div>
 
-            {/* Main Row */}
-            <div className="flex justify-between items-start mb-6 relative z-10">
-                <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner ${trx.type === 'add_money' ? 'bg-green-50 text-green-500' : 'bg-blue-50 text-blue-500'}`}>
-                        {trx.type === 'add_money' ? '💰' : '⚡'}
+            <div className="flex items-start gap-6">
+                <div className="w-16 h-16 bg-white/5 rounded-[1.8rem] flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                    <span className="text-3xl">{trx.type === 'withdraw' ? '📤' : '📥'}</span>
+                </div>
+                
+                <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-black text-white text-xl tracking-tight">{trx.userId?.fullName || 'Unknown User'}</h3>
+                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded font-black text-slate-500 uppercase tracking-widest">@{trx.userId?.username || 'user'}</span>
                     </div>
-                    <div>
-                        <h3 className="font-bold text-slate-800 text-base">{trx.User?.fullName}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-mono text-slate-500">{trx.User?.phone}</span>
-                            <span className="text-xs text-slate-400">• {formatDate(trx.createdAt)}</span>
+                    <div className="flex items-center gap-4">
+                        <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F9E29C] tracking-tighter">
+                            {trx.amount?.toLocaleString()} NXS
+                        </p>
+                        <div className="flex flex-col">
+                            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">Payable</p>
+                            <p className="text-sm font-black text-white tracking-tighter">{(trx.amount * 2.54).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</p>
+                        </div>
+                        <div className="h-5 w-px bg-white/10" />
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{trx.method}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* P2P Flow Body */}
+            <div className="mt-10 pt-8 border-t border-white/5 space-y-6">
+                {trx.status === 'pending_instructions' && (
+                    <div className="flex gap-3">
+                        <input 
+                            type="text" 
+                            placeholder="Enter Bkash/Nagad Number..."
+                            value={adminMsg}
+                            onChange={(e) => setAdminMsg(e.target.value)}
+                            className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
+                        />
+                        <button 
+                            disabled={loading}
+                            onClick={handleProvideInstructions}
+                            className="px-8 py-4 bg-[#D4AF37] text-black rounded-2xl font-black text-[10px] uppercase shadow-xl shadow-[#D4AF37]/20 active:scale-95 transition-all"
+                        >
+                            {loading ? 'SENDING...' : 'SEND NUMBER'}
+                        </button>
+                    </div>
+                )}
+
+                {trx.status === 'final_review' && (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-3xl p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">User Payment TxID</p>
+                            <p className="text-xl font-black text-white selection:bg-blue-500/30 font-mono tracking-tighter">{trx.proofTxID || 'No TxID'}</p>
+                        </div>
+                        <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400">
+                            <CheckCircle className="w-6 h-6" />
                         </div>
                     </div>
-                </div>
-                <div className="text-right">
-                    <div className="flex flex-col items-end">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm ${trx.type === 'add_money' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>
-                            {trx.type.replace('_', ' ')}
-                        </span>
-                        <span className="text-xl font-black text-slate-800 tracking-tight">${trx.amount}</span>
+                )}
+
+                {/* Metadata Footer */}
+                <div className="flex flex-wrap gap-6 text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    <div className="flex items-center gap-2">
+                        <span className="text-slate-800">Ref ID:</span>
+                        <span className="text-slate-500">{trx.transactionId || trx._id?.slice(-8)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-slate-800">Timestamp:</span>
+                        <span className="text-slate-500">{new Date(trx.createdAt).toLocaleString()}</span>
                     </div>
                 </div>
-            </div>
 
-            {/* Details Section */}
-            <div className="bg-slate-50/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-100/60 mb-5">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Instruction</p>
-                <p className="text-sm text-slate-600 font-medium leading-relaxed break-words">
-                    {trx.recipientDetails}
-                </p>
-                {trx.proofImage && (
-                    <a href={`https://usaaffiliatemarketing.com/api/${trx.proofImage}`} target="_blank" className="mt-3 flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">📷</div>
-                        <span>View Proof Screenshot</span>
-                    </a>
-                )}
-            </div>
+                {/* Footer Actions */}
+                <div className="flex gap-4 pt-4">
+                    <button 
+                        onClick={() => onView(trx)}
+                        className="flex-1 px-8 py-5 bg-white/5 hover:bg-white/10 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all border border-white/5 active:scale-95"
+                    >
+                        Review Full Assets
+                    </button>
+                    
+                    {trx.status === 'final_review' && (
+                        <button 
+                            onClick={() => onApprove(trx)}
+                            className="flex-1 px-8 py-5 bg-emerald-500 text-black rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all"
+                        >
+                            Confirm & Credit
+                        </button>
+                    )}
 
-            {/* Actions */}
-            <div className="relative z-10">
-                {trx.type === 'add_money' || trx.type === 'recharge' || trx.type === 'agent_recharge' || trx.type === 'agent_withdraw' ? (
-                    <div className="flex gap-3">
-                        <button
+                    {(trx.status === 'pending' || trx.status === 'pending_instructions') && (
+                        <button 
                             onClick={() => onReject(trx)}
-                            className="flex-1 py-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm shadow-sm border border-red-100 hover:bg-red-100 active:scale-[0.98] transition-all"
+                            className="px-8 py-5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all border border-red-500/20"
                         >
                             Reject
                         </button>
-                        <button
-                            onClick={() => onApprove(trx)}
-                            className="flex-[2] py-4 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-xl shadow-slate-200 hover:bg-black active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                        >
-                            <span>Approve Request</span>
-                            <span className="text-slate-500">→</span>
-                        </button>
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        <div className="relative w-full">
-                            <select
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-sans text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none transition-all hover:bg-slate-100"
-                                onChange={(e) => onSelectAgent(trx._id, e.target.value)}
-                                value={selectedAgentId || ""}
-                            >
-                                <option value="" disabled className="text-slate-400">Select Agent to Assign</option>
-                                {agents.map(a => <option key={a._id} value={a._id}>{a.fullName}</option>)}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => onReject(trx)}
-                                className="flex-1 py-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm shadow-sm border border-red-100 hover:bg-red-100 active:scale-[0.98] transition-all"
-                            >
-                                Reject
-                            </button>
-                            <button
-                                onClick={() => onAssign(trx._id)}
-                                className="flex-[2] py-4 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
-                            >
-                                Assign Task
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

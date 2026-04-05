@@ -43,7 +43,7 @@ class TurnoverService {
         if (remaining > 0) {
             return {
                 allowed: false,
-                message: `Withdrawal Locked! You need to wager ${remaining.toFixed(2)} more to withdraw.`,
+                message: `🔒 উইথড্রয়াল লক! টাকা তোলার আগে আপনাকে আরও ${remaining.toFixed(2)} NXS সমপরিমাণের গেম খেলতে হবে।`,
                 stats: { required, completed, remaining }
             };
         }

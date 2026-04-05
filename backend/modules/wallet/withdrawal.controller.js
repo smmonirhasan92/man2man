@@ -4,110 +4,82 @@ const User = require('../user/UserModel');
 const Transaction = require('./TransactionModel');
 const SystemSetting = require('../settings/SystemSettingModel');
 const TransactionHelper = require('../common/TransactionHelper');
+const ReferralService = require('../referral/ReferralService');
+const TurnoverService = require('./TurnoverService');
 
-// Request Withdrawal (User)
 exports.requestWithdrawal = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const { amount, method, accountDetails, walletType } = req.body; // walletType: 'main' or 'income'
+        const { amount, method, accountDetails, walletType } = req.body; 
         const userId = req.user.user.id;
         const parsedAmount = parseFloat(amount);
 
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
-            await session.abortTransaction();
             return res.status(400).json({ message: 'Invalid amount' });
         }
 
-        const user = await User.findById(userId).session(session);
+        const result = await TransactionHelper.runTransaction(async (session) => {
+            const user = await User.findById(userId).session(session);
+            if (!user) {
+                throw new Error('User not found');
+            }
 
-        if (!user) {
-            await session.abortTransaction();
-            return res.status(404).json({ message: 'User not found' });
-        }
+            const targetWallet = walletType === 'income' ? 'income' : 'main';
+            const currentBalance = user.wallet[targetWallet];
 
-        // Balance Check & Deduction
-        // Map 'main' -> user.main_balance, 'income' -> user.income_balance
-        const targetWallet = walletType === 'income' ? 'income' : 'main';
-        const currentBalance = user.wallet[targetWallet];
+            if (currentBalance < parsedAmount) {
+                throw new Error(`Insufficient ${targetWallet} Balance`);
+            }
 
-        if (currentBalance < parsedAmount) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: `Insufficient ${targetWallet} Balance` });
-        }
+            // --- TURNOVER FLAG CHECK ---
+            const eligibility = await TurnoverService.checkWithdrawalEligibility(userId);
+            if (!eligibility.allowed) {
+                throw new Error(eligibility.message);
+            }
 
-        // --- TURNOVER GUARD (Retention Engine) ---
-        const TurnoverService = require('../modules/wallet/TurnoverService');
-        const eligibility = await TurnoverService.checkWithdrawalEligibility(userId);
+            // Deduct
+            user.wallet[targetWallet] = (currentBalance - parsedAmount);
+            await user.save({ session });
 
-        if (!eligibility.allowed) {
-            await session.abortTransaction();
-            return res.status(403).json({
-                message: eligibility.message,
-                retentionLock: true,
-                remainingTurnover: eligibility.stats.remaining
-            });
-        }
+            let newStatus = 'pending';
+            let adminComment = null;
+            let gatewayTrxId = null;
 
-        // Deduct
-        user.wallet[targetWallet] = (currentBalance - parsedAmount);
-        await user.save({ session });
-
-        // --- AUTO-SETTLEMENT LOGIC ---
-        // Conditions: 
-        // 1. Amount < 5000 BDT
-        // 2. Turnover Met (Already checked above, otherwise request blocked)
-        // 3. System Mode 'Auto' (Implicit)
-
-        let newStatus = 'pending';
-        let adminComment = null;
-        let gatewayTrxId = null;
-
-        if (parsedAmount < 5000) {
-            try {
-                // Mock Auto-Pay
-                // In production, we might do this via a background Job queue to not block HTTP response
-                // But for "Instant" feel, we try here.
-
-                // const PaymentGatewayService = require('../modules/payment/PaymentGatewayService');
-                // const gatewayRes = await PaymentGatewayService.initiatePayout(accountDetails, parsedAmount, method);
-
-                // For safety in this demo, let's keep it mostly Mock but log it as "Auto-Approved"
-                // Actually, let's set it to 'completed' directly to show the feature working.
-
+            if (parsedAmount < 5000) {
                 newStatus = 'completed';
                 adminComment = 'Auto-Approved by Settlement Gateway (Under 5k limit)';
                 gatewayTrxId = `AUTO_${Date.now()}`;
-
-            } catch (gwError) {
-                console.error("Gateway Error:", gwError);
-                // Fallback to manual
-                newStatus = 'pending';
-                adminComment = 'Gateway Failed - Manual Review Required';
             }
-        }
 
-        // Create Transaction
-        const [transaction] = await Transaction.create([{
-            userId,
-            type: 'cash_out',
-            amount: -parsedAmount,
-            status: newStatus,
-            recipientDetails: `${method} - ${accountDetails} (${targetWallet} wallet)`,
-            description: `Withdrawal Request from ${targetWallet} wallet`,
-            adminComment: adminComment,
-            gatewayTransactionId: gatewayTrxId
-        }], { session });
+            const [transaction] = await Transaction.create([{
+                userId,
+                type: 'cash_out',
+                amount: -parsedAmount,
+                status: newStatus,
+                recipientDetails: `${method} - ${accountDetails} (${targetWallet} wallet)`,
+                description: `Withdrawal Request from ${targetWallet} wallet`,
+                adminComment: adminComment,
+                gatewayTransactionId: gatewayTrxId
+            }], { session });
 
-        await session.commitTransaction();
-        res.json({ message: 'Withdrawal requested successfully', transaction });
+            return transaction;
+        });
+
+        // --- Emit Real-time Update to Admin Room ---
+        const SocketService = require('../common/SocketService');
+        SocketService.broadcast('admin_dashboard', 'transaction_update', { 
+            transactionId: result._id, 
+            status: result.status,
+            message: 'New Cash-out Request'
+        });
+
+        res.json({ message: 'Withdrawal requested successfully', transaction: result });
 
     } catch (err) {
-        await session.abortTransaction();
-        console.error(err);
-        res.status(500).json({ message: 'Server Error' });
-    } finally {
-        session.endSession();
+        console.error('Withdrawal Error:', err);
+        const isTurnoverError = err.message.includes('Turnover Requirement Not Met');
+        const status = isTurnoverError ? 403 : 500;
+        const msg = isTurnoverError ? `টার্নওভার পূর্ণ হয়নি! গেম খেলে আপনাকে আরও ৳${err.message.split('৳')[1] || 'কিছু টাকা'} এর লিমিট পূর্ণ করতে হবে।` : (err.message || 'Server Error');
+        res.status(status).json({ message: msg, retentionLock: isTurnoverError });
     }
 };
 
@@ -131,108 +103,96 @@ exports.getWithdrawals = async (req, res) => {
 
 // Process Withdrawal (Admin: Approve/Reject)
 exports.processWithdrawal = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
         const { transactionId, status, adminComment, agentId } = req.body;
         // status: 'completed' or 'rejected'
 
-        const transaction = await Transaction.findById(transactionId).session(session);
-        if (!transaction || transaction.type !== 'cash_out') {
-            await session.abortTransaction();
-            return res.status(404).json({ message: 'Withdrawal not found' });
-        }
+        const result = await TransactionHelper.runTransaction(async (session) => {
+            const transaction = await Transaction.findById(transactionId).session(session);
+            if (!transaction || transaction.type !== 'cash_out') {
+                throw new Error('উইথড্রয়াল রিকোয়েস্ট পাওয়া যায়নি!');
+            }
 
-        if (transaction.status !== 'pending') {
-            await session.abortTransaction();
-            return res.status(400).json({ message: 'Request already processed' });
-        }
+            if (transaction.status !== 'pending') {
+                throw new Error('এই রিকোয়েস্টটি ইতিমধ্যে প্রসেস করা হয়েছে!');
+            }
 
-        transaction.status = status;
-        transaction.adminComment = adminComment;
+            transaction.status = status;
+            transaction.adminComment = adminComment;
+            if (agentId) transaction.assignedAgentId = agentId;
 
-        if (agentId) {
-            transaction.assignedAgentId = agentId; // Ensure TransactionModel has this field or Strict mode off
-        }
+            await transaction.save({ session });
 
-        await transaction.save({ session });
+            // CASE 1: REJECTED -> Refund the User
+            if (status === 'rejected') {
+                const user = await User.findById(transaction.userId).session(session);
+                if (user) {
+                    const refundAmount = Math.abs(transaction.amount);
+                    const isIncome = transaction.description && transaction.description.includes('income wallet');
+                    const targetWallet = isIncome ? 'income' : 'main';
 
-        // CASE 1: REJECTED -> Refund the User
-        if (status === 'rejected') {
-            const user = await User.findById(transaction.userId).session(session);
-            const refundAmount = Math.abs(transaction.amount);
-
-            // Determine wallet type (Income vs Main)
-            // Heuristic: check description
-            const isIncome = transaction.description && transaction.description.includes('income wallet');
-            const targetWallet = isIncome ? 'income' : 'main';
-
-            user.wallet[targetWallet] += refundAmount;
-            await user.save({ session });
-        }
-
-        // CASE 2: COMPLETED -> Reimburse the Agent + Commission
-        else if (status === 'completed') {
-            const processingAgentId = agentId || transaction.assignedAgentId;
-
-            if (processingAgentId) {
-                const agent = await User.findById(processingAgentId).session(session);
-
-                if (!agent) {
-                    await session.abortTransaction();
-                    return res.status(404).json({ message: 'Assigned Agent not found.' });
-                }
-
-                const reimbursementAmount = Math.abs(transaction.amount);
-
-                // Fetch Settings
-                const settingsDoc = await SystemSetting.findOne({ key: 'cash_out_commission_percent' }).session(session);
-                const commissionPercent = settingsDoc ? parseFloat(settingsDoc.value) : 0;
-                const commissionAmount = reimbursementAmount * (commissionPercent / 100);
-
-                const totalCredit = reimbursementAmount + commissionAmount;
-
-                // Credit Agent Stock (Wallet Main? Or specific 'agent_due'? Old code used AgentWallet.balance. 
-                // Now Agent is User. User.wallet.main is likely their stock/balance.)
-                agent.wallet.main = (agent.wallet.main || 0) + totalCredit;
-                // Also update agentData.due if needed? Legacy had 'agent_due'. Let's assume wallet.main is fine for now.
-
-                await agent.save({ session });
-
-                // Log Reimbursement
-                await Transaction.create([{
-                    userId: processingAgentId,
-                    type: 'admin_credit',
-                    amount: reimbursementAmount,
-                    status: 'completed',
-                    description: `Reimbursement for Cash-Out TrxID: ${transactionId}`,
-                    recipientDetails: `User: ${transaction.userId} Cash Out`,
-                    relatedUserId: transaction.userId
-                }], { session });
-
-                // Log Commission
-                if (commissionAmount > 0) {
-                    await Transaction.create([{
-                        userId: processingAgentId,
-                        type: 'commission',
-                        amount: commissionAmount,
-                        status: 'completed',
-                        description: `Commission (${commissionPercent}%) for Cash-Out TrxID: ${transactionId}`,
-                        recipientDetails: `System Bonus`,
-                        relatedUserId: transaction.userId
-                    }], { session });
+                    user.wallet[targetWallet] += refundAmount;
+                    await user.save({ session });
                 }
             }
-        }
 
-        await session.commitTransaction();
-        res.json({ message: `Withdrawal ${status}` });
+            // CASE 2: COMPLETED -> Reimburse the Agent + Commission
+            else if (status === 'completed') {
+                const processingAgentId = agentId || transaction.assignedAgentId;
+                if (processingAgentId) {
+                    const agent = await User.findById(processingAgentId).session(session);
+                    if (!agent) throw new Error('এসাইন্ড এজেন্ট পাওয়া যায়নি!');
+
+                    const reimbursementAmount = Math.abs(transaction.amount);
+                    const settingsDoc = await SystemSetting.findOne({ key: 'cash_out_commission_percent' }).session(session);
+                    const commissionPercent = settingsDoc ? parseFloat(settingsDoc.value) : 0;
+                    const commissionAmount = reimbursementAmount * (commissionPercent / 100);
+                    const totalCredit = reimbursementAmount + commissionAmount;
+
+                    agent.wallet.main = (agent.wallet.main || 0) + totalCredit;
+                    await agent.save({ session });
+
+                    // Log Reimbursement
+                    await Transaction.create([{
+                        userId: processingAgentId,
+                        type: 'admin_credit',
+                        amount: reimbursementAmount,
+                        status: 'completed',
+                        description: `Reimbursement for Cash-Out TrxID: ${transactionId}`,
+                        recipientDetails: `User: ${transaction.userId} Cash Out`,
+                        relatedUserId: transaction.userId
+                    }], { session });
+
+                    // Log Commission
+                    if (commissionAmount > 0) {
+                        await Transaction.create([{
+                            userId: processingAgentId,
+                            type: 'commission',
+                            amount: commissionAmount,
+                            status: 'completed',
+                            description: `Commission (${commissionPercent}%) for Cash-Out TrxID: ${transactionId}`,
+                            recipientDetails: `System Bonus`,
+                            relatedUserId: transaction.userId
+                        }], { session });
+                    }
+                }
+            }
+            return transaction;
+        });
+
+        // --- Post-Processing Socket Notifications ---
+        try {
+            const SocketService = require('../common/SocketService');
+            const eventMsg = status === 'completed' ? 'আপনার উইথড্রয়াল এপ্রুভ হয়েছে!' : 'আপনার উইথড্রয়াল রিজেক্ট হয়েছে। বিস্তারিত চেক করুন।';
+            SocketService.broadcast(`user_${result.userId}`, 'notification', { type: status === 'completed' ? 'success' : 'error', message: eventMsg });
+            SocketService.broadcast(`user_${result.userId}`, 'transaction_update', { transactionId: result._id, status });
+            SocketService.broadcast('admin_dashboard', 'transaction_update', { transactionId: result._id, status });
+        } catch (syncErr) { console.error('Withdrawal Sync Error:', syncErr); }
+
+        res.json({ message: `উইথড্রয়াল স্ট্যাটাস আপডেট হয়েছে: ${status}`, transaction: result });
 
     } catch (err) {
-        await session.abortTransaction();
-        console.error(err);
-        res.status(500).json({ message: 'Server Error' });
-    } finally {
-        session.endSession();
+        console.error('processWithdrawal Error:', err);
+        res.status(500).json({ message: err.message || 'সার্ভার এরর! দয়া করে আবার চেষ্টা করুন।' });
     }
 };

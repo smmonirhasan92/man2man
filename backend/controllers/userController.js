@@ -17,8 +17,7 @@ const TIER_PRICES = {
 
 // Upgrade Account Tier
 exports.upgradeAccountTier = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const TransactionHelper = require('../modules/common/TransactionHelper');
     try {
         const userId = req.user.user.id;
         const { planId } = req.body;
@@ -26,58 +25,58 @@ exports.upgradeAccountTier = async (req, res) => {
         // Fetch Plan from DB
         const plan = await Plan.findById(planId);
         if (!plan) {
-            throw new Error('Invalid Plan');
+            return res.status(404).json({ message: 'Invalid Plan' });
         }
 
         const price = plan.unlock_price;
         const planName = plan.name;
 
-        const user = await User.findById(userId).session(session);
-        if (!user) throw new Error('User not found');
+        await TransactionHelper.runTransaction(async (session) => {
+            const opts = session ? { session } : {};
 
-        const purchaseBal = user.wallet.purchase || 0;
-        const mainBal = user.wallet.main || 0;
+            const user = await User.findById(userId).setOptions(opts);
+            if (!user) throw new Error('User not found');
 
-        if ((purchaseBal + mainBal) < price) {
-            throw new Error('Insufficient Balance');
-        }
+            const purchaseBal = user.wallet.purchase || 0;
+            const mainBal = user.wallet.main || 0;
 
-        let remainingCost = price;
+            if ((purchaseBal + mainBal) < price) {
+                throw new Error('Insufficient Balance');
+            }
 
-        // Dedjuct from Purchase Wallet
-        if (purchaseBal >= remainingCost) {
-            user.wallet.purchase -= remainingCost;
-            remainingCost = 0;
-        } else {
-            remainingCost -= purchaseBal;
-            user.wallet.purchase = 0;
-        }
+            let remainingCost = price;
 
-        // Deduct Remainder from Main
-        if (remainingCost > 0) {
-            user.wallet.main -= remainingCost;
-        }
+            // Deduct from Purchase Wallet first
+            if (purchaseBal >= remainingCost) {
+                user.wallet.purchase -= remainingCost;
+                remainingCost = 0;
+            } else {
+                remainingCost -= purchaseBal;
+                user.wallet.purchase = 0;
+            }
 
-        user.taskData.accountTier = planName;
-        await user.save({ session });
+            // Deduct remainder from Main
+            if (remainingCost > 0) {
+                user.wallet.main -= remainingCost;
+            }
 
-        // Log
-        await new Transaction({
-            userId: user._id,
-            type: 'purchase',
-            amount: -price,
-            status: 'completed',
-            description: `Upgraded to ${planName}`
-        }).save({ session });
+            user.taskData.accountTier = planName;
+            await user.save(opts);
 
-        await session.commitTransaction();
+            // Log transaction
+            await new Transaction({
+                userId: user._id,
+                type: 'purchase',
+                amount: -price,
+                status: 'completed',
+                description: `Upgraded to ${planName}`
+            }).save(opts);
+        });
+
         res.json({ success: true, message: `Upgraded to ${planName}`, newTier: planName });
     } catch (err) {
-        await session.abortTransaction();
         console.error(err);
         res.status(500).json({ message: err.message || 'Server Error' });
-    } finally {
-        session.endSession();
     }
 };
 
