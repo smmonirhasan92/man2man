@@ -12,48 +12,48 @@ const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
   bronze: {
-    name: 'Bronze', cost: 5,
+    name: 'Bronze', cost: 4,
     btnClass: 'from-[#CD7F32] to-[#E8A55A]', textClass: 'text-white',
     tabActiveBg: 'bg-[#FFF4EA] border-[#CD7F32]', tabActiveText: 'text-[#8B4513]',
     slices: [
-      { label: '25', value: 25, color: '#F4A261' },
-      { label: '15', value: 15, color: '#E76F51' },
-      { label: '12.5', value: 12.5, color: '#2A9D8F' },
-      { label: '10', value: 10, color: '#E9C46A' },
+      { label: '20', value: 20, color: '#F4A261' },
+      { label: '12', value: 12, color: '#E76F51' },
+      { label: '10', value: 10, color: '#2A9D8F' },
+      { label: '8',  value: 8,  color: '#E9C46A' },
       { label: '0',  value: 0,  color: '#264653' },
-      { label: '7.5', value: 7.5, color: '#F4A261' },
-      { label: '5', value: 5, color: '#2A9D8F' },
-      { label: '2.5',  value: 2.5,  color: '#E9C46A' }
+      { label: '6',  value: 6,  color: '#F4A261' },
+      { label: '4',  value: 4,  color: '#2A9D8F' },
+      { label: '2',  value: 2,  color: '#E9C46A' }
     ]
   },
   silver: {
-    name: 'Silver', cost: 10,
+    name: 'Silver', cost: 8,
     btnClass: 'from-[#909090] to-[#C0C0C0]', textClass: 'text-white',
     tabActiveBg: 'bg-[#F5F5F5] border-[#A0A0A0]', tabActiveText: 'text-[#444]',
     slices: [
-      { label: '50', value: 50, color: '#8D8D8D' },
-      { label: '30', value: 30, color: '#B0B0B0' },
-      { label: '25', value: 25, color: '#5E5E5E' },
-      { label: '20', value: 20, color: '#C8C8C8' },
-      { label: '0',   value: 0,   color: '#333' },
-      { label: '15',  value: 15,  color: '#9A9A9A' },
-      { label: '10',  value: 10,  color: '#6E6E6E' },
-      { label: '5',  value: 5,  color: '#B8B8B8' }
+      { label: '40', value: 40, color: '#8D8D8D' },
+      { label: '24', value: 24, color: '#B0B0B0' },
+      { label: '20', value: 20, color: '#5E5E5E' },
+      { label: '16', value: 16, color: '#C8C8C8' },
+      { label: '0',  value: 0,  color: '#333' },
+      { label: '12', value: 12, color: '#9A9A9A' },
+      { label: '8',  value: 8,  color: '#6E6E6E' },
+      { label: '4',  value: 4,  color: '#B8B8B8' }
     ]
   },
   gold: {
-    name: 'Gold', cost: 15,
+    name: 'Gold', cost: 12,
     btnClass: 'from-[#B8860B] to-[#FFD700]', textClass: 'text-[#3B2A00]',
     tabActiveBg: 'bg-[#FFFBE6] border-[#DAA520]', tabActiveText: 'text-[#856404]',
     slices: [
-      { label: '75', value: 75, color: '#DAA520' },
-      { label: '45', value: 45, color: '#B8860B' },
-      { label: '37.5', value: 37.5, color: '#FFD700' },
-      { label: '30', value: 30, color: '#8B6914' },
-      { label: '0',   value: 0,   color: '#F5C842' },
-      { label: '22.5', value: 22.5, color: '#B8860B' },
-      { label: '15', value: 15, color: '#DAA520' },
-      { label: '7.5',  value: 7.5,  color: '#FFD700' }
+      { label: '60', value: 60, color: '#DAA520' },
+      { label: '36', value: 36, color: '#B8860B' },
+      { label: '30', value: 30, color: '#FFD700' },
+      { label: '24', value: 24, color: '#8B6914' },
+      { label: '0',  value: 0,  color: '#F5C842' },
+      { label: '18', value: 18, color: '#B8860B' },
+      { label: '12', value: 12, color: '#DAA520' },
+      { label: '6',  value: 6,  color: '#FFD700' }
     ]
   }
 };
@@ -118,19 +118,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   }, [user?.wallet?.main, spinning, popup]);
 
   // [P#7] Background Wallet Sync (Periodic Refresh)
-  useEffect(() => {
-    const syncInterval = setInterval(async () => {
-      if (!spinning && !popup) {
-        try {
-          const { data } = await api.get('/user/profile');
-          if (data.success) {
-            setDisplayBalance(data.user.wallet.main);
-          }
-        } catch (err) { console.error('Balance sync failed:', err); }
-      }
-    }, 30000); // 30 seconds
-    return () => clearInterval(syncInterval);
-  }, [spinning, popup]);
+  // [REMOVED] Redundant interval. Now handled by centralized AuthContext single listener.
 
   const toggleMute = () => {
     const newVal = !muted;
@@ -157,7 +145,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     // Instantly lock all global socket interceptions before the network hits the backend.
     if (typeof window !== 'undefined') {
       window.isLuckTestAnimating = true;
-      window.deferredLuckTestBalance = null;
+      window.unifiedDeferredBalance = null;
     }
 
     // [P#3] VISUAL OPTIMISTIC DEDUCTION (Upfront Betting Action)
@@ -214,9 +202,9 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       // STRICT SYNCHRONIZATION: Wallet unlocks only precisely when wheel stops
       if (typeof window !== 'undefined') {
         window.isLuckTestAnimating = false;
-        if (window.deferredLuckTestBalance) {
-           const tmpDetails = window.deferredLuckTestBalance;
-           window.deferredLuckTestBalance = null;
+        if (window.unifiedDeferredBalance) {
+           const tmpDetails = window.unifiedDeferredBalance;
+           window.unifiedDeferredBalance = null;
            window.dispatchEvent(new CustomEvent('balance_update', { detail: tmpDetails }));
         }
       }

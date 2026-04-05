@@ -2,10 +2,16 @@ const TransactionHelper = require('../common/TransactionHelper');
 const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 
-const TIERS = {
-  bronze: { costNXS: 5, labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
-  silver: { costNXS: 10, labels: { win: 'Silver Jackpot', loss: 'Miss' } },
-  gold: { costNXS: 15, labels: { win: 'Gold Jackpot', loss: 'Miss' } }
+const SPIN_TIERS = {
+  bronze: { costNXS: 4,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
+  silver: { costNXS: 8,  labels: { win: 'Silver Jackpot', loss: 'Miss' } },
+  gold:   { costNXS: 12, labels: { win: 'Gold Jackpot',   loss: 'Miss' } }
+};
+
+const SCRATCH_TIERS = {
+  bronze: { costNXS: 5,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
+  silver: { costNXS: 10, labels: { win: 'Silver Luck', loss: 'Miss' } },
+  gold:   { costNXS: 25, labels: { win: 'Golden Treasure', loss: 'Miss' } }
 };
 
 // --- SPIN LOGIC (Luck Test) ---
@@ -15,7 +21,7 @@ exports.spinLuckTest = async (req, res) => {
 
 // --- SCRATCH CARD LOGIC ---
 exports.scratchCard = async (req, res) => {
-    return processGameRequest(req, res, 'scratch', 2000); // 2s window
+    return processGameRequest(req, res, 'scratch', 0); // 0s window for instant feedback
 };
 
 async function processGameRequest(req, res, gameType, windowMs) {
@@ -23,11 +29,13 @@ async function processGameRequest(req, res, gameType, windowMs) {
         const { tier } = req.body;
         const userId = req.user.user.id;
 
-        if (!tier || !TIERS[tier]) {
+        const tierDict = gameType === 'scratch' ? SCRATCH_TIERS : SPIN_TIERS;
+
+        if (!tier || !tierDict[tier]) {
             return res.status(400).json({ success: false, message: 'Invalid tier selected.' });
         }
 
-        const cost = TIERS[tier].costNXS;
+        const cost = tierDict[tier].costNXS;
 
         // Process through Pure Pooling Engine
         const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, windowMs);
@@ -81,7 +89,7 @@ async function processGameRequest(req, res, gameType, windowMs) {
             tier,
             game: gameType,
             result: {
-                label: matchResult.label || (matchResult.isWin ? TIERS[tier].labels.win : TIERS[tier].labels.loss),
+                label: matchResult.label || (matchResult.isWin ? tierDict[tier].labels.win : tierDict[tier].labels.loss),
                 amountNXS: winAmt,
                 isWin: matchResult.isWin,
                 mode: matchResult.mode,

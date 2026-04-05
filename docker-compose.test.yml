@@ -11,14 +11,13 @@ services:
         - NEXT_PUBLIC_API_URL=http://76.13.244.202/api
     container_name: m2m-frontend-test
     ports:
-      - "3011:3011"
+      - "3011:3000"
     environment:
-      - PORT=3011
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://76.13.244.202/api
       - TZ=Asia/Dhaka
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3011"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3

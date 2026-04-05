@@ -152,7 +152,7 @@ export default function GiftBox({ onBalanceUpdate }) {
     // ── [SOCKET GUARD] Lock balance updates during animation ──
     if (typeof window !== 'undefined') {
       window.isMysteryVaultAnimating = true;
-      window.deferredVaultBalance = null;
+      window.unifiedDeferredBalance = null;
     }
 
     setSelectedTier(tier);
@@ -206,9 +206,9 @@ export default function GiftBox({ onBalanceUpdate }) {
         }
 
         // Flush any deferred socket update
-        if (window.deferredVaultBalance !== null && window.deferredVaultBalance !== undefined) {
-          window.dispatchEvent(new CustomEvent('balance_update', { detail: window.deferredVaultBalance }));
-          window.deferredVaultBalance = null;
+        if (window.unifiedDeferredBalance !== null && window.unifiedDeferredBalance !== undefined) {
+          window.dispatchEvent(new CustomEvent('balance_update', { detail: window.unifiedDeferredBalance }));
+          window.unifiedDeferredBalance = null;
         }
       }
 

@@ -102,14 +102,14 @@ export default function ScratchCanvas({
             const dist = Math.sqrt(dx*dx + dy*dy);
             totalSwipeDistRef.current += dist;
             
-            if (totalSwipeDistRef.current > 80 && !isFinished) {
+            if (totalSwipeDistRef.current > 15 && !isFinished) {
                finishReveal();
             }
         }
         createParticles(pos.x, pos.y);
         lastPosRef.current = pos;
 
-        if (typeof window !== 'undefined' && window.navigator.vibrate) window.navigator.vibrate(8);
+        if (typeof window !== 'undefined' && window.navigator.vibrate) window.navigator.vibrate(5);
         if (onScratch) onScratch();
     };
 
@@ -117,14 +117,14 @@ export default function ScratchCanvas({
         if (isFinished) return;
         setIsFinished(true);
         const canvas = canvasRef.current;
-        canvas.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s ease-out';
+        canvas.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
         canvas.style.opacity = '0';
-        canvas.style.transform = 'scale(1.1)';
-        setTimeout(() => onComplete && onComplete(), 500);
+        canvas.style.transform = 'scale(1.2) rotate(2deg)';
+        if (onComplete) onComplete();
     };
 
     return (
-        <div className="absolute inset-0 z-20 overflow-hidden rounded-2xl">
+        <div className="absolute inset-0 z-20 overflow-hidden pointer-events-auto">
             <canvas
                 ref={canvasRef}
                 width={width}
@@ -136,8 +136,8 @@ export default function ScratchCanvas({
                 onTouchStart={(e) => { setIsDrawing(true); lastPosRef.current = getPos(e); totalSwipeDistRef.current = 0; }}
                 onTouchEnd={() => setIsDrawing(false)}
                 onTouchMove={scratch}
-                className="absolute inset-0 cursor-crosshair touch-none"
-                style={{ touchAction: 'none' }}
+                className="absolute inset-0 cursor-crosshair touch-none select-none"
+                style={{ touchAction: 'none', WebkitTapHighlightColor: 'transparent' }}
             />
             {/* Dust Particles SVG Overlay */}
             <svg className="absolute inset-0 pointer-events-none w-full h-full">

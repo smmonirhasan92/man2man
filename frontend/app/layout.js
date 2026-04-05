@@ -56,6 +56,7 @@ export const viewport = {
 import { NotificationProvider } from '../context/NotificationContext';
 import { CurrencyProvider } from '../context/CurrencyContext';
 import { CardSkinProvider } from '../context/CardSkinContext';
+import { AuthProvider } from '../context/AuthContext';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import BottomNav from '../components/BottomNav';
 import ChatWidget from '../components/ui/ChatWidget';
@@ -75,80 +76,57 @@ export default function RootLayout({ children }) {
         <html lang="en" suppressHydrationWarning={true} className={`${inter.variable} ${outfit.variable}`}>
             <body className={`${outfit.className} min-h-screen text-white bg-[#0a192f]`} suppressHydrationWarning={true}>
                 <AutoUpdater />
-                <NotificationProvider>
-                    <CurrencyProvider>
-                        <CardSkinProvider>
-                            {/* Shell handles Layout Constraints */}
-                            <Shell>
-                                {/* GLOBAL DRAWER TRIGGER + DRAWER */}
-                                <GlobalProfileDrawer />
+                <AuthProvider>
+                    <NotificationProvider>
+                        <CurrencyProvider>
+                            <CardSkinProvider>
+                                {/* Shell handles Layout Constraints */}
+                                <Shell>
+                                    {/* GLOBAL DRAWER TRIGGER + DRAWER */}
+                                    <GlobalProfileDrawer />
 
-                                {/* Main Content Area */}
-                                <main className="flex-1 pb-32 relative z-10">
-                                    <RouteChecker />
-                                    <AuthGuard>
-                                        <PageTransition>
-                                            {children}
-                                        </PageTransition>
-                                    </AuthGuard>
-                                </main>
+                                    {/* Main Content Area */}
+                                    <main className="flex-1 pb-32 relative z-10">
+                                        <RouteChecker />
+                                        <AuthGuard>
+                                            <PageTransition>
+                                                {children}
+                                            </PageTransition>
+                                        </AuthGuard>
+                                    </main>
 
-                                {/* Sticky Bottom Nav - Constrined by Logic inside Shell or Component */}
-                                {/* We keep the wrapper but rely on CSS or inheretance/media queries if possible, 
-                                    OR we just leave it max-w-[450px] for now. 
-                                    Wait, if Admin is Full Width, we don't want BottomNav at all usually. 
-                                    Let's assume BottomNav component hides itself on admin routes.
-                                    But the CONTAINER needs to not block clicks or look weird.
-                                    I will add 'max-w-[450px]' class BUT also 'md:max-w-none md:w-full' for admin? No.
-                                    App is always 450px. Admin is full.
-                                    I will wrap this in a component that checks path is simpler?
-                                    Actually, Shell.js is client component. I can pass a prop 'isMobile'?
-                                    No, Shell determines isMobile internaly.
-                                    
-                                    Let's just put the Nav inside Shell.
-                                */}
-                                <div className="fixed bottom-0 w-full sm:max-w-md mx-auto z-50 pointer-events-none left-0 right-0 mobile-only-nav">
-                                    <div className="pointer-events-auto">
-                                        <BottomNav />
+                                    {/* Sticky Bottom Nav */}
+                                    <div className="fixed bottom-0 w-full sm:max-w-md mx-auto z-50 pointer-events-none left-0 right-0 mobile-only-nav">
+                                        <div className="pointer-events-auto">
+                                            <BottomNav />
+                                        </div>
                                     </div>
-                                </div>
 
 
-                                <PWAInstallPrompt />
-                                <NotificationPopup />
-                                <GlobalActiveTradeBanner />
-                                <ChatWidget />
-                                {/* Premium Toasts */}
-                                <Toaster
-                                    position="top-center"
-                                    toastOptions={{
-                                        style: {
-                                            background: '#1e293b',
-                                            color: '#fff',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '12px',
-                                            fontSize: '12px',
-                                            fontWeight: 'bold',
-                                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                                        },
-                                        success: {
-                                            iconTheme: {
-                                                primary: '#10b981',
-                                                secondary: '#fff',
+                                    <PWAInstallPrompt />
+                                    <NotificationPopup />
+                                    <GlobalActiveTradeBanner />
+                                    <ChatWidget />
+                                    {/* Premium Toasts */}
+                                    <Toaster
+                                        position="top-center"
+                                        toastOptions={{
+                                            style: {
+                                                background: '#1e293b',
+                                                color: '#fff',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: '12px',
+                                                fontSize: '12px',
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
                                             },
-                                        },
-                                        error: {
-                                            iconTheme: {
-                                                primary: '#ef4444',
-                                                secondary: '#fff',
-                                            },
-                                        },
-                                    }}
-                                />
-                            </Shell>
-                        </CardSkinProvider>
-                    </CurrencyProvider>
-                </NotificationProvider>
+                                        }}
+                                    />
+                                </Shell>
+                            </CardSkinProvider>
+                        </CurrencyProvider>
+                    </NotificationProvider>
+                </AuthProvider>
             </body>
         </html >
     )

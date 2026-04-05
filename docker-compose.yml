@@ -7,19 +7,19 @@ services:
       dockerfile: Dockerfile
       args:
         # Default API URL for local PC
-        - NEXT_PUBLIC_API_URL=http://localhost:5050
+        - NEXT_PUBLIC_API_URL=http://localhost:5050/api
     ports:
-      - "3000:3000"
+      - "3010:3000"
     container_name: m2m-frontend-dev
-    command: npm run dev
     environment:
-      - NODE_ENV=development 
-      - NEXT_PUBLIC_API_URL=http://localhost:5050
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:5050/api
     volumes:
-      - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   backend:
     build:
@@ -38,7 +38,7 @@ services:
       - REDIS_URL=redis://host.docker.internal:6379
       # Set timezone to ensure node-cron jobs run perfectly to Bangladesh time
       - TZ=Asia/Dhaka
-      - CLIENT_URL=http://localhost:3000
+      - CLIENT_URL=http://localhost:3010
     volumes:
       # Map the code for real-time updates
       - ./backend:/app

@@ -9,6 +9,8 @@ class UniversalMatchMaker {
     constructor() {
         this.queues = {};
         this.DEFAULT_WINDOW_MS = 1500; 
+        this.globalScratchPool = 50000; // Track historical liquidity to allow jackpots
+        this.globalSpinPool = 0; // Strictly 0 so admin never loses. Accumulates from margins.
     }
 
     async processMatch(userId, betAmount, gameType = 'spin', customWindowMs = null) {
@@ -41,22 +43,11 @@ class UniversalMatchMaker {
                 const rewardPool = totalBet - adminMargin; 
 
                 if (gameType === 'scratch') {
-                    this.executeScratchBatch(batch, rewardPool, isDuo);
-                } else if (isDuo) {
-                    // [P#18-0 RULE] One winner, one loser (or split) to keep exact 90% RTP
-                    const winnerIdx = Math.random() > 0.5 ? 0 : 1;
-                    const loserIdx = winnerIdx === 0 ? 1 : 0;
-
-                    batch[winnerIdx].resolve(this.generateOutcome(batch[winnerIdx].betAmount * 1.8, 'WIN', 1, rewardPool));
-                    batch[loserIdx].resolve(this.generateOutcome(0, 'LOSS', 8, rewardPool));
-                } else {
-                    // Solo Match: Maximum payout can't exceed 0.9x
-                    const random = Math.random();
-                    if (random > 0.6) {
-                        batch[0].resolve(this.generateOutcome(batch[0].betAmount * 0.9, 'REFUND', 2, rewardPool));
-                    } else {
-                        batch[0].resolve(this.generateOutcome(0, 'LOSS', 8, rewardPool));
-                    }
+                    this.globalScratchPool += rewardPool;
+                    this.executeScratchBatch(batch, isDuo);
+                } else if (gameType === 'spin') {
+                    this.globalSpinPool += rewardPool;
+                    this.executeSpinBatch(batch, isDuo);
                 }
             }
         } finally { q.isProcessing = false; }
@@ -65,11 +56,12 @@ class UniversalMatchMaker {
     /**
      * Optimized Scratch Engine: Distributes rewards with volatility while capping at 90% RTP.
      */
-    executeScratchBatch(batch, rewardPool, isDuo) {
+    executeScratchBatch(batch, isDuo) {
         if (!isDuo) {
             const p = batch[0];
-            const outcome = this.calcWeightedMult(p.betAmount, rewardPool);
-            p.resolve(this.generateOutcome(outcome.amount, outcome.label, outcome.rank, rewardPool));
+            const outcome = this.calcWeightedMult(p.betAmount, this.globalScratchPool);
+            this.globalScratchPool = Math.max(0, this.globalScratchPool - outcome.amount);
+            p.resolve(this.generateOutcome(outcome.amount, outcome.label, outcome.rank, this.globalScratchPool));
             return;
         }
 
@@ -77,16 +69,14 @@ class UniversalMatchMaker {
         const p1 = batch[0];
         const p2 = batch[1];
         
-        const o1 = this.calcWeightedMult(p1.betAmount, rewardPool);
-        const remaining = Math.max(0, rewardPool - o1.amount);
+        const o1 = this.calcWeightedMult(p1.betAmount, this.globalScratchPool);
+        this.globalScratchPool = Math.max(0, this.globalScratchPool - o1.amount);
         
-        // P2 gets remainder or a minimal consolation if pool allows
-        let p2Amt = remaining;
-        let p2Label = p2Amt > 0 ? 'CONSOLATION' : 'LOSS';
-        let p2Rank = p2Amt > 0 ? 3 : 8;
+        const o2 = this.calcWeightedMult(p2.betAmount, this.globalScratchPool);
+        this.globalScratchPool = Math.max(0, this.globalScratchPool - o2.amount);
 
-        p1.resolve(this.generateOutcome(o1.amount, o1.label, o1.rank, rewardPool));
-        p2.resolve(this.generateOutcome(p2Amt, p2Label, p2Rank, rewardPool));
+        p1.resolve(this.generateOutcome(o1.amount, o1.label, o1.rank, this.globalScratchPool));
+        p2.resolve(this.generateOutcome(o2.amount, o2.label, o2.rank, this.globalScratchPool));
     }
 
     calcWeightedMult(bet, pool) {
@@ -99,7 +89,12 @@ class UniversalMatchMaker {
         else if (rng < 5) { mult = 5.0; label = 'EPIC'; rank = 1; }
         else if (rng < 15) { mult = 2.0; label = 'PROFIT'; rank = 2; }
         else if (rng < 35) { mult = 1.0; label = 'REFUND'; rank = 2; }
-        else if (rng < 55) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
+        else if (rng < 55) { 
+            if (bet === 50) mult = 0.3; // Consolation 15
+            else if (bet === 100) mult = 0.25; // Consolation 25
+            else mult = 0.5; // Default Consolation 0.5x
+            label = 'CONSOLATION'; rank = 3; 
+        }
         else { mult = 0.0; label = 'LOSS'; rank = 8; }
 
         // Mandatory Cap: A single payout cannot exceed the entire reward pool of the batch
@@ -109,6 +104,54 @@ class UniversalMatchMaker {
         if (amount < bet * mult && amount > 0) label = 'MEGA WIN (CAPPED)';
 
         return { amount, label, rank };
+    }
+
+    /**
+     * Optimized Spin Engine: Strict Zero-Liability. Admin never loses. Single Users don't bleed too fast.
+     */
+    executeSpinBatch(batch, isDuo) {
+        if (!isDuo) {
+            const p = batch[0];
+            const bet = p.betAmount;
+            
+            // Expected Wheel Multipliers: 5.0, 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.0
+            const rng = Math.random() * 100;
+            let mult = 0.0;
+            
+            if (rng < 1) mult = 5.0;           // 1%
+            else if (rng < 5) mult = 3.0;      // 4%
+            else if (rng < 10) mult = 2.5;     // 5%
+            else if (rng < 20) mult = 2.0;     // 10%
+            else if (rng < 40) mult = 1.5;     // 20%
+            else if (rng < 65) mult = 1.0;     // 25% (Extends playtime)
+            else if (rng < 90) mult = 0.5;     // 25% (Extends playtime)
+            else mult = 0.0;                   // 10%
+            
+            let payout = parseFloat((bet * mult).toFixed(2));
+            
+            // [STRICT] Admin Never Loses. Cap payout if globalSpinPool is insufficient.
+            if (payout > this.globalSpinPool) {
+                const possibleMults = [5.0, 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.0];
+                for (let pm of possibleMults) {
+                    if (pm * bet <= this.globalSpinPool) {
+                        mult = pm;
+                        payout = parseFloat((bet * mult).toFixed(2));
+                        break;
+                    }
+                }
+            }
+            
+            this.globalSpinPool = Math.max(0, this.globalSpinPool - payout);
+            p.resolve(this.generateOutcome(payout, mult > 0 ? 'WIN' : 'LOSS', 1, this.globalSpinPool));
+        } else {
+            // Duo Spin logic: one wins 1.8x, other loses, or split.
+            const p1 = batch[0], p2 = batch[1];
+            const winnerIdx = Math.random() > 0.5 ? 0 : 1;
+            const loserIdx = winnerIdx === 0 ? 1 : 0;
+            
+            p1.resolve(this.generateOutcome(p1.betAmount * 1.8, 'WIN', 1, this.globalSpinPool));
+            p2.resolve(this.generateOutcome(0, 'LOSS', 8, this.globalSpinPool));
+        }
     }
 
 

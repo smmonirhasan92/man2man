@@ -8,31 +8,38 @@ import useGameSound from '../../hooks/useGameSound';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import ScratchCanvas from './ScratchCanvas';
+import FlyingNumber from '../ui/FlyingNumber';
 
 const TIERS = {
   bronze: {
     name: 'Bronze Fortune', cost: 5, 
-    btnClass: 'from-[#CD7F32] to-[#E8A55A]', textClass: 'text-[#8B4513]',
-    bgPattern: 'bg-gradient-to-br from-[#CD7F32]/20 to-[#E8A55A]/30',
-    cardCover: '#C0C0C0', 
+    btnClass: 'from-[#CD7F32] to-[#A0522D]', textClass: 'text-white',
+    bgPattern: 'bg-gradient-to-br from-[#CD7F32]/10 to-[#8B4513]/20',
+    cardCover: '#B87333', 
     accent: '#CD7F32',
-    slogan: 'Unlock Your Fortune'
+    slogan: 'Unlock Your Fortune',
+    border: 'border-[#CD7F32]/40',
+    glow: 'shadow-[#CD7F32]/20'
   },
   silver: {
     name: 'Silver Luck', cost: 10, 
-    btnClass: 'from-[#94A3B8] to-[#CBD5E1]', textClass: 'text-[#334155]',
-    bgPattern: 'bg-gradient-to-br from-[#94A3B8]/20 to-[#CBD5E1]/30',
-    cardCover: '#D1D5DB', 
+    btnClass: 'from-[#94A3B8] to-[#64748B]', textClass: 'text-white',
+    bgPattern: 'bg-gradient-to-br from-[#94A3B8]/10 to-[#475569]/20',
+    cardCover: '#A0A0A0', 
     accent: '#94A3B8',
-    slogan: 'Claim Your Destiny'
+    slogan: 'Claim Your Destiny',
+    border: 'border-[#94A3B8]/40',
+    glow: 'shadow-[#94A3B8]/20'
   },
   gold: {
-    name: 'Golden Treasure', cost: 15, 
-    btnClass: 'from-[#D4AF37] to-[#F3E5AB]', textClass: 'text-[#B8860B]',
-    bgPattern: 'bg-gradient-to-br from-[#FFD700]/10 to-[#F3E5AB]/20',
+    name: 'Golden Treasure', cost: 25, 
+    btnClass: 'from-[#D4AF37] to-[#B8860B]', textClass: 'text-[#5C4033]',
+    bgPattern: 'bg-gradient-to-br from-[#FFD700]/10 to-[#DAA520]/20',
     cardCover: '#FFD700', 
     accent: '#FFD700',
-    slogan: 'Wealth Awaits You'
+    slogan: 'Wealth Awaits You',
+    border: 'border-[#D4AF37]/50',
+    glow: 'shadow-[#D4AF37]/30'
   }
 };
 
@@ -44,7 +51,10 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   const [isExiting, setIsExiting] = useState(false);
   
   const [gameState, setGameState] = useState('IDLE');
+  const gameStateRef = React.useRef('IDLE');
   const [prizeData, setPrizeData] = useState(null);
+  const prizeDataRef = React.useRef(null);
+  const [flyingNotes, setFlyingNotes] = useState([]);
   const { play: playSound } = useGameSound();
 
   const handleExit = () => {
@@ -73,8 +83,8 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
     if (gameState !== 'IDLE' && gameState !== 'REVEALED') return;
     
     if (typeof window !== 'undefined') {
-      window.isLuckTestAnimating = true;
-      window.deferredLuckTestBalance = null;
+      window.isScratchCardAnimating = true;
+      window.unifiedDeferredBalance = null;
     }
 
     let baselineBalance = displayBalance;
@@ -88,19 +98,23 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
       }
     } else {
         toast.error('Insufficient Balance');
-        if (typeof window !== 'undefined') window.isLuckTestAnimating = false;
+        if (typeof window !== 'undefined') window.isScratchCardAnimating = false;
         return;
     }
 
     setGameState('BOUGHT');
+    gameStateRef.current = 'BOUGHT';
     setPrizeData(null);
+    prizeDataRef.current = null;
 
     try {
       const { data } = await api.post('/game/scratch-card', { tier });
       setPrizeData(data.result);
-      setTimeout(() => setGameState('READY_TO_SCRATCH'), 400);
+      prizeDataRef.current = data.result;
+      setGameState('READY_TO_SCRATCH');
+      gameStateRef.current = 'READY_TO_SCRATCH';
     } catch (err) {
-      if (typeof window !== 'undefined') window.isLuckTestAnimating = false;
+      if (typeof window !== 'undefined') window.isScratchCardAnimating = false;
       if (baselineBalanceRef.current !== null) {
         setDisplayBalance(baselineBalanceRef.current);
         if (typeof window !== 'undefined') {
@@ -108,17 +122,47 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
         }
       }
       setGameState('IDLE');
+      gameStateRef.current = 'IDLE';
       toast.error(err.response?.data?.message || 'Transaction Failed');
     }
   };
 
   const onScratchComplete = async () => {
-      if (gameState !== 'READY_TO_SCRATCH') return;
+      if (gameStateRef.current === 'BOUGHT') {
+          const checkReady = setInterval(() => {
+              if (document.getElementById('scratch-card-prize')?.dataset?.ready === 'true') {
+                  clearInterval(checkReady);
+                  executeReveal();
+              }
+          }, 100);
+          return;
+      }
+      executeReveal();
+  };
+
+  const executeReveal = async () => {
+      if (gameStateRef.current === 'REVEALED') return;
       
       setGameState('REVEALED');
+      gameStateRef.current = 'REVEALED';
       
+      const currentPrize = prizeDataRef.current;
+
       // 🚀 PARTICLES & FIREWORKS
-      if (prizeData?.amountNXS > 0) {
+      if (currentPrize?.amountNXS > 0) {
+        // Generate Flying Numbers
+        const notes = Array.from({ length: 12 }).map((_, i) => ({
+            id: Date.now() + i,
+            value: Math.floor(currentPrize.amountNXS / 12) || 1,
+            delay: i * 0.1,
+            x: Math.random() * 200 - 100,
+            size: 0.8 + Math.random() * 1.5
+        }));
+        setFlyingNotes(notes);
+        
+        // Auto-cleanup notes after animation finishes
+        setTimeout(() => setFlyingNotes([]), 4000);
+
         const confetti = (await import('canvas-confetti')).default;
         confetti({
             particleCount: 100,
@@ -132,17 +176,19 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
       }
       
       if (typeof window !== 'undefined') {
-        window.isLuckTestAnimating = false;
-        if (window.deferredLuckTestBalance) {
-            const tmpDetails = window.deferredLuckTestBalance;
-            window.deferredLuckTestBalance = null;
+        window.isScratchCardAnimating = false;
+        if (window.unifiedDeferredBalance) {
+            const tmpDetails = window.unifiedDeferredBalance;
+            window.unifiedDeferredBalance = null;
             window.dispatchEvent(new CustomEvent('balance_update', { detail: tmpDetails }));
         }
       }
 
-      const trueBal = Number((parseFloat(displayBalance) + parseFloat(prizeData?.amountNXS || 0)).toFixed(2));
-      setDisplayBalance(trueBal);
-      if (onBalanceUpdate) onBalanceUpdate(trueBal);
+      setDisplayBalance(prev => {
+          const trueBal = Number((parseFloat(prev) + parseFloat(currentPrize?.amountNXS || 0)).toFixed(2));
+          if (onBalanceUpdate) onBalanceUpdate(trueBal);
+          return trueBal;
+      });
   };
 
   return (
@@ -153,10 +199,10 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-md mx-auto relative pt-4 pb-32 font-sans px-4 min-h-[100dvh]"
+            className="w-full max-w-sm mx-auto relative py-4 font-sans px-3 min-h-[100dvh] flex flex-col justify-center"
         >
             {/* Main Frame Container as requested by user */}
-            <div className="w-full bg-[#0F172A]/80 border border-slate-700/50 rounded-[2rem] p-4 sm:p-5 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-visible">
+            <div className="w-full bg-[#0F172A]/80 border border-slate-700/50 rounded-3xl p-3 sm:p-5 flex flex-col gap-3 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-visible">
                 
                 {/* Ambient Background Glow for the frame */}
                 <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 opacity-20 bg-gradient-to-b ${TIERS[tier].btnClass} blur-[50px] pointer-events-none rounded-[2rem]`}></div>
@@ -169,8 +215,8 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                     >
                       <ArrowLeft size={18} className="text-slate-300" />
                     </button>
-                    <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-2 px-4 shadow-lg text-right flex items-center gap-3">
-                        <p className="text-[#94A3B8] text-[9px] font-bold uppercase tracking-widest font-mono text-left leading-tight">Main<br/>Assets</p>
+                    <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-1.5 px-3 shadow-lg text-right flex items-center gap-2">
+                        <p className="text-[#94A3B8] text-[8px] font-bold uppercase tracking-wide font-mono text-left leading-tight">Main<br/>Assets</p>
                         <div className="flex flex-col">
                           {displayBalance === null ? (
                               <span className="w-16 h-5 bg-slate-700 animate-pulse rounded my-0.5 inline-block" />
@@ -184,16 +230,16 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                 </div>
 
             {/* Info Header */}
-            <div className="text-center mb-4 relative z-10 shrink-0">
-                <h1 className="text-3xl font-black text-white mb-1 tracking-tighter flex items-center justify-center gap-3 drop-shadow-xl">
-                    <Sparkles className="text-amber-400 w-6 h-6 animate-pulse" /> {TIERS[tier].name}
+            <div className="text-center relative z-10 shrink-0">
+                <h1 className="text-2xl font-black text-white mb-0.5 tracking-tighter flex items-center justify-center gap-2 drop-shadow-xl">
+                    <Sparkles className="text-amber-400 w-5 h-5 animate-pulse" /> {TIERS[tier].name}
                 </h1>
-                <p className="text-amber-500/60 text-[10px] uppercase tracking-[0.4em] font-black mb-1">{TIERS[tier].slogan}</p>
-                <p className="text-slate-500 text-[10px] px-6 uppercase tracking-widest font-bold opacity-40 italic">Global Luck Multiplier: 1:8 Pool Active</p>
+                <p className="text-amber-500/60 text-[9px] uppercase tracking-[0.3em] font-black mb-1">{TIERS[tier].slogan}</p>
+                <p className="text-slate-500 text-[8px] px-2 uppercase tracking-widest font-bold opacity-40 italic">Global Luck Multiplier: 1:8 Pool Active</p>
             </div>
 
             {/* Tier Selector */}
-            <div className="flex gap-2 justify-center mb-6 shrink-0 relative z-10">
+            <div className="flex gap-1.5 justify-center shrink-0 relative z-10">
               {Object.entries(TIERS).map(([t, info]) => (
                 <button
                   key={t}
@@ -207,146 +253,170 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                       : 'bg-[#1E293B] text-slate-400 border border-[#334155] hover:bg-slate-800'
                   } ${gameState === 'BOUGHT' || gameState === 'READY_TO_SCRATCH' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <span className="text-sm font-black mb-0.5 font-mono tracking-widest">{info.name.split(' ')[0]}</span>
+                  <span className="text-xs font-black mb-0 font-mono tracking-widest">{info.name.split(' ')[0]}</span>
                   <span className={`text-[9px] font-bold opacity-80 font-mono tracking-wider ${tier===t ? 'text-white/80' : ''}`}>{info.cost} NXS</span>
                 </button>
               ))}
             </div>
 
-            {/* The Scratch Card Container */}
-            <div className="relative w-full z-10 flex items-center justify-center mb-5 mt-2">
-                <div className="w-full max-w-[300px] aspect-square relative rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.6)] border-[5px] border-[#1E293B] bg-[#0A0F1A] overflow-hidden group">
+            {/* The Precision Reveal Scratch Card */}
+            <div className={`relative w-full z-10 flex flex-col items-center justify-center mt-2`}>
+                
+                {/* Premium Frame Wrapper */}
+                <div className={`w-[90%] max-w-[280px] mx-auto aspect-[4/5] relative rounded-[2rem] p-1 shadow-2xl transition-all duration-500 bg-gradient-to-b ${TIERS[tier].btnClass} ${TIERS[tier].glow}`}>
                     
-                    {/* The Prize Content (Bottom Layer) */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-900">
-                        <AnimatePresence>
-                            {prizeData && (
-                                <motion.div 
-                                    initial={{ scale: 0.3, opacity: 0, rotate: -10 }}
-                                    animate={{ scale: 1.1, opacity: 1, rotate: 0 }}
-                                    exit={{ scale: 0.5, opacity: 0 }}
-                                    transition={{ type: 'spring', stiffness: 400, damping: 12 }}
-                                    className="flex flex-col items-center justify-center w-full z-10"
-                                >
-                                    {prizeData.amountNXS > 0 ? (
-                                       <div className="relative mb-4">
-                                           <motion.div 
-                                                animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
-                                                transition={{ duration: 2, repeat: Infinity }}
-                                                className="absolute inset-0 blur-3xl opacity-60 bg-amber-400" 
-                                           />
-                                           <div className="relative bg-gradient-to-br from-amber-300 to-amber-600 w-28 h-28 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(251,191,36,0.5)] border-4 border-white/20">
-                                               <Coins className="text-white drop-shadow-lg w-14 h-14" />
-                                           </div>
-                                       </div>
-                                    ) : (
-                                       <div className="bg-slate-700/50 w-24 h-24 rounded-full flex items-center justify-center mb-4 border-2 border-slate-600/50">
-                                           <AlertCircle className="text-slate-400 w-12 h-12" />
-                                       </div>
+                    <div className="w-full h-full bg-[#0F172A] rounded-[1.8rem] relative overflow-hidden flex flex-col">
+                        
+                        {/* Static Premium Design (Top Part) */}
+                        <div className="absolute top-0 inset-x-0 h-1/2 bg-slate-900/40 pointer-events-none flex flex-col items-center pt-8">
+                             <div className={`w-16 h-1 w-1 bg-gradient-to-r ${TIERS[tier].btnClass} rounded-full mb-4 opacity-50`} />
+                             <Gift size={32} className={`text-white/20 mb-2`} />
+                             <h4 className="text-white/30 text-[9px] uppercase tracking-[0.5em] font-black">Official Lotary System</h4>
+                        </div>
+                        
+                        {/* Static Premium Design (Bottom Part) */}
+                        <div className="absolute bottom-0 inset-x-0 h-1/3 bg-slate-950/60 pointer-events-none flex flex-col items-center justify-end pb-8">
+                             <p className="text-slate-500 text-[8px] uppercase tracking-[0.3em] font-bold mb-1 opacity-40 italic">Global Luck Multiplier Active</p>
+                             <div className="flex gap-1 opacity-20">
+                                {[1,2,3,4,5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-white" />)}
+                             </div>
+                        </div>
+
+                        {/* Ambient Glow */}
+                        <div className={`absolute inset-0 ${TIERS[tier].bgPattern} opacity-50 z-0 pointer-events-none`} />
+
+                        {/* Middle Reward Box - The ONLY scratchable area */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] aspect-square flex items-center justify-center z-10">
+                            
+                            {/* Inner Box with Prize */}
+                            <div className={`w-full h-full relative rounded-2xl overflow-hidden border-[3px] ${TIERS[tier].border} bg-[#0A0F1B] shadow-inner`}>
+                                
+                                {/* Prize Content */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-0">
+                                    <AnimatePresence mode='wait'>
+                                        {prizeData && (
+                                            <motion.div 
+                                                id="scratch-card-prize"
+                                                data-ready="true"
+                                                initial={{ scale: 0.8, opacity: 0, y: 10 }}
+                                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                className="flex flex-col items-center"
+                                            >
+                                                {prizeData.amountNXS > 0 ? (
+                                                    <div className="relative mb-3">
+                                                         <div className="absolute inset-0 blur-2xl opacity-60 bg-amber-400 animate-pulse" />
+                                                         <div className="relative bg-gradient-to-br from-amber-300 to-amber-600 w-20 h-20 rounded-full flex items-center justify-center shadow-lg border-2 border-white/20">
+                                                             <Coins className="text-white w-10 h-10 drop-shadow-md" />
+                                                         </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-slate-800/80 w-16 h-16 rounded-full flex items-center justify-center mb-3 border border-slate-700">
+                                                        <AlertCircle className="text-slate-500 w-8 h-8" />
+                                                    </div>
+                                                )}
+                                                <span className="text-3xl font-black text-white tracking-tighter drop-shadow-lg leading-none mb-1">
+                                                    {prizeData.label}
+                                                </span>
+                                                <span className={`text-xl font-bold font-mono ${prizeData.amountNXS > 0 ? 'text-amber-400' : 'text-slate-500'}`}>
+                                                    {prizeData.amountNXS > 0 ? `+${prizeData.amountNXS} NXS` : '0 NXS'}
+                                                </span>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                    
+                                    {/* Flying Numbers Overlay */}
+                                    {flyingNotes.map(n => (
+                                        <FlyingNumber key={n.id} {...n} />
+                                    ))}
+
+                                    {!prizeData && (
+                                        <div className="flex flex-col items-center gap-2 opacity-50">
+                                            <div className="w-8 h-8 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+                                            <div className="text-slate-600 font-bold font-mono text-[8px] uppercase tracking-widest">Encrypting Result...</div>
+                                        </div>
                                     )}
-                                    <motion.span 
-                                        animate={{ scale: [1, 1.1, 1] }}
-                                        transition={{ duration: 0.8, repeat: Infinity }}
-                                        className="text-4xl font-black text-white font-sans drop-shadow-2xl uppercase tracking-tighter"
-                                    >
-                                        {prizeData.label}
-                                    </motion.span>
-                                    <span className={`text-2xl font-black mt-2 font-mono ${prizeData.amountNXS > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
-                                        {prizeData.amountNXS > 0 ? `+${prizeData.amountNXS} NXS` : '0 NXS'}
-                                    </span>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                        
-                        {!prizeData && (
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-                                <div className="text-slate-500 font-bold font-mono text-xs uppercase tracking-widest">Generating Luck...</div>
+                                </div>
+
+                                {/* Scratch Overlay - Managed by ScratchCanvas */}
+                                {(gameState === 'READY_TO_SCRATCH' || gameState === 'BOUGHT') && (
+                                    <div className="absolute inset-0 z-20">
+                                        <ScratchCanvas 
+                                            width={220} // Adjusted for 80% of inner frame
+                                            height={220}
+                                            overlayColor={TIERS[tier].cardCover}
+                                            accentColor={TIERS[tier].accent}
+                                            isReady={gameState === 'READY_TO_SCRATCH' || gameState === 'BOUGHT'}
+                                            onComplete={onScratchComplete}
+                                            onScratch={() => {
+                                                playSound('tick');
+                                                const guide = document.getElementById('scratch-guide');
+                                                if (guide) guide.style.opacity = '0';
+                                            }}
+                                        />
+                                        
+                                        {/* Visual Guide */}
+                                        {(gameState === 'READY_TO_SCRATCH' || gameState === 'BOUGHT') && (
+                                            <motion.div 
+                                                id="scratch-guide"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-30"
+                                            >
+                                                 <motion.div 
+                                                    animate={{ y: [0, -10, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                                    className="bg-white/10 backdrop-blur-md p-3 rounded-full border border-white/20 shadow-xl"
+                                                 >
+                                                    <Pointer size={24} className="text-white drop-shadow-lg" />
+                                                 </motion.div>
+                                                 <span className="mt-3 text-white/60 font-bold text-[8px] uppercase tracking-[0.4em]">1 Swipe to Reveal</span>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                        
-                        <div className={`absolute inset-0 ${TIERS[tier].bgPattern} opacity-40 z-0`} />
+                        </div>
+
+                        {/* Title & Slogan over the premium design */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[150%] z-20 text-center pointer-events-none mb-4">
+                             <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-xl">{TIERS[tier].name.split(' ')[0]}</h3>
+                             <p className="text-amber-500/80 text-[8px] uppercase tracking-[0.4em] font-black">{TIERS[tier].slogan}</p>
+                        </div>
                     </div>
 
-                    {/* The Scratch Overlay (Top Layer) */}
-                    {(gameState === 'READY_TO_SCRATCH' || gameState === 'BOUGHT') && (
-                        <div className="absolute inset-0 z-20">
-                            <ScratchCanvas 
-                                width={300}
-                                height={300}
-                                overlayColor={TIERS[tier].cardCover}
-                                accentColor={TIERS[tier].accent}
-                                isReady={gameState === 'READY_TO_SCRATCH'}
-                                onComplete={onScratchComplete}
-                                onScratch={() => {
-                                    playSound('tick');
-                                    // Hide guide when scratching starts
-                                    const guide = document.getElementById('scratch-guide');
-                                    if (guide) guide.style.opacity = '0';
-                                }}
-                            />
-                            
-                            {/* Visual Scratch Guide */}
-                            {gameState === 'READY_TO_SCRATCH' && (
-                                <motion.div 
-                                    id="scratch-guide"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-30 transition-opacity duration-300"
-                                >
-                                    <motion.div 
-                                        animate={{ 
-                                            y: [0, -15, 0],
-                                            scale: [1, 1.1, 1]
-                                        }}
-                                        transition={{ repeat: Infinity, duration: 1.5 }}
-                                        className="bg-white/20 backdrop-blur-md p-4 rounded-full border border-white/30 shadow-2xl"
-                                    >
-                                        <Pointer size={40} className="text-white drop-shadow-lg rotate-12" />
-                                    </motion.div>
-                                    <span className="mt-4 text-white font-black text-xs uppercase tracking-[0.3em] drop-shadow-md bg-black/20 px-3 py-1 rounded-full border border-white/10">
-                                        Swipe Here
-                                    </span>
-                                </motion.div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Intro Overlay if Idle */}
+                    {/* Idle Overlay */}
                     {gameState === 'IDLE' && (
-                        <div className="absolute inset-0 z-20 bg-[#0F172A]/90 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center border-2 border-white/5 mx-1 my-1 rounded-[2.5rem]">
+                        <div className="absolute inset-0 z-[40] bg-[#0F172A]/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center rounded-[2rem] border border-white/5">
                              <motion.div 
-                                animate={{ 
-                                    scale: [1, 1.05, 1],
-                                    rotate: [0, 2, -2, 0]
-                                }}
-                                transition={{ repeat: Infinity, duration: 4 }}
-                                className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-950 rounded-3xl flex items-center justify-center mb-6 shadow-2xl border border-white/10 relative"
+                                animate={{ scale: [1, 1.05, 1] }}
+                                transition={{ repeat: Infinity, duration: 3 }}
+                                className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mb-6 shadow-2xl border border-white/5 relative overflow-hidden"
                              >
                                 <div className={`absolute inset-0 bg-gradient-to-br ${TIERS[tier].btnClass} opacity-20 blur-xl`} />
-                                <Gift size={48} className="text-white relative z-10" />
+                                <Sparkles size={36} className="text-white relative z-10" />
                              </motion.div>
                              
                              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{TIERS[tier].name}</h3>
-                             <div className="h-1 w-12 bg-amber-500/50 rounded-full mb-4" />
-                             <p className="text-amber-400 text-xs font-black uppercase tracking-[0.3em] mb-2">{TIERS[tier].slogan}</p>
-                             <p className="text-slate-400 text-[10px] leading-tight px-6 uppercase tracking-widest font-bold opacity-60">Instant Reward reveal mechanics</p>
+                             <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.4em] mb-4">{TIERS[tier].slogan}</p>
+                             <div className="bg-slate-800/80 px-4 py-2 rounded-xl text-[9px] font-bold text-slate-400 tracking-widest uppercase border border-slate-700">
+                                Premium Asset Revealed Instantly
+                             </div>
                         </div>
                     )}
                 </div>
                 
-                {/* Floating Buy Button */}
+                {/* Buy Button Below the Card */}
                 {(gameState === 'IDLE' || gameState === 'REVEALED') && (
                     <motion.div 
-                        initial={{ opacity: 0, y: 20 }} 
+                        initial={{ opacity: 0, y: 10 }} 
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute -bottom-6 w-full flex justify-center z-30 pointer-events-none"
+                        className="mt-4 mb-2 w-full flex justify-center z-30"
                     >
                         <button 
                             onClick={buyCard}
-                            className={`pointer-events-auto px-10 py-4 w-[85%] rounded-[1.5rem] font-black text-xl tracking-tighter shadow-[0_20px_40px_rgba(0,0,0,0.7)] border-2 border-white/20 hover:-translate-y-1 active:translate-y-1 transition-all bg-gradient-to-r ${TIERS[tier].btnClass} ${TIERS[tier].textClass} uppercase`}
+                            className={`px-6 py-3.5 w-[90%] rounded-[1.5rem] font-black text-lg tracking-tighter shadow-xl border border-white/20 hover:-translate-y-1 active:translate-y-0.5 transition-all bg-gradient-to-r ${TIERS[tier].btnClass} ${TIERS[tier].textClass} uppercase drop-shadow-xl`}
                         >
-                            {gameState === 'REVEALED' ? 'Play Again' : `Get Card • ${TIERS[tier].cost} NXS`}
+                            {gameState === 'REVEALED' ? 'Get Another' : `Reveal for ${TIERS[tier].cost} NXS`}
                         </button>
                     </motion.div>
                 )}

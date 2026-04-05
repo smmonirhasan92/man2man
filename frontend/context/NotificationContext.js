@@ -40,21 +40,8 @@ export function NotificationProvider({ children }) {
     useEffect(() => {
         if (!socket) return;
 
-        const joinRoom = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) return; // Don't try to join room if not logged in
-
-            try {
-                const res = await api.get('/auth/me');
-                if (res.data && res.data._id) {
-                    socket.emit('join_user_room', res.data._id);
-                    console.log(`[SOCKET_CONTEXT] Joined room: user_${res.data._id}`);
-                }
-            } catch (e) {
-                // Squelch 401s here as they are expected during token expiry
-            }
-        };
-
+        // Room joining is now centralized in AuthContext to prevent duplicate /auth/me calls
+        
         const setupWebPush = async () => {
             if ('serviceWorker' in navigator && 'PushManager' in window && localStorage.getItem('token')) {
                 try {
@@ -83,15 +70,10 @@ export function NotificationProvider({ children }) {
             }
         };
 
-        // 1. Initial Join
-        joinRoom();
+        // 1. Initial setupWebPush
         setupWebPush();
 
-        // 1.5. Re-join on Reconnect (Fixes mobile sleep disconnects)
-        socket.on('connect', () => {
-            console.log('[SOCKET_CONTEXT] Reconnected - rejoining rooms...');
-            joinRoom();
-        });
+        // 1.5. Re-join on Reconnect moved to AuthContext
 
         let lastSoundTime = 0;
         const playSound = (type = 'info') => {
@@ -147,38 +129,22 @@ export function NotificationProvider({ children }) {
             }
         };
 
-        const handleWalletUpdate = (data) => {
-            console.log('[SOCKET_CONTEXT] Wallet Update Received');
-
-            // [P#3] SOCKET SPOILER GUARD
-            // If a high-stakes animation is running, do NOT update the UI yet.
-            // This prevents the user from seeing their new balance before the animation finishes.
-            if (typeof window !== 'undefined') {
-                if (window.isLuckTestAnimating || window.isMysteryVaultAnimating) {
-                    console.log('[SOCKET_CONTEXT] Animation in progress. Deferring UI update.');
-                    window.deferredLuckTestBalance = data?.newBalance || data?.amount || data;
-                    window.deferredVaultBalance = data?.newBalance || data?.amount || data;
-                    return; 
-                }
-            }
-
-            playSound('success');
-
+        const handleWalletNotification = (data) => {
+            // This now ONLY handles high-level Toast notifications for wallet events, 
+            // NOT the actual balance logic which is moved to AuthContext.
             if (data?.type === 'withdrawal_completed') {
+                playSound('success');
                 toast.success(`Withdrawal Approved: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #064e3b, #065f46)' },
                     icon: '💸'
                 });
             } else if (data?.type === 'deposit_received') {
+                playSound('success');
                 toast.success(`Deposit Received: $${data.amount}`, {
                     style: { ...premiumStyle, background: 'linear-gradient(135deg, #1e3a8a, #172554)' },
                     icon: '💎'
                 });
-            } else {
-                console.log('[SOCKET_CONTEXT] Triggering Silent Balance Refresh');
             }
-
-            if (refreshUser) refreshUser();
         };
 
         const handleConfigUpdate = (data) => {
@@ -190,15 +156,13 @@ export function NotificationProvider({ children }) {
         };
 
         socket.on('notification', handleNotification);
-        socket.on('wallet:update', handleWalletUpdate);
-        socket.on('balance_update', handleWalletUpdate); // [SYNC] Handle numeric balance updates
+        socket.on('wallet:update', handleWalletNotification);
         socket.on('config:update', handleConfigUpdate);
 
         return () => {
             socket.off('connect');
             socket.off('notification', handleNotification);
-            socket.off('wallet:update', handleWalletUpdate);
-            socket.off('balance_update', handleWalletUpdate);
+            socket.off('wallet:update', handleWalletNotification);
             socket.off('config:update', handleConfigUpdate);
         };
     }, [socket]); // [FIX] Removed refreshUser from dependency array to prevent infinite loop
