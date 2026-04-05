@@ -8,23 +8,47 @@ const crashGameManager = require('../modules/gamification/CrashGameSocket');
 
 const rateLimit = require('express-rate-limit');
 
-// [P#5] Prevent rapid spinning (exploit prevention)
-const spinLimiter = rateLimit({
-  windowMs: 10 * 1000, 
-  max: 2, 
-  message: { success: false, message: 'Too many spins. Please wait 10s.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// [P#5] Session-Based Rest Logic (5 Min Play, 3 Min Rest)
+const userSessions = new Map();
+const sessionRestLimiter = (req, res, next) => {
+    const userId = req.user?.user?.id;
+    if (!userId) return next();
+
+    const now = Date.now();
+    const sessionData = userSessions.get(userId);
+
+    if (!sessionData) {
+        userSessions.set(userId, { startTime: now });
+        return next();
+    }
+
+    const timePlayed = now - sessionData.startTime;
+    const FIVE_MIN = 5 * 60 * 1000;
+    const EIGHT_MIN = 8 * 60 * 1000;
+
+    if (timePlayed < FIVE_MIN) { // 5 mins unlimited play
+        return next();
+    } else if (timePlayed < EIGHT_MIN) { // 3 mins cooldown
+        const cooldownRemaining = EIGHT_MIN - timePlayed;
+        return res.status(429).json({ 
+            success: false, 
+            message: 'Take a breath! Next session starts in...', 
+            cooldownRemaining 
+        });
+    } else { // Session resets
+        userSessions.set(userId, { startTime: now });
+        return next();
+    }
+};
 
 // Route for Luck Test (Tiered Spins)
-router.post('/luck-test', authMiddleware, spinLimiter, spinController.spinLuckTest);
+router.post('/luck-test', authMiddleware, sessionRestLimiter, spinController.spinLuckTest);
 
 // Mystery Gift Box Routes
 router.post('/open-gift', authMiddleware, giftBoxController.openGiftBox);
 
 // Scratch Card Route
-router.post('/scratch-card', authMiddleware, spinLimiter, spinController.scratchCard);
+router.post('/scratch-card', authMiddleware, sessionRestLimiter, spinController.scratchCard);
 
 // --- UNIVERSAL MULTIPLIER API (CRASH GAME) ---
 

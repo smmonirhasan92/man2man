@@ -101,6 +101,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [popup, setPopup] = useState(null);
   const [isPreloading, setIsPreloading] = useState(false);
   const [displayBalance, setDisplayBalance] = useState(null);
+  const [cooldownMs, setCooldownMs] = useState(0);
+  const [cooldownActive, setCooldownActive] = useState(false);
   const [muted, setMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('game_muted') === 'true';
@@ -116,6 +118,32 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       setDisplayBalance(user.wallet.main);
     }
   }, [user?.wallet?.main, spinning, popup]);
+
+  // Session Cooldown Timer
+  useEffect(() => {
+    let interval;
+    if (cooldownActive && cooldownMs > 0) {
+      interval = setInterval(() => {
+        setCooldownMs((prev) => {
+          if (prev <= 1000) {
+            setCooldownActive(false);
+            return 0;
+          }
+          return prev - 1000;
+        });
+      }, 1000);
+    } else if (cooldownMs <= 0) {
+      setCooldownActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [cooldownActive, cooldownMs]);
+
+  const formatCooldown = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   // [P#7] Background Wallet Sync (Periodic Refresh)
   // [REMOVED] Redundant interval. Now handled by centralized AuthContext single listener.
@@ -178,7 +206,14 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       }
       setIsPreloading(false);
       setSpinning(false);
-      toast.error(err.response?.data?.message || 'Transaction Failed');
+      
+      // Cooldown Interceptor
+      if (err.response?.status === 429 && err.response?.data?.cooldownRemaining) {
+          setCooldownMs(err.response.data.cooldownRemaining);
+          setCooldownActive(true);
+      } else {
+          toast.error(err.response?.data?.message || 'Transaction Failed');
+      }
       return;
     }
     
@@ -232,7 +267,22 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         >
           <ResultOverlay result={popup} onClose={() => setPopup(null)} />
           
-          <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30">
+          <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30 relative overflow-hidden">
+            
+            {/* Session Cooldown Overlay */}
+            {cooldownActive && (
+              <div className="absolute inset-0 z-[60] bg-[#0B0F1A]/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center sm:pb-24">
+                <div className="text-6xl mb-6 animate-bounce filter drop-shadow-[0_0_20px_rgba(249,115,22,0.5)]">☕</div>
+                <h3 className="text-3xl font-black text-white mb-3 uppercase tracking-wider text-orange-400">Take a breath</h3>
+                <p className="text-slate-400 mb-8 font-medium leading-relaxed max-w-[280px]">
+                  You've been playing actively! Take a short rest to continue.
+                </p>
+                <div className="bg-[#151B2B] px-8 py-5 rounded-3xl border border-white/5 w-full shadow-inner ring-1 ring-white/5">
+                     <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold mb-2">Next Session Starts In</p>
+                     <h4 className="text-5xl font-mono text-orange-400 font-black tracking-widest">{formatCooldown(cooldownMs)}</h4>
+                </div>
+              </div>
+            )}
             
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
