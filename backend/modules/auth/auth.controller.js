@@ -156,9 +156,13 @@ exports.login = async (req, res) => {
         let { primary_phone, phone, identifier, password } = req.body;
         primary_phone = primary_phone || phone || identifier; // Handle frontend mismatch
 
+        if (!primary_phone) {
+            return res.status(400).json({ message: 'Phone number or username is required.' });
+        }
+
         // [FIX] Sanitize Inputs to eliminate trailing spaces from mobile keyboards
-        primary_phone = primary_phone?.trim();
-        password = password?.trim();
+        primary_phone = primary_phone.trim();
+        password = (password || '').trim();
 
         // 1. Lookup by PLAIN TEXT (Normalized)
         // Remove +88 if present
