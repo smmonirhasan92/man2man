@@ -2,8 +2,8 @@ const GameVault = require('./GameVaultModel');
 
 class UniversalMatchMaker {
     constructor() {
-        this.queues = {};
-        this.DEFAULT_WINDOW_MS = 1500; 
+        this.globalQueue = { players: [], timeout: null, isProcessing: false };
+        this.DEFAULT_WINDOW_MS = 2500; 
     }
 
     async processMatch(userId, betAmount, gameType = 'spin', customWindowMs = null) {
@@ -13,39 +13,41 @@ class UniversalMatchMaker {
                 return reject(new Error('Game engine is currently disabled by admin (Kill Switch).'));
             }
 
-            if (!this.queues[gameType]) {
-                this.queues[gameType] = { players: [], timeout: null, isProcessing: false };
-            }
-            const q = this.queues[gameType];
-            q.players.push({ userId, betAmount, resolve, reject, timestamp: Date.now() });
+            const q = this.globalQueue;
+            q.players.push({ userId, betAmount, gameType, resolve, reject, timestamp: Date.now() });
+            
             const windowMs = customWindowMs || this.DEFAULT_WINDOW_MS;
-            if (q.players.length >= 2) this.triggerMatch(gameType);
-            else if (!q.timeout) q.timeout = setTimeout(() => this.triggerMatch(gameType), windowMs);
+            
+            // Soft absolute cap to prevent memory issues or lag (15 players)
+            if (q.players.length >= 15) {
+                this.triggerMatch();
+            } else if (!q.timeout) {
+                q.timeout = setTimeout(() => this.triggerMatch(), windowMs);
+            }
         });
     }
 
     flushQueues() {
-        for (let game in this.queues) {
-            const q = this.queues[game];
-            for (let p of q.players) {
-                p.reject(new Error("Engine flushed by admin. Bet cancelled."));
-            }
-            if (q.timeout) clearTimeout(q.timeout);
+        const q = this.globalQueue;
+        for (let p of q.players) {
+            p.reject(new Error("Engine flushed by admin. Bet cancelled."));
         }
-        this.queues = {};
-        console.log("[UniversalMatchMaker] Queues flushed!");
+        if (q.timeout) clearTimeout(q.timeout);
+        this.globalQueue = { players: [], timeout: null, isProcessing: false };
+        console.log("[UniversalMatchMaker] Global Queue flushed!");
     }
 
-    async triggerMatch(gameType) {
-        const q = this.queues[gameType];
-        if (!q || q.isProcessing) return;
+    async triggerMatch() {
+        const q = this.globalQueue;
+        if (!q || q.isProcessing || q.players.length === 0) return;
         q.isProcessing = true;
         if (q.timeout) { clearTimeout(q.timeout); q.timeout = null; }
 
         try {
             while (q.players.length > 0) {
-                let batch = q.players.length >= 2 ? q.players.splice(0, 2) : q.players.splice(0, 1);
-                const isDuo = batch.length === 2;
+                // Take the entire accumulated batch
+                let batch = q.players.splice(0, q.players.length);
+                const isDuo = batch.length > 1;
                 
                 // 1. Fetch current Vault Snapshot
                 const vault = await GameVault.getMasterVault();
@@ -56,19 +58,19 @@ class UniversalMatchMaker {
                 let redisLivePot = await RedisService.get('livedata:game:match_pot');
                 if (redisLivePot === null) {
                     redisLivePot = vault.balances.activePool; 
-                    if (redisLivePot > 0) await RedisService.set('livedata:game:match_pot', redisLivePot, 86400 * 365);
+                    if (redisLivePot > 0) await RedisService.client.set('livedata:game:match_pot', redisLivePot);
                     else redisLivePot = 0;
                 } else {
                     redisLivePot = parseFloat(redisLivePot);
                 }
                 
-                // 2. Triple Stream Distribution Setup
+                // 2. Triple Stream Distribution Setup for Entire Global Batch
                 const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
                 const adminIncomeIn = totalBet * 0.10;
                 const userInterestIn = totalBet * 0.15;
                 const activePoolIn = totalBet * 0.75; // Goes to Redis!
 
-                // Atomically add incoming funds to Redis
+                // Atomically add incoming funds to Redis BEFORE calculating wins
                 if (activePoolIn > 0) {
                     redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', activePoolIn);
                 }
@@ -86,23 +88,47 @@ class UniversalMatchMaker {
                 let payoutSource = 'redis_pot';
                 let auditPlayers = [];
 
-                // 3. Process Batch
+                // 3. Process Batch with WHALE SACRIFICE LOGIC
+                // Sort descending to tackle the highest bettor first
+                batch.sort((a, b) => b.betAmount - a.betAmount);
+
                 for (let i = 0; i < batch.length; i++) {
                     const p = batch[i];
                     let rtpMult = 0.0;
                     let label = 'LOSS';
                     let rank = 8;
+                    
+                    // SACRIFICE LOGIC
+                    let isSacrificialWhale = false;
+                    if (isTightMode && batch.length > 1 && i === 0) {
+                        const nextHighestBet = batch[1].betAmount;
+                        // Determine if Whale's bet dominates the queue pool
+                        if (p.betAmount > nextHighestBet * 1.5) {
+                            // 80% chance to sacrifice whale to feed the remaining small bettors
+                            if (Math.random() < 0.8) {
+                                isSacrificialWhale = true;
+                            }
+                        }
+                    }
 
-                    // Get base multiplier based on game logic
-                    if (gameType === 'scratch') {
-                        const res = this.getScratchBaseRTP(p.betAmount, isTightMode);
-                        rtpMult = res.mult; label = res.label; rank = res.rank;
-                    } else if (gameType === 'spin') {
-                        const res = this.getSpinBaseRTP(isTightMode);
-                        rtpMult = res.mult; label = res.label; rank = res.rank;
-                    } else { // Fallback / Gift
-                        const res = this.getFallbackBaseRTP(isTightMode);
-                        rtpMult = res.mult; label = res.label; rank = res.rank;
+                    if (isSacrificialWhale) {
+                         rtpMult = 0.0;
+                         if (p.gameType === 'scratch') label = 'LOSS';
+                         else if (p.gameType === 'spin') label = 'MISS';
+                         else label = 'EMPTY BOX';
+                         rank = 8;
+                    } else {
+                        // Get base multiplier based on game logic
+                        if (p.gameType === 'scratch') {
+                            const res = this.getScratchBaseRTP(p.betAmount, isTightMode);
+                            rtpMult = res.mult; label = res.label; rank = res.rank;
+                        } else if (p.gameType === 'spin') {
+                            const res = this.getSpinBaseRTP(isTightMode);
+                            rtpMult = res.mult; label = res.label; rank = res.rank;
+                        } else { // Fallback / Gift
+                            const res = this.getFallbackBaseRTP(isTightMode);
+                            rtpMult = res.mult; label = res.label; rank = res.rank;
+                        }
                     }
 
                     // Payout Calculation
@@ -131,7 +157,7 @@ class UniversalMatchMaker {
 
                     if (targetPayout > maxAllowedPayout) {
                         // Apply mathematical downgrade so we hit a clear discrete multiplier
-                        const safeOutcome = this.getDowngradedOutcome(gameType, p.betAmount, maxAllowedPayout, true);
+                        const safeOutcome = this.getDowngradedOutcome(p.gameType, p.betAmount, maxAllowedPayout, true);
                         targetPayout = safeOutcome.adjustedPayout;
                         rtpMult = safeOutcome.newMult;
                         label = safeOutcome.newLabel;
@@ -200,7 +226,7 @@ class UniversalMatchMaker {
                 });
 
                 await P2PAudit.create({
-                    gameType,
+                    gameType: 'GLOBAL_BATCH',
                     players: auditPlayers,
                     financials: {
                         totalBetIn: totalBet,
@@ -224,7 +250,7 @@ class UniversalMatchMaker {
                     if (SocketService) {
                         const totalPayoutStr = (totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct).toFixed(2);
                         SocketService.broadcast('admin_dashboard', 'activity_feed', {
-                            event: `${batch.length} player(s) played ${gameType.toUpperCase()}`,
+                            event: `${batch.length} player(s) played P2P MULTI-GAME`,
                             payout: totalPayoutStr,
                             timestamp: Date.now()
                         });
