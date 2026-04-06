@@ -752,6 +752,11 @@ const GameVault = require('../modules/gamification/GameVaultModel');
 exports.getGameVault = async (req, res) => {
     try {
         const vault = await GameVault.getMasterVault();
+        const RedisService = require('../services/RedisService');
+        let redisLivePot = await RedisService.get('livedata:game:match_pot');
+        if (redisLivePot !== null) {
+            vault.balances.activePool = parseFloat(redisLivePot);
+        }
         res.json(vault);
     } catch (e) {
         console.error("Game Vault Error:", e);

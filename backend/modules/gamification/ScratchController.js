@@ -2,45 +2,27 @@ const TransactionHelper = require('../common/TransactionHelper');
 const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 
-const SPIN_TIERS = {
-  bronze: { costNXS: 4,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
-  silver: { costNXS: 8,  labels: { win: 'Silver Jackpot', loss: 'Miss' } },
-  gold:   { costNXS: 12, labels: { win: 'Gold Jackpot',   loss: 'Miss' } }
+const SCRATCH_TIERS = {
+  bronze: { costNXS: 5,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
+  silver: { costNXS: 10, labels: { win: 'Silver Luck', loss: 'Miss' } },
+  gold:   { costNXS: 25, labels: { win: 'Golden Treasure', loss: 'Miss' } }
 };
 
-// --- SPIN LOGIC (Luck Test) ---
-exports.spinLuckTest = async (req, res) => {
-    return processGameRequest(req, res, 'spin', 50);
-};
-
-async function processGameRequest(req, res, gameType, windowMs) {
+exports.scratchCard = async (req, res) => {
     try {
         const { tier } = req.body;
         const userId = req.user.user.id;
+        const gameType = 'scratch';
 
-        const tierDict = SPIN_TIERS;
-
-        if (!tier || !tierDict[tier]) {
+        if (!tier || !SCRATCH_TIERS[tier]) {
             return res.status(400).json({ success: false, message: 'Invalid tier selected.' });
         }
 
-        const cost = tierDict[tier].costNXS;
+        const cost = SCRATCH_TIERS[tier].costNXS;
 
-        // Process through Pure Pooling Engine
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, windowMs);
+        // Process through Pure Pooling Engine (0s window for instant feedback)
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, 0);
         const winAmt = matchResult.winAmount;
-
-        // --- MAP DYNAMIC MULTIPLIER TO VISUAL WHEEL SLICE ---
-        const mult = parseFloat((winAmt / cost).toFixed(2));
-        let sliceIndex = 4; // Default to Loss (0)
-        if (mult === 5.0) sliceIndex = 0;
-        else if (mult === 3.0) sliceIndex = 1;
-        else if (mult === 2.5) sliceIndex = 2;
-        else if (mult === 2.0) sliceIndex = 3;
-        else if (mult === 0.0) sliceIndex = 4;
-        else if (mult === 1.5) sliceIndex = 5;
-        else if (mult === 1.0) sliceIndex = 6;
-        else if (mult === 0.5) sliceIndex = 7;
 
         const result = await TransactionHelper.runTransaction(async (session) => {
             const user = await User.findById(userId).session(session);
@@ -72,17 +54,16 @@ async function processGameRequest(req, res, gameType, windowMs) {
             return { winAmt, finalBalance: user.wallet.main };
         });
 
-        // SUCCESS Bridge Response
+        // SUCCESS Bridge Response (NO SLICE INDEX)
         return res.json({
             success: true,
             tier,
             game: gameType,
             result: {
-                label: matchResult.label || (matchResult.isWin ? tierDict[tier].labels.win : tierDict[tier].labels.loss),
+                label: matchResult.label || (matchResult.isWin ? SCRATCH_TIERS[tier].labels.win : SCRATCH_TIERS[tier].labels.loss),
                 amountNXS: winAmt,
                 isWin: matchResult.isWin,
-                mode: matchResult.mode,
-                sliceIndex: sliceIndex
+                mode: matchResult.mode
             },
             newBalance: result.finalBalance
         });

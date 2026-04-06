@@ -1,4 +1,5 @@
 const GameVault = require('./GameVaultModel');
+const RedisService = require('../../services/RedisService');
 
 /**
  * Public Vault Controller (Safe Metrics Only)
@@ -8,9 +9,9 @@ exports.getPublicVaultStatus = async (req, res) => {
         const vault = await GameVault.getMasterVault();
         if (!vault) return res.status(404).json({ success: false, message: 'Vault not found' });
 
-        // CALCULATE MAX SAFE WIN (5% of Active Payout Pool)
-        // This value is used by the frontend to show "Up to X NXS" labels dynamically.
-        const pool = vault.balances.activePool;
+        // FETCH LIVE POT FROM REDIS INSTEAD OF MONGO
+        let redisLivePot = await RedisService.get('livedata:game:match_pot');
+        const pool = redisLivePot !== null ? parseFloat(redisLivePot) : vault.balances.activePool;
         const hardStop = vault.config.hardStopLimit || 1000;
         
         // Safety Strategy: Max payout is either 5% of the pool OR the hard stop, whichever is smaller.

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const spinController = require('../modules/gamification/SpinController');
+const scratchController = require('../modules/gamification/ScratchController');
 const giftBoxController = require('../modules/gamification/GiftBoxController');
 const vaultController = require('../modules/gamification/VaultController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -62,7 +63,7 @@ router.post('/luck-test', authMiddleware, gameActionLimiter, sessionRestLimiter,
 router.post('/open-gift', authMiddleware, gameActionLimiter, giftBoxController.openGiftBox);
 
 // Scratch Card Route
-router.post('/scratch-card', authMiddleware, gameActionLimiter, sessionRestLimiter, spinController.scratchCard);
+router.post('/scratch-card', authMiddleware, gameActionLimiter, sessionRestLimiter, scratchController.scratchCard);
 
 // --- UNIVERSAL MULTIPLIER API (CRASH GAME) ---
 

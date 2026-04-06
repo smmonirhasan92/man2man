@@ -26,7 +26,7 @@ async function runVPSAudit() {
 
         // 3. Fetch Game Vault State (Redis check)
         console.log("📊 Fetching Remote Game Vault & Redis Pot...");
-        const vaultRes = await axios.get(`${API_BASE}/api/admin/gamification/vault`, {
+        const vaultRes = await axios.get(`${API_BASE}/api/admin/vault`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -48,6 +48,7 @@ async function runVPSAudit() {
         if (err.response) {
             console.error("Response Data:", JSON.stringify(err.response.data, null, 2));
             console.error("Response Status:", err.response.status);
+            console.error("Response Headers:", JSON.stringify(err.response.headers, null, 2));
         } else {
             console.error("Error Message:", err.message);
         }

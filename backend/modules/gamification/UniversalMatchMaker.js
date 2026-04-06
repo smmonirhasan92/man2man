@@ -106,39 +106,53 @@ class UniversalMatchMaker {
 
                     // Payout Calculation
                     let targetPayout = p.betAmount * rtpMult;
-                    let actualPayout = targetPayout;
-                    let usedInterest = 0;
+                    
+                    // Determine maximum funding we can assemble
+                    let availableFunding = redisLivePot;
+                    let boostInterest = 0;
+                    let boostMongo = 0;
 
-                    if (actualPayout > redisLivePot) {
-                        const deficit = actualPayout - redisLivePot;
-                        // Use BOOST from Mongo Interest Fund if available
-                        if (currentUserInterest > 0 && !isTightMode) {
-                            usedInterest = Math.min(deficit, currentUserInterest);
-                            actualPayout = redisLivePot + usedInterest;
-                        } else {
-                            actualPayout = redisLivePot;
-                            label = 'CONSOLATION (SAFE)';
-                            rank = 3;
-                        }
+                    if (targetPayout > availableFunding && currentUserInterest > 0 && !isTightMode) {
+                        boostInterest = Math.min(targetPayout - availableFunding, currentUserInterest);
+                        availableFunding += boostInterest;
                     }
 
-                    // Fallback to Vault Active Pool if severely depleted (Mongo)
-                    if (targetPayout > actualPayout && !isTightMode) {
-                        const remainingDeficit = targetPayout - actualPayout;
+                    if (targetPayout > availableFunding && !isTightMode) {
                         const availableMongoPool = vault.balances.activePool - fallbackMongoDeduct;
                         if (availableMongoPool > 0) {
-                            const mongoAssist = Math.min(remainingDeficit, availableMongoPool);
-                            actualPayout += mongoAssist;
-                            fallbackMongoDeduct += mongoAssist;
-                            payoutSource = 'mixed';
+                            boostMongo = Math.min(targetPayout - availableFunding, availableMongoPool);
+                            availableFunding += boostMongo;
                         }
                     }
 
-                    // HARD STOP PROTECTION (Max Single Win)
-                    if (actualPayout > hardStop) {
-                        actualPayout = hardStop;
-                        usedInterest = Math.min(usedInterest, actualPayout); 
+                    // HARD STOP checks against theoretical availability
+                    let maxAllowedPayout = Math.min(availableFunding, hardStop);
+
+                    if (targetPayout > maxAllowedPayout) {
+                        // Apply mathematical downgrade so we hit a clear discrete multiplier
+                        const safeOutcome = this.getDowngradedOutcome(gameType, p.betAmount, maxAllowedPayout, true);
+                        targetPayout = safeOutcome.adjustedPayout;
+                        rtpMult = safeOutcome.newMult;
+                        label = safeOutcome.newLabel;
+                        rank = safeOutcome.newRank;
+                        if (boostMongo > 0) payoutSource = 'mixed_safe';
+                    } else {
+                        if (boostMongo > 0) payoutSource = 'mixed';
                     }
+
+                    let actualPayout = targetPayout;
+                    let usedInterest = 0;
+                    let usedMongo = 0;
+
+                    if (actualPayout > redisLivePot) {
+                        let remainder = actualPayout - redisLivePot;
+                        usedInterest = Math.min(remainder, currentUserInterest);
+                        remainder -= usedInterest;
+                        if (remainder > 0) {
+                            usedMongo = remainder;
+                        }
+                    }
+                    fallbackMongoDeduct += usedMongo;
 
                     // Bookkepping
                     const activePoolPayout = actualPayout - usedInterest - (fallbackMongoDeduct > 0 ? fallbackMongoDeduct : 0);
@@ -256,6 +270,43 @@ class UniversalMatchMaker {
         if (rng < 15) return { mult: 1.5, label: 'LUCKY BOX', rank: 2 };
         if (rng < 40) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
         return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
+    }
+    getDowngradedOutcome(gameType, pBetAmount, actualPayout, isSafe) {
+        if (pBetAmount <= 0) return { newMult: 0, newLabel: 'LOSS', newRank: 8, adjustedPayout: 0 };
+        const allowedMult = actualPayout / pBetAmount;
+        let newMult = 0.0;
+        let newLabel = 'LOSS';
+        let newRank = 8;
+        
+        if (gameType === 'spin') {
+            if (allowedMult >= 5.0) { newMult = 5.0; newLabel = 'JACKPOT'; newRank = 1; }
+            else if (allowedMult >= 3.0) { newMult = 3.0; newLabel = 'MEGA WIN'; newRank = 1; }
+            else if (allowedMult >= 2.0) { newMult = 2.0; newLabel = 'BIG WIN'; newRank = 2; }
+            else if (allowedMult >= 1.5) { newMult = 1.5; newLabel = 'PROFIT'; newRank = 2; }
+            else if (allowedMult >= 1.0) { newMult = 1.0; newLabel = 'REFUND'; newRank = 3; }
+            else if (allowedMult >= 0.5) { newMult = 0.5; newLabel = 'CONSOLATION'; newRank = 4; }
+            else { newMult = 0.0; newLabel = 'MISS'; newRank = 8; }
+        } else if (gameType === 'scratch') {
+            if (allowedMult >= 10.0) { newMult = 10.0; newLabel = 'LEGENDARY'; newRank = 1; }
+            else if (allowedMult >= 5.0) { newMult = 5.0; newLabel = 'EPIC'; newRank = 1; }
+            else if (allowedMult >= 2.0) { newMult = 2.0; newLabel = 'PROFIT'; newRank = 2; }
+            else if (allowedMult >= 1.0) { newMult = 1.0; newLabel = 'REFUND'; newRank = 2; }
+            else if (allowedMult >= 0.5) { newMult = 0.5; newLabel = 'CONSOLATION'; newRank = 3; }
+            else { newMult = 0.0; newLabel = 'LOSS'; newRank = 8; }
+        } else { // gift
+            if (allowedMult >= 3.0) { newMult = 3.0; newLabel = 'MEGA BOX'; newRank = 1; }
+            else if (allowedMult >= 1.5) { newMult = 1.5; newLabel = 'LUCKY BOX'; newRank = 2; }
+            else if (allowedMult >= 0.8) { newMult = 0.8; newLabel = 'CONSOLATION'; newRank = 3; }
+            else { newMult = 0.0; newLabel = 'EMPTY BOX'; newRank = 8; }
+        }
+
+        if (isSafe && newMult > 0 && newMult <= 1.0) {
+           newLabel = newLabel + ' (SAFE)';
+        } else if (isSafe && newMult === 0) {
+           newLabel = newLabel + ' (SAFE)';
+        }
+
+        return { newMult, newLabel, newRank, adjustedPayout: pBetAmount * newMult };
     }
 }
 

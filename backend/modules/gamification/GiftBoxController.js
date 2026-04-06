@@ -66,7 +66,7 @@ exports.openGiftBox = async (req, res) => {
             success: true,
             tier,
             reward: {
-                label: matchResult.isWin ? 'Super Win' : 'Consolation',
+                label: matchResult.label || (matchResult.isWin ? 'Super Win' : 'Consolation'),
                 amountNXS: winAmt,
                 isWin: matchResult.isWin
             },
