@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('./modules/user/UserModel');
 const Plan = require('./modules/admin/PlanModel');
 const TaskAd = require('./modules/task/TaskAdModel');
 require('dotenv').config();
@@ -130,7 +132,30 @@ const seedPlans = async () => {
     await TaskAd.insertMany(tasks);
     console.log(`  ✅ 20 Task Ads Seeded.`);
 
-    console.log("\n✅ SEED COMPLETE — Plans + Tasks ready.\n");
+    // --- [NEW] SEED SUPER ADMIN (01712345678 / 000000) ---
+    console.log("\n=== SEEDING SUPER ADMIN ===");
+    const adminPhone = '01712345678';
+    const existingAdmin = await User.findOne({ primary_phone: adminPhone });
+    
+    if (!existingAdmin) {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash('000000', salt);
+        await User.create({
+            fullName: 'Super Admin (Seed)',
+            primary_phone: adminPhone,
+            phone: adminPhone,
+            username: 'SuperAdminSeed',
+            password: passwordHash,
+            role: 'super_admin',
+            wallet: { main: 100, game: 0, income: 0, purchase: 0, agent: 0 },
+            status: 'active'
+        });
+        console.log(`  ✅ Super Admin Created: ${adminPhone}`);
+    } else {
+        console.log(`  ℹ️ Super Admin already exists.`);
+    }
+
+    console.log("\n✅ SEED COMPLETE — Plans + Tasks + Admin ready.\n");
     process.exit(0);
 };
 
