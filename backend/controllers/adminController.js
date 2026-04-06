@@ -775,8 +775,12 @@ exports.updateGameVaultConfig = async (req, res) => {
         if (isEnabled !== undefined) vault.config.isEnabled = Boolean(isEnabled);
         
         if (seedAmount && Number(seedAmount) > 0) {
-            vault.balances.activePool += Number(seedAmount);
-            vault.stats.totalBetsIn += Number(seedAmount); // Track seeded money to maintain metrics
+            const RedisService = require('../services/RedisService');
+            const incAmt = Number(seedAmount);
+            await RedisService.client.incrByFloat('livedata:game:match_pot', incAmt);
+            
+            vault.balances.activePool += incAmt;
+            vault.stats.totalBetsIn += incAmt; // Track seeded money to maintain metrics
         }
         
         await vault.save();

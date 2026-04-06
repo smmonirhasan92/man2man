@@ -55,7 +55,9 @@ class UniversalMatchMaker {
                 const P2PAudit = require('./P2PAuditModel');
                 let redisLivePot = await RedisService.get('livedata:game:match_pot');
                 if (redisLivePot === null) {
-                    redisLivePot = 0; // Initialize if empty
+                    redisLivePot = vault.balances.activePool; 
+                    if (redisLivePot > 0) await RedisService.set('livedata:game:match_pot', redisLivePot, 86400 * 365);
+                    else redisLivePot = 0;
                 } else {
                     redisLivePot = parseFloat(redisLivePot);
                 }
@@ -77,7 +79,6 @@ class UniversalMatchMaker {
                 let currentUserInterest = vault.balances.userInterest + userInterestIn;
                 const hardStop = vault.config.hardStopLimit;
                 const isTightMode = redisLivePot < vault.config.tightModeThreshold;
-                const houseEdgeModifier = Math.max(0, (100 - (vault.config.houseEdge || 10)) / 90);
 
                 let totalActiveDeduct = 0;
                 let totalInterestDeduct = 0;
@@ -94,13 +95,13 @@ class UniversalMatchMaker {
 
                     // Get base multiplier based on game logic
                     if (gameType === 'scratch') {
-                        const res = this.getScratchBaseRTP(p.betAmount, isTightMode, houseEdgeModifier);
+                        const res = this.getScratchBaseRTP(p.betAmount, isTightMode);
                         rtpMult = res.mult; label = res.label; rank = res.rank;
                     } else if (gameType === 'spin') {
-                        const res = this.getSpinBaseRTP(isTightMode, houseEdgeModifier);
+                        const res = this.getSpinBaseRTP(isTightMode);
                         rtpMult = res.mult; label = res.label; rank = res.rank;
                     } else { // Fallback / Gift
-                        const res = this.getFallbackBaseRTP(isTightMode, houseEdgeModifier);
+                        const res = this.getFallbackBaseRTP(isTightMode);
                         rtpMult = res.mult; label = res.label; rank = res.rank;
                     }
 
@@ -234,42 +235,58 @@ class UniversalMatchMaker {
         } finally { q.isProcessing = false; }
     }
 
-    getScratchBaseRTP(bet, isTightMode, houseEdgeModifier = 1) {
-        const rng = (Math.random() * 100) / houseEdgeModifier; // Higher edge = lower effective chance
+    getScratchBaseRTP(bet, isTightMode) {
+        const rng = Math.random() * 100;
         let mult = 0; let label = 'LOSS'; let rank = 8;
         
-        if (rng < 2 && !isTightMode) { mult = 10.0; label = 'LEGENDARY'; rank = 1; }
-        else if (rng < 8 && !isTightMode) { mult = 5.0; label = 'EPIC'; rank = 1; }
-        else if (rng < 20) { mult = 2.0; label = 'PROFIT'; rank = 2; }
-        else if (rng < 45) { mult = 1.0; label = 'REFUND'; rank = 2; }
-        else if (rng < 70) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
-        else { mult = 0.0; label = 'LOSS'; rank = 8; }
-        
-        // Golden Tiers specifically shouldn't be penalized if tight mode is off
+        if (!isTightMode) {
+            if (rng < 2) { mult = 10.0; label = 'LEGENDARY'; rank = 1; }
+            else if (rng < 8) { mult = 5.0; label = 'EPIC'; rank = 1; }
+            else if (rng < 20) { mult = 2.0; label = 'PROFIT'; rank = 2; }
+            else if (rng < 45) { mult = 1.0; label = 'REFUND'; rank = 2; }
+            else if (rng < 70) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
+            else { mult = 0.0; label = 'LOSS'; rank = 8; }
+        } else {
+            // Tight mode: Pot recovery (RTP < 75%)
+            if (rng < 15) { mult = 1.0; label = 'REFUND'; rank = 2; }
+            else if (rng < 50) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
+            else { mult = 0.0; label = 'LOSS'; rank = 8; }
+        }
         return { mult, label, rank };
     }
 
-    getSpinBaseRTP(isTightMode, houseEdgeModifier = 1) {
-        const rng = (Math.random() * 100) / houseEdgeModifier;
+    getSpinBaseRTP(isTightMode) {
+        const rng = Math.random() * 100;
         let mult = 0.0; let label = 'LOSS'; let rank = 8;
         
-        if (rng < 2 && !isTightMode) { mult = 5.0; label = 'JACKPOT'; rank = 1; }
-        else if (rng < 6 && !isTightMode) { mult = 3.0; label = 'MEGA WIN'; rank = 1; }
-        else if (rng < 15) { mult = 2.0; label = 'BIG WIN'; rank = 2; }
-        else if (rng < 30) { mult = 1.5; label = 'PROFIT'; rank = 2; }
-        else if (rng < 55) { mult = 1.0; label = 'REFUND'; rank = 3; }
-        else if (rng < 80) { mult = 0.5; label = 'CONSOLATION'; rank = 4; }
-        else { mult = 0.0; label = 'MISS'; rank = 8; }
-
+        if (!isTightMode) {
+            if (rng < 2) { mult = 5.0; label = 'JACKPOT'; rank = 1; }
+            else if (rng < 6) { mult = 3.0; label = 'MEGA WIN'; rank = 1; }
+            else if (rng < 15) { mult = 2.0; label = 'BIG WIN'; rank = 2; }
+            else if (rng < 30) { mult = 1.5; label = 'PROFIT'; rank = 2; }
+            else if (rng < 55) { mult = 1.0; label = 'REFUND'; rank = 3; }
+            else if (rng < 80) { mult = 0.5; label = 'CONSOLATION'; rank = 4; }
+            else { mult = 0.0; label = 'MISS'; rank = 8; }
+        } else {
+            // Tight mode: Pot recovery (RTP < 75%)
+            if (rng < 20) { mult = 1.0; label = 'REFUND'; rank = 3; }
+            else if (rng < 60) { mult = 0.5; label = 'CONSOLATION'; rank = 4; }
+            else { mult = 0.0; label = 'MISS'; rank = 8; }
+        }
         return { mult, label, rank };
     }
 
-    getFallbackBaseRTP(isTightMode, houseEdgeModifier = 1) {
-        const rng = (Math.random() * 100) / houseEdgeModifier;
-        if (rng < 5 && !isTightMode) return { mult: 3.0, label: 'MEGA BOX', rank: 1 };
-        if (rng < 15) return { mult: 1.5, label: 'LUCKY BOX', rank: 2 };
-        if (rng < 40) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
-        return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
+    getFallbackBaseRTP(isTightMode) {
+        const rng = Math.random() * 100;
+        if (!isTightMode) {
+            if (rng < 5) return { mult: 3.0, label: 'MEGA BOX', rank: 1 };
+            if (rng < 15) return { mult: 1.5, label: 'LUCKY BOX', rank: 2 };
+            if (rng < 40) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
+            return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
+        } else {
+            if (rng < 25) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
+            return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
+        }
     }
     getDowngradedOutcome(gameType, pBetAmount, actualPayout, isSafe) {
         if (pBetAmount <= 0) return { newMult: 0, newLabel: 'LOSS', newRank: 8, adjustedPayout: 0 };
