@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import ScratchCanvas from './ScratchCanvas';
 import FlyingNumber from '../ui/FlyingNumber';
+import { socket } from '../../services/socket';
 
 const TIERS = {
   bronze: {
@@ -57,6 +58,16 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   const [flyingNotes, setFlyingNotes] = useState([]);
   const [maxSafeWin, setMaxSafeWin] = useState(null);
   const { play: playSound } = useGameSound();
+
+  // [NEW] Live Metric Heartbeat
+  useEffect(() => {
+    if (socket && typeof window !== 'undefined') {
+        socket.emit('start_game', 'scratch');
+        return () => {
+            socket.emit('leave_game', 'scratch');
+        };
+    }
+  }, []);
 
   // Dynamic Vault Status
   useEffect(() => {

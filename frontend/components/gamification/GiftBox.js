@@ -5,6 +5,7 @@ import { Gift, X, Shield, Timer, Coins } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import useGameSound from '../../hooks/useGameSound';
+import { socket } from '../../services/socket';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ANIMATION_DURATION_MS = 3000; // Flying Numbers duration
@@ -159,7 +160,16 @@ export default function GiftBox({ onBalanceUpdate }) {
   }, []);
 
   useEffect(() => {
-    if (isOpen) fetchVaultStatus();
+    if (isOpen) {
+        fetchVaultStatus();
+        if (socket && typeof window !== 'undefined') {
+            socket.emit('start_game', 'gift');
+        }
+    } else {
+        if (socket && typeof window !== 'undefined') {
+            socket.emit('leave_game', 'gift');
+        }
+    }
   }, [isOpen]);
 
   const handleOpenBox = async (tier) => {

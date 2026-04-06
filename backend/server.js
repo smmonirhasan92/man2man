@@ -225,21 +225,57 @@ setInterval(() => {
 }, 2000); // 2 second fast update
 
 systemNamespace.on('connection', (socket) => {
-    console.log('[SOCKET] Client connected to /system namespace:', socket.id);
+    // console.log('[SOCKET] Client connected to /system namespace:', socket.id);
     liveTraffic.activeConnections.add(socket.id);
+    
+    // Store which games this socket is currently playing
+    socket.activeGames = new Set();
 
-    // Allow joining user rooms in system namespace if needed
     socket.on('join_user_room', (userId) => {
         if (userId) socket.join(`user_${userId}`);
     });
     
-    // [NEW] Admins join dashboard securely
     socket.on('join_admin_room', (adminToken) => {
         socket.join('admin_dashboard');
+        // Immediate sync for instant UI updates
+        socket.emit('live_traffic_update', {
+            visitors: liveTraffic.activeConnections.size,
+            players: liveTraffic.activePlayers,
+            timestamp: Date.now()
+        });
+    });
+
+    // [NEW] Live Active Player Tracking
+    socket.on('start_game', (gameType) => {
+        if (!socket.activeGames.has(gameType)) {
+            socket.activeGames.add(gameType);
+            if (liveTraffic.activePlayers[gameType] !== undefined) {
+                liveTraffic.activePlayers[gameType]++;
+            }
+            liveTraffic.activePlayers.total++;
+        }
+    });
+
+    socket.on('leave_game', (gameType) => {
+        if (socket.activeGames.has(gameType)) {
+            socket.activeGames.delete(gameType);
+            if (liveTraffic.activePlayers[gameType] !== undefined && liveTraffic.activePlayers[gameType] > 0) {
+                liveTraffic.activePlayers[gameType]--;
+            }
+            if (liveTraffic.activePlayers.total > 0) liveTraffic.activePlayers.total--;
+        }
     });
 
     socket.on('disconnect', () => {
         liveTraffic.activeConnections.delete(socket.id);
+        // Ensure to decrement if they disconnect while in-game
+        socket.activeGames.forEach(gameType => {
+            if (liveTraffic.activePlayers[gameType] !== undefined && liveTraffic.activePlayers[gameType] > 0) {
+                liveTraffic.activePlayers[gameType]--;
+            }
+            if (liveTraffic.activePlayers.total > 0) liveTraffic.activePlayers.total--;
+        });
+        socket.activeGames.clear();
     });
 
     // 2. Chat Brain (Support)

@@ -50,21 +50,40 @@ class UniversalMatchMaker {
                 // 1. Fetch current Vault Snapshot
                 const vault = await GameVault.getMasterVault();
                 
+                // [NEW] Redis Live Match Pot Initialization
+                const RedisService = require('../../services/RedisService');
+                const P2PAudit = require('./P2PAuditModel');
+                let redisLivePot = await RedisService.get('livedata:game:match_pot');
+                if (redisLivePot === null) {
+                    redisLivePot = 0; // Initialize if empty
+                } else {
+                    redisLivePot = parseFloat(redisLivePot);
+                }
+                
                 // 2. Triple Stream Distribution Setup
                 const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
                 const adminIncomeIn = totalBet * 0.10;
                 const userInterestIn = totalBet * 0.15;
-                const activePoolIn = totalBet * 0.75;
+                const activePoolIn = totalBet * 0.75; // Goes to Redis!
+
+                // Atomically add incoming funds to Redis
+                if (activePoolIn > 0) {
+                    redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', activePoolIn);
+                }
+
+                const redisPotBefore = redisLivePot - activePoolIn;
 
                 // Active variables for calculations
-                let currentActivePool = vault.balances.activePool + activePoolIn;
                 let currentUserInterest = vault.balances.userInterest + userInterestIn;
                 const hardStop = vault.config.hardStopLimit;
-                const isTightMode = currentActivePool < vault.config.tightModeThreshold;
+                const isTightMode = redisLivePot < vault.config.tightModeThreshold;
                 const houseEdgeModifier = Math.max(0, (100 - (vault.config.houseEdge || 10)) / 90);
 
                 let totalActiveDeduct = 0;
                 let totalInterestDeduct = 0;
+                let fallbackMongoDeduct = 0;
+                let payoutSource = 'redis_pot';
+                let auditPlayers = [];
 
                 // 3. Process Batch
                 for (let i = 0; i < batch.length; i++) {
@@ -87,28 +106,32 @@ class UniversalMatchMaker {
 
                     // Payout Calculation
                     let targetPayout = p.betAmount * rtpMult;
-
-                    // Financial Safety Net: Limit Payouts
                     let actualPayout = targetPayout;
                     let usedInterest = 0;
 
-                    if (actualPayout > currentActivePool) {
-                        const deficit = actualPayout - currentActivePool;
-                        // Use BOOST from Interest Fund if available
+                    if (actualPayout > redisLivePot) {
+                        const deficit = actualPayout - redisLivePot;
+                        // Use BOOST from Mongo Interest Fund if available
                         if (currentUserInterest > 0 && !isTightMode) {
                             usedInterest = Math.min(deficit, currentUserInterest);
-                            actualPayout = currentActivePool + usedInterest;
+                            actualPayout = redisLivePot + usedInterest;
                         } else {
-                            // Empty Interest Fund or Tight Mode: Only pay from Active Pool
-                            actualPayout = currentActivePool;
+                            actualPayout = redisLivePot;
                             label = 'CONSOLATION (SAFE)';
                             rank = 3;
                         }
                     }
 
-                    // [V8.0] ABSOLUTE CAP: 100% Interest Fund Exhaustion Guard
-                    if (actualPayout > (currentActivePool + currentUserInterest)) {
-                        actualPayout = currentActivePool + currentUserInterest;
+                    // Fallback to Vault Active Pool if severely depleted (Mongo)
+                    if (targetPayout > actualPayout && !isTightMode) {
+                        const remainingDeficit = targetPayout - actualPayout;
+                        const availableMongoPool = vault.balances.activePool - fallbackMongoDeduct;
+                        if (availableMongoPool > 0) {
+                            const mongoAssist = Math.min(remainingDeficit, availableMongoPool);
+                            actualPayout += mongoAssist;
+                            fallbackMongoDeduct += mongoAssist;
+                            payoutSource = 'mixed';
+                        }
                     }
 
                     // HARD STOP PROTECTION (Max Single Win)
@@ -118,12 +141,19 @@ class UniversalMatchMaker {
                     }
 
                     // Bookkepping
-                    const activePoolPayout = actualPayout - usedInterest;
-                    currentActivePool -= activePoolPayout;
+                    const activePoolPayout = actualPayout - usedInterest - (fallbackMongoDeduct > 0 ? fallbackMongoDeduct : 0);
+                    redisLivePot -= activePoolPayout;
                     currentUserInterest -= usedInterest;
                     
                     totalActiveDeduct += activePoolPayout;
                     totalInterestDeduct += usedInterest;
+
+                    auditPlayers.push({
+                        userId: p.userId,
+                        betAmount: p.betAmount,
+                        winAmount: parseFloat(actualPayout.toFixed(2)),
+                        netProfit: parseFloat((actualPayout - p.betAmount).toFixed(2))
+                    });
 
                     // Delay resolution
                     p.finalOutcome = {
@@ -132,20 +162,40 @@ class UniversalMatchMaker {
                         label: label,
                         rank: rank,
                         mode: isDuo ? 'p2p' : 'single',
-                        pool: parseFloat(currentActivePool.toFixed(2))
+                        pool: parseFloat(redisLivePot.toFixed(2))
                     };
                 }
 
-                // 4. Atomic Database Update ($inc)
+                // 3.5 Deduct from Redis atomically
+                if (totalActiveDeduct > 0) {
+                    redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', -totalActiveDeduct);
+                }
+
+                // 4. Atomic Database Update ($inc) & Ledger
+                // Only ActivePool fallback and Interest/Admin touch DB
                 await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
                     $inc: {
                         'balances.adminIncome': adminIncomeIn,
                         'balances.userInterest': userInterestIn - totalInterestDeduct,
-                        'balances.activePool': activePoolIn - totalActiveDeduct,
+                        'balances.activePool': -fallbackMongoDeduct, // Main pool is now Redis
                         'stats.totalBetsIn': totalBet,
-                        'stats.totalPayoutsOut': totalActiveDeduct + totalInterestDeduct,
+                        'stats.totalPayoutsOut': totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct,
                         'stats.totalGamesPlayed': batch.length
                     }
+                });
+
+                await P2PAudit.create({
+                    gameType,
+                    players: auditPlayers,
+                    financials: {
+                        totalBetIn: totalBet,
+                        adminFeeDeducted: adminIncomeIn,
+                        interestFundDeducted: userInterestIn,
+                        redisPotContribution: activePoolIn,
+                        totalPayoutOut: totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct,
+                        payoutSource
+                    },
+                    redisPotState: { before: redisPotBefore, after: redisLivePot }
                 });
 
                 // 5. Finalize Promises
@@ -155,9 +205,9 @@ class UniversalMatchMaker {
 
                 // [NEW] Push to Admin Live Feed
                 try {
-                    const SocketService = require('./common/SocketService');
+                    const SocketService = require('../common/SocketService');
                     if (SocketService) {
-                        const totalPayoutStr = (totalActiveDeduct + totalInterestDeduct).toFixed(2);
+                        const totalPayoutStr = (totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct).toFixed(2);
                         SocketService.broadcast('admin_dashboard', 'activity_feed', {
                             event: `${batch.length} player(s) played ${gameType.toUpperCase()}`,
                             payout: totalPayoutStr,

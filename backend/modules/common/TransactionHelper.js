@@ -8,53 +8,51 @@ const mongoose = require('mongoose');
  * @param {Function} callback - async (session) => { ... }
  */
 async function runTransaction(callback) {
-    let session = null;
-    try {
-        console.log(`[TX_TRACE] Starting Session...`);
-        session = await mongoose.startSession();
-        session.startTransaction();
-        console.log(`[TX_TRACE] Session Started & Transaction Begin. ID: ${session.id}`);
-    } catch (err) {
-        // Failed to start session (e.g. connection issue or not supported)
-        if (session) session.endSession();
-        return await callback(null);
-    }
+    const MAX_RETRIES = 3;
+    let retries = 0;
 
-    try {
-        const result = await callback(session);
-        await session.commitTransaction();
-        return result;
-    } catch (error) {
-        // Check if error is due to Standalone instance limitation
-        // Relaxed check: Retry on ANY error that looks like a transaction issue
-        const strError = error.toString();
-        const isTransactionError = error.code === 20 ||
-            strError.includes('Transaction numbers are only allowed');
+    while (retries < MAX_RETRIES) {
+        let session = null;
+        try {
+            console.log(`[TX_TRACE] Starting Session (Attempt ${retries + 1}/${MAX_RETRIES})...`);
+            session = await mongoose.startSession();
+            session.startTransaction();
+            console.log(`[TX_TRACE] Session Started & Transaction Begin. ID: ${session.id}`);
 
-        if (isTransactionError) {
-            console.warn(`⚠️ Transaction Failed: ${error.message}. Retrying without transaction...`);
-            if (session) {
-                await session.abortTransaction().catch(() => { });
-                session.endSession();
+            const result = await callback(session);
+            await session.commitTransaction();
+            return result;
+        } catch (error) {
+            const strError = error.toString();
+            // Check for TransientTransactionError (Standard MongoDB Write Conflict handling)
+            const isTransientError = error.hasErrorLabel && error.hasErrorLabel('TransientTransactionError') || error.code === 112;
+            
+            // Check if error is due to Standalone instance limitation
+            const isStandaloneError = error.code === 20 || strError.includes('Transaction numbers are only allowed');
+
+            if (isTransientError && retries < MAX_RETRIES - 1) {
+                console.warn(`⏳ [TX_RETRY] Write Conflict (Transient Error) detected. Retrying ${retries + 1}/${MAX_RETRIES}...`);
+                retries++;
+                // Wait briefly before retrying
+                await new Promise(res => setTimeout(res, 300));
+                continue;
             }
-            // Retry without session
-            return await callback(null);
-        }
 
-        // Real error, abort and rethrow
-        if (session) {
-            await session.abortTransaction().catch(() => { });
-        }
-        throw error;
-    } finally {
-        // ALWAYS END SESSION (Connection Leak Prevention)
-        if (session) {
-            console.log(`[TX_TRACE] Ending Session ${session.id}...`);
-            try {
-                if (session.inTransaction()) await session.abortTransaction();
-            } catch (e) { }
-            await session.endSession();
-            console.log(`[TX_TRACE] Session ${session.id} Ended.`);
+            if (isStandaloneError) {
+                console.warn(`⚠️ Transaction Failed: ${error.message}. Retrying without transaction...`);
+                // Attempt raw execution without session
+                return await callback(null);
+            }
+
+            throw error; // Real error, surface to user
+        } finally {
+            if (session) {
+                console.log(`[TX_TRACE] Ending Session ${session.id}...`);
+                try {
+                    if (session.inTransaction()) await session.abortTransaction();
+                } catch (e) {}
+                await session.endSession();
+            }
         }
     }
 }

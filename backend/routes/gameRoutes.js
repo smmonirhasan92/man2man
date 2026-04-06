@@ -9,6 +9,16 @@ const crashGameManager = require('../modules/gamification/CrashGameSocket');
 
 const rateLimit = require('express-rate-limit');
 
+// [SECURITY] Strict Game Rate Limiter (Anti-Script Jamming)
+// Allows maximum 1 request per second per IP to prevent rapid-fire scam attacks.
+const gameActionLimiter = rateLimit({
+    windowMs: 1000, // 1 second window
+    max: 1, // Limit each IP to 1 request per `window` (here, per second)
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Rate limit exceeded: Please wait a second before spinning again.' }
+});
+
 // [P#5] Session-Based Rest Logic (5 Min Play, 3 Min Rest)
 const userSessions = new Map();
 const sessionRestLimiter = (req, res, next) => {
@@ -46,13 +56,13 @@ const sessionRestLimiter = (req, res, next) => {
 router.get('/vault-status', authMiddleware, vaultController.getPublicVaultStatus);
 
 // Route for Luck Test (Tiered Spins)
-router.post('/luck-test', authMiddleware, sessionRestLimiter, spinController.spinLuckTest);
+router.post('/luck-test', authMiddleware, gameActionLimiter, sessionRestLimiter, spinController.spinLuckTest);
 
 // Mystery Gift Box Routes
-router.post('/open-gift', authMiddleware, giftBoxController.openGiftBox);
+router.post('/open-gift', authMiddleware, gameActionLimiter, giftBoxController.openGiftBox);
 
 // Scratch Card Route
-router.post('/scratch-card', authMiddleware, sessionRestLimiter, spinController.scratchCard);
+router.post('/scratch-card', authMiddleware, gameActionLimiter, sessionRestLimiter, spinController.scratchCard);
 
 // --- UNIVERSAL MULTIPLIER API (CRASH GAME) ---
 

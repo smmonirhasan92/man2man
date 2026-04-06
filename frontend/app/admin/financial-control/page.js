@@ -21,31 +21,44 @@ export default function FinancialControlCenter() {
     useEffect(() => {
         fetchVault();
 
-        // Socket IO configuration
-        const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://usaaffiliatemarketing.com';
-        const socket = io(BASE_URL + '/system');
+        // [FIX] Use centralized robust Socket Service
+        const { socket } = require('../../../services/socket');
 
-        socket.on('connect', () => {
-            console.log("Admin Socket connected!");
-            socket.emit('join_admin_room', 'dummy_token');
-        });
-
-        socket.on('live_traffic_update', (data) => {
-            setTraffic({
-                visitors: data.visitors || 0,
-                players: data.players || { spin: 0, scratch: 0 }
+        if (socket) {
+            socket.on('connect', () => {
+                console.log("Admin Socket connected!");
+                socket.emit('join_admin_room', 'dummy_token');
             });
-        });
-
-        socket.on('activity_feed', (data) => {
-            setFeed(prev => {
-                const updated = [data, ...prev];
-                if (updated.length > 50) updated.pop();
-                return updated;
+    
+            socket.on('live_traffic_update', (data) => {
+                setTraffic({
+                    visitors: data.visitors || 0,
+                    players: data.players || { spin: 0, scratch: 0 }
+                });
             });
-        });
+    
+            socket.on('activity_feed', (data) => {
+                setFeed(prev => {
+                    const updated = [data, ...prev];
+                    if (updated.length > 50) updated.pop();
+                    return updated;
+                });
+            });
+    
+            // Ensure if socket was already connected, we just emit join
+            if (socket.connected) {
+                socket.emit('join_admin_room', 'dummy_token');
+            }
+        }
 
-        return () => socket.disconnect();
+        // Cleanup listeners to prevent memory leaks on unmount
+        return () => {
+            if (socket) {
+                socket.off('connect');
+                socket.off('live_traffic_update');
+                socket.off('activity_feed');
+            }
+        };
     }, []);
 
     const fetchVault = async () => {

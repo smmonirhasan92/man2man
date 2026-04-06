@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+import { socket } from '../../services/socket';
 
 const SPIN_DURATION_MS = 5000;
 const SLICE_DEG = 45; // 360 / 8 segments
@@ -112,6 +113,17 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [maxSafeWin, setMaxSafeWin] = useState(null);
   
   const config = TIERS[tier];
+
+  // [NEW] Live Metric Heartbeat
+  useEffect(() => {
+    if (socket && typeof window !== 'undefined') {
+        // Broadcast that this user is currently in the Spin Engine
+        socket.emit('start_game', 'spin');
+        return () => {
+            socket.emit('leave_game', 'spin');
+        };
+    }
+  }, []);
 
   // Fetch Vault Payout Limits
   useEffect(() => {
