@@ -1,3 +1,0 @@
---- SSH Connection Established ---
-Executing: docker logs m2m-mongodb-test
---- Command Finished with code: 0 ---

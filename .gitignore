@@ -1,10 +1,14 @@
-# Dependencies
+# ===========================
+# DEPENDENCIES
+# ===========================
 node_modules/
 **/node_modules/
 frontend/node_modules/
 backend/node_modules/
 
-# Next.js Build
+# ===========================
+# NEXT.JS BUILD OUTPUT
+# ===========================
 .next/
 **/.next/
 frontend/.next/
@@ -12,33 +16,76 @@ out/
 build/
 dist/
 
-# Environment Variables
+# ===========================
+# ENVIRONMENT VARIABLES
+# [SECURITY] All .env files are gitignored — create manually on each server
+# ===========================
 .env
 .env.local
 .env.production
+.env.test
+.env.prod
+backend/.env
+backend/.env.local
+backend/.env.test
+backend/.env.prod
 
-# System Files
+# ===========================
+# SYSTEM FILES
+# ===========================
 .DS_Store
 *.log
 
-# AI Models (LARGE)
+# ===========================
+# LOG & DEBUG FILES (Never commit these)
+# ===========================
+*.txt
+backend_check.txt
+backend_errors.txt
+backend_logs.txt
+vps_logs*.txt
+vps_ps_final.txt
+vps_mongo_logs.txt
+nginx_dump.txt
+nginx_error.txt
+restart_backend.txt
+sim_error.log
+simulation_report.txt
+user_count*.txt
+users_list.txt
+tmp_token.txt
+keys.json
+latest_orders.json
+
+# Frontend Lint Reports (auto-generated, never commit)
+frontend/final_lint*.txt
+frontend/lint_*.txt
+frontend/build_debug.log
+frontend/build_error.log
+frontend/*.bak
+
+# ===========================
+# AI MODELS (LARGE BINARIES)
+# ===========================
 *.gguf
 *.bin
 *.pth
 *.pt
 *.onnx
+models/
 
-# Large Archives (BLOAT)
+# ===========================
+# LARGE ARCHIVES (BLOAT)
+# ===========================
 *.zip
 *.rar
 *.7z
 *.tar
 *.gz
-LOTTERY_PRO_VERSION_1_M.zip
-USA_Affiliate_Full_Package.zip
-USA_Affiliate_Lottery_Ready.zip
 
-# Backup/Large Folders
+# ===========================
+# BACKUP / LARGE FOLDERS
+# ===========================
 mongodb_data_safe/
 uploads/
 LOTTERY_PRO_VERSION_1_M/
@@ -46,4 +93,3 @@ USA_Affiliate_Full_Package/
 USA_Affiliate_Lottery_Ready/
 _SOFTWARE_MASTER_TEMPLATE/
 USA_Developer_Kit/
-

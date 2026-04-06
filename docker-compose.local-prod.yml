@@ -9,19 +9,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: m2m-backend-prod-test
+    # [SECURITY] All secrets loaded from gitignored .env.test — never hardcoded here
+    env_file:
+      - ./backend/.env.test
     environment:
       - NODE_ENV=production
+      # [STANDARDIZED] PORT 5050 matches Nginx proxy_pass across all environments
       - PORT=5050
-      - JWT_SECRET=supersecretkeyremitwallet123
-      - GEMINI_API_KEY=AIzaSyApJEjpj_V2QT4SksDi-Lu00WEuUFpz4dE
-      - SUPER_ADMIN_SEC_KEY_1=1111
-      - SUPER_ADMIN_SEC_KEY_2=2222
-      - SUPER_ADMIN_SEC_KEY_3=3333
-      # [POINT TO HOST MONGO] Using the host machine's MongoDB (seen in Compass)
-      - MONGODB_URI=mongodb://host.docker.internal:27017/universal_game_core_v1
-      - REDIS_URL=redis://host.docker.internal:6379
-      - TZ=Asia/Dhaka
-      - CLIENT_URL=http://localhost:3010
     ports:
       - "5050:5050"
     volumes:

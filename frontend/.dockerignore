@@ -1,6 +1,39 @@
+# ===========================
+# NODE & BUILD ARTIFACTS
+# ===========================
 node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===========================
+# NEXT.JS BUILD OUTPUT
+# (Rebuilt fresh in Docker builder stage)
+# ===========================
 .next
 out
+
+# ===========================
+# ENVIRONMENT FILES
+# ===========================
 .env
 .env.local
-npm-debug.log
+.env.production
+
+# ===========================
+# LOGS & LINT REPORTS
+# ===========================
+*.log
+*.txt
+final_lint.txt
+final_lint_report.txt
+lint_final_restored.txt
+lint_fix_report.txt
+build_debug.log
+build_error.log
+
+# ===========================
+# BACKUP & TEMP FILES
+# ===========================
+*.bak
+tailwind.config.js.bak

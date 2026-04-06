@@ -62,7 +62,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  transpilePackages: ['framer-motion', 'lucide-react', 'react-hot-toast', 'phaser', 'p5', 'react-p5'],
+  transpilePackages: ['framer-motion', 'lucide-react', 'react-hot-toast'],
   /* config options here */
   turbopack: {},
   typescript: {
@@ -71,7 +71,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // output: 'export' as const, // Disabled for PM2 Next Start
+  output: 'standalone' as const, // [DOCKER] Minimal standalone bundle for production images
   images: {
     remotePatterns: [
       { protocol: 'https' as const, hostname: 'flagcdn.com' },
