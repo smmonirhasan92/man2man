@@ -56,7 +56,6 @@ inject_admin.js
 make_super_admin.js
 seed_live.js
 seed_plans_verify.js
-seed_root_v2.js
 seed_templates.js
 set_test_plan.js
 setup_admin_direct.js
