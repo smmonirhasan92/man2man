@@ -107,10 +107,8 @@ class UniversalMatchMaker {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
                 }
                 
-                // Active Pool Logic: Only take if Low-Vol is OFF or Pool is starving
-                const activePoolIn = (!isMultiplayer || isHighVolume || !isHealthyPool) 
-                                     ? parseFloat((totalBet - totalFeeIn).toFixed(2)) 
-                                     : 0;
+                // Active Pool Logic: ALL Bets (minus fees) contribute to the pool for reliable redistribution
+                const activePoolIn = parseFloat((totalBet - totalFeeIn).toFixed(2)); 
 
                 if (activePoolIn > 0) {
                     redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', activePoolIn);
@@ -168,16 +166,18 @@ class UniversalMatchMaker {
                         // We don't deduct winners from redisLivePot here because it's handled below globally.
 
                         let safeLabel = label.replace('_', ' ');
+                        const visualSync = this.getVisualSliceIndex(p.tier, targetPayout, p.gameType, p.betAmount);
+
                         p.finalOutcome = {
-                            winAmount: targetPayout,
+                            winAmount: parseFloat(targetPayout.toFixed(2)),
                             isWin: targetPayout > 0,
-                            label: label,
+                            label: safeLabel, 
                             rank: rank,
-                            mode: 'triangular_p2p',
-                            sliceIndex: targetPayout > 0 ? 0 : 7 // P2P Winner ALWAYS lands on Jackpot (Sync Fix)
+                            mode: 'p2p',
+                            sliceIndex: visualSync.index
                         };
                         
-                        console.log(`[ENGINE] P2P Player ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Slice=${p.finalOutcome.sliceIndex}`);
+                        console.log(`[ENGINE] P2P ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Mode=p2p`);
                         auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
                     }
                 } else {
