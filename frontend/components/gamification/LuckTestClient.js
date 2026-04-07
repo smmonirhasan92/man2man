@@ -18,12 +18,12 @@ const TIERS = {
     tabActiveBg: 'bg-[#FFF4EA] border-[#CD7F32]', tabActiveText: 'text-[#8B4513]',
     slices: [
       { label: '25', value: 25, color: '#F4A261' }, // 5x
-      { label: '10', value: 10, color: '#E76F51' }, // 2x
-      { label: '8',  value: 8,  color: '#2A9D8F' }, // 1.5x
-      { label: '6',  value: 6,  color: '#E9C46A' }, // 1.2x
-      { label: '5',  value: 5,  color: '#E9C46B' }, // 1.0x (Refund)
-      { label: '4',  value: 4,  color: '#F4A261' }, // 0.8x (Miss)
-      { label: '2',  value: 2,  color: '#2A9D8F' }, // 0.4x
+      { label: '15', value: 15, color: '#E76F51' }, // 3x
+      { label: '12',  value: 12,  color: '#2A9D8F' }, // 2.4x
+      { label: '10',  value: 10,  color: '#E9C46A' }, // 2.0x
+      { label: '8',  value: 8,  color: '#E9C46B' }, // 1.6x 
+      { label: '5',  value: 5,  color: '#F4A261' }, // 1.0x (Refund)
+      { label: '3',  value: 3,  color: '#2A9D8F' }, // 0.6x
       { label: '0',  value: 0,  color: '#264653' }  // 0.0x
     ]
   },
@@ -33,12 +33,12 @@ const TIERS = {
     tabActiveBg: 'bg-[#F5F5F5] border-[#A0A0A0]', tabActiveText: 'text-[#444]',
     slices: [
       { label: '75', value: 75, color: '#8D8D8D' }, // 5x
-      { label: '30', value: 30, color: '#B0B0B0' }, // 2x
-      { label: '22', value: 22, color: '#5E5E5E' }, // 1.5x
-      { label: '18', value: 18, color: '#C8C8C8' }, // 1.2x
-      { label: '15', value: 15, color: '#B8B8B8' }, // 1.0x (Refund)
-      { label: '12', value: 12, color: '#9A9A9A' }, // 0.8x
-      { label: '6',  value: 6,  color: '#6E6E6E' }, // 0.4x
+      { label: '50', value: 50, color: '#B0B0B0' }, // 3x
+      { label: '40', value: 40, color: '#5E5E5E' }, // 2.6x
+      { label: '30', value: 30, color: '#C8C8C8' }, // 2x
+      { label: '22', value: 22, color: '#B8B8B8' }, // 1.5x 
+      { label: '15', value: 15, color: '#9A9A9A' }, // 1.0x
+      { label: '8',  value: 8,  color: '#6E6E6E' }, // 0.5x
       { label: '0',  value: 0,  color: '#333' }     // 0.0x
     ]
   },
@@ -48,12 +48,12 @@ const TIERS = {
     tabActiveBg: 'bg-[#FFFBE6] border-[#DAA520]', tabActiveText: 'text-[#856404]',
     slices: [
       { label: '150', value: 150, color: '#DAA520' }, // 5x
-      { label: '60',  value: 60,  color: '#B8860B' }, // 2x
+      { label: '100', value: 100, color: '#B8860B' }, // 3x
+      { label: '80',  value: 80,  color: '#FFD700' }, // 2.6x
+      { label: '60',  value: 60,  color: '#8B6914' }, // 2x
       { label: '45',  value: 45,  color: '#FFD700' }, // 1.5x
-      { label: '36',  value: 36,  color: '#8B6914' }, // 1.2x
-      { label: '30',  value: 30,  color: '#FFD700' }, // 1.0x (Refund)
-      { label: '24',  value: 24,  color: '#B8860B' }, // 0.8x
-      { label: '12',  value: 12,  color: '#DAA520' }, // 0.4x
+      { label: '30',  value: 30,  color: '#B8860B' }, // 1.0x (Refund)
+      { label: '15',  value: 15,  color: '#DAA520' }, // 0.5x
       { label: '0',   value: 0,   color: '#F5C842' }  // 0.0x
     ]
   }

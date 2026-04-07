@@ -2,6 +2,12 @@ const GameVault = require('./GameVaultModel');
 const RedisService = require('../../services/RedisService');
 const P2PAudit = require('./P2PAuditModel');
 
+const UNIVERSAL_SLICES = {
+    bronze: [25, 15, 12, 10, 8, 5, 3, 0],
+    silver: [75, 50, 40, 30, 22, 15, 8, 0],
+    gold: [150, 100, 80, 60, 45, 30, 15, 0]
+};
+
 class UniversalMatchMaker {
     constructor() {
         this.globalQueue = { players: [], timeout: null, isProcessing: false };
@@ -60,13 +66,24 @@ class UniversalMatchMaker {
                 console.log(`[ENGINE] Processing Batch: Size=${batch.length}, Multiplayer=${isMultiplayer}`);
 
                 try {
-                    const config = await this.getDynamicConfig();
+                    const vault = await GameVault.getMasterVault();
+                    const config = vault.config;
+                    
+                    // [PERSISTENCE FIX] If Redis is empty but Mongo has Seed, RESTORE it!
+                    let redisLivePotStr = await RedisService.get('livedata:game:match_pot');
+                    let redisLivePot = redisLivePotStr ? parseFloat(redisLivePotStr) : null;
+                    
+                    if (redisLivePot === null || redisLivePot < 100) {
+                         if (vault.balances.activePool > 5000) {
+                             console.warn(`[RECOVERY] Redis Pot Lost! Restoring ${vault.balances.activePool} NXS from MongoDB.`);
+                             await RedisService.client.set('livedata:game:match_pot', vault.balances.activePool.toString());
+                             redisLivePot = vault.balances.activePool;
+                         } else { redisLivePot = redisLivePot || 0; }
+                    }
                 
                 const currentMinute = new Date().getMinutes();
                 const isPhaseA = currentMinute % 6 < 3; // 0-2 (Win Mode), 3-5 (Recovery)
 
-                let redisLivePotStr = await RedisService.get('livedata:game:match_pot');
-                let redisLivePot = redisLivePotStr ? parseFloat(redisLivePotStr) : 0;
                 const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
 
                 // [ADAPTIVE] TARGET SEED MANAGEMENT
@@ -183,9 +200,19 @@ class UniversalMatchMaker {
                              
                              if (roll < winChance) {
                                  // HIGH PAYOUT Mode
-                                 if (isGold) rtpMult = isAbundance ? (Math.random() < 0.2 ? 5.0 : (Math.random() < 0.5 ? 2.0 : 1.5)) : 1.5;
-                                 else if (isSilver) rtpMult = Math.random() < 0.5 ? 1.5 : 2.0;
-                                 else rtpMult = Math.random() < 0.5 ? 2.0 : 3.0; // Bronze
+                                 if (isAbundance) {
+                                     // Generous Weighted Selection
+                                     const rollWin = Math.random();
+                                     if (rollWin < 0.20) rtpMult = 5.0; // 5x Jackpot
+                                     else if (rollWin < 0.40) rtpMult = 3.0; // 3x
+                                     else if (rollWin < 0.60) rtpMult = 2.0; // 2x
+                                     else if (rollWin < 0.85) rtpMult = 1.5; // 1.5x
+                                     else rtpMult = 1.2; // 1.2x
+                                 } else {
+                                     if (isGold) rtpMult = 1.5;
+                                     else if (isSilver) rtpMult = Math.random() < 0.5 ? 1.5 : 2.0;
+                                     else rtpMult = Math.random() < 0.5 ? 2.0 : 3.0; // Bronze
+                                 }
                              } else {
                                  rtpMult = Math.random() < 0.7 ? 1.0 : 0.0; // Moderate refund or miss
                                  label = rtpMult === 1.0 ? 'REFUND' : 'MISS';
@@ -273,10 +300,11 @@ class UniversalMatchMaker {
                     await RedisService.client.expire(hourlyKey, 3600);
                 }
 
-                // Batch to Mongo 
+                // Batch to Mongo & Sync ActivePool
                 await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
                     $inc: {
                         'balances.adminIncome': adminIncomeIn,
+                        'balances.activePool': parseFloat((activePoolIn - actualActiveDeduct).toFixed(2)),
                         'stats.totalBetsIn': totalBet,
                         'stats.totalPayoutsOut': parseFloat((actualActiveDeduct + actualPadDeduct).toFixed(2)),
                         'stats.totalGamesPlayed': batch.length
@@ -316,39 +344,25 @@ class UniversalMatchMaker {
     }
 }
     getVisualSliceIndex(tier, winAmount, gameType) {
-        if (gameType !== 'spin') return { index: 4, amount: winAmount }; // Not a wheel game
+        if (gameType !== 'spin') return { index: 7, amount: winAmount }; // Not a wheel game
 
-        let amount = Math.round(winAmount);
+        const tierKey = (tier && UNIVERSAL_SLICES[tier.toLowerCase()]) ? tier.toLowerCase() : 'bronze';
+        const sliceMap = UNIVERSAL_SLICES[tierKey];
+        const amount = parseFloat(winAmount.toFixed(2));
         
-        // P2P Winner handling: Force to Jackpot (Slice 0) of the corresponding tier
-        if (winAmount > 0 && amount > 25) { // Likely P2P
-            const p2pJackpots = { bronze: 25, silver: 75, gold: 150 };
-            return { index: 0, amount: p2pJackpots[tier] || 25 };
+        // Dynamic search for closest slice match
+        let bestIndex = 7; // Default to Loss (Index 7)
+        let minDiff = Infinity;
+
+        for (let i = 0; i < sliceMap.length; i++) {
+            const diff = Math.abs(sliceMap[i] - amount);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestIndex = i;
+            }
         }
 
-        // Handle rounding for 1.5x cases to match labels exactly
-        if (tier === 'silver' && amount === 23) amount = 22; 
-        if (tier === 'bronze' && amount === 7) amount = 8;  
-
-        // SOURCE OF TRUTH: Same labels as LuckTestClient.js
-        const mapping = {
-            bronze: { 25: 0, 10: 1, 8: 2, 6: 3, 5: 4, 4: 5, 2: 6, 0: 7 },
-            silver: { 75: 0, 30: 1, 22: 2, 18: 3, 15: 4, 12: 5, 6: 6, 0: 7 },
-            gold:   { 150: 0, 60: 1, 45: 2, 36: 3, 30: 4, 24: 5, 12: 6, 0: 7 }
-        };
-
-        const tierMap = mapping[tier] || mapping.bronze;
-        
-        // Return matching slice and amount
-        if (tierMap[amount] !== undefined) return { index: tierMap[amount], amount };
-        
-        // Fallback safety
-        if (amount === 0) return { index: 7, amount: 0 };
-        if (amount > 5) {
-             const keys = Object.keys(tierMap).sort((a,b) => b-a);
-             return { index: 0, amount: parseInt(keys[0]) }; // Return Jackpot
-        }
-        return { index: 7, amount: 0 };
+        return { index: bestIndex, amount: sliceMap[bestIndex] };
     }
 }
 
