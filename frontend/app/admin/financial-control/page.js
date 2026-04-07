@@ -44,6 +44,16 @@ export default function FinancialControlCenter() {
                     return updated;
                 });
             });
+
+            socket.on('vault_update', (data) => {
+                setVault(prev => ({
+                    ...prev,
+                    balances: data.balances,
+                    stats: data.stats,
+                    redisPot: data.redisPot
+                }));
+                console.log("[SOCKET] Live Vault Sync Success!");
+            });
     
             // Ensure if socket was already connected, we just emit join
             if (socket.connected) {

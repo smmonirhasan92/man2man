@@ -7,17 +7,23 @@ const UNIVERSAL_MULTIPLIERS = [5, 3.3, 2.6, 2, 1.5, 1, 0.5, 0];
 class UniversalMatchMaker {
     constructor() {
         this.globalQueue = { players: [], timeout: null, isProcessing: false };
-        this.DEFAULT_WINDOW_MS = 2500; 
+        this.DEFAULT_WINDOW_MS = 1000; // 1s Pulse: Zero-lag feeling
     }
 
     async getDynamicConfig() {
         let isEnabled = await RedisService.get('config:isEnabled');
         let houseEdge = await RedisService.get('config:houseEdge');
-        if (isEnabled === null) {
+        
+        if (isEnabled === null || houseEdge === null) {
             const vault = await GameVault.getMasterVault();
-            return { isEnabled: vault.config.isEnabled, houseEdge: vault.config.houseEdge };
+            if (vault) {
+                // Populate Cache for High-Traffic performance
+                await RedisService.client.set('config:isEnabled', vault.config.isEnabled ? 'true' : 'false', 'EX', 3600);
+                await RedisService.client.set('config:houseEdge', vault.config.houseEdge.toString(), 'EX', 3600);
+                return { isEnabled: vault.config.isEnabled, houseEdge: vault.config.houseEdge };
+            }
         }
-        return { isEnabled: isEnabled === 'true', houseEdge: parseFloat(houseEdge) };
+        return { isEnabled: isEnabled === 'true', houseEdge: parseFloat(houseEdge) || 10 };
     }
 
     async processMatch(userId, betAmount, gameType = 'spin', tier = 'bronze', customWindowMs = null) {
@@ -139,27 +145,33 @@ class UniversalMatchMaker {
                 batch.sort((a, b) => b.betAmount - a.betAmount); // Whale first
 
                 if (isMultiplayer) {
-                    // TRIANGULAR BALANCE (85% to ONE winner, others get 0 money but near miss UI)
-                    const winnerIdx = Math.floor(Math.random() * batch.length); // Pick 1 random winner
-                    const winnerPayout = parseFloat((totalBet * 0.85).toFixed(2));
+                    // NATURAL ENTROPY: Pick 1 Main Winner (75-85%) and 1 Partial Winner (5-10%)
+                    const mainWinnerIdx = Math.floor(Math.random() * batch.length);
+                    let sideWinnerIdx = -1;
+                    if (batch.length >= 3) {
+                        sideWinnerIdx = (mainWinnerIdx + 1) % batch.length;
+                    }
+
+                    const jitter = 0.85 + (Math.random() * 0.10); // 85-95% payout jitter
+                    const totalPotForPrizes = parseFloat((totalBet * jitter).toFixed(2));
                     
                     for (let i = 0; i < batch.length; i++) {
                         const p = batch[i];
-                        let rtpMult = 0.0; let label = 'LOSS'; let rank = 8;
                         let targetPayout = 0;
+                        let label = 'LOSS'; let rank = 8;
                         
-                        if (i === winnerIdx) {
-                            // In abundance, winner gets 100% of bets!
-                            targetPayout = isAbundance ? totalBet : winnerPayout;
-                            rtpMult = targetPayout / p.betAmount;
-                            if (rtpMult >= 3.0) { label = 'MEGA_WIN'; rank=1; }
-                            else if (rtpMult >= 1.5) { label = 'PROFIT'; rank=2; }
-                            else { label = 'REFUND'; rank=3; }
-                        } else {
-                            targetPayout = 0; // The losers pay. 
-                            if (Math.random() > 0.4) { rtpMult = 0.8; label = 'NEAR_MISS'; rank=3; } // Visual UI near miss
-                            else { rtpMult = 0.0; label = 'LOSS'; rank=8; }
+                        if (i === mainWinnerIdx) {
+                            targetPayout = isAbundance ? totalBet : (totalPotForPrizes * 0.85); // 85% of prizes
+                        } else if (i === sideWinnerIdx) {
+                            targetPayout = (totalPotForPrizes * 0.15); // 15% side winner
                         }
+                        
+                        targetPayout = parseFloat(targetPayout.toFixed(2));
+                        const rtpMult = targetPayout / (p.betAmount || 5);
+
+                        if (rtpMult >= 2.5) { label = 'PROFIT'; rank=2; }
+                        else if (rtpMult >= 1.0) { label = 'REFUND'; rank=3; }
+                        else if (rtpMult > 0) { label = 'NEAR_MISS'; rank=3; }
 
                         actualActiveDeduct += targetPayout;
                         // Note: For multiplayer, the pot handles the winner, others pay.
@@ -306,6 +318,23 @@ class UniversalMatchMaker {
                     }
                 });
 
+                // --- REAL-TIME ADMIN DASHBOARD SYNC ---
+                const updatedVault = await GameVault.getMasterVault();
+                const io = require('../../server').systemIo || require('../../server').io;
+                if (io) {
+                    io.to('admin_dashboard').emit('activity_feed', {
+                        event: `Batch Processed (${batch.length} Players)`,
+                        payout: (actualActiveDeduct + actualPadDeduct).toFixed(2),
+                        timestamp: Date.now()
+                    });
+                    
+                    // Critical: Push the exact balances so charts update live
+                    io.to('admin_dashboard').emit('vault_update', {
+                        balances: updatedVault.balances,
+                        stats: updatedVault.stats,
+                        redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct
+                    });
+                }
                 await P2PAudit.create({
                     gameType: 'GLOBAL_BATCH',
                     players: auditPlayers,

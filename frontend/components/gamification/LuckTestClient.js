@@ -105,13 +105,22 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [displayBalance, setDisplayBalance] = useState(null);
   const [cooldownMs, setCooldownMs] = useState(0);
   const [cooldownActive, setCooldownActive] = useState(false);
-  const [engineMode, setEngineMode] = useState(null); // 'p2p' or 'single'
+  const [engineMode, setEngineMode] = useState(null); 
+  const [msg, setMsg] = useState({ text: '', type: '' }); 
   const [muted, setMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('game_muted') === 'true';
     }
     return false;
   });
+
+  // Auto-clear soft notifications for a premium feel
+  useEffect(() => {
+    if (msg.text) {
+      const timer = setTimeout(() => setMsg({ text: '', type: '' }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [msg.text]);
   const [maxSafeWin, setMaxSafeWin] = useState(null);
   
   const config = TIERS[tier];
@@ -235,13 +244,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       setIsPreloading(false);
       setSpinning(false);
       
-      // Cooldown Interceptor
-      if (err.response?.status === 429 && err.response?.data?.cooldownRemaining) {
-          setCooldownMs(err.response.data.cooldownRemaining);
-          setCooldownActive(true);
-      } else {
-          toast.error(err.response?.data?.message || 'Transaction Failed');
-      }
+      const errorMsg = err.response?.data?.message || 'Transaction Failed';
+      setMsg({ text: errorMsg, type: 'error' });
       return;
     }
     
@@ -354,6 +358,17 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                 </div>
               </div>
             </div>
+
+        {/* [MASTER CLASS] SOFT NOTIFICATION OVERLAY */}
+        <div className="relative h-2 mb-2">
+            {msg.text && (
+              <div className={`absolute -top-10 left-0 right-0 py-2 px-4 rounded-xl text-center text-[10px] font-black uppercase tracking-widest z-50 animate-in fade-in slide-in-from-top-2 duration-300 border ${
+                msg.type === 'error' ? 'bg-rose-950/80 text-rose-200 border-rose-500/50 shadow-lg shadow-rose-900/20' : 'bg-emerald-950/80 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-900/40'
+              }`}>
+                {msg.text}
+              </div>
+            )}
+        </div>
 
         {/* Tier Control */}
         <div className="grid grid-cols-3 gap-3 mb-8">
