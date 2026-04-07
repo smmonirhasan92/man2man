@@ -320,21 +320,20 @@ class UniversalMatchMaker {
 
                 // --- REAL-TIME ADMIN DASHBOARD SYNC ---
                 const updatedVault = await GameVault.getMasterVault();
-                const io = require('../../server').systemIo || require('../../server').io;
-                if (io) {
-                    io.to('admin_dashboard').emit('activity_feed', {
-                        event: `Batch Processed (${batch.length} Players)`,
-                        payout: (actualActiveDeduct + actualPadDeduct).toFixed(2),
-                        timestamp: Date.now()
-                    });
-                    
-                    // Critical: Push the exact balances so charts update live
-                    io.to('admin_dashboard').emit('vault_update', {
-                        balances: updatedVault.balances,
-                        stats: updatedVault.stats,
-                        redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct
-                    });
-                }
+                const SocketService = require('../common/SocketService');
+                
+                SocketService.broadcast('admin_dashboard', 'activity_feed', {
+                    event: `Batch Processed (${batch.length} Players)`,
+                    payout: (actualActiveDeduct + actualPadDeduct).toFixed(2),
+                    timestamp: Date.now()
+                });
+                
+                // Critical: Push the exact balances so charts update live
+                SocketService.broadcast('admin_dashboard', 'vault_update', {
+                    balances: updatedVault.balances,
+                    stats: updatedVault.stats,
+                    redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct
+                });
                 await P2PAudit.create({
                     gameType: 'GLOBAL_BATCH',
                     players: auditPlayers,
