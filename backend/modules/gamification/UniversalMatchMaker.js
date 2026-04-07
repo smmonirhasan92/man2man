@@ -64,27 +64,33 @@ class UniversalMatchMaker {
                 const currentMinute = new Date().getMinutes();
                 const isPhaseA = currentMinute % 6 < 3; // 0-2 (Win Mode), 3-5 (Recovery)
 
-                let redisLivePotStr = await RedisService.get('livedata:game:match_pot');
-                let redisLivePot = redisLivePotStr ? parseFloat(redisLivePotStr) : 0;
+                // [ADAPTIVE] TARGET SEED MANAGEMENT
+                const TARGET_SEED = 17500;
+                const isHighVolume = batch.length >= 5;
+                const isHealthyPool = redisLivePot >= TARGET_SEED;
                 
-                const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
-                
-                // [RESTORED] Original 50/50 Fee Split Logic
-                const houseEdgePct = isMultiplayer ? 0.15 : (config.houseEdge / 100);
+                // Adaptive Fee & Pool Contribution
+                let houseEdgePct = isMultiplayer ? 0.15 : (config.houseEdge / 100);
+                let activePoolContribPct = 1.0; // Normal contribution
+
+                if (isMultiplayer && !isHighVolume) {
+                    houseEdgePct = 0.10; // "Interest Boost" for duels/small groups
+                    activePoolContribPct = 0.0; // DON'T take from user bets for the pool during Low-Vol
+                    console.log(`[ADAPTIVE] Low Volume Duel Detected. Fee reduced to 10%, Pool contribution disabled.`);
+                }
+
                 const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
                 const adminIncomeIn = parseFloat((totalFeeIn * 0.5).toFixed(2)); 
                 const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn).toFixed(2)); 
                 
                 if (reinjectionPadIn > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
-                    console.log(`[REFILL] Pad +${reinjectionPadIn} NXS (from 50% split)`);
                 }
                 
-                if (totalFeeIn > 0) {
-                    console.log(`[ENGINE] Fee: ${totalFeeIn} (Admin: ${adminIncomeIn}, Pad: ${reinjectionPadIn})`);
-                }
-                
-                const activePoolIn = parseFloat((totalBet - totalFeeIn).toFixed(2)); // Main pot gets the exact remainder
+                // Active Pool Logic: Only take if Low-Vol is OFF or Pool is starving
+                const activePoolIn = (!isMultiplayer || isHighVolume || !isHealthyPool) 
+                                     ? parseFloat((totalBet - totalFeeIn).toFixed(2)) 
+                                     : 0;
 
                 if (activePoolIn > 0) {
                     redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', activePoolIn);
@@ -145,7 +151,7 @@ class UniversalMatchMaker {
                             label: label,
                             rank: rank,
                             mode: 'triangular_p2p',
-                            sliceIndex: rtpMult === 0.0 ? 4 : (rtpMult >= 2 ? 0 : 6) // Visual mapped
+                            sliceIndex: targetPayout > 0 ? 0 : 7 // P2P Winner ALWAYS lands on Jackpot (Sync Fix)
                         };
                         
                         console.log(`[ENGINE] P2P Player ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Slice=${p.finalOutcome.sliceIndex}`);
@@ -169,12 +175,21 @@ class UniversalMatchMaker {
                              
                              const netLoss = parseFloat((targetPayout - p.betAmount).toFixed(2));
                              
-                             if (netLoss > 0 && reinjectionPad >= netLoss) {
-                                 // Safely take from Pad!
-                                 actualPadDeduct += netLoss;
-                                 reinjectionPad -= netLoss;
+                             // [SURPLUS LOGIC] Spend the Seed above 17500 for bonuses!
+                             const surplus = redisLivePot - 17500;
+                             const isAffordableFromPad = netLoss > 0 && reinjectionPad >= netLoss;
+                             const isAffordableFromSurplus = netLoss > 0 && surplus > netLoss;
+
+                             if (isAffordableFromPad || isAffordableFromSurplus) {
+                                 if (isAffordableFromPad) {
+                                     actualPadDeduct += netLoss;
+                                     reinjectionPad -= netLoss;
+                                 } else {
+                                     actualActiveDeduct += netLoss;
+                                     console.log(`[ADAPTIVE] Seed Surplus used for Bonus (+${netLoss} NXS)`);
+                                 }
                                  actualActiveDeduct += p.betAmount;
-                                 payoutSource = 'admin_pad_injection';
+                                 payoutSource = isAffordableFromPad ? 'admin_pad_injection' : 'active_pool_surplus';
                                  if(rtpMult>=3) { label='JACKPOT'; rank=1;}
                                  else { label='PROFIT'; rank=2; }
                              } else {
@@ -208,16 +223,21 @@ class UniversalMatchMaker {
                         }
 
                         let safeLabel = label.replace('_', ' ');
+                        const visualSync = this.getVisualSliceIndex(p.tier, targetPayout, p.gameType);
+                        
+                        // [HARD SYNC] Overwrite targetPayout with the exact visual slice amount!
+                        targetPayout = visualSync.amount; 
+                        
                         p.finalOutcome = {
                             winAmount: parseFloat(targetPayout.toFixed(2)),
                             isWin: targetPayout > 0,
                             label: safeLabel, 
                             rank: rank,
                             mode: isPhaseA ? 'pulse_active' : 'pulse_recovery',
-                            sliceIndex: this.getVisualSliceIndex(p.tier, targetPayout, p.gameType)
+                            sliceIndex: visualSync.index
                         };
                         
-                        console.log(`[ENGINE] SinglePlayer ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, PadUsed=${actualPadDeduct > 0}, Slice=${p.finalOutcome.sliceIndex} (${p.tier})`);
+                        console.log(`[ENGINE] SinglePlayer ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Slice=${p.finalOutcome.sliceIndex} (${p.tier}) [VISUAL SYNC]`);
                         auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
                     }
                 }
@@ -262,34 +282,39 @@ class UniversalMatchMaker {
         } finally { q.isProcessing = false; }
     }
     getVisualSliceIndex(tier, winAmount, gameType) {
-        if (gameType !== 'spin') return 4; // Not a wheel game
+        if (gameType !== 'spin') return { index: 4, amount: winAmount }; // Not a wheel game
 
-        // Handle rounding for 1.5x cases (e.g. 7.5 -> 8, 22.5 -> 22) to match harmonized labels
         let amount = Math.round(winAmount);
-        if (tier === 'silver' && amount === 23) amount = 22; // Hard sync for Silver 1.5x
-        if (tier === 'bronze' && amount === 7) amount = 8;   // Hard sync for Bronze 1.5x
+        
+        // P2P Winner handling: Force to Jackpot (Slice 0) of the corresponding tier
+        if (winAmount > 0 && amount > 25) { // Likely P2P
+            const p2pJackpots = { bronze: 25, silver: 75, gold: 150 };
+            return { index: 0, amount: p2pJackpots[tier] || 25 };
+        }
 
-        // Dynamic Mapping based on LuckTestClient.js Slices [Jackpot, 2x, 1.5x, 1.2x, 1x, 0.8x, 0.4x, 0x]
+        // Handle rounding for 1.5x cases to match labels exactly
+        if (tier === 'silver' && amount === 23) amount = 22; 
+        if (tier === 'bronze' && amount === 7) amount = 8;  
+
+        // SOURCE OF TRUTH: Same labels as LuckTestClient.js
         const mapping = {
-            bronze: {
-                25: 0, 10: 1, 8: 2, 6: 3, 5: 4, 4: 5, 2: 6, 0: 7
-            },
-            silver: {
-                75: 0, 30: 1, 22: 2, 18: 3, 15: 4, 12: 5, 6: 6, 0: 7
-            },
-            gold: {
-                150: 0, 60:1, 45: 2, 36: 3, 30: 4, 24: 5, 12: 6, 0: 7
-            }
+            bronze: { 25: 0, 10: 1, 8: 2, 6: 3, 5: 4, 4: 5, 2: 6, 0: 7 },
+            silver: { 75: 0, 30: 1, 22: 2, 18: 3, 15: 4, 12: 5, 6: 6, 0: 7 },
+            gold:   { 150: 0, 60: 1, 45: 2, 36: 3, 30: 4, 24: 5, 12: 6, 0: 7 }
         };
 
         const tierMap = mapping[tier] || mapping.bronze;
         
-        // Find exact match or default to a "close" slice for safety
-        if (tierMap[amount] !== undefined) return tierMap[amount];
+        // Return matching slice and amount
+        if (tierMap[amount] !== undefined) return { index: tierMap[amount], amount };
         
-        if (amount === 0) return 7;
-        if (amount > 5) return 0; // High wins default to jackpot slice if mismatch
-        return 7; // Default to loss
+        // Fallback safety
+        if (amount === 0) return { index: 7, amount: 0 };
+        if (amount > 5) {
+             const keys = Object.keys(tierMap).sort((a,b) => b-a);
+             return { index: 0, amount: parseInt(keys[0]) }; // Return Jackpot
+        }
+        return { index: 7, amount: 0 };
     }
 }
 
