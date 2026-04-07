@@ -1,6 +1,7 @@
 const GameVault = require('./GameVaultModel');
 const RedisService = require('../../services/RedisService');
 const P2PAudit = require('./P2PAuditModel');
+const SocketService = require('../common/SocketService');
 
 const UNIVERSAL_MULTIPLIERS = [5, 3.3, 2.6, 2, 1.5, 1, 0.5, 0];
 
@@ -318,22 +319,24 @@ class UniversalMatchMaker {
                     }
                 });
 
-                // --- REAL-TIME ADMIN DASHBOARD SYNC ---
-                const updatedVault = await GameVault.getMasterVault();
-                const SocketService = require('../common/SocketService');
-                
-                SocketService.broadcast('admin_dashboard', 'activity_feed', {
-                    event: `Batch Processed (${batch.length} Players)`,
-                    payout: (actualActiveDeduct + actualPadDeduct).toFixed(2),
-                    timestamp: Date.now()
-                });
-                
-                // Critical: Push the exact balances so charts update live
-                SocketService.broadcast('admin_dashboard', 'vault_update', {
-                    balances: updatedVault.balances,
-                    stats: updatedVault.stats,
-                    redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct
-                });
+                // --- REAL-TIME ADMIN DASHBOARD SYNC (RECOVERED) ---
+                try {
+                    const updatedVault = await GameVault.getMasterVault();
+                    
+                    SocketService.broadcast('admin_dashboard', 'activity_feed', {
+                        event: `Batch Processed (${batch.length} Players)`,
+                        payout: (actualActiveDeduct + actualPadDeduct).toFixed(2),
+                        timestamp: Date.now()
+                    });
+                    
+                    SocketService.broadcast('admin_dashboard', 'vault_update', {
+                        balances: updatedVault.balances,
+                        stats: updatedVault.stats,
+                        redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct
+                    });
+                } catch (socketErr) {
+                    console.warn(`[RECOVERY] Socket sync failed but engine is running:`, socketErr.message);
+                }
                 await P2PAudit.create({
                     gameType: 'GLOBAL_BATCH',
                     players: auditPlayers,
