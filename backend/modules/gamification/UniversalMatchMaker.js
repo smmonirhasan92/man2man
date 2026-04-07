@@ -2,11 +2,7 @@ const GameVault = require('./GameVaultModel');
 const RedisService = require('../../services/RedisService');
 const P2PAudit = require('./P2PAuditModel');
 
-const UNIVERSAL_SLICES = {
-    bronze: [25, 15, 12, 10, 8, 5, 3, 0],
-    silver: [75, 50, 40, 30, 22, 15, 8, 0],
-    gold: [150, 100, 80, 60, 45, 30, 15, 0]
-};
+const UNIVERSAL_MULTIPLIERS = [5, 3.3, 2.6, 2, 1.5, 1, 0.5, 0];
 
 class UniversalMatchMaker {
     constructor() {
@@ -270,9 +266,8 @@ class UniversalMatchMaker {
                         }
 
                         let safeLabel = label.replace('_', ' ');
-                        const visualSync = this.getVisualSliceIndex(p.tier, targetPayout, p.gameType);
+                        const visualSync = this.getVisualSliceIndex(p.tier, targetPayout, p.gameType, p.betAmount);
                         
-                        // [HARD SYNC] Overwrite targetPayout with the exact visual slice amount!
                         targetPayout = visualSync.amount; 
                         
                         p.finalOutcome = {
@@ -280,11 +275,11 @@ class UniversalMatchMaker {
                             isWin: targetPayout > 0,
                             label: safeLabel, 
                             rank: rank,
-                            mode: activePhaseA ? (isAbundance ? 'promotion' : 'pulse_active') : 'pulse_recovery',
+                            mode: isMultiplayer ? 'p2p' : 'single',
                             sliceIndex: visualSync.index
                         };
                         
-                        console.log(`[ENGINE] SinglePlayer ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Slice=${p.finalOutcome.sliceIndex} (${p.tier}) [VISUAL SYNC]`);
+                        console.log(`[ENGINE] Action ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Mode=${p.finalOutcome.mode} [SYNC]`);
                         auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
                     }
                 }
@@ -343,26 +338,24 @@ class UniversalMatchMaker {
         q.isProcessing = false; 
     }
 }
-    getVisualSliceIndex(tier, winAmount, gameType) {
+    getVisualSliceIndex(tier, winAmount, gameType, betAmount) {
         if (gameType !== 'spin') return { index: 7, amount: winAmount }; // Not a wheel game
 
-        const tierKey = (tier && UNIVERSAL_SLICES[tier.toLowerCase()]) ? tier.toLowerCase() : 'bronze';
-        const sliceMap = UNIVERSAL_SLICES[tierKey];
-        const amount = parseFloat(winAmount.toFixed(2));
+        const mult = parseFloat((winAmount / (betAmount || 5)).toFixed(1));
         
-        // Dynamic search for closest slice match
+        // Dynamic search for closest multiplier match
         let bestIndex = 7; // Default to Loss (Index 7)
         let minDiff = Infinity;
 
-        for (let i = 0; i < sliceMap.length; i++) {
-            const diff = Math.abs(sliceMap[i] - amount);
+        for (let i = 0; i < UNIVERSAL_MULTIPLIERS.length; i++) {
+            const diff = Math.abs(UNIVERSAL_MULTIPLIERS[i] - mult);
             if (diff < minDiff) {
                 minDiff = diff;
                 bestIndex = i;
             }
         }
 
-        return { index: bestIndex, amount: sliceMap[bestIndex] };
+        return { index: bestIndex, amount: winAmount };
     }
 }
 

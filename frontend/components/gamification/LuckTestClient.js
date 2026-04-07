@@ -17,14 +17,15 @@ const TIERS = {
     btnClass: 'from-[#CD7F32] to-[#E8A55A]', textClass: 'text-white',
     tabActiveBg: 'bg-[#FFF4EA] border-[#CD7F32]', tabActiveText: 'text-[#8B4513]',
     slices: [
-      { label: '25', value: 25, color: '#F4A261' }, // 5x
-      { label: '15', value: 15, color: '#E76F51' }, // 3x
-      { label: '12',  value: 12,  color: '#2A9D8F' }, // 2.4x
-      { label: '10',  value: 10,  color: '#E9C46A' }, // 2.0x
-      { label: '8',  value: 8,  color: '#E9C46B' }, // 1.6x 
-      { label: '5',  value: 5,  color: '#F4A261' }, // 1.0x (Refund)
-      { label: '3',  value: 3,  color: '#2A9D8F' }, // 0.6x
-      { label: '0',  value: 0,  color: '#264653' }  // 0.0x
+      { label: '5x',    value: 5.0, color: '#F4A261' },
+      { label: '3.3x',  value: 3.3, color: '#E76F51' },
+      { label: '2.6x',  value: 2.6, color: '#2A9D8F' }, 
+      { label: '2x',    value: 2.0, color: '#E9C46A' },
+      { label: '1.5x',  // Label mapping for 1.5x is Index 4
+        value: 1.5,  color: '#E9C46B' }, 
+      { label: '1x',    value: 1.0, color: '#F4A261' }, 
+      { label: '0.5x',  value: 0.5, color: '#2A9D8F' },
+      { label: '0x',    value: 0.0, color: '#264653' }
     ]
   },
   silver: {
@@ -32,14 +33,14 @@ const TIERS = {
     btnClass: 'from-[#909090] to-[#C0C0C0]', textClass: 'text-white',
     tabActiveBg: 'bg-[#F5F5F5] border-[#A0A0A0]', tabActiveText: 'text-[#444]',
     slices: [
-      { label: '75', value: 75, color: '#8D8D8D' }, // 5x
-      { label: '50', value: 50, color: '#B0B0B0' }, // 3x
-      { label: '40', value: 40, color: '#5E5E5E' }, // 2.6x
-      { label: '30', value: 30, color: '#C8C8C8' }, // 2x
-      { label: '22', value: 22, color: '#B8B8B8' }, // 1.5x 
-      { label: '15', value: 15, color: '#9A9A9A' }, // 1.0x
-      { label: '8',  value: 8,  color: '#6E6E6E' }, // 0.5x
-      { label: '0',  value: 0,  color: '#333' }     // 0.0x
+      { label: '5x',    value: 5.0, color: '#8D8D8D' },
+      { label: '3.3x',  value: 3.3, color: '#B0B0B0' },
+      { label: '2.6x',  value: 2.6, color: '#5E5E5E' },
+      { label: '2x',    value: 2.0, color: '#C8C8C8' },
+      { label: '1.5x',  value: 1.5, color: '#B8B8B8' }, 
+      { label: '1x',    value: 1.0, color: '#9A9A9A' },
+      { label: '0.5x',  value: 0.5, color: '#6E6E6E' },
+      { label: '0x',    value: 0.0, color: '#333' }
     ]
   },
   gold: {
@@ -47,14 +48,14 @@ const TIERS = {
     btnClass: 'from-[#B8860B] to-[#FFD700]', textClass: 'text-[#3B2A00]',
     tabActiveBg: 'bg-[#FFFBE6] border-[#DAA520]', tabActiveText: 'text-[#856404]',
     slices: [
-      { label: '150', value: 150, color: '#DAA520' }, // 5x
-      { label: '100', value: 100, color: '#B8860B' }, // 3x
-      { label: '80',  value: 80,  color: '#FFD700' }, // 2.6x
-      { label: '60',  value: 60,  color: '#8B6914' }, // 2x
-      { label: '45',  value: 45,  color: '#FFD700' }, // 1.5x
-      { label: '30',  value: 30,  color: '#B8860B' }, // 1.0x (Refund)
-      { label: '15',  value: 15,  color: '#DAA520' }, // 0.5x
-      { label: '0',   value: 0,   color: '#F5C842' }  // 0.0x
+      { label: '5x',    value: 5.0, color: '#DAA520' },
+      { label: '3.3x',  value: 3.3, color: '#B8860B' },
+      { label: '2.6x',  value: 2.6, color: '#FFD700' },
+      { label: '2x',    value: 2.0, color: '#8B6914' },
+      { label: '1.5x',  value: 1.5, color: '#FFD700' },
+      { label: '1x',    value: 1.0, color: '#B8860B' },
+      { label: '0.5x',  value: 0.5, color: '#DAA520' },
+      { label: '0x',    value: 0.0, color: '#F5C842' }
     ]
   }
 };
@@ -104,6 +105,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [displayBalance, setDisplayBalance] = useState(null);
   const [cooldownMs, setCooldownMs] = useState(0);
   const [cooldownActive, setCooldownActive] = useState(false);
+  const [engineMode, setEngineMode] = useState(null); // 'p2p' or 'single'
   const [muted, setMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('game_muted') === 'true';
@@ -260,6 +262,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setTimeout(() => {
       setSpinning(false);
       setPopup(apiResult.result);
+      setEngineMode(apiResult.result.mode); 
       
       // STRICT SYNCHRONIZATION: Wallet unlocks only precisely when wheel stops
       if (typeof window !== 'undefined') {
@@ -338,7 +341,14 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                 >
                   {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
-                <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner">
+                <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner relative">
+                  {/* Subtle Stealth Tracker Dot (Top Left Corner) */}
+                  <div className={`absolute -top-1 -left-1 w-2 h-2 rounded-full blur-[1px] transition-colors duration-500 ${
+                    engineMode === 'p2p' ? 'bg-blue-500 shadow-[0_0_8px_#3b82f6]' : 
+                    engineMode === 'single' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 
+                    'bg-slate-700'
+                  }`} />
+                  
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
                   <h4 className="text-md font-mono font-black text-emerald-400">{displayBalance || '0.00'}</h4>
                 </div>
