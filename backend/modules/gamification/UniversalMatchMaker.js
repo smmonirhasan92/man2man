@@ -58,11 +58,16 @@ class UniversalMatchMaker {
                 let batch = q.players.splice(0, q.players.length);
                 const isMultiplayer = batch.length > 1;
                 console.log(`[ENGINE] Processing Batch: Size=${batch.length}, Multiplayer=${isMultiplayer}`);
-                
-                const config = await this.getDynamicConfig();
+
+                try {
+                    const config = await this.getDynamicConfig();
                 
                 const currentMinute = new Date().getMinutes();
                 const isPhaseA = currentMinute % 6 < 3; // 0-2 (Win Mode), 3-5 (Recovery)
+
+                let redisLivePotStr = await RedisService.get('livedata:game:match_pot');
+                let redisLivePot = redisLivePotStr ? parseFloat(redisLivePotStr) : 0;
+                const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
 
                 // [ADAPTIVE] TARGET SEED MANAGEMENT
                 const TARGET_SEED = 17500;
@@ -276,11 +281,25 @@ class UniversalMatchMaker {
                 });
 
                 for (let p of batch) {
-                    p.resolve(p.finalOutcome);
+                    if (p.finalOutcome) {
+                        p.resolve(p.finalOutcome);
+                    } else {
+                        p.reject(new Error("Match processed but no outcome generated."));
+                    }
+                }
+            } catch (batchError) {
+                console.error(`[ENGINE] BATCH CRITICAL ERROR:`, batchError);
+                for (let p of batch) {
+                    p.reject(new Error("Engine internal error during match processing."));
                 }
             }
-        } finally { q.isProcessing = false; }
+        }
+    } catch (globalError) {
+        console.error(`[ENGINE] GLOBAL ENGINE ERROR:`, globalError);
+    } finally { 
+        q.isProcessing = false; 
     }
+}
     getVisualSliceIndex(tier, winAmount, gameType) {
         if (gameType !== 'spin') return { index: 4, amount: winAmount }; // Not a wheel game
 
