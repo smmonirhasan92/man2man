@@ -73,14 +73,16 @@ class UniversalMatchMaker {
                 const TARGET_SEED = 17500;
                 const isHighVolume = batch.length >= 5;
                 const isHealthyPool = redisLivePot >= TARGET_SEED;
+                const isAbundance = redisLivePot >= 15000;
                 
                 // Adaptive Fee & Pool Contribution
                 let houseEdgePct = isMultiplayer ? 0.15 : (config.houseEdge / 100);
-                let activePoolContribPct = 1.0; // Normal contribution
-
-                if (isMultiplayer && !isHighVolume) {
+                
+                if (isAbundance) {
+                    houseEdgePct = 0; // "Promotion Mode": No fees when pool is big
+                    console.log(`[ADAPTIVE] ABUNDANCE MODE: ${redisLivePot.toFixed(2)} NXS. Fees set to 0% for this batch.`);
+                } else if (isMultiplayer && !isHighVolume) {
                     houseEdgePct = 0.10; // "Interest Boost" for duels/small groups
-                    activePoolContribPct = 0.0; // DON'T take from user bets for the pool during Low-Vol
                     console.log(`[ADAPTIVE] Low Volume Duel Detected. Fee reduced to 10%, Pool contribution disabled.`);
                 }
 
@@ -112,8 +114,10 @@ class UniversalMatchMaker {
                 let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
                 let reinjectionPad = padStr ? parseFloat(padStr) : 0;
                 const dynamicLimit = 33 + reinjectionPad; // Auto-scales beyond 80-100 NXS based on traffic
-                const isHourlyCapped = hourlyNetLoss >= dynamicLimit;
-                console.log(`[ENGINE] Stats: HourlyLoss=${hourlyNetLoss.toFixed(2)}, Pad=${reinjectionPad.toFixed(2)}, Limit=${dynamicLimit.toFixed(2)}, Capped=${isHourlyCapped}, PhaseA=${isPhaseA}`);
+                const isHourlyCapped = isAbundance ? false : (hourlyNetLoss >= dynamicLimit); 
+                const activePhaseA = isAbundance ? true : isPhaseA; 
+
+                console.log(`[ENGINE] Stats: HourlyLoss=${hourlyNetLoss.toFixed(2)}, Pad=${reinjectionPad.toFixed(2)}, Limit=${dynamicLimit.toFixed(2)}, Capped=${isHourlyCapped}, PhaseA=${activePhaseA}`);
 
                 let payoutSource = 'redis_pot';
                 let auditPlayers = [];
@@ -134,7 +138,8 @@ class UniversalMatchMaker {
                         let targetPayout = 0;
                         
                         if (i === winnerIdx) {
-                            targetPayout = winnerPayout;
+                            // In abundance, winner gets 100% of bets!
+                            targetPayout = isAbundance ? totalBet : winnerPayout;
                             rtpMult = targetPayout / p.betAmount;
                             if (rtpMult >= 3.0) { label = 'MEGA_WIN'; rank=1; }
                             else if (rtpMult >= 1.5) { label = 'PROFIT'; rank=2; }
@@ -171,17 +176,27 @@ class UniversalMatchMaker {
                         const isSilver = p.betAmount >= 15 && p.betAmount < 30;
                         let targetPayout = 0;
 
-                        if (isPhaseA && !isHourlyCapped) {
-                             if (isGold) rtpMult = 1.5;
-                             else if (isSilver) rtpMult = Math.random() < 0.5 ? 1.5 : 2.0;
-                             else rtpMult = Math.random() < 0.5 ? 2.0 : 3.0; // Bronze
+                        if (activePhaseA && !isHourlyCapped) {
+                             // Dynamic Win Chance (In Abundance: 80% Win)
+                             const roll = Math.random();
+                             const winChance = isAbundance ? 0.85 : 0.40;
+                             
+                             if (roll < winChance) {
+                                 // HIGH PAYOUT Mode
+                                 if (isGold) rtpMult = isAbundance ? (Math.random() < 0.2 ? 5.0 : (Math.random() < 0.5 ? 2.0 : 1.5)) : 1.5;
+                                 else if (isSilver) rtpMult = Math.random() < 0.5 ? 1.5 : 2.0;
+                                 else rtpMult = Math.random() < 0.5 ? 2.0 : 3.0; // Bronze
+                             } else {
+                                 rtpMult = Math.random() < 0.7 ? 1.0 : 0.0; // Moderate refund or miss
+                                 label = rtpMult === 1.0 ? 'REFUND' : 'MISS';
+                             }
                              
                              targetPayout = parseFloat((p.betAmount * rtpMult).toFixed(2));
                              
                              const netLoss = parseFloat((targetPayout - p.betAmount).toFixed(2));
                              
                              // [SURPLUS LOGIC] Spend the Seed above 17500 for bonuses!
-                             const surplus = redisLivePot - 17500;
+                             const surplus = redisLivePot - 12500; // Let it spend down to 12.5k for promo
                              const isAffordableFromPad = netLoss > 0 && reinjectionPad >= netLoss;
                              const isAffordableFromSurplus = netLoss > 0 && surplus > netLoss;
 
@@ -238,7 +253,7 @@ class UniversalMatchMaker {
                             isWin: targetPayout > 0,
                             label: safeLabel, 
                             rank: rank,
-                            mode: isPhaseA ? 'pulse_active' : 'pulse_recovery',
+                            mode: activePhaseA ? (isAbundance ? 'promotion' : 'pulse_active') : 'pulse_recovery',
                             sliceIndex: visualSync.index
                         };
                         
