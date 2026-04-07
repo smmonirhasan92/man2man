@@ -789,8 +789,10 @@ exports.updateGameVaultConfig = async (req, res) => {
             await RedisService.client.set('config:houseEdge', Number(houseEdge).toString());
         }
         if (isEnabled !== undefined) {
-            vault.config.isEnabled = Boolean(isEnabled);
-            await RedisService.client.set('config:isEnabled', String(Boolean(isEnabled)));
+            const isActuallyEnabled = isEnabled === true || isEnabled === 'true';
+            vault.config.isEnabled = isActuallyEnabled;
+            await RedisService.client.set('config:isEnabled', String(isActuallyEnabled));
+            console.log(`[ADAPTIVE] Emergency Stop toggled to: ${isActuallyEnabled}`);
         }
         
         if (seedAmount && Number(seedAmount) > 0) {
