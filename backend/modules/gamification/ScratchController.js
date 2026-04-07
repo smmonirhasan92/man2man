@@ -4,8 +4,8 @@ const User = require('../user/UserModel');
 
 const SCRATCH_TIERS = {
   bronze: { costNXS: 5,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
-  silver: { costNXS: 10, labels: { win: 'Silver Luck', loss: 'Miss' } },
-  gold:   { costNXS: 25, labels: { win: 'Golden Treasure', loss: 'Miss' } }
+  silver: { costNXS: 15, labels: { win: 'Silver Luck', loss: 'Miss' } },
+  gold:   { costNXS: 30, labels: { win: 'Golden Treasure', loss: 'Miss' } }
 };
 
 exports.scratchCard = async (req, res) => {

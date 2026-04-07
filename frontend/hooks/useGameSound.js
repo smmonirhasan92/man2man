@@ -43,15 +43,23 @@ export const useGameSound = (enabled = true) => {
         if (audio) {
             audio.currentTime = 0;
             audio.volume = volume;
-            audio.play().catch(e => console.warn(`Sound '${name}' failed to play:`, e));
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    // Silently ignore 'play() interrupted' or 'user didn't interact' errors
+                });
+            }
         } else {
             // Fallback for lazy loading or missing preload
             try {
                 const tempAudio = new Audio(`/sounds/${name}-v2.mp3`);
                 tempAudio.volume = volume;
-                tempAudio.play().catch(() => { });
+                const tempPromise = tempAudio.play();
+                if (tempPromise !== undefined) {
+                    tempPromise.catch(() => {});
+                }
             } catch (e) {
-                console.warn(`Sound '${name}' not found.`);
+                // Ignore silent missing audio
             }
         }
     }, [enabled]);

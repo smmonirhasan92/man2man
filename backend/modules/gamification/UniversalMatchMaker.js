@@ -1,4 +1,6 @@
 const GameVault = require('./GameVaultModel');
+const RedisService = require('../../services/RedisService');
+const P2PAudit = require('./P2PAuditModel');
 
 class UniversalMatchMaker {
     constructor() {
@@ -6,19 +8,28 @@ class UniversalMatchMaker {
         this.DEFAULT_WINDOW_MS = 2500; 
     }
 
-    async processMatch(userId, betAmount, gameType = 'spin', customWindowMs = null) {
-        return new Promise(async (resolve, reject) => {
+    async getDynamicConfig() {
+        let isEnabled = await RedisService.get('config:isEnabled');
+        let houseEdge = await RedisService.get('config:houseEdge');
+        if (isEnabled === null) {
             const vault = await GameVault.getMasterVault();
-            if (!vault.config.isEnabled) {
+            return { isEnabled: vault.config.isEnabled, houseEdge: vault.config.houseEdge };
+        }
+        return { isEnabled: isEnabled === 'true', houseEdge: parseFloat(houseEdge) };
+    }
+
+    async processMatch(userId, betAmount, gameType = 'spin', tier = 'bronze', customWindowMs = null) {
+        return new Promise(async (resolve, reject) => {
+            const config = await this.getDynamicConfig();
+            if (!config.isEnabled) {
                 return reject(new Error('Game engine is currently disabled by admin (Kill Switch).'));
             }
 
             const q = this.globalQueue;
-            q.players.push({ userId, betAmount, gameType, resolve, reject, timestamp: Date.now() });
+            q.players.push({ userId, betAmount, gameType, tier, resolve, reject, timestamp: Date.now() });
             
             const windowMs = customWindowMs || this.DEFAULT_WINDOW_MS;
             
-            // Soft absolute cap to prevent memory issues or lag (15 players)
             if (q.players.length >= 15) {
                 this.triggerMatch();
             } else if (!q.timeout) {
@@ -34,7 +45,6 @@ class UniversalMatchMaker {
         }
         if (q.timeout) clearTimeout(q.timeout);
         this.globalQueue = { players: [], timeout: null, isProcessing: false };
-        console.log("[UniversalMatchMaker] Global Queue flushed!");
     }
 
     async triggerMatch() {
@@ -45,182 +55,190 @@ class UniversalMatchMaker {
 
         try {
             while (q.players.length > 0) {
-                // Take the entire accumulated batch
                 let batch = q.players.splice(0, q.players.length);
-                const isDuo = batch.length > 1;
+                const isMultiplayer = batch.length > 1;
+                console.log(`[ENGINE] Processing Batch: Size=${batch.length}, Multiplayer=${isMultiplayer}`);
                 
-                // 1. Fetch current Vault Snapshot
-                const vault = await GameVault.getMasterVault();
+                const config = await this.getDynamicConfig();
                 
-                // [NEW] Redis Live Match Pot Initialization
-                const RedisService = require('../../services/RedisService');
-                const P2PAudit = require('./P2PAuditModel');
-                let redisLivePot = await RedisService.get('livedata:game:match_pot');
-                if (redisLivePot === null) {
-                    redisLivePot = vault.balances.activePool; 
-                    if (redisLivePot > 0) await RedisService.client.set('livedata:game:match_pot', redisLivePot);
-                    else redisLivePot = 0;
-                } else {
-                    redisLivePot = parseFloat(redisLivePot);
+                const currentMinute = new Date().getMinutes();
+                const isPhaseA = currentMinute % 6 < 3; // 0-2 (Win Mode), 3-5 (Recovery)
+
+                let redisLivePotStr = await RedisService.get('livedata:game:match_pot');
+                let redisLivePot = redisLivePotStr ? parseFloat(redisLivePotStr) : 0;
+                
+                const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
+                
+                // [RESTORED] Original 50/50 Fee Split Logic
+                const houseEdgePct = isMultiplayer ? 0.15 : (config.houseEdge / 100);
+                const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
+                const adminIncomeIn = parseFloat((totalFeeIn * 0.5).toFixed(2)); 
+                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn).toFixed(2)); 
+                
+                if (reinjectionPadIn > 0) {
+                    await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
+                    console.log(`[REFILL] Pad +${reinjectionPadIn} NXS (from 50% split)`);
                 }
                 
-                // 2. Triple Stream Distribution Setup for Entire Global Batch
-                const totalBet = batch.reduce((sum, p) => sum + p.betAmount, 0);
-                const adminIncomeIn = totalBet * 0.10;
-                const userInterestIn = totalBet * 0.15;
-                const activePoolIn = totalBet * 0.75; // Goes to Redis!
+                if (totalFeeIn > 0) {
+                    console.log(`[ENGINE] Fee: ${totalFeeIn} (Admin: ${adminIncomeIn}, Pad: ${reinjectionPadIn})`);
+                }
+                
+                const activePoolIn = parseFloat((totalBet - totalFeeIn).toFixed(2)); // Main pot gets the exact remainder
 
-                // Atomically add incoming funds to Redis BEFORE calculating wins
                 if (activePoolIn > 0) {
                     redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', activePoolIn);
                 }
-
                 const redisPotBefore = redisLivePot - activePoolIn;
 
-                // Active variables for calculations
-                let currentUserInterest = vault.balances.userInterest + userInterestIn;
-                const hardStop = vault.config.hardStopLimit;
-                const isTightMode = redisLivePot < vault.config.tightModeThreshold;
+                // Net Loss Hourly tracking
+                const hourPrefix = new Date().toISOString().slice(0, 13);
+                const hourlyKey = `livedata:game:hourly_net_loss:${hourPrefix}`;
+                let hourlyNetLossStr = await RedisService.get(hourlyKey);
+                let hourlyNetLoss = hourlyNetLossStr ? parseFloat(hourlyNetLossStr) : 0;
 
-                let totalActiveDeduct = 0;
-                let totalInterestDeduct = 0;
-                let fallbackMongoDeduct = 0;
+                // Dynamically expanding budget
+                let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
+                let reinjectionPad = padStr ? parseFloat(padStr) : 0;
+                const dynamicLimit = 33 + reinjectionPad; // Auto-scales beyond 80-100 NXS based on traffic
+                const isHourlyCapped = hourlyNetLoss >= dynamicLimit;
+                console.log(`[ENGINE] Stats: HourlyLoss=${hourlyNetLoss.toFixed(2)}, Pad=${reinjectionPad.toFixed(2)}, Limit=${dynamicLimit.toFixed(2)}, Capped=${isHourlyCapped}, PhaseA=${isPhaseA}`);
+
                 let payoutSource = 'redis_pot';
                 let auditPlayers = [];
+                let actualHourlyLossDeduct = 0;
+                let actualActiveDeduct = 0;
+                let actualPadDeduct = 0;
 
-                // 3. Process Batch with WHALE SACRIFICE LOGIC
-                // Sort descending to tackle the highest bettor first
-                batch.sort((a, b) => b.betAmount - a.betAmount);
+                batch.sort((a, b) => b.betAmount - a.betAmount); // Whale first
 
-                for (let i = 0; i < batch.length; i++) {
-                    const p = batch[i];
-                    let rtpMult = 0.0;
-                    let label = 'LOSS';
-                    let rank = 8;
+                if (isMultiplayer) {
+                    // TRIANGULAR BALANCE (85% to ONE winner, others get 0 money but near miss UI)
+                    const winnerIdx = Math.floor(Math.random() * batch.length); // Pick 1 random winner
+                    const winnerPayout = parseFloat((totalBet * 0.85).toFixed(2));
                     
-                    // SACRIFICE LOGIC
-                    let isSacrificialWhale = false;
-                    if (isTightMode && batch.length > 1 && i === 0) {
-                        const nextHighestBet = batch[1].betAmount;
-                        // Determine if Whale's bet dominates the queue pool
-                        if (p.betAmount > nextHighestBet * 1.5) {
-                            // 80% chance to sacrifice whale to feed the remaining small bettors
-                            if (Math.random() < 0.8) {
-                                isSacrificialWhale = true;
-                            }
+                    for (let i = 0; i < batch.length; i++) {
+                        const p = batch[i];
+                        let rtpMult = 0.0; let label = 'LOSS'; let rank = 8;
+                        let targetPayout = 0;
+                        
+                        if (i === winnerIdx) {
+                            targetPayout = winnerPayout;
+                            rtpMult = targetPayout / p.betAmount;
+                            if (rtpMult >= 3.0) { label = 'MEGA_WIN'; rank=1; }
+                            else if (rtpMult >= 1.5) { label = 'PROFIT'; rank=2; }
+                            else { label = 'REFUND'; rank=3; }
+                        } else {
+                            targetPayout = 0; // The losers pay. 
+                            if (Math.random() > 0.4) { rtpMult = 0.8; label = 'NEAR_MISS'; rank=3; } // Visual UI near miss
+                            else { rtpMult = 0.0; label = 'LOSS'; rank=8; }
                         }
-                    }
 
-                    if (isSacrificialWhale) {
-                         rtpMult = 0.0;
-                         if (p.gameType === 'scratch') label = 'LOSS';
-                         else if (p.gameType === 'spin') label = 'MISS';
-                         else label = 'EMPTY BOX';
-                         rank = 8;
-                    } else {
-                        // Get base multiplier based on game logic
-                        if (p.gameType === 'scratch') {
-                            const res = this.getScratchBaseRTP(p.betAmount, isTightMode);
-                            rtpMult = res.mult; label = res.label; rank = res.rank;
-                        } else if (p.gameType === 'spin') {
-                            const res = this.getSpinBaseRTP(isTightMode);
-                            rtpMult = res.mult; label = res.label; rank = res.rank;
-                        } else { // Fallback / Gift
-                            const res = this.getFallbackBaseRTP(isTightMode);
-                            rtpMult = res.mult; label = res.label; rank = res.rank;
+                        actualActiveDeduct += targetPayout;
+                        // Note: For multiplayer, the pot handles the winner, others pay.
+                        // We don't deduct winners from redisLivePot here because it's handled below globally.
+
+                        let safeLabel = label.replace('_', ' ');
+                        p.finalOutcome = {
+                            winAmount: targetPayout,
+                            isWin: targetPayout > 0,
+                            label: label,
+                            rank: rank,
+                            mode: 'triangular_p2p',
+                            sliceIndex: rtpMult === 0.0 ? 4 : (rtpMult >= 2 ? 0 : 6) // Visual mapped
+                        };
+                        
+                        console.log(`[ENGINE] P2P Player ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Slice=${p.finalOutcome.sliceIndex}`);
+                        auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
+                    }
+                } else {
+                    // SINGLE PLAYER: 3-3 Silent Pulse
+                    for (let i = 0; i < batch.length; i++) {
+                        const p = batch[i];
+                        let rtpMult = 0.0; let label = 'LOSS'; let rank = 8;
+                        const isGold = p.betAmount >= 30;
+                        const isSilver = p.betAmount >= 15 && p.betAmount < 30;
+                        let targetPayout = 0;
+
+                        if (isPhaseA && !isHourlyCapped) {
+                             if (isGold) rtpMult = 1.5;
+                             else if (isSilver) rtpMult = Math.random() < 0.5 ? 1.5 : 2.0;
+                             else rtpMult = Math.random() < 0.5 ? 2.0 : 3.0; // Bronze
+                             
+                             targetPayout = parseFloat((p.betAmount * rtpMult).toFixed(2));
+                             
+                             const netLoss = parseFloat((targetPayout - p.betAmount).toFixed(2));
+                             
+                             if (netLoss > 0 && reinjectionPad >= netLoss) {
+                                 // Safely take from Pad!
+                                 actualPadDeduct += netLoss;
+                                 reinjectionPad -= netLoss;
+                                 actualActiveDeduct += p.betAmount;
+                                 payoutSource = 'admin_pad_injection';
+                                 if(rtpMult>=3) { label='JACKPOT'; rank=1;}
+                                 else { label='PROFIT'; rank=2; }
+                             } else {
+                                 // Pad empty! Save players with probabilistic refunds to prevent economy drain
+                                 // HIGH REFUND FOR SILVER/GOLD (80%)
+                                 if (isGold && Math.random() < 0.9) { 
+                                     rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
+                                 } else if (isSilver && Math.random() < 0.8) {
+                                     rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
+                                 } else { 
+                                     rtpMult = 0.0; label = 'MISS'; rank=8; targetPayout=0; 
+                                 }
+                             }
+                        } else {
+                             // Phase B (Recovery / Safe Mode)
+                             // Stop invincibility spam: Protect Gold frequently (70% chance), but not 100%. Protect Silver slightly.
+                             if (isGold && Math.random() < 0.7) { 
+                                 rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
+                             } else if (isSilver && Math.random() < 0.3) {
+                                 rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
+                             } else { 
+                                 rtpMult = 0.8; label = 'NEAR_MISS'; rank=3; targetPayout=0; 
+                             }
                         }
-                    }
 
-                    // Payout Calculation
-                    let targetPayout = p.betAmount * rtpMult;
-                    
-                    // Determine maximum funding we can assemble
-                    let availableFunding = redisLivePot;
-                    let boostInterest = 0;
-                    let boostMongo = 0;
-
-                    if (targetPayout > availableFunding && currentUserInterest > 0 && !isTightMode) {
-                        boostInterest = Math.min(targetPayout - availableFunding, currentUserInterest);
-                        availableFunding += boostInterest;
-                    }
-
-                    if (targetPayout > availableFunding && !isTightMode) {
-                        const availableMongoPool = vault.balances.activePool - fallbackMongoDeduct;
-                        if (availableMongoPool > 0) {
-                            boostMongo = Math.min(targetPayout - availableFunding, availableMongoPool);
-                            availableFunding += boostMongo;
+                        if (actualPadDeduct === 0) {
+                             const netL = parseFloat((targetPayout - p.betAmount).toFixed(2));
+                             if (netL > 0) actualHourlyLossDeduct += netL;
+                             actualActiveDeduct += targetPayout;
+                             // We don't sub redisLivePot here manually, handled by incrByFloat below globally
                         }
+
+                        let safeLabel = label.replace('_', ' ');
+                        p.finalOutcome = {
+                            winAmount: parseFloat(targetPayout.toFixed(2)),
+                            isWin: targetPayout > 0,
+                            label: safeLabel, 
+                            rank: rank,
+                            mode: isPhaseA ? 'pulse_active' : 'pulse_recovery',
+                            sliceIndex: this.getVisualSliceIndex(p.tier, targetPayout, p.gameType)
+                        };
+                        
+                        console.log(`[ENGINE] SinglePlayer ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, PadUsed=${actualPadDeduct > 0}, Slice=${p.finalOutcome.sliceIndex} (${p.tier})`);
+                        auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
                     }
-
-                    // HARD STOP checks against theoretical availability
-                    let maxAllowedPayout = Math.min(availableFunding, hardStop);
-
-                    if (targetPayout > maxAllowedPayout) {
-                        // Apply mathematical downgrade so we hit a clear discrete multiplier
-                        const safeOutcome = this.getDowngradedOutcome(p.gameType, p.betAmount, maxAllowedPayout, true);
-                        targetPayout = safeOutcome.adjustedPayout;
-                        rtpMult = safeOutcome.newMult;
-                        label = safeOutcome.newLabel;
-                        rank = safeOutcome.newRank;
-                        if (boostMongo > 0) payoutSource = 'mixed_safe';
-                    } else {
-                        if (boostMongo > 0) payoutSource = 'mixed';
-                    }
-
-                    let actualPayout = targetPayout;
-                    let usedInterest = 0;
-                    let usedMongo = 0;
-
-                    if (actualPayout > redisLivePot) {
-                        let remainder = actualPayout - redisLivePot;
-                        usedInterest = Math.min(remainder, currentUserInterest);
-                        remainder -= usedInterest;
-                        if (remainder > 0) {
-                            usedMongo = remainder;
-                        }
-                    }
-                    fallbackMongoDeduct += usedMongo;
-
-                    // Bookkepping
-                    const activePoolPayout = actualPayout - usedInterest - (fallbackMongoDeduct > 0 ? fallbackMongoDeduct : 0);
-                    redisLivePot -= activePoolPayout;
-                    currentUserInterest -= usedInterest;
-                    
-                    totalActiveDeduct += activePoolPayout;
-                    totalInterestDeduct += usedInterest;
-
-                    auditPlayers.push({
-                        userId: p.userId,
-                        betAmount: p.betAmount,
-                        winAmount: parseFloat(actualPayout.toFixed(2)),
-                        netProfit: parseFloat((actualPayout - p.betAmount).toFixed(2))
-                    });
-
-                    // Delay resolution
-                    p.finalOutcome = {
-                        winAmount: parseFloat(actualPayout.toFixed(2)),
-                        isWin: actualPayout > 0,
-                        label: label,
-                        rank: rank,
-                        mode: isDuo ? 'p2p' : 'single',
-                        pool: parseFloat(redisLivePot.toFixed(2))
-                    };
                 }
 
-                // 3.5 Deduct from Redis atomically
-                if (totalActiveDeduct > 0) {
-                    redisLivePot = await RedisService.client.incrByFloat('livedata:game:match_pot', -totalActiveDeduct);
+                if (actualActiveDeduct > 0) {
+                    await RedisService.client.incrByFloat('livedata:game:match_pot', -actualActiveDeduct);
+                }
+                if (actualPadDeduct > 0) {
+                    await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', -actualPadDeduct);
+                }
+                if (actualHourlyLossDeduct > 0) {
+                    await RedisService.client.incrByFloat(hourlyKey, actualHourlyLossDeduct);
+                    await RedisService.client.expire(hourlyKey, 3600);
                 }
 
-                // 4. Atomic Database Update ($inc) & Ledger
-                // Only ActivePool fallback and Interest/Admin touch DB
+                // Batch to Mongo 
                 await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
                     $inc: {
                         'balances.adminIncome': adminIncomeIn,
-                        'balances.userInterest': userInterestIn - totalInterestDeduct,
-                        'balances.activePool': -fallbackMongoDeduct, // Main pool is now Redis
                         'stats.totalBetsIn': totalBet,
-                        'stats.totalPayoutsOut': totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct,
+                        'stats.totalPayoutsOut': parseFloat((actualActiveDeduct + actualPadDeduct).toFixed(2)),
                         'stats.totalGamesPlayed': batch.length
                     }
                 });
@@ -230,126 +248,48 @@ class UniversalMatchMaker {
                     players: auditPlayers,
                     financials: {
                         totalBetIn: totalBet,
-                        adminFeeDeducted: adminIncomeIn,
-                        interestFundDeducted: userInterestIn,
                         redisPotContribution: activePoolIn,
-                        totalPayoutOut: totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct,
+                        totalPayoutOut: actualActiveDeduct + actualPadDeduct,
                         payoutSource
                     },
                     redisPotState: { before: redisPotBefore, after: redisLivePot }
                 });
 
-                // 5. Finalize Promises
                 for (let p of batch) {
                     p.resolve(p.finalOutcome);
                 }
-
-                // [NEW] Push to Admin Live Feed
-                try {
-                    const SocketService = require('../common/SocketService');
-                    if (SocketService) {
-                        const totalPayoutStr = (totalActiveDeduct + totalInterestDeduct + fallbackMongoDeduct).toFixed(2);
-                        SocketService.broadcast('admin_dashboard', 'activity_feed', {
-                            event: `${batch.length} player(s) played P2P MULTI-GAME`,
-                            payout: totalPayoutStr,
-                            timestamp: Date.now()
-                        });
-                    }
-                } catch(e) { }
-
             }
         } finally { q.isProcessing = false; }
     }
+    getVisualSliceIndex(tier, winAmount, gameType) {
+        if (gameType !== 'spin') return 4; // Not a wheel game
 
-    getScratchBaseRTP(bet, isTightMode) {
-        const rng = Math.random() * 100;
-        let mult = 0; let label = 'LOSS'; let rank = 8;
+        // Handle rounding for 1.5x cases (e.g. 7.5 -> 8, 22.5 -> 22) to match harmonized labels
+        let amount = Math.round(winAmount);
+        if (tier === 'silver' && amount === 23) amount = 22; // Hard sync for Silver 1.5x
+        if (tier === 'bronze' && amount === 7) amount = 8;   // Hard sync for Bronze 1.5x
+
+        // Dynamic Mapping based on LuckTestClient.js Slices [Jackpot, 2x, 1.5x, 1.2x, 1x, 0.8x, 0.4x, 0x]
+        const mapping = {
+            bronze: {
+                25: 0, 10: 1, 8: 2, 6: 3, 5: 4, 4: 5, 2: 6, 0: 7
+            },
+            silver: {
+                75: 0, 30: 1, 22: 2, 18: 3, 15: 4, 12: 5, 6: 6, 0: 7
+            },
+            gold: {
+                150: 0, 60:1, 45: 2, 36: 3, 30: 4, 24: 5, 12: 6, 0: 7
+            }
+        };
+
+        const tierMap = mapping[tier] || mapping.bronze;
         
-        if (!isTightMode) {
-            if (rng < 2) { mult = 10.0; label = 'LEGENDARY'; rank = 1; }
-            else if (rng < 8) { mult = 5.0; label = 'EPIC'; rank = 1; }
-            else if (rng < 20) { mult = 2.0; label = 'PROFIT'; rank = 2; }
-            else if (rng < 45) { mult = 1.0; label = 'REFUND'; rank = 2; }
-            else if (rng < 70) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
-            else { mult = 0.0; label = 'LOSS'; rank = 8; }
-        } else {
-            // Tight mode: Pot recovery (RTP < 75%)
-            if (rng < 15) { mult = 1.0; label = 'REFUND'; rank = 2; }
-            else if (rng < 50) { mult = 0.5; label = 'CONSOLATION'; rank = 3; }
-            else { mult = 0.0; label = 'LOSS'; rank = 8; }
-        }
-        return { mult, label, rank };
-    }
-
-    getSpinBaseRTP(isTightMode) {
-        const rng = Math.random() * 100;
-        let mult = 0.0; let label = 'LOSS'; let rank = 8;
+        // Find exact match or default to a "close" slice for safety
+        if (tierMap[amount] !== undefined) return tierMap[amount];
         
-        if (!isTightMode) {
-            if (rng < 2) { mult = 5.0; label = 'JACKPOT'; rank = 1; }
-            else if (rng < 6) { mult = 3.0; label = 'MEGA WIN'; rank = 1; }
-            else if (rng < 15) { mult = 2.0; label = 'BIG WIN'; rank = 2; }
-            else if (rng < 30) { mult = 1.5; label = 'PROFIT'; rank = 2; }
-            else if (rng < 55) { mult = 1.0; label = 'REFUND'; rank = 3; }
-            else if (rng < 80) { mult = 0.5; label = 'CONSOLATION'; rank = 4; }
-            else { mult = 0.0; label = 'MISS'; rank = 8; }
-        } else {
-            // Tight mode: Pot recovery (RTP < 75%)
-            if (rng < 20) { mult = 1.0; label = 'REFUND'; rank = 3; }
-            else if (rng < 60) { mult = 0.5; label = 'CONSOLATION'; rank = 4; }
-            else { mult = 0.0; label = 'MISS'; rank = 8; }
-        }
-        return { mult, label, rank };
-    }
-
-    getFallbackBaseRTP(isTightMode) {
-        const rng = Math.random() * 100;
-        if (!isTightMode) {
-            if (rng < 5) return { mult: 3.0, label: 'MEGA BOX', rank: 1 };
-            if (rng < 15) return { mult: 1.5, label: 'LUCKY BOX', rank: 2 };
-            if (rng < 40) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
-            return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
-        } else {
-            if (rng < 25) return { mult: 0.8, label: 'CONSOLATION', rank: 3 };
-            return { mult: 0.0, label: 'EMPTY BOX', rank: 8 };
-        }
-    }
-    getDowngradedOutcome(gameType, pBetAmount, actualPayout, isSafe) {
-        if (pBetAmount <= 0) return { newMult: 0, newLabel: 'LOSS', newRank: 8, adjustedPayout: 0 };
-        const allowedMult = actualPayout / pBetAmount;
-        let newMult = 0.0;
-        let newLabel = 'LOSS';
-        let newRank = 8;
-        
-        if (gameType === 'spin') {
-            if (allowedMult >= 5.0) { newMult = 5.0; newLabel = 'JACKPOT'; newRank = 1; }
-            else if (allowedMult >= 3.0) { newMult = 3.0; newLabel = 'MEGA WIN'; newRank = 1; }
-            else if (allowedMult >= 2.0) { newMult = 2.0; newLabel = 'BIG WIN'; newRank = 2; }
-            else if (allowedMult >= 1.5) { newMult = 1.5; newLabel = 'PROFIT'; newRank = 2; }
-            else if (allowedMult >= 1.0) { newMult = 1.0; newLabel = 'REFUND'; newRank = 3; }
-            else if (allowedMult >= 0.5) { newMult = 0.5; newLabel = 'CONSOLATION'; newRank = 4; }
-            else { newMult = 0.0; newLabel = 'MISS'; newRank = 8; }
-        } else if (gameType === 'scratch') {
-            if (allowedMult >= 10.0) { newMult = 10.0; newLabel = 'LEGENDARY'; newRank = 1; }
-            else if (allowedMult >= 5.0) { newMult = 5.0; newLabel = 'EPIC'; newRank = 1; }
-            else if (allowedMult >= 2.0) { newMult = 2.0; newLabel = 'PROFIT'; newRank = 2; }
-            else if (allowedMult >= 1.0) { newMult = 1.0; newLabel = 'REFUND'; newRank = 2; }
-            else if (allowedMult >= 0.5) { newMult = 0.5; newLabel = 'CONSOLATION'; newRank = 3; }
-            else { newMult = 0.0; newLabel = 'LOSS'; newRank = 8; }
-        } else { // gift
-            if (allowedMult >= 3.0) { newMult = 3.0; newLabel = 'MEGA BOX'; newRank = 1; }
-            else if (allowedMult >= 1.5) { newMult = 1.5; newLabel = 'LUCKY BOX'; newRank = 2; }
-            else if (allowedMult >= 0.8) { newMult = 0.8; newLabel = 'CONSOLATION'; newRank = 3; }
-            else { newMult = 0.0; newLabel = 'EMPTY BOX'; newRank = 8; }
-        }
-
-        if (isSafe && newMult > 0 && newMult <= 1.0) {
-           newLabel = newLabel + ' (SAFE)';
-        } else if (isSafe && newMult === 0) {
-           newLabel = newLabel + ' (SAFE)';
-        }
-
-        return { newMult, newLabel, newRank, adjustedPayout: pBetAmount * newMult };
+        if (amount === 0) return 7;
+        if (amount > 5) return 0; // High wins default to jackpot slice if mismatch
+        return 7; // Default to loss
     }
 }
 

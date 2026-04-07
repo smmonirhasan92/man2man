@@ -13,48 +13,48 @@ const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
   bronze: {
-    name: 'Bronze', cost: 4,
+    name: 'Bronze', cost: 5,
     btnClass: 'from-[#CD7F32] to-[#E8A55A]', textClass: 'text-white',
     tabActiveBg: 'bg-[#FFF4EA] border-[#CD7F32]', tabActiveText: 'text-[#8B4513]',
     slices: [
-      { label: '20', value: 20, color: '#F4A261' },
-      { label: '12', value: 12, color: '#E76F51' },
-      { label: '10', value: 10, color: '#2A9D8F' },
-      { label: '8',  value: 8,  color: '#E9C46A' },
-      { label: '0',  value: 0,  color: '#264653' },
-      { label: '6',  value: 6,  color: '#F4A261' },
-      { label: '4',  value: 4,  color: '#2A9D8F' },
-      { label: '2',  value: 2,  color: '#E9C46A' }
+      { label: '25', value: 25, color: '#F4A261' }, // 5x
+      { label: '10', value: 10, color: '#E76F51' }, // 2x
+      { label: '8',  value: 8,  color: '#2A9D8F' }, // 1.5x
+      { label: '6',  value: 6,  color: '#E9C46A' }, // 1.2x
+      { label: '5',  value: 5,  color: '#E9C46B' }, // 1.0x (Refund)
+      { label: '4',  value: 4,  color: '#F4A261' }, // 0.8x (Miss)
+      { label: '2',  value: 2,  color: '#2A9D8F' }, // 0.4x
+      { label: '0',  value: 0,  color: '#264653' }  // 0.0x
     ]
   },
   silver: {
-    name: 'Silver', cost: 8,
+    name: 'Silver', cost: 15,
     btnClass: 'from-[#909090] to-[#C0C0C0]', textClass: 'text-white',
     tabActiveBg: 'bg-[#F5F5F5] border-[#A0A0A0]', tabActiveText: 'text-[#444]',
     slices: [
-      { label: '40', value: 40, color: '#8D8D8D' },
-      { label: '24', value: 24, color: '#B0B0B0' },
-      { label: '20', value: 20, color: '#5E5E5E' },
-      { label: '16', value: 16, color: '#C8C8C8' },
-      { label: '0',  value: 0,  color: '#333' },
-      { label: '12', value: 12, color: '#9A9A9A' },
-      { label: '8',  value: 8,  color: '#6E6E6E' },
-      { label: '4',  value: 4,  color: '#B8B8B8' }
+      { label: '75', value: 75, color: '#8D8D8D' }, // 5x
+      { label: '30', value: 30, color: '#B0B0B0' }, // 2x
+      { label: '22', value: 22, color: '#5E5E5E' }, // 1.5x
+      { label: '18', value: 18, color: '#C8C8C8' }, // 1.2x
+      { label: '15', value: 15, color: '#B8B8B8' }, // 1.0x (Refund)
+      { label: '12', value: 12, color: '#9A9A9A' }, // 0.8x
+      { label: '6',  value: 6,  color: '#6E6E6E' }, // 0.4x
+      { label: '0',  value: 0,  color: '#333' }     // 0.0x
     ]
   },
   gold: {
-    name: 'Gold', cost: 12,
+    name: 'Gold', cost: 30,
     btnClass: 'from-[#B8860B] to-[#FFD700]', textClass: 'text-[#3B2A00]',
     tabActiveBg: 'bg-[#FFFBE6] border-[#DAA520]', tabActiveText: 'text-[#856404]',
     slices: [
-      { label: '60', value: 60, color: '#DAA520' },
-      { label: '36', value: 36, color: '#B8860B' },
-      { label: '30', value: 30, color: '#FFD700' },
-      { label: '24', value: 24, color: '#8B6914' },
-      { label: '0',  value: 0,  color: '#F5C842' },
-      { label: '18', value: 18, color: '#B8860B' },
-      { label: '12', value: 12, color: '#DAA520' },
-      { label: '6',  value: 6,  color: '#FFD700' }
+      { label: '150', value: 150, color: '#DAA520' }, // 5x
+      { label: '60',  value: 60,  color: '#B8860B' }, // 2x
+      { label: '45',  value: 45,  color: '#FFD700' }, // 1.5x
+      { label: '36',  value: 36,  color: '#8B6914' }, // 1.2x
+      { label: '30',  value: 30,  color: '#FFD700' }, // 1.0x (Refund)
+      { label: '24',  value: 24,  color: '#B8860B' }, // 0.8x
+      { label: '12',  value: 12,  color: '#DAA520' }, // 0.4x
+      { label: '0',   value: 0,   color: '#F5C842' }  // 0.0x
     ]
   }
 };
@@ -248,10 +248,11 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     // CSS-powered Target Resolution logic
     const targetIdx = apiResult.result.sliceIndex;
     const winAmount = apiResult.result.amountNXS;
+    const isNearMiss = apiResult.result.label === 'আহ্! অল্পের জন্য মিস!' || apiResult.result.label === 'So Close!';
 
     const loops = 1800; // Final 5 loops
     const currentMod = rotation % 360;
-    const jitter = Math.floor(Math.random() * 20) - 10;
+    let jitter = Math.floor(Math.random() * 20) - 10;
     
     const nextRotation = rotation + loops + (360 - currentMod) - (targetIdx * SLICE_DEG) + jitter;
     setRotation(nextRotation);
@@ -435,17 +436,22 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 function ResultOverlay({ result, onClose }) {
   if (!result) return null;
   const isWin = result.amountNXS > 0;
+  
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
-      <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
-        <div className="text-6xl mb-4">{isWin ? '🎉' : '😢'}</div>
+      <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+        <div className="text-6xl mb-4">
+          {isWin ? '🎉' : '😢'}
+        </div>
+        
         <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
           {isWin ? 'You Won!' : 'Better Luck Next Time'}
         </h2>
         <p className="text-slate-400 mb-6">
           {isWin ? `You received ${result.amountNXS} NXS from the ${result.label} prize.` : 'The spin resulted in a Miss. No rewards this time.'}
         </p>
-        <button onClick={onClose} className="w-full py-3 rounded-xl font-bold bg-white/10 text-white hover:bg-white/20 transition-colors">
+        
+        <button onClick={onClose} className="w-full py-3 rounded-xl font-bold transition-colors shadow-lg bg-white/10 text-white hover:bg-white/20">
           Dismiss
         </button>
       </div>

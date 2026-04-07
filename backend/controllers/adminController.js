@@ -753,11 +753,17 @@ exports.getGameVault = async (req, res) => {
     try {
         const vault = await GameVault.getMasterVault();
         const RedisService = require('../services/RedisService');
+        const vaultObj = vault.toObject();
+        
         let redisLivePot = await RedisService.get('livedata:game:match_pot');
         if (redisLivePot !== null) {
-            vault.balances.activePool = parseFloat(redisLivePot);
+            vaultObj.balances.activePool = parseFloat(redisLivePot);
         }
-        res.json(vault);
+        
+        let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
+        vaultObj.pad = padStr ? parseFloat(padStr) : 0;
+        
+        res.json(vaultObj);
     } catch (e) {
         console.error("Game Vault Error:", e);
         res.status(500).json({ message: "Failed to fetch Game Vault" });
@@ -768,14 +774,26 @@ exports.updateGameVaultConfig = async (req, res) => {
     try {
         const { hardStopLimit, tightModeThreshold, seedAmount, houseEdge, isEnabled } = req.body;
         const vault = await GameVault.getMasterVault();
+        const RedisService = require('../services/RedisService');
         
-        if (hardStopLimit !== undefined) vault.config.hardStopLimit = Number(hardStopLimit);
-        if (tightModeThreshold !== undefined) vault.config.tightModeThreshold = Number(tightModeThreshold);
-        if (houseEdge !== undefined) vault.config.houseEdge = Number(houseEdge);
-        if (isEnabled !== undefined) vault.config.isEnabled = Boolean(isEnabled);
+        if (hardStopLimit !== undefined) {
+            vault.config.hardStopLimit = Number(hardStopLimit);
+            await RedisService.client.set('config:hardStopLimit', Number(hardStopLimit).toString());
+        }
+        if (tightModeThreshold !== undefined) {
+            vault.config.tightModeThreshold = Number(tightModeThreshold);
+            await RedisService.client.set('config:tightModeThreshold', Number(tightModeThreshold).toString());
+        }
+        if (houseEdge !== undefined) {
+            vault.config.houseEdge = Number(houseEdge);
+            await RedisService.client.set('config:houseEdge', Number(houseEdge).toString());
+        }
+        if (isEnabled !== undefined) {
+            vault.config.isEnabled = Boolean(isEnabled);
+            await RedisService.client.set('config:isEnabled', String(Boolean(isEnabled)));
+        }
         
         if (seedAmount && Number(seedAmount) > 0) {
-            const RedisService = require('../services/RedisService');
             const incAmt = Number(seedAmount);
             await RedisService.client.incrByFloat('livedata:game:match_pot', incAmt);
             

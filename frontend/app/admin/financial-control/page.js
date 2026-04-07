@@ -197,35 +197,75 @@ export default function FinancialControlCenter() {
                         </div>
                     </div>
 
-                    {/* RISK CONTROL SETTINGS */}
+                    {/* 2. বাজেটিং ও লিমিট (Budget & Limits) */}
                     <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl mt-8">
-                        <h2 className="text-lg font-bold mb-6 flex items-center justify-between">
-                            <span className="flex items-center gap-2"><Settings className="w-5 h-5 text-indigo-400" /> Risk Control Parameters</span>
-                            <button onClick={handleSaveConfig} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2">
-                                <Save className="w-4 h-4" /> Save Constraints
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400">
+                            ২. বাজেটিং ও লিমিট (Budget & Limits)
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-black/50 p-4 rounded-xl border border-slate-800 border-b-cyan-500">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Base Hourly Limit</p>
+                                <p className="text-2xl font-mono text-white">33.00 <span className="text-xs text-slate-500">NXS</span></p>
+                                <p className="text-[9px] text-slate-500 mt-1">এটি আপনার সেট করা প্রাথমিক বাজেট</p>
+                            </div>
+                            <div className="bg-black/50 p-4 rounded-xl border border-slate-800 border-b-purple-500">
+                                <p className="text-[10px] text-purple-400 font-bold uppercase mb-1">Bonus Budget (Pad)</p>
+                                <p className="text-2xl font-mono text-purple-300">{(vault.pad || 0).toFixed(2)} <span className="text-xs text-purple-500/50">NXS</span></p>
+                                <p className="text-[9px] text-slate-500 mt-1">ফি থেকে জমানো টাকা যা অটোমেটিক বাড়ছে</p>
+                            </div>
+                            <div className="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/30">
+                                <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1">Total Playable Limit</p>
+                                <p className="text-2xl font-mono text-emerald-400">{(33 + (vault.pad || 0)).toFixed(2)} <span className="text-xs text-emerald-500/50">NXS</span></p>
+                                <p className="text-[9px] text-emerald-500/70 mt-1">বর্তমানে এই পরিমাণ টাকা জেতানো সম্ভব</p>
+                            </div>
+                        </div>
+                        <div className="bg-amber-900/20 p-3 rounded-lg border border-amber-500/30 text-[10px] text-amber-200/80">
+                            <span className="font-bold text-amber-400">Note:</span> এই বাজেট শেষ হলে সিঙ্গেল প্লেয়াররা আর বড় উইন পাবে না, শুধুমাত্র রিফান্ড পাবে।
+                        </div>
+                    </div>
+
+                    {/* 3. ফি এবং প্রফিট কন্ট্রোল (Fees & Profit) */}
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl mt-6">
+                        <h2 className="text-lg font-bold mb-4 flex items-center justify-between text-pink-400">
+                            <span>৩. ফি এবং প্রফিট কন্ট্রোল (Fees & Profit)</span>
+                            <button onClick={handleSaveConfig} className="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2">
+                                <Save className="w-4 h-4" /> Save Fee Rule
                             </button>
                         </h2>
-
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-widest">Single Game Hard-Stop (Max Payout)</label>
-                                <input type="number" value={configEdits.hardStopLimit} onChange={e => setConfigEdits({...configEdits, hardStopLimit: Number(e.target.value)})} className="w-full bg-black/50 border border-slate-700 rounded-lg p-3 text-lg font-mono focus:border-indigo-500 outline-none" />
-                                <p className="text-[10px] text-slate-500 pt-1">The absolutely maximum allowed win from a single spin/scratch.</p>
+                        
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5">
+                                <div className="w-1/2 pr-4 space-y-4">
+                                    {/* Single Player Slider */}
+                                    <div>
+                                        <label className="flex items-center justify-between text-xs font-bold text-slate-300 mb-2">
+                                            <span>Single Player Fee:</span>
+                                            <span className="text-pink-400 font-mono text-lg">{configEdits.houseEdge}%</span>
+                                        </label>
+                                        <input type="range" min="5" max="15" value={configEdits.houseEdge} onChange={e => setConfigEdits({...configEdits, houseEdge: Number(e.target.value)})} className="w-full accent-pink-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+                                        <p className="text-[9px] text-slate-500 mt-1">আপনি এখান থেকে চেঞ্জ করতে পারবেন</p>
+                                    </div>
+                                </div>
+                                <div className="w-1/2 pl-4 border-l border-white/10">
+                                    <label className="block text-xs font-bold text-slate-300 mb-1">Multiplayer (P2P) Fee:</label>
+                                    <div className="text-2xl font-black text-rose-500 flex items-center gap-2">
+                                        15% <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-1 rounded">LOCKED</span>
+                                    </div>
+                                    <p className="text-[9px] text-slate-500 mt-1 leading-relaxed">এটি পরিবর্তন করা যাবে না কারণ এটি জিরো-বার্ণ নিশ্চিত করে।</p>
+                                </div>
                             </div>
-                            
-                            <div>
-                                <label className="block text-xs font-bold text-amber-500 mb-1 uppercase tracking-widest">Tight Mode Pool Threshold</label>
-                                <input type="number" value={configEdits.tightModeThreshold} onChange={e => setConfigEdits({...configEdits, tightModeThreshold: Number(e.target.value)})} className="w-full bg-black/50 border border-amber-500/30 rounded-lg p-3 text-lg font-mono focus:border-amber-500 outline-none" />
-                                <p className="text-[10px] text-amber-500/70 pt-1">If Active Pool drops below this, high multipliers are mathematically disabled.</p>
-                            </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-pink-500 mb-1 uppercase tracking-widest flex items-center justify-between">
-                                    <span>House Edge Modifier (%)</span>
-                                    <span className="font-mono text-lg">{configEdits.houseEdge}%</span>
-                                </label>
-                                <input type="range" min="1" max="99" value={configEdits.houseEdge} onChange={e => setConfigEdits({...configEdits, houseEdge: Number(e.target.value)})} className="w-full accent-pink-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
-                                <p className="text-[10px] text-pink-500/70 pt-1">Scales RNG against the player. Higher = lower win probability. Default: 10%.</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-[#0B1221] p-4 rounded-xl border border-indigo-500/20 text-center">
+                                    <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Admin Share</h4>
+                                    <p className="text-xl font-black text-white">50% <span className="text-xs text-slate-500 font-normal">of Fees</span></p>
+                                    <p className="text-[9px] text-indigo-500/70 mt-1">সরাসরি আপনার লাভ</p>
+                                </div>
+                                <div className="bg-[#0B1221] p-4 rounded-xl border border-purple-500/20 text-center">
+                                    <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Injection Share</h4>
+                                    <p className="text-xl font-black text-white">50% <span className="text-xs text-slate-500 font-normal">of Fees</span></p>
+                                    <p className="text-[9px] text-purple-500/70 mt-1">রি-ইনজেকশন প্যাডে বা বোনাস বাজেটে জমা হবে</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -254,18 +294,24 @@ export default function FinancialControlCenter() {
                         </div>
                     </div>
 
-                    {/* EMERGENCY ACTIONS */}
+                    {/* 1. গেমের মেইন সুইচ (The Kill Switch) */}
                     <div className="bg-red-950/20 border border-red-500/30 p-5 rounded-2xl">
-                        <h3 className="text-sm text-red-500 font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><PowerOff className="w-4 h-4" /> Emergency Area</h3>
+                        <h3 className="text-sm text-red-500 font-bold tracking-widest mb-4 flex items-center gap-2"><PowerOff className="w-4 h-4" /> ১. গেমের মেইন সুইচ (The Kill Switch)</h3>
                         <div className="space-y-3">
+                            <div className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-red-500/20">
+                                <span className="text-xs text-red-400 font-bold uppercase">Game Status / খেলার অবস্থা</span>
+                                <span className={`text-xs font-black px-2 py-1 rounded ${configEdits.isEnabled ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-white'}`}>
+                                    [{configEdits.isEnabled ? 'ON' : 'OFF'}]
+                                </span>
+                            </div>
                             <button onClick={toggleKillSwitch} className={`w-full py-4 rounded-xl font-black uppercase tracking-widest shadow-lg transition-all ${configEdits.isEnabled ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-500/30 border border-red-400' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/30 border border-emerald-400'}`}>
-                                {configEdits.isEnabled ? 'Initiate Kill Switch' : 'Restore Game Engine'}
+                                {configEdits.isEnabled ? 'Turn OFF (Emergency Stop)' : 'Turn ON (Restore Engine)'}
                             </button>
                             <button onClick={flushCache} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs border border-white/5">
                                 <RefreshCw className="w-4 h-4" /> Flush Memory Cache
                             </button>
                         </div>
-                        <p className="text-[10px] text-red-400/70 mt-3 text-center leading-relaxed">Kill switch immediately rejects all new bets and halts matchmaking. Flush memory abruptly cancels pending game loops.</p>
+                        <p className="text-[10px] text-red-400/70 mt-3 text-center leading-relaxed">Description: এই বাটনটি অফ করলে পুরো গেম ইঞ্জিন সাথে সাথে বন্ধ হয়ে যাবে (Emergency Stop)।</p>
                     </div>
 
                     {/* LIVE ACTIVITY FEED */}

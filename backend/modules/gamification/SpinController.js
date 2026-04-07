@@ -3,9 +3,9 @@ const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 
 const SPIN_TIERS = {
-  bronze: { costNXS: 4,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
-  silver: { costNXS: 8,  labels: { win: 'Silver Jackpot', loss: 'Miss' } },
-  gold:   { costNXS: 12, labels: { win: 'Gold Jackpot',   loss: 'Miss' } }
+  bronze: { costNXS: 5,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
+  silver: { costNXS: 15, labels: { win: 'Silver Jackpot', loss: 'Miss' } },
+  gold:   { costNXS: 30, labels: { win: 'Gold Jackpot',   loss: 'Miss' } }
 };
 
 // --- SPIN LOGIC (Luck Test) ---
@@ -27,7 +27,7 @@ async function processGameRequest(req, res, gameType, windowMs) {
         const cost = tierDict[tier].costNXS;
 
         // Process through Pure Pooling Engine
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, windowMs);
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs);
         const winAmt = matchResult.winAmount;
 
         // --- MAP DYNAMIC MULTIPLIER TO VISUAL WHEEL SLICE ---
@@ -82,7 +82,7 @@ async function processGameRequest(req, res, gameType, windowMs) {
                 amountNXS: winAmt,
                 isWin: matchResult.isWin,
                 mode: matchResult.mode,
-                sliceIndex: sliceIndex
+                sliceIndex: matchResult.sliceIndex // Use ENGINE's calculated slice!
             },
             newBalance: result.finalBalance
         });

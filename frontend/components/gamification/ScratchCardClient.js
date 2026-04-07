@@ -23,7 +23,7 @@ const TIERS = {
     glow: 'shadow-[#CD7F32]/20'
   },
   silver: {
-    name: 'Silver Luck', cost: 10, 
+    name: 'Silver Luck', cost: 15, 
     btnClass: 'from-[#94A3B8] to-[#64748B]', textClass: 'text-white',
     bgPattern: 'bg-gradient-to-br from-[#94A3B8]/10 to-[#475569]/20',
     cardCover: '#A0A0A0', 
@@ -33,7 +33,7 @@ const TIERS = {
     glow: 'shadow-[#94A3B8]/20'
   },
   gold: {
-    name: 'Golden Treasure', cost: 25, 
+    name: 'Golden Treasure', cost: 30, 
     btnClass: 'from-[#D4AF37] to-[#B8860B]', textClass: 'text-[#5C4033]',
     bgPattern: 'bg-gradient-to-br from-[#FFD700]/10 to-[#DAA520]/20',
     cardCover: '#FFD700', 
@@ -355,7 +355,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                                     {!prizeData && (
                                         <div className="flex flex-col items-center gap-2 opacity-50">
                                             <div className="w-8 h-8 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-                                            <div className="text-slate-600 font-bold font-mono text-[8px] uppercase tracking-widest">Encrypting Result...</div>
+                                            <div className="text-slate-600 font-bold font-mono text-[10px] uppercase tracking-widest text-center">P2P Matchmaking...<br/>Please Wait</div>
                                         </div>
                                     )}
                                 </div>
