@@ -337,30 +337,29 @@ export default function GiftBox({ onBalanceUpdate }) {
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Select your prize tier</p>
                     </div>
                   </div>
-                  <div className="grid gap-3">
+                  <div className="flex gap-4 overflow-x-auto pb-4 px-2 no-scrollbar scroll-smooth">
                     {TIERS.map((t, idx) => (
                       <motion.button
                         key={t.id}
                         onClick={() => handleOpenBox(t)}
-                        className={`w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-yellow-500/20 transition-all text-left group overflow-hidden ${isShaking && selectedTier === t.id ? 'animate-shake' : ''}`}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        className={`flex-shrink-0 w-32 aspect-[3/4] p-4 rounded-3xl bg-slate-800/60 border border-white/5 relative overflow-hidden group transition-all duration-300 ${isShaking && selectedTier === t.id ? 'animate-shake' : 'hover:scale-105 hover:bg-white/10 hover:border-yellow-500/30'} ${selectedTier === t.id ? 'border-yellow-500 shadow-xl' : ''}`}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.1 }}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl group-hover:scale-110 transition-transform">{t.icon}</span>
-                          <div>
-                            <div className="text-white font-bold text-sm uppercase">{t.name}</div>
-                            <div className="text-slate-500 text-[9px] uppercase tracking-wider">
-                                {t.id === 'free' ? t.desc : `Up to ${maxSafeWin ? `${maxSafeWin} NXS` : t.maxLabel}`}
+                        {/* Card Glow Background */}
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br from-yellow-400 to-transparent`} />
+                        
+                        <div className="h-full flex flex-col items-center justify-between relative z-10">
+                          <span className="text-4xl mt-2 drop-shadow-lg scale-110 group-hover:scale-125 transition-transform duration-500">{t.icon}</span>
+                          
+                          <div className="text-center w-full">
+                            <div className="text-white font-black text-[10px] uppercase tracking-tighter truncate mb-1">{t.name}</div>
+                            <div className={`text-[8px] font-black px-1.5 py-0.5 rounded-md inline-block ${t.cost === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}`}>
+                              {t.cost === 0 ? 'FREE' : `${t.cost} NXS`}
                             </div>
+                            <div className="text-slate-500 text-[8px] mt-1 line-clamp-1">{t.maxLabel}</div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <div className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${t.cost === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}`}>
-                            {t.cost === 0 ? 'FREE' : `${t.cost} NXS`}
-                          </div>
-                          <div className="text-slate-600 text-[8px] mt-0.5">Max: {t.maxLabel}</div>
                         </div>
                       </motion.button>
                     ))}

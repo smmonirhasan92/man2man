@@ -167,3 +167,22 @@ input:-webkit-autofill:active {
 .animate-glow-gold {
   animation: glow-pulse 2s infinite;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@keyframes wheel-land-pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.5) drop-shadow(0 0 20px #FFD700); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.animate-wheel-land {
+  animation: wheel-land-pulse 0.4s ease-out;
+}

@@ -427,7 +427,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           <div className={`relative w-[240px] h-[240px] mb-8 transition-all duration-300`}>
             {/* CSS Powered Wheel Container */}
             <div 
-              className="absolute inset-0 z-0" 
+              className={`absolute inset-0 z-0 ${spinning ? 'filter blur-[0.4px]' : popup ? 'animate-wheel-land' : ''}`} 
               style={{ 
                 transform: `rotate(${rotation}deg)`,
                 transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.19, 1, 0.22, 1)` : 'none'
