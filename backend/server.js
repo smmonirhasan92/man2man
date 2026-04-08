@@ -212,7 +212,27 @@ const systemNamespace = io.of('/system');
 // [NEW] Live Traffic State
 const liveTraffic = {
     activeConnections: new Set(),
-    activePlayers: { spin: 0, scratch: 0, total: 0 }
+    activePlayers: { spin: 0, scratch: 0, gift: 0, total: 0 }
+};
+
+// [NEW] Unified Engine Broadcaster: Syncs P2P state across ALL game rooms
+const broadcastEnginePresence = (gameType) => {
+    const totalPlayers = liveTraffic.activePlayers.total;
+    const globalMode = totalPlayers > 1 ? 'p2p' : 'single';
+    
+    // 1. Emit specific room update (for per-game player counts)
+    systemNamespace.to(`game_${gameType}`).emit('engine_state', {
+        gameType,
+        mode: globalMode,
+        players: liveTraffic.activePlayers[gameType] || 0
+    });
+
+    // 2. Emit global sync (so different games can see each other in P2P mode)
+    systemNamespace.emit('engine_state', {
+        gameType: 'global',
+        mode: globalMode,
+        players: totalPlayers
+    });
 };
 
 // Interval to push live traffic purely to Admins
@@ -251,15 +271,13 @@ systemNamespace.on('connection', (socket) => {
             socket.activeGames.add(gameType);
             if (liveTraffic.activePlayers[gameType] !== undefined) {
                 liveTraffic.activePlayers[gameType]++;
+            } else {
+                liveTraffic.activePlayers[gameType] = 1;
             }
             liveTraffic.activePlayers.total++;
 
             socket.join(`game_${gameType}`);
-            systemNamespace.to(`game_${gameType}`).emit('engine_state', {
-                gameType,
-                mode: liveTraffic.activePlayers[gameType] > 1 ? 'p2p' : 'single',
-                players: liveTraffic.activePlayers[gameType]
-            });
+            broadcastEnginePresence(gameType);
         }
     });
 
@@ -272,11 +290,7 @@ systemNamespace.on('connection', (socket) => {
             if (liveTraffic.activePlayers.total > 0) liveTraffic.activePlayers.total--;
 
             socket.leave(`game_${gameType}`);
-            systemNamespace.to(`game_${gameType}`).emit('engine_state', {
-                gameType,
-                mode: liveTraffic.activePlayers[gameType] > 1 ? 'p2p' : 'single',
-                players: liveTraffic.activePlayers[gameType]
-            });
+            broadcastEnginePresence(gameType);
         }
     });
 
@@ -289,11 +303,7 @@ systemNamespace.on('connection', (socket) => {
             }
             if (liveTraffic.activePlayers.total > 0) liveTraffic.activePlayers.total--;
 
-            systemNamespace.to(`game_${gameType}`).emit('engine_state', {
-                gameType,
-                mode: liveTraffic.activePlayers[gameType] > 1 ? 'p2p' : 'single',
-                players: liveTraffic.activePlayers[gameType]
-            });
+            broadcastEnginePresence(gameType);
         });
         socket.activeGames.clear();
     });
