@@ -105,7 +105,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   const [displayBalance, setDisplayBalance] = useState(null);
   const [cooldownMs, setCooldownMs] = useState(0);
   const [cooldownActive, setCooldownActive] = useState(false);
-  const [engineMode, setEngineMode] = useState(null); 
+  const [engineMode, setEngineMode] = useState('single'); 
   const [msg, setMsg] = useState({ text: '', type: '' }); 
   const [muted, setMuted] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -141,7 +141,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         socket.on('connect', emitStart);
 
         const handleEngineState = (data) => {
-            if (data.gameType === 'spin') {
+            if (data.gameType === 'spin' || data.gameType === 'global') {
                 setEngineMode(data.mode);
             }
         };
