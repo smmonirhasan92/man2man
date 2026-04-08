@@ -259,6 +259,13 @@ export default function GiftBox({ onBalanceUpdate }) {
     }, 150);
   };
 
+  const handleReset = () => {
+    setPhase('select');
+    setApiResult(null);
+    setSelectedTier(null);
+    setIsShaking(false);
+  };
+
   const closeAll = () => {
     if (phase === 'flying') return; // Block close during animation
     setIsOpen(false);
@@ -425,28 +432,28 @@ export default function GiftBox({ onBalanceUpdate }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-4 gap-6"
+                  className="flex flex-col items-center justify-center py-4 gap-4"
                   style={{ minHeight: 260 }}
                 >
                   <GoldenLock amount={winAmt} isJackpot={isJackpot} />
-
-                  {/* Collect Button */}
+                  
+                  {/* [PRO LOOP] Play Again Button */}
                   <motion.button
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
-                    onClick={closeAll}
-                    className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg"
-                    style={{
-                      background: isJackpot
-                        ? 'linear-gradient(135deg, #B8860B, #FFD700, #B8860B)'
-                        : 'linear-gradient(135deg, #059669, #10b981)',
-                      color: isJackpot ? '#1a0e00' : 'white',
-                      boxShadow: isJackpot ? '0 0 20px #FFD70060' : '0 0 20px #10b98160',
-                    }}
+                    onClick={handleReset}
+                    className="mt-6 px-10 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-white font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(234,179,8,0.3)] hover:scale-105 transition-transform active:scale-95"
                   >
-                    {isJackpot ? '🏆 Collect Jackpot' : '✅ Collect & Close'}
+                    Open Another Box
                   </motion.button>
+
+                  <button 
+                    onClick={closeAll}
+                    className="text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:text-white transition-colors"
+                  >
+                    Close & Exit
+                  </button>
                 </motion.div>
               )}
 
