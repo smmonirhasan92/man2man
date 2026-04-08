@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { socket } from '../../services/socket';
 
-const SPIN_DURATION_MS = 2200;
+const SPIN_DURATION_MS = 1700;
 const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {

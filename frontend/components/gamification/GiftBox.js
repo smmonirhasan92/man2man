@@ -8,7 +8,7 @@ import useGameSound from '../../hooks/useGameSound';
 import { socket } from '../../services/socket';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ANIMATION_DURATION_MS = 1800; // Flying Numbers duration
+const ANIMATION_DURATION_MS = 1700; // Flying Numbers duration
 const LOCK_DELAY_MS         = 300;  // Pause before Golden Lock appears
 const BALANCE_SYNC_DELAY_MS = 100;  // Sync balance 100ms after animation ends
 
