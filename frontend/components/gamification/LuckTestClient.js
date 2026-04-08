@@ -285,7 +285,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     setTimeout(() => {
       setSpinning(false);
       setPopup(apiResult.result);
-      setEngineMode(apiResult.result.mode); 
       
       // STRICT SYNCHRONIZATION: Wallet unlocks only precisely when wheel stops
       if (typeof window !== 'undefined') {
