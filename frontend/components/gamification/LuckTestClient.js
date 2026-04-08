@@ -246,9 +246,9 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     }
 
     setSpinning(true);
-    // [OPTIMISTIC ACTION] Start indefinite spin loop immediately for "Instant Feel"
-    const startInfiniteRotation = rotation + 10000; // Large number to keep it spinning
-    setRotation(startInfiniteRotation);
+    // [FIX] Double Spinning: Removed the optimistic +10000 jump.
+    // Instead, we let the wheel stay in its current position until the result arrives,
+    // or we start a fast internal loop via CSS.
     
     audioQueue.play('spin-v2.mp3', muted);
 
@@ -424,10 +424,10 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           <div className={`relative w-[240px] h-[240px] mb-8 transition-all duration-300`}>
             {/* CSS Powered Wheel Container */}
             <div 
-              className="absolute inset-0 z-0" 
+              className={`absolute inset-0 z-0 ${spinning && !popup ? 'animate-wheel-slow' : ''}`} 
               style={{ 
                 transform: `rotate(${rotation}deg)`,
-                transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.1, 0, 0, 1)` : 'none'
+                transition: spinning && popup === null ? 'none' : `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.1, 0, 0, 1)`
               }}
             >
               <div 

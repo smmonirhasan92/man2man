@@ -173,3 +173,12 @@
     animation: coin-drop 1s ease-in forwards;
     box-shadow: 0 0 5px #f59e0b;
 }
+
+/* 8. WHEEL SPIN (Spin Wheel Optimistic) */
+@keyframes wheel-spin-infinite {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.animate-wheel-slow {
+    animation: wheel-spin-infinite 0.8s linear infinite;
+}
