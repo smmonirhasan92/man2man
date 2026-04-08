@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { socket } from '../../services/socket';
 
-const SPIN_DURATION_MS = 1500;
+const SPIN_DURATION_MS = 1200;
 const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
@@ -246,9 +246,10 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     }
 
     setSpinning(true);
-    // [FIX] Double Spinning: Removed the optimistic +10000 jump.
-    // Instead, we let the wheel stay in its current position until the result arrives,
-    // or we start a fast internal loop via CSS.
+    // [PREMIUM ACTION] Start a heavy optimistic launch immediately.
+    // 1440 degrees = 4 full loops. This creates a "Pro" high-speed start.
+    const launchRotation = rotation + 1440;
+    setRotation(launchRotation);
     
     audioQueue.play('spin-v2.mp3', muted);
 
@@ -283,7 +284,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     const currentMod = rotation % 360;
     let jitter = Math.floor(Math.random() * 20) - 10;
     
-    const nextRotation = rotation + loops + (360 - currentMod) - (targetIdx * SLICE_DEG) + jitter;
+    // Result now overrides the launch trajectory for a smooth pro-landing.
+    const nextRotation = launchRotation + (360 - (launchRotation % 360)) - (targetIdx * SLICE_DEG) + jitter;
     setRotation(nextRotation);
 
     setTimeout(() => {
@@ -424,10 +426,10 @@ export default function LuckTestClient({ onBalanceUpdate }) {
           <div className={`relative w-[240px] h-[240px] mb-8 transition-all duration-300`}>
             {/* CSS Powered Wheel Container */}
             <div 
-              className={`absolute inset-0 z-0 ${spinning && !popup ? 'animate-wheel-slow' : ''}`} 
+              className="absolute inset-0 z-0" 
               style={{ 
                 transform: `rotate(${rotation}deg)`,
-                transition: spinning && popup === null ? 'none' : `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.1, 0, 0, 1)`
+                transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.15, 0, 0.15, 1)` : 'none'
               }}
             >
               <div 
