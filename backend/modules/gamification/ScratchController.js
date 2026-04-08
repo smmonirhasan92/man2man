@@ -19,9 +19,14 @@ exports.scratchCard = async (req, res) => {
         }
 
         const cost = SCRATCH_TIERS[tier].costNXS;
+        const windowMs = 500; // Fast-batch window
 
-        // Process through Pure Pooling Engine (0s window for instant feedback)
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, 0);
+        // [RETENTION] Fetch streak so engine can force refund after 4+ losses
+        const userDoc = await User.findById(userId).select('gameStats.consecutiveLosses').lean();
+        const consecutiveLosses = userDoc?.gameStats?.consecutiveLosses || 0;
+
+        // Process through Pure Pooling Engine
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
         const winAmt = matchResult.winAmount;
 
         const result = await TransactionHelper.runTransaction(async (session) => {

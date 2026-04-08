@@ -138,6 +138,7 @@ export default function GiftBox({ onBalanceUpdate }) {
   const [apiResult, setApiResult] = useState(null);
   const [maxSafeWin, setMaxSafeWin] = useState(null);
   const [hasMounted, setHasMounted] = useState(false);
+  const [engineMode, setEngineMode] = useState('single');
   const { play: playSound } = useGameSound();
   const baselineBalanceRef = useRef(null);
 
@@ -163,10 +164,16 @@ export default function GiftBox({ onBalanceUpdate }) {
     if (isOpen) {
         fetchVaultStatus();
         if (socket && typeof window !== 'undefined') {
+            socket.on('engine_state', (data) => {
+                if (data.gameType === 'gift' || data.gameType === 'global') {
+                    setEngineMode(data.mode);
+                }
+            });
             socket.emit('start_game', 'gift');
         }
     } else {
         if (socket && typeof window !== 'undefined') {
+            socket.off('engine_state');
             socket.emit('leave_game', 'gift');
         }
     }
@@ -311,9 +318,15 @@ export default function GiftBox({ onBalanceUpdate }) {
                   exit={{ opacity: 0, y: -12 }}
                   className="space-y-4"
                 >
-                  <div className="mb-2">
-                    <h3 className="text-lg font-black text-white uppercase tracking-widest">Mystery Vault</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Select your prize tier</p>
+                  <div className="mb-2 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-2">
+                            Mystery Vault
+                            {/* P2P Indicator Bati */}
+                            <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] transition-all duration-500 ${engineMode === 'p2p' ? 'bg-green-500 shadow-green-500 animate-pulse' : 'bg-slate-600 shadow-transparent'}`}></div>
+                        </h3>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Select your prize tier</p>
+                    </div>
                   </div>
                   <div className="grid gap-3">
                     {TIERS.map((t) => (

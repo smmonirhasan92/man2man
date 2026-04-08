@@ -58,12 +58,19 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   const [flyingNotes, setFlyingNotes] = useState([]);
   const [maxSafeWin, setMaxSafeWin] = useState(null);
   const { play: playSound } = useGameSound();
+  const [engineMode, setEngineMode] = useState('single');
 
-  // [NEW] Live Metric Heartbeat
+  // [NEW] Live Metric Heartbeat & Engine Mode Sync
   useEffect(() => {
     if (socket && typeof window !== 'undefined') {
         const emitStart = () => socket.emit('start_game', 'scratch');
         
+        socket.on('engine_state', (data) => {
+            if (data.gameType === 'scratch' || data.gameType === 'global') {
+                setEngineMode(data.mode);
+            }
+        });
+
         if (socket.connected) emitStart();
         else socket.emit('start_game', 'scratch');
         
@@ -71,6 +78,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
 
         return () => {
             socket.off('connect', emitStart);
+            socket.off('engine_state');
             socket.emit('leave_game', 'scratch');
         };
     }
@@ -251,10 +259,12 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                           {displayBalance === null ? (
                               <span className="w-16 h-5 bg-slate-700 animate-pulse rounded my-0.5 inline-block" />
                           ) : (
-                              <span className={`text-xl font-black text-white font-mono leading-none tracking-tight`}>
-                                  {parseFloat(displayBalance).toFixed(2)}
-                              </span>
-                          )}
+                               <span className={`text-xl font-black text-white font-mono leading-none tracking-tight flex items-center gap-1.5`}>
+                                   {parseFloat(displayBalance).toFixed(2)}
+                                   {/* P2P Indicator Bati */}
+                                   <div className={`w-2 h-2 rounded-full shadow-[0_0_8px] transition-all duration-500 ${engineMode === 'p2p' ? 'bg-green-500 shadow-green-500 animate-pulse' : 'bg-slate-600 shadow-transparent'}`}></div>
+                               </span>
+                           )}
                         </div>
                     </div>
                 </div>

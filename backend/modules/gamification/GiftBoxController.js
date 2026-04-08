@@ -18,9 +18,14 @@ exports.openGiftBox = async (req, res) => {
 
         const selectedTier = GIFT_TIERS[tier];
         const cost = selectedTier.cost;
+        const windowMs = 500; // Fast-batch window
 
-        // Process through Pure Pooling Engine (10+10=20)
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, 'gift', 1500);
+        // [RETENTION] Fetch streak so engine can force refund after 4+ losses
+        const userDoc = await User.findById(userId).select('gameStats.consecutiveLosses').lean();
+        const consecutiveLosses = userDoc?.gameStats?.consecutiveLosses || 0;
+
+        // Process through Pure Pooling Engine
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, 'gift', tier, windowMs, consecutiveLosses);
         let winAmt = matchResult.winAmount;
 
         // Fetch and deduct Free Box directly from User-Interest Fund to keep Admin protected
