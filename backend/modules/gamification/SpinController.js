@@ -10,7 +10,8 @@ const SPIN_TIERS = {
 
 // --- SPIN LOGIC (Luck Test) ---
 exports.spinLuckTest = async (req, res) => {
-    return processGameRequest(req, res, 'spin', 50);
+    // 1200ms allows real humans tapping roughly together to batch perfectly without feeling laggy
+    return processGameRequest(req, res, 'spin', 1200);
 };
 
 async function processGameRequest(req, res, gameType, windowMs) {

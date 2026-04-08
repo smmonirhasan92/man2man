@@ -132,7 +132,7 @@ class UniversalMatchMaker {
                 let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
                 let reinjectionPad = padStr ? parseFloat(padStr) : 0;
                 const dynamicLimit = 33 + reinjectionPad; // Auto-scales beyond 80-100 NXS based on traffic
-                const isHourlyCapped = isAbundance ? false : (hourlyNetLoss >= dynamicLimit); 
+                const isHourlyCapped = (hourlyNetLoss >= dynamicLimit); // [FIX] Abundance shouldn't bypass caps completely if we are bleeding money!
                 const activePhaseA = isAbundance ? true : isPhaseA; 
 
                 console.log(`[ENGINE] Stats: HourlyLoss=${hourlyNetLoss.toFixed(2)}, Pad=${reinjectionPad.toFixed(2)}, Limit=${dynamicLimit.toFixed(2)}, Capped=${isHourlyCapped}, PhaseA=${activePhaseA}`);
@@ -212,9 +212,11 @@ class UniversalMatchMaker {
                         const canAffordWin = poolCapacity > (p.betAmount * 3); // Pool must have at least 3x bet
 
                         if (activePhaseA && !isHourlyCapped) {
-                            // === PHASE A: Win Mode (55% win chance) ===
+                            // === PHASE A: Win Mode ===
                             const roll = Math.random();
-                            const winChance = isAbundance ? 0.85 : 0.55; // [FIX] 55% instead of 40%
+                            // [FIX] Abundance Mode winrate is high, but normal Single Player MUST have a House Edge!
+                            // 35% win chance in Single Player guarantees the pool grows for real P2P players.
+                            const winChance = isAbundance ? 0.70 : 0.35; 
 
                             if (roll < winChance && canAffordWin) {
                                 // Weighted multiplier selection based on tier
@@ -261,18 +263,18 @@ class UniversalMatchMaker {
                                 rank = rtpMult >= 3.3 ? 1 : 2;
 
                             } else {
-                                // 45% chance: Refund or Near Miss
-                                // [RETENTION] Point 2: Force refund after 4+ consecutive losses
+                                // 65% chance: Loss Path (Miss or Occasional Refund)
                                 const streak = p.consecutiveLosses || 0;
                                 const refundRoll = Math.random();
-                                if (streak >= 4 || refundRoll < 0.55) {
-                                    // Force refund on losing streak OR normal 55% refund chance
+                                
+                                // [FIX] Reduce arbitrary refunds to 20% to prevent over-inflating RTP. Only force refund early if heavily losing.
+                                if (streak >= 4 || refundRoll < 0.20) {
                                     rtpMult = 1.0; label = 'REFUND'; rank = 3;
                                     targetPayout = p.betAmount;
                                     actualActiveDeduct += targetPayout;
                                     if (streak >= 4) console.log(`[RETENTION] ${p.userId} streak=${streak} → Force REFUND`);
                                 } else {
-                                    // 45% of losses = actual miss
+                                    // 80% of losses = actual miss
                                     rtpMult = 0.0; label = 'MISS'; rank = 8; targetPayout = 0;
                                 }
                             }
@@ -398,6 +400,15 @@ class UniversalMatchMaker {
         console.error(`[ENGINE] GLOBAL ENGINE ERROR:`, globalError);
     } finally { 
         q.isProcessing = false; 
+        
+        // [CRITICAL FIX] If players joined while this batch was processing, the timeout 
+        // may have been missed or skipped. We MUST re-trigger immediately!
+        if (q.players.length > 0) {
+            console.log(`[ENGINE] Queue has ${q.players.length} stranded players. Re-triggering...`);
+            q.timeout = setTimeout(() => this.triggerMatch(), 500); // 500ms safety pulse
+        } else {
+            q.timeout = null; // Clean up dead timeout IDs
+        }
     }
 }
     getVisualSliceIndex(tier, winAmount, gameType, betAmount) {
