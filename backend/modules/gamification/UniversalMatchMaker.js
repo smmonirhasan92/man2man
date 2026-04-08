@@ -107,9 +107,8 @@ class UniversalMatchMaker {
                 }
 
                 const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
-                const adminIncomeIn = parseFloat((totalFeeIn * 0.5).toFixed(2)); 
-                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn).toFixed(2)); 
-                
+                const adminIncomeIn = parseFloat((totalFeeIn * 0.25).toFixed(2)); // [FIX] 25% Admin share
+                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn).toFixed(2)); // [FIX] 75% PAD share for fast Jackpots                
                 if (reinjectionPadIn > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
                 }
@@ -143,20 +142,29 @@ class UniversalMatchMaker {
                 let actualActiveDeduct = 0;
                 let actualPadDeduct = 0;
 
-                batch.sort((a, b) => b.betAmount - a.betAmount); // Whale first
+                batch.sort((a, b) => a.timestamp - b.timestamp); // [FIX] Preserving First-Click Order (Ascending)
 
                 if (isMultiplayer) {
-                    // NATURAL ENTROPY: Pick 1 Main Winner (75-85%) and 1 Partial Winner (5-10%)
-                    const mainWinnerIdx = Math.floor(Math.random() * batch.length);
+                    // [FIX] FAIR-BIAS SELECTION: First person in batch gets 65% weight
+                    const rollMain = Math.random();
+                    const mainWinnerIdx = (rollMain < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1;
+
                     let sideWinnerIdx = -1;
                     if (batch.length >= 3) {
                         sideWinnerIdx = (mainWinnerIdx + 1) % batch.length;
                     }
 
+                    // [SPEED LOOP] P2P JACKPOT: If PAD is high, inject it into the P2P main winner!
+                    let bonusFromPad = 0;
+                    if (reinjectionPad > 50) {
+                        bonusFromPad = Math.min(reinjectionPad * 0.5, 60); // Inject 50% of PAD (max 60 NXS)
+                        reinjectionPad -= bonusFromPad;
+                        actualPadDeduct += bonusFromPad;
+                        payoutSource = 'p2p_with_pad_injection';
+                    }
+
                     const jitter = 0.85 + (Math.random() * 0.10); // 85-95% payout jitter
-                    // [BUG FIX] Use activePoolIn (fee-deducted bets) as the prize base, NOT totalBet.
-                    // This prevents double-counting: fees already deducted BEFORE adding to pot.
-                    const totalPotForPrizes = parseFloat((activePoolIn * jitter).toFixed(2));
+                    const totalPotForPrizes = parseFloat(((activePoolIn + bonusFromPad) * jitter).toFixed(2));
                     
                     for (let i = 0; i < batch.length; i++) {
                         const p = batch[i];
@@ -172,7 +180,8 @@ class UniversalMatchMaker {
                         targetPayout = parseFloat(targetPayout.toFixed(2));
                         const rtpMult = targetPayout / (p.betAmount || 5);
 
-                        if (rtpMult >= 2.5) { label = 'PROFIT'; rank=2; }
+                        if (rtpMult >= 3.0) { label = 'JACKPOT'; rank=1; }
+                        else if (rtpMult >= 2.0) { label = 'PROFIT'; rank=2; }
                         else if (rtpMult >= 1.0) { label = 'REFUND'; rank=3; }
                         else if (rtpMult > 0) { label = 'NEAR_MISS'; rank=3; }
 
@@ -214,9 +223,9 @@ class UniversalMatchMaker {
                         if (activePhaseA && !isHourlyCapped) {
                             // === PHASE A: Win Mode ===
                             const roll = Math.random();
-                            // [FIX] Abundance Mode winrate is high, but normal Single Player MUST have a House Edge!
-                            // 35% win chance in Single Player guarantees the pool grows for real P2P players.
-                            const winChance = isAbundance ? 0.70 : 0.35; 
+                            // [SPEED LOOP] If PAD fund is overflowing, increase win chance significantly!
+                            let winChance = isAbundance ? 0.70 : 0.35; 
+                            if (reinjectionPad > 50) winChance = 0.60;
 
                             if (roll < winChance && canAffordWin) {
                                 // Weighted multiplier selection based on tier

@@ -35,17 +35,8 @@ async function processGameRequest(req, res, gameType, windowMs) {
         const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
         const winAmt = matchResult.winAmount;
 
-        // --- MAP DYNAMIC MULTIPLIER TO VISUAL WHEEL SLICE ---
-        const mult = parseFloat((winAmt / cost).toFixed(2));
-        let sliceIndex = 4; // Default to Loss (0)
-        if (mult === 5.0) sliceIndex = 0;
-        else if (mult === 3.0) sliceIndex = 1;
-        else if (mult === 2.5) sliceIndex = 2;
-        else if (mult === 2.0) sliceIndex = 3;
-        else if (mult === 0.0) sliceIndex = 4;
-        else if (mult === 1.5) sliceIndex = 5;
-        else if (mult === 1.0) sliceIndex = 6;
-        else if (mult === 0.5) sliceIndex = 7;
+        // [FIX] Priority: Always use the engine's pre-calculated slice and label for consistency
+        const sliceIndex = matchResult.sliceIndex;
 
         const result = await TransactionHelper.runTransaction(async (session) => {
             const user = await User.findById(userId).session(session);
