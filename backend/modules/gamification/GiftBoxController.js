@@ -4,9 +4,9 @@ const User = require('../user/UserModel');
 
 const GIFT_TIERS = {
     free: { cost: 0, mult: 1.0 }, // Free is special
-    bronze: { cost: 5 },
-    silver: { cost: 15 },
-    gold: { cost: 30 }
+    bronze: { cost: 3 },
+    silver: { cost: 6 },
+    gold: { cost: 9 }
 };
 
 exports.openGiftBox = async (req, res) => {

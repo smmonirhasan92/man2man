@@ -3,9 +3,9 @@ const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 
 const SCRATCH_TIERS = {
-  bronze: { costNXS: 5,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
-  silver: { costNXS: 15, labels: { win: 'Silver Luck', loss: 'Miss' } },
-  gold:   { costNXS: 30, labels: { win: 'Golden Treasure', loss: 'Miss' } }
+  bronze: { costNXS: 3,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
+  silver: { costNXS: 6,  labels: { win: 'Silver Luck',    loss: 'Miss' } },
+  gold:   { costNXS: 9,  labels: { win: 'Golden Treasure', loss: 'Miss' } }
 };
 
 exports.scratchCard = async (req, res) => {

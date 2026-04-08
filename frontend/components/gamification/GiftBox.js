@@ -17,9 +17,9 @@ const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) +
 
 const TIERS = [
   { id: 'free',   name: 'Free Daily',  cost: 0,  icon: '🎁', desc: 'Once every 24h',   maxLabel: 'Random' },
-  { id: 'bronze', name: 'Bronze Box',  cost: 5,  icon: '📦', desc: 'Up to 5 NXS',      maxLabel: '5 NXS'  },
-  { id: 'silver', name: 'Silver Box',  cost: 15,  icon: '💎', desc: 'Up to 25 NXS',     maxLabel: '25 NXS' },
-  { id: 'gold',   name: 'Gold Box',    cost: 30, icon: '👑', desc: 'Up to 18 NXS',     maxLabel: '18 NXS' },
+  { id: 'bronze', name: 'Bronze Box',  cost: 3,  icon: '📦', desc: 'Up to 5 NXS',      maxLabel: '3 NXS'  },
+  { id: 'silver', name: 'Silver Box',  cost: 6,  icon: '💎', desc: 'Up to 25 NXS',     maxLabel: '15 NXS' },
+  { id: 'gold',   name: 'Gold Box',    cost: 9, icon: '👑', desc: 'Up to 18 NXS',     maxLabel: '10 NXS' },
 ];
 
 // ─── Confetti Helper ──────────────────────────────────────────────────────────

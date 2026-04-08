@@ -1,5 +1,5 @@
 const { generateSecureCrashPoint } = require('./CrashGameEngine');
-const GamePool = require('./GamePoolModel');
+const GameVault = require('./GameVaultModel');
 const CrashGameRound = require('./CrashGameRoundModel');
 const TransactionHelper = require('../common/TransactionHelper');
 const User = require('../user/UserModel');
@@ -61,21 +61,25 @@ class CrashGameManager {
 
             // Using ACID Transaction to deduct wallet funds and fund the pool
             await TransactionHelper.runTransaction(async (session) => {
-                let pool = await GamePool.findOne({ poolId: 'GLOBAL_CRASH_POOL' }).session(session);
-                if (!pool) {
-                    pool = await GamePool.create([{ poolId: 'GLOBAL_CRASH_POOL' }], { session }).then(res => res[0]);
-                }
+                const vault = await GameVault.getMasterVault();
+                const HOUSE_EDGE_PCT = vault.config.houseEdge / 100; // Default 10%
 
-                // Deduct 10% Margin exactly as mathematically approved
-                adminCommission = parseFloat((totalBets * (pool.adminProfitMarginPercent / 100)).toFixed(6));
+                // Deduct house edge from total bets
+                adminCommission = parseFloat((totalBets * HOUSE_EDGE_PCT).toFixed(6));
                 const poolContribution = totalBets - adminCommission;
-                
-                pool.currentLiquidity = parseFloat((pool.currentLiquidity + poolContribution).toFixed(6));
-                pool.totalAdminCommissionGained = parseFloat((pool.totalAdminCommissionGained + adminCommission).toFixed(6));
-                pool.totalBetsReceived += totalBets;
-                
-                await pool.save({ session });
-                poolLiquidity = pool.currentLiquidity;
+
+                // Update vault balances atomically
+                await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
+                    $inc: {
+                        'balances.adminIncome': adminCommission,
+                        'balances.activePool': poolContribution,
+                        'stats.totalBetsIn': totalBets,
+                        'stats.totalGamesPlayed': this.bets.size
+                    }
+                });
+
+                const updatedVault = await GameVault.getMasterVault();
+                poolLiquidity = updatedVault.balances.activePool;
 
                 // Create the Historical Round Entry
                 await CrashGameRound.create([{
@@ -148,11 +152,14 @@ class CrashGameManager {
 
         // Record the end state to DB via Async task
         TransactionHelper.runTransaction(async (session) => {
-            let pool = await GamePool.findOne({ poolId: 'GLOBAL_CRASH_POOL' }).session(session);
-            if (pool) {
-                pool.currentLiquidity -= totalPayouts;
-                pool.totalPayoutsSent += totalPayouts;
-                await pool.save({ session });
+            // Deduct payouts from active pool
+            if (totalPayouts > 0) {
+                await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
+                    $inc: {
+                        'balances.activePool': -totalPayouts,
+                        'stats.totalPayoutsOut': totalPayouts
+                    }
+                });
             }
 
             await CrashGameRound.findOneAndUpdate(

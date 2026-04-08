@@ -13,7 +13,7 @@ const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
   bronze: {
-    name: 'Bronze', cost: 5,
+    name: 'Bronze', cost: 3,
     btnClass: 'from-[#CD7F32] to-[#E8A55A]', textClass: 'text-white',
     tabActiveBg: 'bg-[#FFF4EA] border-[#CD7F32]', tabActiveText: 'text-[#8B4513]',
     slices: [
@@ -29,7 +29,7 @@ const TIERS = {
     ]
   },
   silver: {
-    name: 'Silver', cost: 15,
+    name: 'Silver', cost: 6,
     btnClass: 'from-[#909090] to-[#C0C0C0]', textClass: 'text-white',
     tabActiveBg: 'bg-[#F5F5F5] border-[#A0A0A0]', tabActiveText: 'text-[#444]',
     slices: [
@@ -44,7 +44,7 @@ const TIERS = {
     ]
   },
   gold: {
-    name: 'Gold', cost: 30,
+    name: 'Gold', cost: 9,
     btnClass: 'from-[#B8860B] to-[#FFD700]', textClass: 'text-[#3B2A00]',
     tabActiveBg: 'bg-[#FFFBE6] border-[#DAA520]', tabActiveText: 'text-[#856404]',
     slices: [
@@ -228,6 +228,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
     setSpinning(true);
     setIsPreloading(true);
+    setEngineMode(null); // [FIX] বাতি নিভিয়ে দাও — result আসলে তবেই জ্বলবে
     audioQueue.play('spin-v2.mp3', muted);
 
     let apiResult = null;
@@ -346,15 +347,22 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                   {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
                 <div className="bg-[#151B2B] px-4 py-2 rounded-2xl border border-white/5 shadow-inner relative">
-                  {/* Subtle Stealth Tracker Dot (Top Left Corner) */}
-                  <div className={`absolute -top-1 -left-1 w-2 h-2 rounded-full blur-[1px] transition-colors duration-500 ${
-                    engineMode === 'p2p' ? 'bg-blue-500 shadow-[0_0_8px_#3b82f6]' : 
-                    engineMode === 'single' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 
-                    'bg-slate-700'
-                  }`} />
+                  {/* P2P Mode Indicator Light */}
+                  <div className="absolute -top-1.5 -right-1.5 flex items-center gap-1">
+                    <div className={`w-2.5 h-2.5 rounded-full transition-all duration-700 ${
+                      engineMode === 'p2p'
+                        ? 'bg-emerald-400 shadow-[0_0_10px_3px_#34d399] animate-pulse'
+                        : 'bg-slate-700 shadow-none'
+                    }`} />
+                  </div>
                   
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
-                  <h4 className="text-md font-mono font-black text-emerald-400">{displayBalance || '0.00'}</h4>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-md font-mono font-black text-emerald-400">{displayBalance || '0.00'}</h4>
+                    {engineMode === 'p2p' && (
+                      <span className="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-1 rounded uppercase tracking-wider">P2P</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

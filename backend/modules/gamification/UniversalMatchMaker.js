@@ -1,6 +1,7 @@
 const GameVault = require('./GameVaultModel');
 const RedisService = require('../../services/RedisService');
 const P2PAudit = require('./P2PAuditModel');
+const SocketService = require('../common/SocketService');
 
 const UNIVERSAL_MULTIPLIERS = [5, 3.3, 2.6, 2, 1.5, 1, 0.5, 0];
 
@@ -26,7 +27,7 @@ class UniversalMatchMaker {
         return { isEnabled: isEnabled === 'true', houseEdge: parseFloat(houseEdge) || 10 };
     }
 
-    async processMatch(userId, betAmount, gameType = 'spin', tier = 'bronze', customWindowMs = null) {
+    async processMatch(userId, betAmount, gameType = 'spin', tier = 'bronze', customWindowMs = null, consecutiveLosses = 0) {
         return new Promise(async (resolve, reject) => {
             const config = await this.getDynamicConfig();
             if (!config.isEnabled) {
@@ -34,7 +35,7 @@ class UniversalMatchMaker {
             }
 
             const q = this.globalQueue;
-            q.players.push({ userId, betAmount, gameType, tier, resolve, reject, timestamp: Date.now() });
+            q.players.push({ userId, betAmount, gameType, tier, consecutiveLosses, resolve, reject, timestamp: Date.now() });
             
             const windowMs = customWindowMs || this.DEFAULT_WINDOW_MS;
             
@@ -100,9 +101,9 @@ class UniversalMatchMaker {
                 if (isAbundance) {
                     houseEdgePct = 0; // "Promotion Mode": No fees when pool is big
                     console.log(`[ADAPTIVE] ABUNDANCE MODE: ${redisLivePot.toFixed(2)} NXS. Fees set to 0% for this batch.`);
-                } else if (isMultiplayer && !isHighVolume) {
-                    houseEdgePct = 0.10; // "Interest Boost" for duels/small groups
-                    console.log(`[ADAPTIVE] Low Volume Duel Detected. Fee reduced to 10%, Pool contribution disabled.`);
+                } else if (isMultiplayer) {
+                    houseEdgePct = 0.15; // [FIX] P2P always 15% — 7.5% Admin + 7.5% → Bonus PAD
+                    console.log(`[P2P] Multiplayer batch. Fee=15% (7.5% to PAD).`);
                 }
 
                 const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
@@ -153,7 +154,9 @@ class UniversalMatchMaker {
                     }
 
                     const jitter = 0.85 + (Math.random() * 0.10); // 85-95% payout jitter
-                    const totalPotForPrizes = parseFloat((totalBet * jitter).toFixed(2));
+                    // [BUG FIX] Use activePoolIn (fee-deducted bets) as the prize base, NOT totalBet.
+                    // This prevents double-counting: fees already deducted BEFORE adding to pot.
+                    const totalPotForPrizes = parseFloat((activePoolIn * jitter).toFixed(2));
                     
                     for (let i = 0; i < batch.length; i++) {
                         const p = batch[i];
@@ -193,105 +196,134 @@ class UniversalMatchMaker {
                         auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
                     }
                 } else {
-                    // SINGLE PLAYER: 3-3 Silent Pulse
+                    // SINGLE PLAYER: Balanced Random Mode
                     for (let i = 0; i < batch.length; i++) {
                         const p = batch[i];
-                        let rtpMult = 0.0; let label = 'LOSS'; let rank = 8;
-                        const isGold = p.betAmount >= 30;
-                        const isSilver = p.betAmount >= 15 && p.betAmount < 30;
+                        let rtpMult = 0.0; let label = 'MISS'; let rank = 8;
+                        const isGold   = p.betAmount >= 9;
+                        const isSilver = p.betAmount >= 6 && p.betAmount < 9;
                         let targetPayout = 0;
 
+                        // [CORE FIX] Pool funds single-player wins directly.
+                        // Pool (5512 NXS) is the payout reservoir — not PAD.
+                        // PAD is only used for JACKPOT bonuses extra above normal wins.
+                        // House edge (10%) ensures pool grows over time despite payouts.
+                        const poolCapacity = redisLivePot; // Use actual pool for safety check
+                        const canAffordWin = poolCapacity > (p.betAmount * 3); // Pool must have at least 3x bet
+
                         if (activePhaseA && !isHourlyCapped) {
-                             // Dynamic Win Chance (In Abundance: 80% Win)
-                             const roll = Math.random();
-                             const winChance = isAbundance ? 0.85 : 0.40;
-                             
-                             if (roll < winChance) {
-                                 // HIGH PAYOUT Mode
-                                 if (isAbundance) {
-                                     // Generous Weighted Selection
-                                     const rollWin = Math.random();
-                                     if (rollWin < 0.20) rtpMult = 5.0; // 5x Jackpot
-                                     else if (rollWin < 0.40) rtpMult = 3.0; // 3x
-                                     else if (rollWin < 0.60) rtpMult = 2.0; // 2x
-                                     else if (rollWin < 0.85) rtpMult = 1.5; // 1.5x
-                                     else rtpMult = 1.2; // 1.2x
-                                 } else {
-                                     if (isGold) rtpMult = 1.5;
-                                     else if (isSilver) rtpMult = Math.random() < 0.5 ? 1.5 : 2.0;
-                                     else rtpMult = Math.random() < 0.5 ? 2.0 : 3.0; // Bronze
-                                 }
-                             } else {
-                                 rtpMult = Math.random() < 0.7 ? 1.0 : 0.0; // Moderate refund or miss
-                                 label = rtpMult === 1.0 ? 'REFUND' : 'MISS';
-                             }
-                             
-                             targetPayout = parseFloat((p.betAmount * rtpMult).toFixed(2));
-                             
-                             const netLoss = parseFloat((targetPayout - p.betAmount).toFixed(2));
-                             
-                             // [SURPLUS LOGIC] Spend the Seed above 17500 for bonuses!
-                             const surplus = redisLivePot - 12500; // Let it spend down to 12.5k for promo
-                             const isAffordableFromPad = netLoss > 0 && reinjectionPad >= netLoss;
-                             const isAffordableFromSurplus = netLoss > 0 && surplus > netLoss;
+                            // === PHASE A: Win Mode (55% win chance) ===
+                            const roll = Math.random();
+                            const winChance = isAbundance ? 0.85 : 0.55; // [FIX] 55% instead of 40%
 
-                             if (isAffordableFromPad || isAffordableFromSurplus) {
-                                 if (isAffordableFromPad) {
-                                     actualPadDeduct += netLoss;
-                                     reinjectionPad -= netLoss;
-                                 } else {
-                                     actualActiveDeduct += netLoss;
-                                     console.log(`[ADAPTIVE] Seed Surplus used for Bonus (+${netLoss} NXS)`);
-                                 }
-                                 actualActiveDeduct += p.betAmount;
-                                 payoutSource = isAffordableFromPad ? 'admin_pad_injection' : 'active_pool_surplus';
-                                 if(rtpMult>=3) { label='JACKPOT'; rank=1;}
-                                 else { label='PROFIT'; rank=2; }
-                             } else {
-                                 // Pad empty! Save players with probabilistic refunds to prevent economy drain
-                                 // HIGH REFUND FOR SILVER/GOLD (80%)
-                                 if (isGold && Math.random() < 0.9) { 
-                                     rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
-                                 } else if (isSilver && Math.random() < 0.8) {
-                                     rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
-                                 } else { 
-                                     rtpMult = 0.0; label = 'MISS'; rank=8; targetPayout=0; 
-                                 }
-                             }
+                            if (roll < winChance && canAffordWin) {
+                                // Weighted multiplier selection based on tier
+                                const rollWin = Math.random();
+                                if (isAbundance) {
+                                    if (rollWin < 0.15) rtpMult = 5.0;
+                                    else if (rollWin < 0.30) rtpMult = 3.3;
+                                    else if (rollWin < 0.50) rtpMult = 2.6;
+                                    else if (rollWin < 0.70) rtpMult = 2.0;
+                                    else if (rollWin < 0.88) rtpMult = 1.5;
+                                    else rtpMult = 1.0;
+                                } else if (isGold) {
+                                    // Gold: Conservative — 1.5x mostly
+                                    rtpMult = rollWin < 0.70 ? 1.5 : 2.0;
+                                } else if (isSilver) {
+                                    // Silver: Moderate variation
+                                    if (rollWin < 0.40) rtpMult = 1.5;
+                                    else if (rollWin < 0.75) rtpMult = 2.0;
+                                    else rtpMult = 2.6;
+                                } else {
+                                    // Bronze: Full range possible
+                                    if (rollWin < 0.30) rtpMult = 1.5;
+                                    else if (rollWin < 0.55) rtpMult = 2.0;
+                                    else if (rollWin < 0.75) rtpMult = 2.6;
+                                    else if (rollWin < 0.90) rtpMult = 3.3;
+                                    else rtpMult = 5.0;
+                                }
+
+                                targetPayout = parseFloat((p.betAmount * rtpMult).toFixed(2));
+                                const netLoss = parseFloat((targetPayout - p.betAmount).toFixed(2));
+
+                                // PAD used only for JACKPOT bonus top-up
+                                if (netLoss > 0 && reinjectionPad >= netLoss && rtpMult >= 3) {
+                                    actualPadDeduct += netLoss;
+                                    reinjectionPad -= netLoss;
+                                    payoutSource = 'admin_pad_injection';
+                                } else {
+                                    // [CORE FIX] Normal wins paid from main pool 
+                                    actualActiveDeduct += netLoss;
+                                    payoutSource = 'active_pool';
+                                }
+                                actualActiveDeduct += p.betAmount;
+                                label = rtpMult >= 3.3 ? 'JACKPOT' : 'PROFIT';
+                                rank = rtpMult >= 3.3 ? 1 : 2;
+
+                            } else {
+                                // 45% chance: Refund or Near Miss
+                                // [RETENTION] Point 2: Force refund after 4+ consecutive losses
+                                const streak = p.consecutiveLosses || 0;
+                                const refundRoll = Math.random();
+                                if (streak >= 4 || refundRoll < 0.55) {
+                                    // Force refund on losing streak OR normal 55% refund chance
+                                    rtpMult = 1.0; label = 'REFUND'; rank = 3;
+                                    targetPayout = p.betAmount;
+                                    actualActiveDeduct += targetPayout;
+                                    if (streak >= 4) console.log(`[RETENTION] ${p.userId} streak=${streak} → Force REFUND`);
+                                } else {
+                                    // 45% of losses = actual miss
+                                    rtpMult = 0.0; label = 'MISS'; rank = 8; targetPayout = 0;
+                                }
+                            }
+
                         } else {
-                             // Phase B (Recovery / Safe Mode)
-                             // Stop invincibility spam: Protect Gold frequently (70% chance), but not 100%. Protect Silver slightly.
-                             if (isGold && Math.random() < 0.7) { 
-                                 rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
-                             } else if (isSilver && Math.random() < 0.3) {
-                                 rtpMult = 1.0; label = 'REFUND'; rank=3; targetPayout=p.betAmount; 
-                             } else { 
-                                 rtpMult = 0.8; label = 'NEAR_MISS'; rank=3; targetPayout=0; 
-                             }
+                            // === PHASE B: Recovery Mode (20% small win, 80% safe) ===
+                            const roll = Math.random();
+                            if (roll < 0.20 && canAffordWin) {
+                                // 20% chance: Small win allowed even in recovery
+                                rtpMult = 1.5; label = 'PROFIT'; rank = 2;
+                                targetPayout = parseFloat((p.betAmount * rtpMult).toFixed(2));
+                                actualActiveDeduct += targetPayout;
+                            } else if (roll < 0.65) {
+                                // 45%: Refund — player gets money back
+                                rtpMult = 1.0; label = 'REFUND'; rank = 3;
+                                targetPayout = p.betAmount;
+                                actualActiveDeduct += targetPayout;
+                            } else {
+                                // 35%: Near Miss — 0.8x (partial return)
+                                rtpMult = 0.8; label = 'NEAR MISS'; rank = 3;
+                                targetPayout = parseFloat((p.betAmount * 0.8).toFixed(2)); // [FIX] Actually pay 0.8x, not 0
+                                actualActiveDeduct += targetPayout;
+                            }
                         }
 
-                        if (actualPadDeduct === 0) {
-                             const netL = parseFloat((targetPayout - p.betAmount).toFixed(2));
-                             if (netL > 0) actualHourlyLossDeduct += netL;
-                             actualActiveDeduct += targetPayout;
-                             // We don't sub redisLivePot here manually, handled by incrByFloat below globally
+                        // Hourly net loss tracking (only for true wins above bet)
+                        const netL = parseFloat((targetPayout - p.betAmount).toFixed(2));
+                        if (netL > 0 && actualPadDeduct === 0) {
+                            actualHourlyLossDeduct += netL;
+                        }
+                        if (actualPadDeduct === 0 && targetPayout > 0 && label !== 'PROFIT') {
+                            // Already counted above for win paths; this handles refund/nearmiss
                         }
 
-                        let safeLabel = label.replace('_', ' ');
+                        const safeLabel = label;
+                        // [BUDGET] Point 6: Cap payout at hardStopLimit — prevents single-hit pool drain
+                        const hardStop = vault.config.hardStopLimit || 1000;
+                        if (targetPayout > hardStop) { targetPayout = hardStop; }
                         const visualSync = this.getVisualSliceIndex(p.tier, targetPayout, p.gameType, p.betAmount);
-                        
-                        targetPayout = visualSync.amount; 
-                        
+                        targetPayout = visualSync.amount;
+
                         p.finalOutcome = {
                             winAmount: parseFloat(targetPayout.toFixed(2)),
-                            isWin: targetPayout > 0,
-                            label: safeLabel, 
+                            isWin: targetPayout > p.betAmount,
+                            label: safeLabel,
                             rank: rank,
-                            mode: isMultiplayer ? 'p2p' : 'single',
+                            mode: 'single',
                             sliceIndex: visualSync.index
                         };
-                        
-                        console.log(`[ENGINE] Action ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout}, Mode=${p.finalOutcome.mode} [SYNC]`);
+
+                        console.log(`[ENGINE] Single ${p.userId}: Bet=${p.betAmount}, Win=${targetPayout} (${rtpMult}x), Phase=${activePhaseA?'A':'B'}`);
                         auditPlayers.push({ userId: p.userId, betAmount: p.betAmount, winAmount: targetPayout });
                     }
                 }

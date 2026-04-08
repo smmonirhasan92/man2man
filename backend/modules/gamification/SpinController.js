@@ -3,9 +3,9 @@ const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 
 const SPIN_TIERS = {
-  bronze: { costNXS: 5,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
-  silver: { costNXS: 15, labels: { win: 'Silver Jackpot', loss: 'Miss' } },
-  gold:   { costNXS: 30, labels: { win: 'Gold Jackpot',   loss: 'Miss' } }
+  bronze: { costNXS: 3,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
+  silver: { costNXS: 6,  labels: { win: 'Silver Jackpot', loss: 'Miss' } },
+  gold:   { costNXS: 9,  labels: { win: 'Gold Jackpot',   loss: 'Miss' } }
 };
 
 // --- SPIN LOGIC (Luck Test) ---
@@ -26,8 +26,12 @@ async function processGameRequest(req, res, gameType, windowMs) {
 
         const cost = tierDict[tier].costNXS;
 
+        // [RETENTION] Fetch streak so engine can force refund after 4+ losses
+        const userDoc = await User.findById(userId).select('gameStats.consecutiveLosses').lean();
+        const consecutiveLosses = userDoc?.gameStats?.consecutiveLosses || 0;
+
         // Process through Pure Pooling Engine
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs);
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
         const winAmt = matchResult.winAmount;
 
         // --- MAP DYNAMIC MULTIPLIER TO VISUAL WHEEL SLICE ---
