@@ -139,6 +139,7 @@ export default function GiftBox({ onBalanceUpdate }) {
   const [maxSafeWin, setMaxSafeWin] = useState(null);
   const [hasMounted, setHasMounted] = useState(false);
   const [engineMode, setEngineMode] = useState('single');
+  const [isShaking, setIsShaking] = useState(false);
   const { play: playSound } = useGameSound();
   const baselineBalanceRef = useRef(null);
 
@@ -189,64 +190,72 @@ export default function GiftBox({ onBalanceUpdate }) {
     }
 
     setSelectedTier(tier);
-    setPhase('flying');
-    playSound('notification'); // Open sound (v2 is a nice "bling")
+    setSelectedTier(tier.id);
+    baselineBalanceRef.current = user?.wallet?.main || 0;
     
-    // Play a tick sound shortly after to create "opening" hype
-    setTimeout(() => playSound('tick'), 200);
+    // [PRO ANIMATION] 150ms Shake Feedback before any server call
+    setIsShaking(true);
+    playSound('click-v2'); 
 
-    // ── Fetch backend result in parallel with animation ──
-    let result = null;
-    try {
-      const res = await api.post('/game/open-gift', { tier: tier.id });
-      if (res.data.success) result = res.data;
-    } catch (err) {
-      // Rollback
-      setPhase('select');
-      setSelectedTier(null);
-      if (typeof window !== 'undefined') window.isMysteryVaultAnimating = false;
-      toast.error(err.response?.data?.message || 'Failed to open box');
-      return;
-    }
+    setTimeout(async () => {
+      setIsShaking(false);
+      setPhase('flying');
+      playSound('notification');
+      setTimeout(() => playSound('tick'), 200);
 
-    // ── Wait for Flying Numbers animation to finish ──
-    await new Promise(r => setTimeout(r, ANIMATION_DURATION_MS + LOCK_DELAY_MS));
-
-    setApiResult(result);
-    setPhase('lock');
-
-    // ── Determine win type ──
-    const cost = tier.cost || 1;
-    const winAmt = result?.reward?.amountNXS || 0;
-    const isJackpot = winAmt >= cost * 1.5;
-
-    // ── Fire Confetti & Play Sound ──
-    if (winAmt > 0) {
-      playSound(isJackpot ? 'win' : 'success');
-      fireConfetti(isJackpot ? 'jackpot' : 'normal');
-    } else {
-      playSound('loss');
-    }
-
-    // ── [BALANCE SYNC] Unlock socket and sync balance 100ms after animation ──
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.isMysteryVaultAnimating = false;
-
-        const finalBalance = result?.newBalance;
-        if (finalBalance !== undefined) {
-          window.dispatchEvent(new CustomEvent('balance_update', { detail: finalBalance }));
-        }
-
-        // Flush any deferred socket update
-        if (window.unifiedDeferredBalance !== null && window.unifiedDeferredBalance !== undefined) {
-          window.dispatchEvent(new CustomEvent('balance_update', { detail: window.unifiedDeferredBalance }));
-          window.unifiedDeferredBalance = null;
-        }
+      // ── Fetch backend result in parallel with animation ──
+      let result = null;
+      try {
+        const res = await api.post('/game/open-gift', { tier: tier.id });
+        if (res.data.success) result = res.data;
+      } catch (err) {
+        // Rollback
+        setPhase('select');
+        setSelectedTier(null);
+        if (typeof window !== 'undefined') window.isMysteryVaultAnimating = false;
+        toast.error(err.response?.data?.message || 'Failed to open box');
+        return;
       }
 
-      if (typeof onBalanceUpdate === 'function') onBalanceUpdate();
-    }, BALANCE_SYNC_DELAY_MS);
+      // ── Wait for Flying Numbers animation to finish ──
+      await new Promise(r => setTimeout(r, ANIMATION_DURATION_MS + LOCK_DELAY_MS));
+
+      setApiResult(result);
+      setPhase('lock');
+
+      // ── Determine win type ──
+      const cost = tier.cost || 1;
+      const winAmt = result?.reward?.amountNXS || 0;
+      const isJackpot = winAmt >= cost * 1.5;
+
+      // ── Fire Confetti & Play Sound ──
+      if (winAmt > 0) {
+        playSound(isJackpot ? 'win' : 'success');
+        fireConfetti(isJackpot ? 'jackpot' : 'normal');
+      } else {
+        playSound('loss');
+      }
+
+      // ── [BALANCE SYNC] Unlock socket and sync balance 100ms after animation ──
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.isMysteryVaultAnimating = false;
+
+          const finalBalance = result?.newBalance;
+          if (finalBalance !== undefined) {
+            window.dispatchEvent(new CustomEvent('balance_update', { detail: finalBalance }));
+          }
+
+          // Flush any deferred socket update
+          if (window.unifiedDeferredBalance !== null && window.unifiedDeferredBalance !== undefined) {
+            window.dispatchEvent(new CustomEvent('balance_update', { detail: window.unifiedDeferredBalance }));
+            window.unifiedDeferredBalance = null;
+          }
+        }
+
+        if (typeof onBalanceUpdate === 'function') onBalanceUpdate();
+      }, BALANCE_SYNC_DELAY_MS);
+    }, 150);
   };
 
   const closeAll = () => {
@@ -274,7 +283,7 @@ export default function GiftBox({ onBalanceUpdate }) {
   if (!hasMounted) return null;
 
   const winAmt = apiResult?.reward?.amountNXS || 0;
-  const cost = selectedTier?.cost || 1;
+  const cost = TIERS.find(t => t.id === selectedTier)?.cost || 1;
   const isJackpot = winAmt >= cost * 1.5;
 
   return (
@@ -329,11 +338,14 @@ export default function GiftBox({ onBalanceUpdate }) {
                     </div>
                   </div>
                   <div className="grid gap-3">
-                    {TIERS.map((t) => (
-                      <button
+                    {TIERS.map((t, idx) => (
+                      <motion.button
                         key={t.id}
                         onClick={() => handleOpenBox(t)}
-                        className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-yellow-500/20 transition-all text-left group"
+                        className={`w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-yellow-500/20 transition-all text-left group overflow-hidden ${isShaking && selectedTier === t.id ? 'animate-shake' : ''}`}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: idx * 0.1 }}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl group-hover:scale-110 transition-transform">{t.icon}</span>
@@ -350,7 +362,7 @@ export default function GiftBox({ onBalanceUpdate }) {
                           </div>
                           <div className="text-slate-600 text-[8px] mt-0.5">Max: {t.maxLabel}</div>
                         </div>
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </motion.div>

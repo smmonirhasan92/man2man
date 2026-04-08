@@ -246,11 +246,12 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     }
 
     setSpinning(true);
-    // [PREMIUM ACTION] Start a heavy optimistic launch immediately.
-    // 1440 degrees = 4 full loops. This creates a "Pro" high-speed start.
-    const launchRotation = rotation + 1440;
+    // [PRO ANIMATION] 720 degrees (2 loops) in 1.2s is the optimal "High Speed" sweet spot.
+    // It avoids strobing while feeling incredibly snappy.
+    const launchRotation = rotation + 720;
     setRotation(launchRotation);
     
+    // Slight delay recoil effect via CSS (handled in the transition class)
     audioQueue.play('spin-v2.mp3', muted);
 
     let apiResult = null;
@@ -429,7 +430,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
               className="absolute inset-0 z-0" 
               style={{ 
                 transform: `rotate(${rotation}deg)`,
-                transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.15, 0, 0.15, 1)` : 'none'
+                transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.19, 1, 0.22, 1)` : 'none'
               }}
             >
               <div 
