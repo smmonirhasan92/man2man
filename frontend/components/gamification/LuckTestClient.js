@@ -130,7 +130,16 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     if (socket && typeof window !== 'undefined') {
         // Broadcast that this user is currently in the Spin Engine
         socket.emit('start_game', 'spin');
+
+        const handleEngineState = (data) => {
+            if (data.gameType === 'spin') {
+                setEngineMode(data.mode);
+            }
+        };
+        socket.on('engine_state', handleEngineState);
+
         return () => {
+            socket.off('engine_state', handleEngineState);
             socket.emit('leave_game', 'spin');
         };
     }
@@ -228,7 +237,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
     setSpinning(true);
     setIsPreloading(true);
-    setEngineMode(null); // [FIX] বাতি নিভিয়ে দাও — result আসলে তবেই জ্বলবে
     audioQueue.play('spin-v2.mp3', muted);
 
     let apiResult = null;

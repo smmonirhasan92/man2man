@@ -253,6 +253,13 @@ systemNamespace.on('connection', (socket) => {
                 liveTraffic.activePlayers[gameType]++;
             }
             liveTraffic.activePlayers.total++;
+
+            socket.join(`game_${gameType}`);
+            systemNamespace.to(`game_${gameType}`).emit('engine_state', {
+                gameType,
+                mode: liveTraffic.activePlayers[gameType] > 1 ? 'p2p' : 'single',
+                players: liveTraffic.activePlayers[gameType]
+            });
         }
     });
 
@@ -263,6 +270,13 @@ systemNamespace.on('connection', (socket) => {
                 liveTraffic.activePlayers[gameType]--;
             }
             if (liveTraffic.activePlayers.total > 0) liveTraffic.activePlayers.total--;
+
+            socket.leave(`game_${gameType}`);
+            systemNamespace.to(`game_${gameType}`).emit('engine_state', {
+                gameType,
+                mode: liveTraffic.activePlayers[gameType] > 1 ? 'p2p' : 'single',
+                players: liveTraffic.activePlayers[gameType]
+            });
         }
     });
 
@@ -274,6 +288,12 @@ systemNamespace.on('connection', (socket) => {
                 liveTraffic.activePlayers[gameType]--;
             }
             if (liveTraffic.activePlayers.total > 0) liveTraffic.activePlayers.total--;
+
+            systemNamespace.to(`game_${gameType}`).emit('engine_state', {
+                gameType,
+                mode: liveTraffic.activePlayers[gameType] > 1 ? 'p2p' : 'single',
+                players: liveTraffic.activePlayers[gameType]
+            });
         });
         socket.activeGames.clear();
     });
