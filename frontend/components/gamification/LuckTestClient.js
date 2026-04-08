@@ -128,8 +128,17 @@ export default function LuckTestClient({ onBalanceUpdate }) {
   // [NEW] Live Metric Heartbeat
   useEffect(() => {
     if (socket && typeof window !== 'undefined') {
-        // Broadcast that this user is currently in the Spin Engine
-        socket.emit('start_game', 'spin');
+        const emitStart = () => socket.emit('start_game', 'spin');
+        
+        // If already connected, broadcast immediately
+        if (socket.connected) {
+            emitStart();
+        } else {
+            socket.emit('start_game', 'spin'); // fallback
+        }
+        
+        // If connection drops, we lose state on server. Re-establish on connect.
+        socket.on('connect', emitStart);
 
         const handleEngineState = (data) => {
             if (data.gameType === 'spin') {
@@ -139,6 +148,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         socket.on('engine_state', handleEngineState);
 
         return () => {
+            socket.off('connect', emitStart);
             socket.off('engine_state', handleEngineState);
             socket.emit('leave_game', 'spin');
         };

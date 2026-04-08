@@ -62,8 +62,15 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
   // [NEW] Live Metric Heartbeat
   useEffect(() => {
     if (socket && typeof window !== 'undefined') {
-        socket.emit('start_game', 'scratch');
+        const emitStart = () => socket.emit('start_game', 'scratch');
+        
+        if (socket.connected) emitStart();
+        else socket.emit('start_game', 'scratch');
+        
+        socket.on('connect', emitStart);
+
         return () => {
+            socket.off('connect', emitStart);
             socket.emit('leave_game', 'scratch');
         };
     }
