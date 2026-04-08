@@ -246,7 +246,10 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     }
 
     setSpinning(true);
-    setIsPreloading(true);
+    // [OPTIMISTIC ACTION] Start indefinite spin loop immediately for "Instant Feel"
+    const startInfiniteRotation = rotation + 10000; // Large number to keep it spinning
+    setRotation(startInfiniteRotation);
+    
     audioQueue.play('spin-v2.mp3', muted);
 
     let apiResult = null;
@@ -268,7 +271,8 @@ export default function LuckTestClient({ onBalanceUpdate }) {
       return;
     }
     
-    setIsPreloading(false);
+    // Preloading fake delay removed for speed. Result now transitions smoothly from the active rotation.
+    // setIsPreloading(false); // Removed
 
     // CSS-powered Target Resolution logic
     const targetIdx = apiResult.result.sliceIndex;
@@ -376,9 +380,6 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
                   <div className="flex items-center gap-1.5">
                     <h4 className="text-md font-mono font-black text-emerald-400">{displayBalance || '0.00'}</h4>
-                    {engineMode === 'p2p' && (
-                      <span className="text-[8px] font-black text-emerald-400 bg-emerald-400/10 px-1 rounded uppercase tracking-wider">P2P</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -404,7 +405,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
               <button 
                 key={t}
                 onClick={() => handleTierSelect(t)}
-                disabled={spinning || isPreloading}
+                disabled={spinning}
                 className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden
                   ${active ? `${tCfg.tabActiveBg} scale-105 shadow-xl` : 'bg-[#151B2B] border-white/5 hover:border-white/10'}
                 `}
@@ -420,13 +421,13 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
         {/* Wheel Section */}
         <div className="flex flex-col items-center mb-8">
-          <div className={`relative w-[240px] h-[240px] mb-8 ${isPreloading ? 'scale-95 grayscale' : ''} transition-all duration-300`}>
+          <div className={`relative w-[240px] h-[240px] mb-8 transition-all duration-300`}>
             {/* CSS Powered Wheel Container */}
             <div 
               className="absolute inset-0 z-0" 
               style={{ 
                 transform: `rotate(${rotation}deg)`,
-                transition: spinning && !isPreloading ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.175, 0.885, 0.32, 1.27)` : 'none'
+                transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.1, 0, 0, 1)` : 'none'
               }}
             >
               <div 
@@ -466,12 +467,12 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 
           <button
             onClick={doSpin}
-            disabled={spinning || isPreloading}
+            disabled={spinning}
             className={`w-full py-5 rounded-[1.5rem] font-black text-xl shadow-2xl transition-all duration-300 tracking-[0.1em] uppercase relative overflow-hidden
-              ${(spinning || isPreloading) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : `bg-gradient-to-r ${config.btnClass} ${config.textClass} hover:opacity-90 active:scale-[0.98] shadow-orange-500/10`}
+              ${spinning ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : `bg-gradient-to-r ${config.btnClass} ${config.textClass} hover:opacity-90 active:scale-[0.98] shadow-orange-500/10`}
             `}
           >
-            {isPreloading ? 'PREPARING...' : spinning ? 'WINNING...' : 'TAP TO SPIN'}
+            {spinning ? 'SPINNING...' : 'TAP TO SPIN'}
           </button>
         </div>
 

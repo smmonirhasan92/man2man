@@ -11,13 +11,13 @@ const crashGameManager = require('../modules/gamification/CrashGameSocket');
 const rateLimit = require('express-rate-limit');
 
 // [SECURITY] Strict Game Rate Limiter (Anti-Script Jamming)
-// Allows maximum 1 request per second per IP to prevent rapid-fire scam attacks.
+// Allows maximum 10 requests per 5 seconds (2/sec average) for fluid gameplay.
 const gameActionLimiter = rateLimit({
-    windowMs: 1000, // 1 second window
-    max: 1, // Limit each IP to 1 request per `window` (here, per second)
+    windowMs: 5000, // 5 seconds window
+    max: 10, // Limit each IP to 10 requests per 5 seconds
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, message: 'Rate limit exceeded: Please wait a second before spinning again.' }
+    message: { success: false, message: 'Rate limit: Please slow down slightly.' }
 });
 
 // [P2P MODEL] No session cooldown needed — users can play unlimited.

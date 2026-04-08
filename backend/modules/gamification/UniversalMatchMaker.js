@@ -268,8 +268,8 @@ class UniversalMatchMaker {
                                     payoutSource = 'active_pool';
                                 }
                                 actualActiveDeduct += p.betAmount;
-                                label = rtpMult >= 3.3 ? 'JACKPOT' : 'PROFIT';
-                                rank = rtpMult >= 3.3 ? 1 : 2;
+                                label = rtpMult >= 5.0 ? 'JACKPOT' : 'PROFIT';
+                                rank = rtpMult >= 5.0 ? 1 : 2;
 
                             } else {
                                 // 65% chance: Loss Path (Miss or Occasional Refund)
