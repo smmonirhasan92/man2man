@@ -6,6 +6,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import useGameSound from '../../hooks/useGameSound';
 import { socket } from '../../services/socket';
+import { useAuth } from '../../hooks/useAuth';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ANIMATION_DURATION_MS = 1500; // Flying Numbers duration
@@ -140,6 +141,7 @@ export default function GiftBox({ onBalanceUpdate }) {
   const [hasMounted, setHasMounted] = useState(false);
   const [engineMode, setEngineMode] = useState('single');
   const [isShaking, setIsShaking] = useState(false);
+  const { user } = useAuth();
   const { play: playSound } = useGameSound();
   const baselineBalanceRef = useRef(null);
 
@@ -189,7 +191,6 @@ export default function GiftBox({ onBalanceUpdate }) {
       window.unifiedDeferredBalance = null;
     }
 
-    setSelectedTier(tier);
     setSelectedTier(tier.id);
     baselineBalanceRef.current = user?.wallet?.main || 0;
     
