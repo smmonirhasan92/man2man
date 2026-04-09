@@ -361,6 +361,7 @@ function RegisterForm() {
                         <input type="hidden" name="username" value={formData.phone} />
                          
                         <AuthInput
+                            id="register-name"
                             icon={User}
                             label="Identity Name"
                             name="fullName"
@@ -407,6 +408,7 @@ function RegisterForm() {
                                 </div>
                                 <div className="flex-1">
                                     <AuthInput
+                                        id="register-phone"
                                         icon={Phone}
                                         name="phone"
                                         placeholder="Mobile Number"
@@ -420,9 +422,9 @@ function RegisterForm() {
                             </div>
                         </div>
 
-                        <AuthInput icon={Lock} label="Secure Password" type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required autoComplete="new-password" />
+                        <AuthInput id="register-password" icon={Lock} label="Secure Password" type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required autoComplete="new-password" />
 
-                        <AuthInput icon={Hash} label="Referral Code (Optional)" name="referralCode" placeholder="Ref Code" value={formData.referralCode} onChange={handleChange} />
+                        <AuthInput id="register-ref" icon={Hash} label="Referral Code (Optional)" name="referralCode" placeholder="Ref Code" value={formData.referralCode} onChange={handleChange} />
 
                         {/* OTP Box */}
                         <div className="bg-[#131c31] rounded-2xl p-5 border border-white/5 mt-4 shadow-inner">
@@ -470,7 +472,11 @@ function RegisterForm() {
                             {loading ? <span className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></span> : 'FINALIZE REGISTRATION'}
                         </button>
 
-                        <AuthTutorial active={showTutorial} onComplete={() => setShowTutorial(false)} />
+                        <AuthTutorial 
+                            active={showTutorial} 
+                            onComplete={() => setShowTutorial(false)} 
+                            setFormData={setFormData}
+                        />
 
                         {/* [NEW] Persistent Install Action */}
                         <button
