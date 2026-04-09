@@ -4,94 +4,93 @@ import { gsap } from 'gsap';
 import { MousePointer2, Info, CheckCircle2 } from 'lucide-react';
 
 /**
- * [PRO MASTERCLASS] Real-UI Simulating Ghost Interaction
- * This version uses the ACTUAL form elements on the page for 100% realism.
+ * [FIXED & POLISHED] Real-UI Interactive Tutorial
+ * This version ensures coordinates are perfect and the cursor NEVER stands still.
  */
 export default function AuthTutorial({ active, onComplete, setFormData }) {
     const cursorRef = useRef(null);
     const tooltipRef = useRef(null);
-    const [step, setStep] = useState(0);
+    const [stepTitle, setStepTitle] = useState("Initializing...");
+    const [stepInfo, setStepInfo] = useState("");
 
     useEffect(() => {
         if (!active) return;
 
-        // Reset real form state for a fresh start
+        // Force reset form to empty for clean demo
         setFormData({ fullName: '', phone: '', countryCode: '+880', password: '', referralCode: '', deviceId: '', otp: '' });
-        setStep(1);
 
         const tl = gsap.timeline({
+            delay: 1,
             onComplete: () => {
-                setStep(100);
-                setTimeout(() => {
-                    // Cleanup real form state after demo
-                    setFormData({ fullName: '', phone: '', countryCode: '+880', password: '', referralCode: '', deviceId: '', otp: '' });
-                    onComplete();
-                }, 2000);
+                setStepTitle("TUTORIAL COMPLETE");
+                setTimeout(onComplete, 2500);
             }
         });
 
-        // Helper to get element position
-        const getPoint = (id) => {
+        // Robust Coordinate Helper (+ Scrolling Support)
+        const moveTo = (id, title, info, typingText, stateKey) => {
             const el = document.getElementById(id);
-            if (!el) return { x: 100, y: 200 };
-            const rect = el.getBoundingClientRect();
-            return { x: rect.left + 40, y: rect.top + 20 };
+            if (!el) return;
+
+            // Scroll element into view first
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            tl.to({}, { duration: 0.8 }) // Wait for scroll
+              .to(cursorRef.current, { 
+                    opacity: 1,
+                    x: () => {
+                        const rect = el.getBoundingClientRect();
+                        return rect.left + 50;
+                    },
+                    y: () => {
+                        const rect = el.getBoundingClientRect();
+                        return rect.top + 15;
+                    },
+                    duration: 1.2, 
+                    ease: "power3.inOut",
+                    onStart: () => {
+                        setStepTitle(title);
+                        setStepInfo(info);
+                    }
+              })
+              .to(cursorRef.current, { scale: 0.7, duration: 0.2, yoyo: true, repeat: 1 }) // Click Simulation
+              .to({}, { 
+                    duration: 1.5, 
+                    onUpdate: function() {
+                        const prog = this.progress();
+                        const currentText = typingText.substring(0, Math.floor(prog * typingText.length));
+                        setFormData(prev => ({ ...prev, [stateKey]: currentText }));
+                    } 
+              })
+              .to({}, { duration: 0.4 }); // Tiny pause
         };
 
-        // --- STEP 1: TYPING NAME ---
-        const pos1 = getPoint('register-name');
-        tl.to(cursorRef.current, { opacity: 1, x: pos1.x, y: pos1.y, duration: 1.5, ease: "power3.out" })
-          .to(tooltipRef.current, { opacity: 1, scale: 1, duration: 0.3 })
-          .set(tooltipRef.current, { innerText: "Step 1: Type Identity Name" })
-          .to(cursorRef.current, { scale: 0.8, duration: 0.2, yoyo: true, repeat: 1 })
-          .to({}, { duration: 1, onUpdate: function() {
-              const progress = this.progress();
-              const full = "S.M. Monir Hasan";
-              const current = full.substring(0, Math.floor(progress * full.length));
-              setFormData(p => ({...p, fullName: current}));
-          }})
+        // --- THE FULL WALKTHROUGH FLOW ---
+        
+        // 1. Identity Name
+        moveTo('register-name', "STEP 1: IDENTITY NAME", "Type your full authorized name here.", "S.M. Monir Hasan", "fullName");
+        
+        // 2. Phone Number
+        moveTo('register-phone', "STEP 2: SECURE MOBILE", "Enter your phone for node connection.", "01788776655", "phone");
+        
+        // 3. Password
+        moveTo('register-password', "STEP 3: SECURITY KEY", "Create a unique password for access.", "Admin@123", "password");
+        
+        // 4. Referral Code
+        moveTo('register-ref', "STEP 4: REFERRAL (OPTIONAL)", "Enter code if you have one, or skip.", "USA_PRO_99", "referralCode");
 
-          // --- STEP 2: PHONE ---
-          const pos2 = getPoint('register-phone');
-          tl.to(cursorRef.current, { x: pos2.x, y: pos2.y, duration: 1, ease: "power2.inOut" })
-            .set(tooltipRef.current, { innerText: "Step 2: Enter Authorized Number" })
-            .to(cursorRef.current, { scale: 0.8, duration: 0.2, yoyo: true, repeat: 1 })
-            .to({}, { duration: 1, onUpdate: function() {
-                const progress = this.progress();
-                const full = "01755667788";
-                const current = full.substring(0, Math.floor(progress * full.length));
-                setFormData(p => ({...p, phone: current}));
-            }})
-
-          // --- STEP 3: PASSWORD ---
-          const pos3 = getPoint('register-password');
-          tl.to(cursorRef.current, { x: pos3.x, y: pos3.y, duration: 1, ease: "power2.inOut" })
-            .set(tooltipRef.current, { innerText: "Step 3: Secure Your Entry" })
-            .to(cursorRef.current, { scale: 0.8, duration: 0.2, yoyo: true, repeat: 1 })
-            .to({}, { duration: 0.8, onUpdate: function() {
-                const progress = this.progress();
-                const full = "********";
-                const current = full.substring(0, Math.floor(progress * full.length));
-                setFormData(p => ({...p, password: current}));
-            }})
-
-          // --- STEP 4: REFERRAL (OPTIONAL) ---
-          const pos4 = getPoint('register-ref');
-          tl.to(cursorRef.current, { x: pos4.x, y: pos4.y, duration: 1, ease: "power2.inOut" })
-            .set(tooltipRef.current, { innerText: "Step 4: Referral Code (Optional)" })
-            .to(cursorRef.current, { scale: 0.8, duration: 0.2, yoyo: true, repeat: 1 })
-            .to({}, { duration: 0.6, onUpdate: function() {
-                const progress = this.progress();
-                const full = "USA777";
-                const current = full.substring(0, Math.floor(progress * full.length));
-                setFormData(p => ({...p, referralCode: current}));
-            }})
-
-          // --- STEP 5: VERIFY TRIGGER ---
-          tl.to(cursorRef.current, { x: window.innerWidth/2 + 100, y: window.innerHeight/2 + 150, duration: 1, ease: "power2.out" })
-            .set(tooltipRef.current, { innerText: "Final Step: OTP Authentication" })
-            .to(cursorRef.current, { scale: 0.8, duration: 0.3 })
-            .to({}, { duration: 1, onStart: () => setStep(5) });
+        // 5. Finalize Button Simulation
+        tl.to(cursorRef.current, { 
+            x: () => window.innerWidth / 2,
+            y: () => window.innerHeight - 150,
+            duration: 1.2,
+            ease: "back.out(1.7)",
+            onStart: () => {
+                setStepTitle("FINAL STEP: REGISTER");
+                setStepInfo("Click to finalize your secure registration.");
+            }
+        })
+        .to('.tutorial-target-button', { scale: 1.05, filter: "brightness(1.5)", boxShadow: "0 0 40px rgba(16,185,129,0.5)", duration: 0.3, repeat: 5, yoyo: true });
 
         return () => tl.kill();
     }, [active, onComplete, setFormData]);
@@ -99,30 +98,45 @@ export default function AuthTutorial({ active, onComplete, setFormData }) {
     if (!active) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] pointer-events-none bg-black/40 overflow-hidden">
-            {/* Ghost Cursor Layer */}
+        <div className="fixed inset-0 z-[999] pointer-events-none bg-black/30 backdrop-blur-[1px] overflow-hidden">
+            {/* Ghost Cursor with Integrated Info Box */}
             <div 
                 ref={cursorRef} 
-                className="absolute top-0 left-0 opacity-0 flex flex-col items-start gap-2 z-50 pointer-events-none"
+                className="absolute top-0 left-0 opacity-0 flex flex-col items-start gap-3 z-[1000] pointer-events-none"
+                style={{ transform: 'translate(0,0)' }}
             >
-                <MousePointer2 className="w-12 h-12 text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,1)] fill-emerald-400 stroke-black stroke-2" />
-                <div ref={tooltipRef} className="bg-emerald-500 text-black text-xs font-black uppercase px-4 py-2 rounded-xl shadow-2xl scale-0 origin-left border-2 border-white/20 whitespace-nowrap">Initializing...</div>
+                {/* Visual Cursor */}
+                <MousePointer2 className="w-12 h-12 text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,1)] fill-emerald-400 stroke-black stroke-2" />
+                
+                {/* Step Info Bubble */}
+                <div 
+                    ref={tooltipRef} 
+                    className="bg-[#0b1221] border-2 border-emerald-500/50 p-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] min-w-[200px] animate-in slide-in-from-left-4 duration-300"
+                >
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                        <Info className="w-3 h-3" /> {stepTitle}
+                    </p>
+                    <p className="text-white text-xs font-bold mt-1 leading-relaxed">{stepInfo}</p>
+                </div>
             </div>
 
-            {/* Status Info */}
-            <div className="absolute top-10 w-full flex flex-col items-center gap-2">
-                 <div className="flex items-center gap-2 px-6 py-2 bg-[#131c31] border border-emerald-500/30 rounded-full animate-in slide-in-from-top duration-500">
-                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-                     <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Live Form Training</span>
+            {/* Global Simulation Header */}
+            <div className="absolute top-0 left-0 w-full p-6 flex flex-col items-center gap-2 pointer-events-none">
+                 <div className="flex items-center gap-3 px-6 py-2 bg-[#0b1221] border border-emerald-500/50 rounded-full shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                     <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                     <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">System Interaction Simulation</span>
                  </div>
+                 <p className="text-slate-400 text-[10px] italic">Your real form is being used for this training. Watch carefully.</p>
             </div>
-            
-            {step === 100 && (
-                <div className="absolute inset-0 bg-emerald-500/10 flex flex-col items-center justify-center animate-in fade-in duration-700">
-                     <div className="bg-emerald-500 p-8 rounded-[3rem] shadow-[0_0_100px_rgba(16,185,129,0.5)] flex flex-col items-center">
-                        <CheckCircle2 className="w-20 h-20 text-white" />
-                        <h2 className="text-2xl font-black text-white mt-4 uppercase">Let's Start!</h2>
-                     </div>
+
+            {/* Progress Success Overlay */}
+            {stepTitle === "TUTORIAL COMPLETE" && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-1000">
+                    <div className="p-10 bg-emerald-500 rounded-[3rem] shadow-[0_0_100px_rgba(16,185,129,0.4)] flex flex-col items-center">
+                        <CheckCircle2 className="w-24 h-24 text-white animate-bounce" />
+                        <h2 className="text-3xl font-black text-white mt-6 uppercase tracking-widest">Mastered!</h2>
+                        <p className="text-emerald-100 font-bold mt-2">You are now ready to dominate the USA Affiliate network.</p>
+                    </div>
                 </div>
             )}
         </div>
