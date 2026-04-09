@@ -107,15 +107,20 @@ class UniversalMatchMaker {
                 }
 
                 const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
-                const adminIncomeIn = parseFloat((totalFeeIn * 0.20).toFixed(2)); // [FIX] 20% Admin
+                // [NEW] PLATFORM SCALE FEE DISTRIBUTION (Total 15% Fee)
+                // Aligned with approved chat strategy:
+                const megaFeeIn    = isMultiplayer ? parseFloat((totalFeeIn * 0.1667).toFixed(2)) : 0; // 2.5% of Bet
+                const bossFeeIn    = isMultiplayer ? parseFloat((totalFeeIn * 0.20).toFixed(2))   : 0; // 3.0% of Bet
+                const bigBangFeeIn = isMultiplayer ? parseFloat((totalFeeIn * 0.0667).toFixed(2)) : 0; // 1.0% of Bet
                 
-                // [NEW] Community Drop Fund Generation (20% of fees, only during P2P)
-                const megaDropIn = isMultiplayer ? parseFloat((totalFeeIn * 0.20).toFixed(2)) : 0;
-                if (megaDropIn > 0) {
-                    await RedisService.client.incrByFloat('livedata:game:mega_drop_fund', megaDropIn);
-                }
+                if (megaFeeIn > 0)    await RedisService.client.incrByFloat('livedata:game:fund_mega', megaFeeIn);
+                if (bossFeeIn > 0)    await RedisService.client.incrByFloat('livedata:game:fund_boss', bossFeeIn);
+                if (bigBangFeeIn > 0) await RedisService.client.incrByFloat('livedata:game:fund_bigbang', bigBangFeeIn);
 
-                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn - megaDropIn).toFixed(2)); // Remaining 60% to PAD                
+                const totalDropIn = megaFeeIn + bossFeeIn + bigBangFeeIn;
+                const adminIncomeIn = parseFloat((totalFeeIn * 0.2333).toFixed(2)); // 3.5% of Bet (Platform Profit)
+                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn - totalDropIn).toFixed(2)); // ~5% of Bet (Safety Pad)
+                
                 if (reinjectionPadIn > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
                 }
@@ -153,35 +158,63 @@ class UniversalMatchMaker {
                 batch.sort((a, b) => a.timestamp - b.timestamp); // [FIX] Preserving First-Click Order (Ascending)
 
                 if (isMultiplayer) {
-                    // [COMMUNITY DROP LOGIC] (Mega, Boss, Big Bang) Check BEFORE standard logic
-                    let dropStr = await RedisService.get('livedata:game:mega_drop_fund');
-                    let currentDropFund = dropStr ? parseFloat(dropStr) : 0;
+                    // [NEW] SEPARATED FUND TRIGGER LOGIC
+                    let fundMegaStr    = await RedisService.get('livedata:game:fund_mega');
+                    let fundBossStr    = await RedisService.get('livedata:game:fund_boss');
+                    let fundBigBangStr = await RedisService.get('livedata:game:fund_bigbang');
+
+                    let currentMega    = fundMegaStr ? parseFloat(fundMegaStr) : 0;
+                    let currentBoss    = fundBossStr ? parseFloat(fundBossStr) : 0;
+                    let currentBigBang = fundBigBangStr ? parseFloat(fundBigBangStr) : 0;
                     
-                    let lastBigBang = parseInt(await RedisService.get('livedata:game:last_bigbang')) || Date.now();
-                    let lastBoss = parseInt(await RedisService.get('livedata:game:last_boss')) || Date.now();
-                    let lastMega = parseInt(await RedisService.get('livedata:game:last_mega')) || Date.now();
+                    let lastBigBang = parseInt(await RedisService.get('livedata:game:last_bigbang')) || (Date.now() - 15 * 60000);
+                    let lastBoss    = parseInt(await RedisService.get('livedata:game:last_boss')) || (Date.now() - 10 * 60000);
+                    let lastMega    = parseInt(await RedisService.get('livedata:game:last_mega')) || (Date.now() - 5 * 60000);
                     
                     const now = Date.now();
                     let dropActivated = null;
                     
-                    // Priority 1: Big Bang (15 min)
-                    if ((now - lastBigBang) > 15 * 60000 && currentDropFund >= 100) {
-                        dropActivated = { type: 'BIG_BANG', amtConfig: { bronze: 30, silver: 60, gold: 100 } };
+                    // Priority 1: Big Bang (15 min / 120 NXS threshold)
+                    if ((now - lastBigBang) > 15 * 60000 && currentBigBang >= 120) {
+                        dropActivated = { type: 'BIG_BANG', fundKey: 'livedata:game:fund_bigbang', amtConfig: { bronze: 40, silver: 80, gold: 120 } };
                         await RedisService.client.set('livedata:game:last_bigbang', now.toString());
                     } 
-                    // Priority 2: Boss Win (10 min)
-                    else if ((now - lastBoss) > 10 * 60000 && currentDropFund >= 65) {
-                        dropActivated = { type: 'BOSS_WIN', amtConfig: { bronze: 25, silver: 45, gold: 65 } };
+                    // Priority 2: Boss Win (10 min / 80 NXS threshold - For GOLD preference)
+                    else if ((now - lastBoss) > 10 * 60000 && currentBoss >= 80) {
+                        dropActivated = { type: 'BOSS_WIN', fundKey: 'livedata:game:fund_boss', amtConfig: { bronze: 30, silver: 55, gold: 80 } };
                         await RedisService.client.set('livedata:game:last_boss', now.toString());
                     }
-                    // Priority 3: Mega Win (5 min)
-                    else if ((now - lastMega) > 5 * 60000 && currentDropFund >= 60) {
-                        dropActivated = { type: 'MEGA_WIN', amtConfig: { bronze: 20, silver: 40, gold: 60 } };
+                    // Priority 3: Mega Win (5 min / 50 NXS threshold)
+                    else if ((now - lastMega) > 5 * 60000 && currentMega >= 50) {
+                        dropActivated = { type: 'MEGA_WIN', fundKey: 'livedata:game:fund_mega', amtConfig: { bronze: 20, silver: 35, gold: 50 } };
                         await RedisService.client.set('livedata:game:last_mega', now.toString());
                     }
 
-                    // [FIX] FAIR-BIAS SELECTION: First person in batch gets 65% weight generally, but Drop ALWAYS hits First Click [0]
-                    const mainWinnerIdx = dropActivated ? 0 : ((Math.random() < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1);
+                    // [SMART PRIORITIZATION]
+                    // If Big Bang or Boss Win is active, prefer Gold/Silver bettors in the batch.
+                    let mainWinnerIdx = 0;
+                    if (dropActivated) {
+                        // Scan for Gold first, then Silver, then use first click [0]
+                        const goldIdx = batch.findIndex(p => p.betAmount >= 9);
+                        const silverIdx = batch.findIndex(p => p.betAmount >= 6);
+                        
+                        if (goldIdx !== -1) mainWinnerIdx = goldIdx;
+                        else if (silverIdx !== -1) mainWinnerIdx = silverIdx;
+                        else mainWinnerIdx = 0;
+
+                        // [ZERO-LOSS PROTECTION] Check if chosen winner's prize can actually be afforded by ONE fund
+                        const tierKey = batch[mainWinnerIdx].tier === 'silver' ? 'silver' : (batch[mainWinnerIdx].tier === 'gold' ? 'gold' : 'bronze');
+                        const price = dropActivated.amtConfig[tierKey];
+                        const fundInUse = dropActivated.fundKey === 'livedata:game:fund_bigbang' ? currentBigBang : (dropActivated.fundKey === 'livedata:game:fund_boss' ? currentBoss : currentMega);
+                        
+                        if (fundInUse < price) {
+                            console.log(`[SAFE_GUARD] Fund ${dropActivated.fundKey} (${fundInUse}) insufficient for ${price}. Skipping drop.`);
+                            dropActivated = null;
+                            mainWinnerIdx = ((Math.random() < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1);
+                        }
+                    } else {
+                        mainWinnerIdx = ((Math.random() < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1);
+                    }
 
                     let sideWinnerIdx = -1;
                     if (batch.length >= 3 && !dropActivated) {
@@ -204,8 +237,12 @@ class UniversalMatchMaker {
                             // FAST CLICK WINS THE COMMUNITY DROP
                             const tierKey = p.tier === 'silver' ? 'silver' : (p.tier === 'gold' ? 'gold' : 'bronze');
                             targetPayout = dropActivated.amtConfig[tierKey];
-                            dropFundDeduct += targetPayout;
+                            
                             payoutSource = 'community_drop_fund';
+                            // Deduct from specific fund
+                            await RedisService.client.incrByFloat(dropActivated.fundKey, -targetPayout);
+                            dropFundDeduct = 0; // Already handled above per fund
+
                             label = dropActivated.type.replace('_', ' ');
                             rank = 1;
 
@@ -410,9 +447,7 @@ class UniversalMatchMaker {
                 if (actualPadDeduct > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', -actualPadDeduct);
                 }
-                if (dropFundDeduct > 0) {
-                    await RedisService.client.incrByFloat('livedata:game:mega_drop_fund', -dropFundDeduct);
-                }
+                // [Note] Drop fund deduction is now handled per-fund inside victory logic
                 if (actualHourlyLossDeduct > 0) {
                     await RedisService.client.incrByFloat(hourlyKey, actualHourlyLossDeduct);
                     await RedisService.client.expire(hourlyKey, 3600);
@@ -439,10 +474,19 @@ class UniversalMatchMaker {
                         timestamp: Date.now()
                     });
                     
+                    const megaStr = await RedisService.get('livedata:game:fund_mega');
+                    const bossStr = await RedisService.get('livedata:game:fund_boss');
+                    const bibgStr = await RedisService.get('livedata:game:fund_bigbang');
+
                     SocketService.broadcast('admin_dashboard', 'vault_update', {
                         balances: updatedVault.balances,
                         stats: updatedVault.stats,
-                        redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct
+                        redisPot: parseFloat(redisLivePot.toFixed(2)) - actualActiveDeduct,
+                        dropFunds: {
+                            mega: parseFloat(megaStr) || 0,
+                            boss: parseFloat(bossStr) || 0,
+                            bigbang: parseFloat(bibgStr) || 0
+                        }
                     });
                 } catch (socketErr) {
                     console.warn(`[RECOVERY] Socket sync failed but engine is running:`, socketErr.message);

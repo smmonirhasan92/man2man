@@ -303,10 +303,17 @@ exports.getFinancialStats = async (req, res) => {
         const RedisService = require('../services/RedisService');
         const redisPot = await RedisService.get('livedata:game:match_pot');
         const padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
-        const dropStr = await RedisService.get('livedata:game:mega_drop_fund');
+        const megaStr = await RedisService.get('livedata:game:fund_mega');
+        const bossStr = await RedisService.get('livedata:game:fund_boss');
+        const bibgStr = await RedisService.get('livedata:game:fund_bigbang');
         
-        const currentJackpotFund = padStr ? parseFloat(padStr) : 0;
-        const communityDropFund = dropStr ? parseFloat(dropStr) : 0;
+        const communityDropFund = {
+            mega: megaStr ? parseFloat(megaStr) : 0,
+            boss: bossStr ? parseFloat(bossStr) : 0,
+            bigbang: bibgStr ? parseFloat(bibgStr) : 0,
+            total: (megaStr ? parseFloat(megaStr) : 0) + (bossStr ? parseFloat(bossStr) : 0) + (bibgStr ? parseFloat(bibgStr) : 0)
+        };
+
         const liveActivePool = redisPot ? parseFloat(redisPot) : (gameVault?.balances?.activePool || 0);
 
         res.json({
@@ -782,9 +789,16 @@ exports.getGameVault = async (req, res) => {
         let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
         vaultObj.pad = padStr ? parseFloat(padStr) : 0;
         
-        // Expose new Community Drop Fund
-        let dropStr = await RedisService.get('livedata:game:mega_drop_fund');
-        vaultObj.drop_fund = dropStr ? parseFloat(dropStr) : 0;
+        // Expose new Community Drop Funds
+        let megaStr    = await RedisService.get('livedata:game:fund_mega');
+        let bossStr    = await RedisService.get('livedata:game:fund_boss');
+        let bigBangStr = await RedisService.get('livedata:game:fund_bigbang');
+
+        vaultObj.dropFunds = {
+            mega: megaStr ? parseFloat(megaStr) : 0,
+            boss: bossStr ? parseFloat(bossStr) : 0,
+            bigbang: bigBangStr ? parseFloat(bigBangStr) : 0
+        };
         
         let lastMega = await RedisService.get('livedata:game:last_mega');
         let lastBoss = await RedisService.get('livedata:game:last_boss');

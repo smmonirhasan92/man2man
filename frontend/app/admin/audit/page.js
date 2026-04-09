@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../../services/api';
+import getSocket from '../../../services/socket';
 import { Shield, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Activity, FileText } from 'lucide-react';
 import Link from 'next/link';
 
@@ -9,14 +10,9 @@ export default function AuditPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchAuditData();
-    }, []);
-
-    const fetchAuditData = async () => {
+    const fetchAuditData = useCallback(async () => {
         try {
             const res = await api.get('/admin/audit/financial');
-            console.log('Audit Data Received:', res.data);
             setAuditData(res.data);
         } catch (err) {
             console.error("Audit Fetch Error:", err);
@@ -24,7 +20,51 @@ export default function AuditPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchAuditData();
+
+        // [NEW] REAL-TIME SOCKET SYNC
+        const socket = getSocket();
+        if (socket) {
+            socket.emit('join_admin_room', 'verified_session');
+            
+            // Listen for global point updates
+            socket.on('vault_update', (data) => {
+                setAuditData(prev => {
+                    if (!prev) return prev;
+                    
+                    const updated = { ...prev };
+                    
+                    // Update partnerAudit stats specifically
+                    if (updated.partnerAudit) {
+                        updated.partnerAudit.activePlayerPool = data.redisPot || updated.partnerAudit.activePlayerPool;
+                        
+                        if (data.dropFunds) {
+                            updated.partnerAudit.communityDropFund = {
+                                ...updated.partnerAudit.communityDropFund,
+                                ...data.dropFunds,
+                                total: (data.dropFunds.mega || 0) + (data.dropFunds.boss || 0) + (data.dropFunds.bigbang || 0)
+                            };
+                        }
+                    }
+                    
+                    // Update main balances if available in vault_update
+                    if (data.balances && updated.actual) {
+                        // Assuming frontend actual cards might need updating too
+                        // updated.actual.total_liability = ...
+                    }
+
+                    return updated;
+                });
+            });
+
+            return () => {
+                socket.off('vault_update');
+            };
+        }
+    }, [fetchAuditData]);
 
     if (loading) return (
         <div className="flex justify-center items-center min-h-[60vh]">
@@ -222,6 +262,45 @@ export default function AuditPage() {
                             <span className="text-xs font-bold uppercase">Total Recovery</span>
                             <span className="text-xl font-black">${auditData.economics?.totalSystemRecovery?.toLocaleString() || '0'}</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* [NEW] REAL-TIME COMMUNITY DROP POOLS */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <TrendingUp className="w-6 h-6 text-indigo-500" />
+                            Community Drop Pools
+                        </h2>
+                        <p className="text-slate-500 text-sm">Real-time allocation of player fees into surprise jackpots.</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Mega Win Fund */}
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-8 -mt-8 opacity-40 group-hover:scale-110 transition-transform"></div>
+                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">Mega Win Fund</p>
+                        <h4 className="text-3xl font-black text-slate-800">${auditData.partnerAudit?.communityDropFund?.mega?.toLocaleString() || '0'}</h4>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">Small-tier surprise wins (Bronze/Silver)</p>
+                    </div>
+
+                    {/* Boss Win Fund */}
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-8 -mt-8 opacity-40 group-hover:scale-110 transition-transform"></div>
+                        <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">Boss Win Fund</p>
+                        <h4 className="text-3xl font-black text-slate-800">${auditData.partnerAudit?.communityDropFund?.boss?.toLocaleString() || '0'}</h4>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">High-tier priority rewards (Gold 9+ NXS)</p>
+                    </div>
+
+                    {/* Big Bang Fund */}
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-full -mr-8 -mt-8 opacity-40 group-hover:scale-110 transition-transform"></div>
+                        <p className="text-xs font-bold text-rose-600 uppercase tracking-widest mb-1">Big Bang Fund</p>
+                        <h4 className="text-3xl font-black text-slate-800">${auditData.partnerAudit?.communityDropFund?.bigbang?.toLocaleString() || '0'}</h4>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">Ultimate community jackpot (Everyone)</p>
                     </div>
                 </div>
             </div>

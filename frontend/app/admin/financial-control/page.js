@@ -50,7 +50,8 @@ export default function FinancialControlCenter() {
                     ...prev,
                     balances: data.balances,
                     stats: data.stats,
-                    redisPot: data.redisPot
+                    redisPot: data.redisPot,
+                    dropFunds: data.dropFunds || prev?.dropFunds // [NEW] Sync Drop Funds
                 }));
                 console.log("[SOCKET] Live Vault Sync Success!");
             });
@@ -212,25 +213,44 @@ export default function FinancialControlCenter() {
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400">
                             ২. বাজেটিং ও লিমিট (Budget & Limits)
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div className="bg-black/50 p-4 rounded-xl border border-slate-800 border-b-cyan-500">
                                 <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Base Hourly Limit</p>
                                 <p className="text-2xl font-mono text-white">33.00 <span className="text-xs text-slate-500">NXS</span></p>
                                 <p className="text-[9px] text-slate-500 mt-1">এটি আপনার সেট করা প্রাথমিক বাজেট</p>
                             </div>
-                            <div className="bg-black/50 p-4 rounded-xl border border-slate-800 border-b-purple-500">
-                                <p className="text-[10px] text-purple-400 font-bold uppercase mb-1">Bonus Budget (Pad)</p>
-                                <p className="text-2xl font-mono text-purple-300">{(vault.pad || 0).toFixed(2)} <span className="text-xs text-purple-500/50">NXS</span></p>
-                                <p className="text-[9px] text-slate-500 mt-1">ফি থেকে জমানো টাকা যা অটোমেটিক বাড়ছে</p>
-                            </div>
                             <div className="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/30">
-                                <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1">Total Playable Limit</p>
-                                <p className="text-2xl font-mono text-emerald-400">{(33 + (vault.pad || 0)).toFixed(2)} <span className="text-xs text-emerald-500/50">NXS</span></p>
+                                <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1">Total Playable Pot</p>
+                                <p className="text-2xl font-mono text-emerald-400">{(vault.balances?.activePool || 0).toFixed(2)} <span className="text-xs text-emerald-500/50">NXS</span></p>
                                 <p className="text-[9px] text-emerald-500/70 mt-1">বর্তমানে এই পরিমাণ টাকা জেতানো সম্ভব</p>
                             </div>
                         </div>
-                        <div className="bg-amber-900/20 p-3 rounded-lg border border-amber-500/30 text-[10px] text-amber-200/80">
-                            <span className="font-bold text-amber-400">Note:</span> এই বাজেট শেষ হলে সিঙ্গেল প্লেয়াররা আর বড় উইন পাবে না, শুধুমাত্র রিফান্ড পাবে।
+
+                        {/* [NEW] COMMUNITY DROP TIERS */}
+                        <div className="mt-6">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Zap className="w-3 h-3 text-yellow-500" /> Community Drop Pools (Live)
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-black/40 p-3 rounded-xl border border-white/5 border-l-emerald-500 border-l-2">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase">Mega Win</p>
+                                    <p className="text-xl font-mono text-emerald-400">{(vault.dropFunds?.mega || 0).toFixed(2)}</p>
+                                </div>
+                                <div className="bg-black/40 p-3 rounded-xl border border-white/5 border-l-indigo-500 border-l-2">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase">Boss Win (Gold)</p>
+                                    <p className="text-xl font-mono text-indigo-400">{(vault.dropFunds?.boss || 0).toFixed(2)}</p>
+                                </div>
+                                <div className="bg-black/40 p-3 rounded-xl border border-white/5 border-l-rose-500 border-l-2">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase">Big Bang</p>
+                                    <p className="text-xl font-mono text-rose-400">{(vault.dropFunds?.bigbang || 0).toFixed(2)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-black/40 p-4 rounded-xl border border-purple-500/20 mt-6">
+                             <p className="text-[10px] text-purple-400 font-bold uppercase mb-1">Backup Pad (Legacy PAD)</p>
+                             <p className="text-2xl font-mono text-purple-300">{(vault.pad || 0).toFixed(2)} <span className="text-xs text-purple-500/50">NXS</span></p>
+                             <p className="text-[9px] text-slate-500 mt-1">ফি থেকে জমানো টাকা যা অটোমেটিক বাড়ছে (P2P Injection)</p>
                         </div>
                     </div>
 
@@ -267,14 +287,14 @@ export default function FinancialControlCenter() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-[#0B1221] p-4 rounded-xl border border-indigo-500/20 text-center">
-                                    <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Admin Share</h4>
-                                    <p className="text-xl font-black text-white">50% <span className="text-xs text-slate-500 font-normal">of Fees</span></p>
-                                    <p className="text-[9px] text-indigo-500/70 mt-1">সরাসরি আপনার লাভ</p>
+                                    <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Admin + Drop Share</h4>
+                                    <p className="text-xl font-black text-white">66.6% <span className="text-xs text-slate-500 font-normal">of Total Fee</span></p>
+                                    <p className="text-[9px] text-indigo-500/70 mt-1">প্রফিট ও মেগা ড্রপ ফান্ডে জমা হবে</p>
                                 </div>
                                 <div className="bg-[#0B1221] p-4 rounded-xl border border-purple-500/20 text-center">
-                                    <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Injection Share</h4>
-                                    <p className="text-xl font-black text-white">50% <span className="text-xs text-slate-500 font-normal">of Fees</span></p>
-                                    <p className="text-[9px] text-purple-500/70 mt-1">রি-ইনজেকশন প্যাডে বা বোনাস বাজেটে জমা হবে</p>
+                                    <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Safety Pad Share</h4>
+                                    <p className="text-xl font-black text-white">33.3% <span className="text-xs text-slate-500 font-normal">of Total Fee</span></p>
+                                    <p className="text-[9px] text-purple-500/70 mt-1">সিস্টেম ব্যাকআপ হিসেবে প্যাডে জমা হবে</p>
                                 </div>
                             </div>
                         </div>
