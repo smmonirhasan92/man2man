@@ -81,8 +81,14 @@ export default function AuthTutorial({ active, onComplete, setFormData }) {
 
         // 5. Finalize Button Simulation
         tl.to(cursorRef.current, { 
-            x: () => window.innerWidth / 2,
-            y: () => window.innerHeight - 150,
+            x: () => {
+                const el = document.getElementById('register-submit');
+                return el ? el.getBoundingClientRect().left + 100 : window.innerWidth / 2;
+            },
+            y: () => {
+                const el = document.getElementById('register-submit');
+                return el ? el.getBoundingClientRect().top + 20 : window.innerHeight - 150;
+            },
             duration: 1.2,
             ease: "back.out(1.7)",
             onStart: () => {
@@ -90,7 +96,7 @@ export default function AuthTutorial({ active, onComplete, setFormData }) {
                 setStepInfo("Click to finalize your secure registration.");
             }
         })
-        .to('.tutorial-target-button', { scale: 1.05, filter: "brightness(1.5)", boxShadow: "0 0 40px rgba(16,185,129,0.5)", duration: 0.3, repeat: 5, yoyo: true });
+        .to('#register-submit', { scale: 1.05, filter: "brightness(1.5)", boxShadow: "0 0 40px rgba(16,185,129,0.5)", duration: 0.3, repeat: 5, yoyo: true });
 
         return () => tl.kill();
     }, [active, onComplete, setFormData]);

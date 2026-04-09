@@ -445,6 +445,7 @@ function RegisterForm() {
                                     </div>
                                     <div className="flex gap-2">
                                         <input
+                                            id="register-otp"
                                             type="text"
                                             maxLength={4}
                                             value={userOtp}
@@ -465,6 +466,7 @@ function RegisterForm() {
                         </div>
 
                         <button
+                            id="register-submit"
                             type="submit"
                             disabled={loading || verificationStep !== 'verified'}
                             className={`w-full mt-6 py-4 rounded-2xl font-black tracking-wide text-sm shadow-xl transition-all flex justify-center items-center gap-2 ${verificationStep === 'verified' ? 'bg-gradient-to-r from-emerald-500 to-blue-600 text-white hover:scale-[1.02] hover:shadow-emerald-500/20 cursor-pointer' : 'bg-[#131c31] text-slate-500 border border-white/5 cursor-not-allowed'}`}
