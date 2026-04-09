@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Upload, ChevronDown } from 'lucide-react';
 import TapToConfirmButton from '../TapToConfirmButton';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '../../utils/uiUtils';
 
 export default function RechargeForm({ settings, onSubmit, loading, activeTab }) {
     const [amount, setAmount] = useState('');
@@ -78,27 +79,39 @@ export default function RechargeForm({ settings, onSubmit, loading, activeTab })
                 {/* Send Money To (Agent) */}
                 <div className="mb-4">
                     <label className="text-[11px] font-bold text-slate-400 mb-1.5 block uppercase tracking-wide">Mobile Number (Send Money To)</label>
-                    <div className="input-premium rounded-xl p-3 flex items-center justify-between group cursor-pointer border border-white/10 bg-[#0f172a]/80">
+                    <div 
+                        onClick={() => {
+                            const num = selectedDepositAgent?.number || settings.bkash_number;
+                            if (num) {
+                                copyToClipboard(num);
+                                toast.success("Number Copied!");
+                            }
+                        }}
+                        className="input-premium rounded-xl p-3 flex items-center justify-between group cursor-pointer border border-white/10 bg-[#0f172a]/80 hover:border-blue-500/50 transition-all active:scale-[0.98]"
+                    >
                         <div className="flex-1">
                             {settings.deposit_agents && settings.deposit_agents.length > 0 ? (
-                                <select
-                                    className="w-full bg-transparent text-sm font-bold text-white outline-none cursor-pointer appearance-none [&>option]:bg-[#0f172a]"
-                                    onChange={(e) => {
-                                        const agent = settings.deposit_agents.find(a => a.number === e.target.value);
-                                        setSelectedDepositAgent(agent);
-                                    }}
-                                    value={selectedDepositAgent?.number || ''}
-                                >
-                                    {settings.deposit_agents.map((agent, idx) => (
-                                        <option key={idx} value={agent.number} className="text-white">
-                                            {agent.number} ({agent.agentName})
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        className="w-full bg-transparent text-sm font-bold text-white outline-none cursor-pointer appearance-none [&>option]:bg-[#0f172a]"
+                                        onClick={(e) => e.stopPropagation()} // Prevent copy when clicking select
+                                        onChange={(e) => {
+                                            const agent = settings.deposit_agents.find(a => a.number === e.target.value);
+                                            setSelectedDepositAgent(agent);
+                                        }}
+                                        value={selectedDepositAgent?.number || ''}
+                                    >
+                                        {settings.deposit_agents.map((agent, idx) => (
+                                            <option key={idx} value={agent.number} className="text-white">
+                                                {agent.number} ({agent.agentName})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             ) : (
                                 <span className="text-sm font-bold text-white">{settings.bkash_number || 'Loading...'}</span>
                             )}
-                            <div className="text-[10px] text-slate-500 mt-0.5">Personal • Click to Copy</div>
+                            <div className="text-[10px] text-blue-400 font-bold mt-1 animate-pulse">✨ Click to Copy Number</div>
                         </div>
                         <ChevronDown className="w-4 h-4 text-slate-500" />
                     </div>

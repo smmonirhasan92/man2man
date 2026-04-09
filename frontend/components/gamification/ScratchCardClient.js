@@ -372,7 +372,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
                                     {!prizeData && (
                                         <div className="flex flex-col items-center gap-2 opacity-50">
                                             <div className="w-8 h-8 border-3 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-                                            <div className="text-slate-600 font-bold font-mono text-[10px] uppercase tracking-widest text-center">P2P Matchmaking...<br/>Please Wait</div>
+                                            <div className="text-slate-600 font-bold font-mono text-[10px] uppercase tracking-widest text-center">Connecting...<br/>Please Wait</div>
                                         </div>
                                     )}
                                 </div>

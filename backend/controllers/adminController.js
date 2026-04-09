@@ -298,7 +298,26 @@ exports.getFinancialStats = async (req, res) => {
 
         const healthStatus = liabilities > totalMinted * 1.5 ? 'CRITICAL' : liabilities > totalMinted ? 'WARNING' : 'HEALTHY';
 
+        // N. Fetch Gamma/Game Vault for specific gaming audit
+        const gameVault = await GameVault.getMasterVault();
+        const RedisService = require('../services/RedisService');
+        const redisPot = await RedisService.get('livedata:game:match_pot');
+        const padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
+        const dropStr = await RedisService.get('livedata:game:mega_drop_fund');
+        
+        const currentJackpotFund = padStr ? parseFloat(padStr) : 0;
+        const communityDropFund = dropStr ? parseFloat(dropStr) : 0;
+        const liveActivePool = redisPot ? parseFloat(redisPot) : (gameVault?.balances?.activePool || 0);
+
         res.json({
+            partnerAudit: {
+                totalHouseIncome: gameVault?.balances?.adminIncome || 0,
+                jackpotReservoir: currentJackpotFund,
+                communityDropFund: communityDropFund,
+                activePlayerPool: liveActivePool,
+                systemHealthScore: netSystemProfit > 0 ? 'STABLE' : 'MONITOR',
+                profitInPercentage: ((netSystemProfit / (totalIncomeGiven || 1)) * 100).toFixed(2) + '%'
+            },
             overview: {
                 total_minted: totalMinted,
                 current_liabilities: liabilities,
@@ -762,6 +781,20 @@ exports.getGameVault = async (req, res) => {
         
         let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
         vaultObj.pad = padStr ? parseFloat(padStr) : 0;
+        
+        // Expose new Community Drop Fund
+        let dropStr = await RedisService.get('livedata:game:mega_drop_fund');
+        vaultObj.drop_fund = dropStr ? parseFloat(dropStr) : 0;
+        
+        let lastMega = await RedisService.get('livedata:game:last_mega');
+        let lastBoss = await RedisService.get('livedata:game:last_boss');
+        let lastBigBang = await RedisService.get('livedata:game:last_bigbang');
+        
+        vaultObj.drop_timers = {
+            mega: lastMega ? parseInt(lastMega) : Date.now(),
+            boss: lastBoss ? parseInt(lastBoss) : Date.now(),
+            bigBang: lastBigBang ? parseInt(lastBigBang) : Date.now()
+        };
         
         res.json(vaultObj);
     } catch (e) {

@@ -107,8 +107,15 @@ class UniversalMatchMaker {
                 }
 
                 const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
-                const adminIncomeIn = parseFloat((totalFeeIn * 0.25).toFixed(2)); // [FIX] 25% Admin share
-                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn).toFixed(2)); // [FIX] 75% PAD share for fast Jackpots                
+                const adminIncomeIn = parseFloat((totalFeeIn * 0.20).toFixed(2)); // [FIX] 20% Admin
+                
+                // [NEW] Community Drop Fund Generation (20% of fees, only during P2P)
+                const megaDropIn = isMultiplayer ? parseFloat((totalFeeIn * 0.20).toFixed(2)) : 0;
+                if (megaDropIn > 0) {
+                    await RedisService.client.incrByFloat('livedata:game:mega_drop_fund', megaDropIn);
+                }
+
+                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn - megaDropIn).toFixed(2)); // Remaining 60% to PAD                
                 if (reinjectionPadIn > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
                 }
@@ -141,45 +148,96 @@ class UniversalMatchMaker {
                 let actualHourlyLossDeduct = 0;
                 let actualActiveDeduct = 0;
                 let actualPadDeduct = 0;
+                let dropFundDeduct = 0;
 
                 batch.sort((a, b) => a.timestamp - b.timestamp); // [FIX] Preserving First-Click Order (Ascending)
 
                 if (isMultiplayer) {
-                    // [FIX] FAIR-BIAS SELECTION: First person in batch gets 65% weight
-                    const rollMain = Math.random();
-                    const mainWinnerIdx = (rollMain < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1;
+                    // [COMMUNITY DROP LOGIC] (Mega, Boss, Big Bang) Check BEFORE standard logic
+                    let dropStr = await RedisService.get('livedata:game:mega_drop_fund');
+                    let currentDropFund = dropStr ? parseFloat(dropStr) : 0;
+                    
+                    let lastBigBang = parseInt(await RedisService.get('livedata:game:last_bigbang')) || Date.now();
+                    let lastBoss = parseInt(await RedisService.get('livedata:game:last_boss')) || Date.now();
+                    let lastMega = parseInt(await RedisService.get('livedata:game:last_mega')) || Date.now();
+                    
+                    const now = Date.now();
+                    let dropActivated = null;
+                    
+                    // Priority 1: Big Bang (15 min)
+                    if ((now - lastBigBang) > 15 * 60000 && currentDropFund >= 100) {
+                        dropActivated = { type: 'BIG_BANG', amtConfig: { bronze: 30, silver: 60, gold: 100 } };
+                        await RedisService.client.set('livedata:game:last_bigbang', now.toString());
+                    } 
+                    // Priority 2: Boss Win (10 min)
+                    else if ((now - lastBoss) > 10 * 60000 && currentDropFund >= 65) {
+                        dropActivated = { type: 'BOSS_WIN', amtConfig: { bronze: 25, silver: 45, gold: 65 } };
+                        await RedisService.client.set('livedata:game:last_boss', now.toString());
+                    }
+                    // Priority 3: Mega Win (5 min)
+                    else if ((now - lastMega) > 5 * 60000 && currentDropFund >= 60) {
+                        dropActivated = { type: 'MEGA_WIN', amtConfig: { bronze: 20, silver: 40, gold: 60 } };
+                        await RedisService.client.set('livedata:game:last_mega', now.toString());
+                    }
+
+                    // [FIX] FAIR-BIAS SELECTION: First person in batch gets 65% weight generally, but Drop ALWAYS hits First Click [0]
+                    const mainWinnerIdx = dropActivated ? 0 : ((Math.random() < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1);
 
                     let sideWinnerIdx = -1;
-                    if (batch.length >= 3) {
+                    if (batch.length >= 3 && !dropActivated) {
                         sideWinnerIdx = (mainWinnerIdx + 1) % batch.length;
                     }
 
-                    // [SPEED LOOP] P2P JACKPOT: If PAD is high, inject it into the P2P main winner!
+                    // [SPEED LOOP FIX] We apply pure multipliers. Do not inject Pad blindly as it breaks 5x max math.
                     let bonusFromPad = 0;
-                    if (reinjectionPad > 50) {
-                        bonusFromPad = Math.min(reinjectionPad * 0.5, 60); // Inject 50% of PAD (max 60 NXS)
-                        reinjectionPad -= bonusFromPad;
-                        actualPadDeduct += bonusFromPad;
-                        payoutSource = 'p2p_with_pad_injection';
-                    }
+                    let usedPadForMainWinner = false;
 
                     const jitter = 0.85 + (Math.random() * 0.10); // 85-95% payout jitter
-                    const totalPotForPrizes = parseFloat(((activePoolIn + bonusFromPad) * jitter).toFixed(2));
+                    const basePotForPrizes = parseFloat((activePoolIn * jitter).toFixed(2));
                     
                     for (let i = 0; i < batch.length; i++) {
                         const p = batch[i];
                         let targetPayout = 0;
                         let label = 'LOSS'; let rank = 8;
                         
-                        if (i === mainWinnerIdx) {
-                            targetPayout = isAbundance ? totalBet : (totalPotForPrizes * 0.85); // 85% of prizes
+                        if (dropActivated && i === mainWinnerIdx) {
+                            // FAST CLICK WINS THE COMMUNITY DROP
+                            const tierKey = p.tier === 'silver' ? 'silver' : (p.tier === 'gold' ? 'gold' : 'bronze');
+                            targetPayout = dropActivated.amtConfig[tierKey];
+                            dropFundDeduct += targetPayout;
+                            payoutSource = 'community_drop_fund';
+                            label = dropActivated.type.replace('_', ' ');
+                            rank = 1;
+
+                        } else if (i === mainWinnerIdx) {
+                            targetPayout = isAbundance ? totalBet : (basePotForPrizes * 0.85); 
+                            
+                            // Boost with PAD if multiplier is low
+                            if (reinjectionPad > 10 && (targetPayout / (p.betAmount || 5)) < 3.3) {
+                                const requiredToBoost = (p.betAmount * 5.0) - targetPayout;
+                                if (requiredToBoost > 0 && reinjectionPad >= requiredToBoost) {
+                                    targetPayout += requiredToBoost;
+                                    reinjectionPad -= requiredToBoost;
+                                    actualPadDeduct += requiredToBoost;
+                                    payoutSource = 'p2p_with_pad_injection';
+                                    usedPadForMainWinner = true;
+                                }
+                            }
+
+                            // [CRITICAL FIX] Target payout can NEVER exceed 5x the user's bet. Ensure bounds.
+                            const maxAllowedPayout = p.betAmount * 5.0;
+                            targetPayout = Math.min(targetPayout, maxAllowedPayout);
+                            
                         } else if (i === sideWinnerIdx) {
-                            targetPayout = (totalPotForPrizes * 0.15); // 15% side winner
+                            targetPayout = (basePotForPrizes * 0.15); 
+                            const maxAllowedPayout = p.betAmount * 2.6; // Side winner max 2.6x
+                            targetPayout = Math.min(targetPayout, maxAllowedPayout);
                         }
                         
                         targetPayout = parseFloat(targetPayout.toFixed(2));
                         const rtpMult = targetPayout / (p.betAmount || 5);
 
+                        // Uniform Jackpot definition (>3.0x is a jackpot)
                         if (rtpMult >= 3.0) { label = 'JACKPOT'; rank=1; }
                         else if (rtpMult >= 2.0) { label = 'PROFIT'; rank=2; }
                         else if (rtpMult >= 1.0) { label = 'REFUND'; rank=3; }
@@ -228,60 +286,67 @@ class UniversalMatchMaker {
                             if (reinjectionPad > 50) winChance = 0.60;
 
                             if (roll < winChance && canAffordWin) {
-                                // Weighted multiplier selection based on tier
-                                const rollWin = Math.random();
-                                if (isAbundance) {
-                                    if (rollWin < 0.15) rtpMult = 5.0;
-                                    else if (rollWin < 0.30) rtpMult = 3.3;
-                                    else if (rollWin < 0.50) rtpMult = 2.6;
-                                    else if (rollWin < 0.70) rtpMult = 2.0;
-                                    else if (rollWin < 0.88) rtpMult = 1.5;
-                                    else rtpMult = 1.0;
-                                } else if (isGold) {
-                                    // Gold: Conservative — 1.5x mostly
-                                    rtpMult = rollWin < 0.70 ? 1.5 : 2.0;
-                                } else if (isSilver) {
-                                    // Silver: Moderate variation
-                                    if (rollWin < 0.40) rtpMult = 1.5;
-                                    else if (rollWin < 0.75) rtpMult = 2.0;
-                                    else rtpMult = 2.6;
+                                // [NEW] Tiered Win Limit Protection
+                                const hourPrefix = new Date().toISOString().slice(0, 13);
+                                const userWinKey = `livedata:game:user_win_limit:${p.userId}:${hourPrefix}`;
+                                const currentWinStr = await RedisService.get(userWinKey);
+                                const currentWinTotal = currentWinStr ? parseFloat(currentWinStr) : 0;
+                                
+                                // Bronze: 200, Silver: 350, Gold: 500, Default: 400
+                                const tierLimit = p.tier === 'bronze' ? 200 : p.tier === 'silver' ? 350 : p.tier === 'gold' ? 500 : 400;
+
+                                if (currentWinTotal >= tierLimit) {
+                                    rtpMult = 0.0; // User hit hourly profit ceiling
+                                    console.log(`[CEILING] User ${p.userId} hit ${tierLimit} limit. Forcing MISS.`);
                                 } else {
-                                    // Bronze: Full range possible
-                                    if (rollWin < 0.30) rtpMult = 1.5;
-                                    else if (rollWin < 0.55) rtpMult = 2.0;
-                                    else if (rollWin < 0.75) rtpMult = 2.6;
-                                    else if (rollWin < 0.90) rtpMult = 3.3;
-                                    else rtpMult = 5.0;
+                                    // Weighted multiplier selection
+                                    const rollWin = Math.random();
+                                    if (isAbundance) {
+                                        if (rollWin < 0.20) rtpMult = 2.6;
+                                        else if (rollWin < 0.60) rtpMult = 2.0;
+                                        else if (rollWin < 0.90) rtpMult = 1.5;
+                                        else rtpMult = 1.0;
+                                    } else {
+                                        // [USER FIX] NO JACKPOTS in Single Mode! Max limit strictly 2.6x
+                                        if (rollWin < 0.15) rtpMult = 2.6;        // 15% Max Cap at 2.6x
+                                        else if (rollWin < 0.50) rtpMult = 2.0;   // 35% Double
+                                        else rtpMult = 1.5;                       // 50% Base profit
+                                    }
+
+                                    // Track win toward limit
+                                    const netProfit = (p.betAmount * rtpMult) - p.betAmount;
+                                    if (netProfit > 0) {
+                                        await RedisService.client.incrByFloat(userWinKey, netProfit);
+                                        await RedisService.client.expire(userWinKey, 3600);
+                                    }
                                 }
 
                                 targetPayout = parseFloat((p.betAmount * rtpMult).toFixed(2));
                                 const netLoss = parseFloat((targetPayout - p.betAmount).toFixed(2));
 
-                                // PAD used only for JACKPOT bonus top-up
-                                if (netLoss > 0 && reinjectionPad >= netLoss && rtpMult >= 3) {
-                                    actualPadDeduct += netLoss;
-                                    reinjectionPad -= netLoss;
-                                    payoutSource = 'admin_pad_injection';
-                                } else {
-                                    // [CORE FIX] Normal wins paid from main pool 
-                                    actualActiveDeduct += netLoss;
-                                    payoutSource = 'active_pool';
-                                }
+                                // Single Mode gets NO PAD TOP-UP since Jackpots are disabled
+                                actualActiveDeduct += netLoss;
+                                payoutSource = 'active_pool';
+                                
                                 actualActiveDeduct += p.betAmount;
-                                label = rtpMult >= 5.0 ? 'JACKPOT' : 'PROFIT';
-                                rank = rtpMult >= 5.0 ? 1 : 2;
+                                label = 'PROFIT'; // Uniform NO Jackpot naming for Single Mode
+                                rank = 2;
 
                             } else {
                                 // 65% chance: Loss Path (Miss or Occasional Refund)
                                 const streak = p.consecutiveLosses || 0;
                                 const refundRoll = Math.random();
-                                
-                                // [FIX] Reduce arbitrary refunds to 20% to prevent over-inflating RTP. Only force refund early if heavily losing.
-                                if (streak >= 4 || refundRoll < 0.20) {
+
+                                // [FIX] Forced refund after 4 losses is now GUARANTEED
+                                if (streak >= 4) {
                                     rtpMult = 1.0; label = 'REFUND'; rank = 3;
                                     targetPayout = p.betAmount;
                                     actualActiveDeduct += targetPayout;
-                                    if (streak >= 4) console.log(`[RETENTION] ${p.userId} streak=${streak} → Force REFUND`);
+                                    console.log(`[RETENTION] ${p.userId} streak=${streak} → GUARANTEED REFUND`);
+                                } else if (refundRoll < 0.20) {
+                                    rtpMult = 1.0; label = 'REFUND'; rank = 3;
+                                    targetPayout = p.betAmount;
+                                    actualActiveDeduct += targetPayout;
                                 } else {
                                     // 80% of losses = actual miss
                                     rtpMult = 0.0; label = 'MISS'; rank = 8; targetPayout = 0;
@@ -344,6 +409,9 @@ class UniversalMatchMaker {
                 }
                 if (actualPadDeduct > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', -actualPadDeduct);
+                }
+                if (dropFundDeduct > 0) {
+                    await RedisService.client.incrByFloat('livedata:game:mega_drop_fund', -dropFundDeduct);
                 }
                 if (actualHourlyLossDeduct > 0) {
                     await RedisService.client.incrByFloat(hourlyKey, actualHourlyLossDeduct);

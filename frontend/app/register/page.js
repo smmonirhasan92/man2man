@@ -9,7 +9,6 @@ import Button from '../../components/ui/Button';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import useGameSound from '../../hooks/useGameSound';
 import { validatePhone } from '../../utils/phoneValidation';
-import AuthTutorial from '../../components/ui/AuthTutorial';
 
 // Premium Country Data with CDN Flag Images
 const countries = [
@@ -166,16 +165,22 @@ function RegisterForm() {
     const refCodeFromUrl = searchParams.get('ref');
     const { playNotification, playSuccess, playError } = useGameSound();
 
+    const [hasMounted, setHasMounted] = useState(false);
+
     // CLEAN STATE: No defaults that look like auto-fill
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
         countryCode: '+880',
         password: '',
-        referralCode: refCodeFromUrl || '',
+        referralCode: '', // Wait for hydration before filling from URL to prevent #418 error
         deviceId: '',
         otp: ''
     });
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     const [verificationStep, setVerificationStep] = useState('initial');
     const [generatedOtp, setGeneratedOtp] = useState(null);
@@ -319,20 +324,9 @@ function RegisterForm() {
                         </h1>
                         <p className="text-slate-400 text-xs font-semibold tracking-widest mt-2 uppercase">USA Affiliate Network</p>
 
-                        {/* [MODERN TUTORIAL] Interactive Walkthrough Button */}
-                        <div className="mt-4">
-                            <button 
-                                type="button" 
-                                onClick={() => setShowTutorial(true)}
-                                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:bg-indigo-500/20 transition-all active:scale-95"
-                            >
-                                <Smartphone className="w-3 h-3" />
-                                Interactive Guide
-                            </button>
-                        </div>
 
                         {/* [NEW] Direct App Download for Referred Users */}
-                        {formData.referralCode && (
+                        {hasMounted && formData.referralCode && (
                             <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
@@ -474,11 +468,6 @@ function RegisterForm() {
                             {loading ? <span className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></span> : 'FINALIZE REGISTRATION'}
                         </button>
 
-                        <AuthTutorial 
-                            active={showTutorial} 
-                            onComplete={() => setShowTutorial(false)} 
-                            setFormData={setFormData}
-                        />
 
                         {/* [NEW] Persistent Install Action */}
                         <button
@@ -489,6 +478,16 @@ function RegisterForm() {
                             <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                             Download Official App
                         </button>
+
+                        {/* Login Link */}
+                        <div className="text-center mt-5">
+                            <p className="text-slate-500 text-xs">
+                                Already have an account?{' '}
+                                <Link href="/login" className="text-emerald-400 font-black hover:text-emerald-300 transition-colors underline underline-offset-2">
+                                    Sign In
+                                </Link>
+                            </p>
+                        </div>
                     </form>
                 </div>
             </div>

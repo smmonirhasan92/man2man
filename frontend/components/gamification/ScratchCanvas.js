@@ -72,14 +72,14 @@ export default function ScratchCanvas({
         return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
-    const createParticles = (x, y) => {
-        for (let i = 0; i < 4; i++) {
+    const createParticles = (x, y, count = 4) => {
+        for (let i = 0; i < count; i++) {
             particlesRef.current.push({
                 x, y,
-                vx: (Math.random() - 0.5) * 5,
-                vy: (Math.random() - 0.5) * 5,
-                life: 1,
-                color: Math.random() > 0.5 ? accentColor : '#FFFFFF'
+                vx: (Math.random() - 0.5) * (count > 5 ? 12 : 5),
+                vy: (Math.random() - 0.5) * (count > 5 ? 12 : 5),
+                life: 1.2,
+                color: Math.random() > 0.5 ? accentColor : (Math.random() > 0.5 ? '#FFFAFA' : '#FFDF00')
             });
         }
     };
@@ -117,9 +117,14 @@ export default function ScratchCanvas({
         if (isFinished) return;
         setIsFinished(true);
         const canvas = canvasRef.current;
-        canvas.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        canvas.style.transition = 'filter 0.5s ease, opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
         canvas.style.opacity = '0';
-        canvas.style.transform = 'scale(1.2) rotate(2deg)';
+        canvas.style.transform = 'scale(1.15) translateY(-10px) rotate(3deg)';
+        canvas.style.filter = 'brightness(2) blur(4px)'; // Premium flash explosion effect
+        
+        // Final particle burst
+        createParticles(width/2, height/2, 25);
+
         if (onComplete) onComplete();
     };
 

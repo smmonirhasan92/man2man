@@ -5,6 +5,7 @@ import { Shield, Lock, Server, Wifi, CheckCircle, Terminal } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '../../../services/authService';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '../../../utils/uiUtils';
 
 export default function USAGateway() {
     const router = useRouter();
@@ -163,8 +164,12 @@ export default function USAGateway() {
                                     <div className="font-mono text-white tracking-widest text-lg font-bold">{targetKey}</div>
                                 </div>
                                 <button
-                                    onClick={() => navigator.clipboard.writeText(targetKey)}
-                                    className="p-2 bg-blue-600 rounded text-white hover:bg-blue-500"
+                                    onClick={() => {
+                                        if (copyToClipboard(targetKey)) {
+                                            toast.success("Key Copied!");
+                                        }
+                                    }}
+                                    className="p-2 bg-blue-600 rounded text-white hover:bg-blue-500 transition-all active:scale-95"
                                 >
                                     Copy
                                 </button>

@@ -490,25 +490,59 @@ export default function LuckTestClient({ onBalanceUpdate }) {
 function ResultOverlay({ result, onClose }) {
   if (!result) return null;
   const isWin = result.amountNXS > 0;
+  const isJackpot = result.label?.toUpperCase().includes('JACKPOT') || result.label?.toUpperCase().includes('WIN') || result.label?.toUpperCase().includes('BIG BAN');
   
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
-      <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-        <div className="text-6xl mb-4">
-          {isWin ? '🎉' : '😢'}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className={`relative overflow-hidden rounded-[2rem] p-1 w-full max-w-sm shadow-2xl ${isJackpot ? 'bg-gradient-to-b from-yellow-400 via-orange-500 to-red-500 shadow-[0_0_50px_rgba(245,158,11,0.4)]' : isWin ? 'bg-gradient-to-b from-emerald-400 via-emerald-500 to-teal-600 shadow-[0_0_40px_rgba(16,185,129,0.3)]' : 'bg-slate-800 border border-white/10'}`}
+      >
+        <div className="bg-[#0B0F1A] rounded-[1.8rem] p-8 text-center relative z-10 w-full h-full flex flex-col items-center">
+            {/* Background radiant glow for jackpots */}
+            {isJackpot && <div className="absolute inset-0 bg-orange-500/10 mix-blend-screen pointer-events-none" />}
+            {isWin && !isJackpot && <div className="absolute inset-0 bg-emerald-500/5 mix-blend-screen pointer-events-none" />}
+            
+            <motion.div 
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: isWin ? [0, -10, 10, -10, 0] : 0 }}
+                transition={{ delay: 0.1, type: "spring", duration: 0.6 }}
+                className="text-7xl mb-6 filter drop-shadow-xl"
+            >
+                {isJackpot ? '🎰' : isWin ? '🏆' : '💔'}
+            </motion.div>
+            
+            <h2 className={`text-3xl font-black uppercase tracking-tight mb-3 px-2 ${isJackpot ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400 drop-shadow-md' : isWin ? 'text-emerald-400' : 'text-slate-300'}`}>
+                {isJackpot ? 'JACKPOT!' : isWin ? 'YOU WON!' : 'MISSED!'}
+            </h2>
+            
+            <div className={`py-5 px-6 rounded-2xl w-full mb-6 ${isWin ? 'bg-emerald-950/40 border border-emerald-500/20 shadow-inner' : 'bg-slate-900/80 border border-white/5'}`}>
+                {isWin ? (
+                    <>
+                        <p className="text-[10px] text-emerald-500/80 uppercase font-black tracking-[0.2em] mb-1">Prize Amount</p>
+                        <div className="text-4xl font-mono font-black text-white drop-shadow-md">{result.amountNXS} <span className="text-xl text-emerald-400">NXS</span></div>
+                        <div className="text-[10px] font-bold mt-3 bg-emerald-500/10 py-1.5 px-3 rounded-xl border border-emerald-500/20 inline-block uppercase tracking-wider text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.1)]">{result.label}</div>
+                    </>
+                ) : (
+                    <p className="text-sm font-medium text-slate-400 leading-relaxed px-2">
+                      Aww, it slipped away! Don't worry, the next spin might be the big one.
+                    </p>
+                )}
+            </div>
+            
+            <motion.button 
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={onClose} 
+                className={`w-full py-4 rounded-[1.2rem] font-black uppercase tracking-[0.15em] text-sm transition-all shadow-xl ${isJackpot ? 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-orange-500/25 border-b-4 border-orange-600 active:border-b-0 active:translate-y-1' : isWin ? 'bg-emerald-500 text-emerald-950 shadow-emerald-500/20 border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1' : 'bg-[#151B2B] text-slate-300 hover:text-white border-b-4 border-[#0B0F1A] active:border-b-0 active:translate-y-1 hover:bg-slate-800'}`}
+            >
+                {isWin ? 'Collect Reward' : 'Try Again'}
+            </motion.button>
         </div>
-        
-        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
-          {isWin ? 'You Won!' : 'Better Luck Next Time'}
-        </h2>
-        <p className="text-slate-400 mb-6">
-          {isWin ? `You received ${result.amountNXS} NXS from the ${result.label} prize.` : 'The spin resulted in a Miss. No rewards this time.'}
-        </p>
-        
-        <button onClick={onClose} className="w-full py-3 rounded-xl font-bold transition-colors shadow-lg bg-white/10 text-white hover:bg-white/20">
-          Dismiss
-        </button>
-      </div>
+      </motion.div>
     </div>
   );
 }

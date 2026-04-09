@@ -96,7 +96,12 @@ export function AuthProvider({ children }) {
             }
         } catch (e) {
             if (e.response?.status === 401) {
-                logout();
+                // [GAME GUARD] Do NOT kick user out if they are actively playing a game
+                const gameRoutes = ['/dashboard/luck-test', '/dashboard/scratch-card', '/dashboard/lottery'];
+                const isInGame = typeof window !== 'undefined' && gameRoutes.some(r => window.location.pathname.startsWith(r));
+                if (!isInGame) {
+                    logout();
+                }
             }
         }
     };

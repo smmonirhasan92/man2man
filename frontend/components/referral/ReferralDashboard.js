@@ -8,6 +8,7 @@ import ShareCard from './ShareCard';
 import OrganicTree from './OrganicTree';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
+import { copyToClipboard } from '../../utils/uiUtils';
 
 export default function ReferralDashboard() {
     const [activeTab, setActiveTab] = useState('overview'); // overview, network, leaderboard, history
@@ -59,9 +60,11 @@ export default function ReferralDashboard() {
     };
 
     const copyCode = () => {
-        navigator.clipboard.writeText(data.referralCode);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (copyToClipboard(data.referralCode)) {
+            setCopied(true);
+            toast.success("Referral Code Copied!");
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     return (

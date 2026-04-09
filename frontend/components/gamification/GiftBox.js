@@ -345,12 +345,12 @@ export default function GiftBox({ onBalanceUpdate }) {
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Select your prize tier</p>
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-4 px-2 no-scrollbar scroll-smooth">
+                  <div className="grid grid-cols-2 gap-3 pb-2 px-1">
                     {TIERS.map((t, idx) => (
                       <motion.button
                         key={t.id}
                         onClick={() => handleOpenBox(t)}
-                        className={`flex-shrink-0 w-32 aspect-[3/4] p-4 rounded-3xl bg-slate-800/60 border border-white/5 relative overflow-hidden group transition-all duration-300 ${isShaking && selectedTier === t.id ? 'animate-shake' : 'hover:scale-105 hover:bg-white/10 hover:border-yellow-500/30'} ${selectedTier === t.id ? 'border-yellow-500 shadow-xl' : ''}`}
+                        className={`w-full aspect-[4/5] p-3 rounded-3xl bg-[#131c31]/80 border border-white/5 relative overflow-hidden group transition-all duration-300 flex flex-col justify-between items-center ${isShaking && selectedTier === t.id ? 'animate-shake' : 'hover:scale-[1.02] hover:bg-white/10 hover:border-yellow-500/30'} ${selectedTier === t.id ? 'border-yellow-500 shadow-xl shadow-yellow-500/10' : ''}`}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.1 }}

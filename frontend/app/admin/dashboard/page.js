@@ -40,12 +40,14 @@ export default function AdminDashboard() {
                 const overview = finRes.data.overview || {};
                 const actual = finRes.data.actual || {};
                 const eco = finRes.data.economics || {};
+                const partnerAudit = finRes.data.partnerAudit || {};
 
                 if (!isCancelled) {
                     setStats({
                         ...eco,
                         currentLiabilities: overview.current_liabilities || 0,
-                        pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0)
+                        pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0),
+                        communityDropFund: partnerAudit.communityDropFund || 0
                     });
                 }
 
@@ -183,6 +185,25 @@ export default function AdminDashboard() {
                         <Activity className="w-8 h-8 text-cyan-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Task Earnings</h3>
                         <div className="text-2xl font-black text-white">{Number(stats.totalTaskIncome || 0).toLocaleString()} NXS</div>
+                    </div>
+                </div>
+
+                {/* DROP FUND MATRIX BANNER */}
+                <div className="w-full bg-gradient-to-r from-purple-900/40 to-fuchsia-900/40 border border-fuchsia-500/30 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between shadow-lg shadow-fuchsia-900/20">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-fuchsia-500/20 rounded-full animate-pulse">
+                            <Zap className="w-8 h-8 text-fuchsia-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-fuchsia-400 text-xs font-bold uppercase tracking-widest mb-1">Live P2P Drop Reservoir</h2>
+                            <p className="text-slate-400 text-xs">Accumulating instantly from 20% of P2P active game fees.</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 md:mt-0 text-center md:text-right">
+                        <div className="text-3xl font-black text-white drop-shadow-[0_0_10px_rgba(217,70,239,0.8)]">
+                            {Number(stats.communityDropFund || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span className="text-fuchsia-400 text-lg">NXS</span>
+                        </div>
+                        <div className="text-[10px] uppercase font-bold text-fuchsia-300/70 tracking-widest mt-1">Ready for Big Bang ({stats.communityDropFund >= 100 ? 'Unlocked' : 'Pending'})</div>
                     </div>
                 </div>
 
