@@ -9,6 +9,7 @@ import Button from '../../components/ui/Button';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import useGameSound from '../../hooks/useGameSound';
 import { validatePhone } from '../../utils/phoneValidation';
+import AuthTutorial from '../../components/ui/AuthTutorial';
 
 // Premium Country Data with CDN Flag Images
 const countries = [
@@ -184,6 +185,7 @@ function RegisterForm() {
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState(null);
     const [isOtpLoading, setIsOtpLoading] = useState(false);
+    const [showTutorial, setShowTutorial] = useState(false); // [NEW] Tutorial state
 
     useEffect(() => {
         if (refCodeFromUrl) setFormData(prev => ({ ...prev, referralCode: refCodeFromUrl }));
@@ -262,9 +264,18 @@ function RegisterForm() {
         try {
             const res = await api.post('/auth/register', payload);
             if (res.data.token) {
+                // [FIX] Ensure Token & User are set in localStorage
                 localStorage.setItem('token', res.data.token);
                 localStorage.setItem('user', JSON.stringify(res.data.user));
-                // playSuccess();
+
+                // [CRITICAL FIX] Sync with Browser Cookie to prevent Dashboard-to-Login bounce
+                document.cookie = `token=${res.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+                
+                if (typeof window !== 'undefined') {
+                   window.dispatchEvent(new CustomEvent('auth_change'));
+                }
+
+                playSuccess();
                 router.push(res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
             } else { router.push('/'); }
         } catch (err) {
@@ -308,6 +319,18 @@ function RegisterForm() {
                         </h1>
                         <p className="text-slate-400 text-xs font-semibold tracking-widest mt-2 uppercase">USA Affiliate Network</p>
 
+                        {/* [MODERN TUTORIAL] Interactive Walkthrough Button */}
+                        <div className="mt-4">
+                            <button 
+                                type="button" 
+                                onClick={() => setShowTutorial(true)}
+                                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:bg-indigo-500/20 transition-all active:scale-95"
+                            >
+                                <Smartphone className="w-3 h-3" />
+                                Interactive Guide
+                            </button>
+                        </div>
+
                         {/* [NEW] Direct App Download for Referred Users */}
                         {formData.referralCode && (
                             <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -334,10 +357,9 @@ function RegisterForm() {
                     {error && <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 text-red-200 rounded-xl text-sm font-bold text-center anim-shake">{error}</div>}
 
                     <form onSubmit={handleRegister} className="space-y-5" autoComplete="off">
-                        {/* AutoComplete Off Hack */}
-                        <input type="text" style={{ display: 'none' }} />
-                        <input type="password" style={{ display: 'none' }} />
-
+                        {/* Standard HTML Form Props for Browser Credential Saving */}
+                        <input type="hidden" name="username" value={formData.phone} />
+                         
                         <AuthInput
                             icon={User}
                             label="Identity Name"
@@ -447,6 +469,8 @@ function RegisterForm() {
                         >
                             {loading ? <span className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></span> : 'FINALIZE REGISTRATION'}
                         </button>
+
+                        <AuthTutorial active={showTutorial} onComplete={() => setShowTutorial(false)} />
 
                         {/* [NEW] Persistent Install Action */}
                         <button

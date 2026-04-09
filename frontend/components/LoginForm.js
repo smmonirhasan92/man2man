@@ -105,6 +105,8 @@ export default function LoginForm() {
                         </div>
                         <input
                             type="tel"
+                            name="phone"
+                            autoComplete="username"
                             required
                             className="bg-[#131c31] border border-white/5 text-white text-sm rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 block w-full pl-11 p-4 placeholder-slate-500 transition-all font-bold tracking-wide"
                             placeholder="01xxxxxxxxx"
@@ -122,6 +124,8 @@ export default function LoginForm() {
                         </div>
                         <input
                             type="password"
+                            name="password"
+                            autoComplete="current-password"
                             required
                             className="bg-[#131c31] border border-white/5 text-white text-sm rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 block w-full pl-11 p-4 placeholder-slate-500 transition-all font-bold tracking-wide"
                             placeholder="••••••"
