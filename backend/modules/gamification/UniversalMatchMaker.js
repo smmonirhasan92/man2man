@@ -27,7 +27,7 @@ class UniversalMatchMaker {
         return { isEnabled: isEnabled === 'true', houseEdge: parseFloat(houseEdge) || 10 };
     }
 
-    async processMatch(userId, betAmount, gameType = 'spin', tier = 'bronze', customWindowMs = null, consecutiveLosses = 0) {
+    async processMatch(userId, betAmount, gameType = 'spin', tier = 'bronze', customWindowMs = null, consecutiveLosses = 0, username = 'Unknown') {
         return new Promise(async (resolve, reject) => {
             const config = await this.getDynamicConfig();
             if (!config.isEnabled) {
@@ -35,7 +35,7 @@ class UniversalMatchMaker {
             }
 
             const q = this.globalQueue;
-            q.players.push({ userId, betAmount, gameType, tier, consecutiveLosses, resolve, reject, timestamp: Date.now() });
+            q.players.push({ userId, username, betAmount, gameType, tier, consecutiveLosses, resolve, reject, timestamp: Date.now() });
             
             const windowMs = customWindowMs || this.DEFAULT_WINDOW_MS;
             
@@ -107,19 +107,20 @@ class UniversalMatchMaker {
                 }
 
                 const totalFeeIn = parseFloat((totalBet * houseEdgePct).toFixed(2)); 
-                // [NEW] PLATFORM SCALE FEE DISTRIBUTION (Total 15% Fee)
-                // Aligned with approved chat strategy:
-                const megaFeeIn    = isMultiplayer ? parseFloat((totalFeeIn * 0.1667).toFixed(2)) : 0; // 2.5% of Bet
-                const bossFeeIn    = isMultiplayer ? parseFloat((totalFeeIn * 0.20).toFixed(2))   : 0; // 3.0% of Bet
-                const bigBangFeeIn = isMultiplayer ? parseFloat((totalFeeIn * 0.0667).toFixed(2)) : 0; // 1.0% of Bet
+                
+                // [THE PULSE ENGINE] HIGH-FREQUENCY JACKPOT MODEL
+                // Admin Fixed at 3% (Sacred). Remaining 12% shared by Community.
+                const adminIncomeIn = parseFloat((totalBet * 0.03).toFixed(2));    // Fixed 3.0% of Bet
+                const megaFeeIn     = parseFloat((totalBet * 0.09).toFixed(2));    // Fixed 9.0% of Bet (Pulse Heartbeat)
+                const bossFeeIn     = parseFloat((totalBet * 0.025).toFixed(2));   // Fixed 2.5% of Bet
+                const bigBangFeeIn  = parseFloat((totalBet * 0.005).toFixed(2));   // Fixed 0.5% of Bet
+                const reinjectionPadIn = 0; // [FIX] Zeroing Pad to maximize Jackpot frequency
                 
                 if (megaFeeIn > 0)    await RedisService.client.incrByFloat('livedata:game:fund_mega', megaFeeIn);
                 if (bossFeeIn > 0)    await RedisService.client.incrByFloat('livedata:game:fund_boss', bossFeeIn);
                 if (bigBangFeeIn > 0) await RedisService.client.incrByFloat('livedata:game:fund_bigbang', bigBangFeeIn);
 
                 const totalDropIn = megaFeeIn + bossFeeIn + bigBangFeeIn;
-                const adminIncomeIn = parseFloat((totalFeeIn * 0.2333).toFixed(2)); // 3.5% of Bet (Platform Profit)
-                const reinjectionPadIn = parseFloat((totalFeeIn - adminIncomeIn - totalDropIn).toFixed(2)); // ~5% of Bet (Safety Pad)
                 
                 if (reinjectionPadIn > 0) {
                     await RedisService.client.incrByFloat('livedata:game:admin_reinjection_pad', reinjectionPadIn);
@@ -174,19 +175,20 @@ class UniversalMatchMaker {
                     const now = Date.now();
                     let dropActivated = null;
                     
-                    // Priority 1: Big Bang (15 min / 120 NXS threshold)
-                    if ((now - lastBigBang) > 15 * 60000 && currentBigBang >= 120) {
-                        dropActivated = { type: 'BIG_BANG', fundKey: 'livedata:game:fund_bigbang', amtConfig: { bronze: 40, silver: 80, gold: 120 } };
+                    // [THE PULSE ENGINE] AGGRESSIVE JACKPOT THRESHOLDS
+                    // Priority 1: Big Bang (10 min / 50 NXS threshold)
+                    if ((now - lastBigBang) > 10 * 60000 && currentBigBang >= 50) {
+                        dropActivated = { type: 'BIG_BANG', fundKey: 'livedata:game:fund_bigbang', amtConfig: { bronze: 30, silver: 50, gold: 80 } };
                         await RedisService.client.set('livedata:game:last_bigbang', now.toString());
                     } 
-                    // Priority 2: Boss Win (10 min / 80 NXS threshold - For GOLD preference)
-                    else if ((now - lastBoss) > 10 * 60000 && currentBoss >= 80) {
-                        dropActivated = { type: 'BOSS_WIN', fundKey: 'livedata:game:fund_boss', amtConfig: { bronze: 30, silver: 55, gold: 80 } };
+                    // Priority 2: Boss Win (3 min / 15 NXS threshold)
+                    else if ((now - lastBoss) > 3 * 60000 && currentBoss >= 15) {
+                        dropActivated = { type: 'BOSS_WIN', fundKey: 'livedata:game:fund_boss', amtConfig: { bronze: 10, silver: 20, gold: 30 } };
                         await RedisService.client.set('livedata:game:last_boss', now.toString());
                     }
-                    // Priority 3: Mega Win (5 min / 50 NXS threshold)
-                    else if ((now - lastMega) > 5 * 60000 && currentMega >= 50) {
-                        dropActivated = { type: 'MEGA_WIN', fundKey: 'livedata:game:fund_mega', amtConfig: { bronze: 20, silver: 35, gold: 50 } };
+                    // Priority 3: Mega Win (Pulse) (1 min / 3 NXS threshold)
+                    else if ((now - lastMega) > 1 * 60000 && currentMega >= 3) {
+                        dropActivated = { type: 'MEGA_WIN', fundKey: 'livedata:game:fund_mega', amtConfig: { bronze: 5, silver: 8, gold: 12 } };
                         await RedisService.client.set('livedata:game:last_mega', now.toString());
                     }
 
@@ -208,12 +210,22 @@ class UniversalMatchMaker {
                         const fundInUse = dropActivated.fundKey === 'livedata:game:fund_bigbang' ? currentBigBang : (dropActivated.fundKey === 'livedata:game:fund_boss' ? currentBoss : currentMega);
                         
                         if (fundInUse < price) {
-                            console.log(`[SAFE_GUARD] Fund ${dropActivated.fundKey} (${fundInUse}) insufficient for ${price}. Skipping drop.`);
-                            dropActivated = null;
-                            mainWinnerIdx = ((Math.random() < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1);
+                            console.log(`[SAFE_GUARD] Fund ${dropActivated.fundKey} (${fundInUse}) insufficient for ${price}. Downscaling prize instead of skipping.`);
+                            // Downgrade the prize tier if possible instead of nullifying
+                            if (p.tier === 'gold' && fundInUse >= dropActivated.amtConfig.silver) {
+                                // Keep Gold winner but give Silver prize
+                                // targetPayout will be handled below
+                            } else if (fundInUse >= dropActivated.amtConfig.bronze) {
+                                // Keep winner but give Bronze prize
+                            } else {
+                                dropActivated = null;
+                            }
                         }
-                    } else {
-                        mainWinnerIdx = ((Math.random() < 0.65) ? 0 : Math.floor(Math.random() * (batch.length - 1)) + 1);
+                    } 
+                    
+                    // [FAIRNESS FIX] Pure Randomization - No 65% first-click bias
+                    if (!dropActivated) {
+                        mainWinnerIdx = Math.floor(Math.random() * batch.length);
                     }
 
                     let sideWinnerIdx = -1;
@@ -234,20 +246,29 @@ class UniversalMatchMaker {
                         let label = 'LOSS'; let rank = 8;
                         
                         if (dropActivated && i === mainWinnerIdx) {
-                            // FAST CLICK WINS THE COMMUNITY DROP
+                            // FAST CLICK WINS THE COMMUNITY DROP (If affordability matches)
                             const tierKey = p.tier === 'silver' ? 'silver' : (p.tier === 'gold' ? 'gold' : 'bronze');
-                            targetPayout = dropActivated.amtConfig[tierKey];
+                            let price = dropActivated.amtConfig[tierKey];
                             
+                            // [SMART FITTING] Use best affordable price
+                            const fundInUse = dropActivated.fundKey === 'livedata:game:fund_bigbang' ? currentBigBang : (dropActivated.fundKey === 'livedata:game:fund_boss' ? currentBoss : currentMega);
+                            if (fundInUse < price) {
+                                if (fundInUse >= dropActivated.amtConfig.silver) price = dropActivated.amtConfig.silver;
+                                else if (fundInUse >= dropActivated.amtConfig.bronze) price = dropActivated.amtConfig.bronze;
+                            }
+
+                            targetPayout = price;
                             payoutSource = 'community_drop_fund';
                             // Deduct from specific fund
                             await RedisService.client.incrByFloat(dropActivated.fundKey, -targetPayout);
                             dropFundDeduct = 0; // Already handled above per fund
-
                             label = dropActivated.type.replace('_', ' ');
                             rank = 1;
 
                         } else if (i === mainWinnerIdx) {
-                            targetPayout = isAbundance ? totalBet : (basePotForPrizes * 0.85); 
+                            // [PULSE TUNING] Winner gets fixed multiplier (e.g. 1.7x for Bronze/Silver)
+                            const mult = (p.betAmount >= 9) ? 1.8 : 1.7;
+                            targetPayout = isAbundance ? totalBet : parseFloat((p.betAmount * mult).toFixed(2));
                             
                             // Boost with PAD if multiplier is low
                             if (reinjectionPad > 10 && (targetPayout / (p.betAmount || 5)) < 3.3) {
@@ -469,7 +490,8 @@ class UniversalMatchMaker {
                     const updatedVault = await GameVault.getMasterVault();
                     
                     SocketService.broadcast('admin_dashboard', 'activity_feed', {
-                        event: `Batch Processed (${batch.length} Players)`,
+                        event: `Batch: ${batch.map(p => p.username || 'User').join(', ')}`,
+                        usernames: batch.map(p => p.username),
                         payout: (actualActiveDeduct + actualPadDeduct).toFixed(2),
                         timestamp: Date.now()
                     });

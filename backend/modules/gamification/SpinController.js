@@ -18,6 +18,7 @@ async function processGameRequest(req, res, gameType, windowMs) {
     try {
         const { tier } = req.body;
         const userId = req.user.user.id;
+        const username = req.user.user.username || 'User';
 
         const tierDict = SPIN_TIERS;
 
@@ -32,7 +33,7 @@ async function processGameRequest(req, res, gameType, windowMs) {
         const consecutiveLosses = userDoc?.gameStats?.consecutiveLosses || 0;
 
         // Process through Pure Pooling Engine
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses, username);
         const winAmt = matchResult.winAmount;
 
         // [FIX] Priority: Always use the engine's pre-calculated slice and label for consistency
