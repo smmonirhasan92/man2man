@@ -14,13 +14,13 @@ const bcrypt = require('bcryptjs');
 class P2PService {
 
     // --- 1. CREATE P2P AD (BUY or SELL Listing) ---
-    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 126, type = 'SELL', fiatCurrency = 'USD', transactionType = 'SEND_MONEY') {
+    async createOrder(userId, amount, paymentMethod, paymentDetails, rate = 123, type = 'SELL', fiatCurrency = 'USD', transactionType = 'SEND_MONEY') {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
         // [AUTO-BOUNDARY] Dynamic Rate Limits for Large Transactions
-        if (amount >= 50) {
-            const standardRate = 126; // System base rate
-            const maxVariance = 4; // Maximum allowed difference (+/-)
+        if (amount >= 100) {
+            const standardRate = 123; // System base rate ($1 = 123 BDT)
+            const maxVariance = 5; // Maximum allowed difference (+/-)
             const minRate = standardRate - maxVariance;
             const maxRate = standardRate + maxVariance;
 
@@ -55,8 +55,8 @@ class P2PService {
                 }
             }
 
-            // Assuming 50 NXS = 1 USD in this ecosystem
-            const minWithdrawalNxs = minWithdrawalUsd * 50;
+            // [v7.0] Normalized: 100 NXS = $1.00 USD
+            const minWithdrawalNxs = minWithdrawalUsd * 100;
 
             if (amount < minWithdrawalNxs) {
                 throw new Error(`Minimum P2P Sell limit is ${minWithdrawalNxs} NXS ($${minWithdrawalUsd} USD) based on your current package.`);
@@ -850,8 +850,8 @@ class P2PService {
     // --- MARKET SUMMARY STATS ---
     async getMarketSummary() {
         // 1. Fetch Admin-configured limits for the P2P chart
-        let p2pMin = 120;
-        let p2pMax = 135;
+        let p2pMin = 121;
+        let p2pMax = 125;
         try {
             const minSetting = await SystemSetting.findOne({ key: 'p2p_market_min' });
             if (minSetting && minSetting.value) p2pMin = parseFloat(minSetting.value);

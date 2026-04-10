@@ -400,14 +400,13 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-[10px] text-[#848e9c] font-black tracking-wide">$1 USD = {trade.orderId.rate || 1.3} {trade.orderId.fiatCurrency || 'BDT'}</div>
+                                <div className="text-[10px] text-[#848e9c] font-black tracking-wide">$1 USD = {trade.orderId.rate || 123} {trade.orderId.fiatCurrency || 'BDT'}</div>
                                 {trade.transactionType === 'CASH_OUT' && (
                                     <div className="text-[9px] text-[#f6465d] uppercase font-black tracking-widest animate-pulse mt-1">+1.85% Cash Out Fee</div>
                                 )}
-                                <div className="text-[10px] text-[#848e9c] mt-1 font-bold uppercase tracking-widest">Total Must Pay</div>
                                 <div className="text-[22px] font-black text-[#0ecb81] leading-none drop-shadow-md">
                                     {(() => {
-                                        let baseFiat = (trade.amount / 50) * (trade.orderId.rate || 1.3);
+                                        let baseFiat = (trade.amount / 100) * (trade.orderId.rate || 123);
                                         if (trade.transactionType === 'CASH_OUT') {
                                             baseFiat += baseFiat * 0.0185;
                                         }

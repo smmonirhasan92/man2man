@@ -1,41 +1,42 @@
+'use client';
 import React, { useState } from 'react';
 import { useCurrency } from '../../context/CurrencyContext';
 import USCIcon from '../ui/USCIcon';
 
+/**
+ * Header Balance Component (v7.1 - Cent Normalized)
+ * Fixes imports and confirms 1 NXS = 1 Cent calculation.
+ */
 export default function HeaderBalance({ balance }) {
     const { formatMoney } = useCurrency();
-    // State: 0 = Hidden, 1 = USD (Default)
-    const [viewState, setViewState] = useState(0);
+    // State: 0 = Hidden, 1 = USD (Default), 2 = NXS
+    const [viewState, setViewState] = useState(1);
 
-    const rawBalance = parseFloat(balance || 0); // Always USD (e.g. 10000)
-    const rate = 50; // 1 USD = 50 NXS (i.e. 1 NXS = $0.02)
+    const rawBalance = parseFloat(balance || 0);
 
     const handleToggle = (e) => {
-        e.stopPropagation(); // Prevent deposit click
+        e.stopPropagation(); 
         setViewState((prev) => (prev + 1) % 3);
     };
 
-    const handleDeposit = () => {
-        window.location.href = '/wallet/recharge';
-    };
-
     // Calculate Display Content
-    let displayValue, currencySymbol, currencyLabel;
+    let displayValue, currencySymbol;
 
     if (viewState === 0) {
         displayValue = '••••••';
         currencySymbol = '';
-        currencyLabel = 'Hidden';
     } else if (viewState === 1) {
-        // USD Mode
-        displayValue = (rawBalance / rate).toFixed(2);
-        currencySymbol = '$';
-        currencyLabel = 'USD';
+        // [v7.0] USD Only Display (Normalized to $0.01 per NXS)
+        displayValue = (
+            <span className="text-emerald-400 font-bold text-lg font-mono leading-none">
+                {formatMoney(rawBalance)}
+            </span>
+        );
+        currencySymbol = null;
     } else {
-        // USC Mode
-        displayValue = rawBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        // NXS Mode
+        displayValue = rawBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         currencySymbol = <USCIcon className="w-5 h-5" />;
-        currencyLabel = 'USC';
     }
 
     return (
@@ -48,7 +49,7 @@ export default function HeaderBalance({ balance }) {
                     Main Balance
                 </span>
                 <div className="flex items-center gap-1.5 text-slate-100">
-                    <span className={`flex items-center justify-center ${viewState === 1 ? 'text-green-400 font-bold' : ''}`}>
+                    <span className="flex items-center justify-center">
                         {currencySymbol}
                     </span>
                     <span className="text-lg font-black font-mono tracking-tight leading-none text-white">
@@ -56,9 +57,6 @@ export default function HeaderBalance({ balance }) {
                     </span>
                 </div>
             </div>
-
-            {/* Tiny Deposit Button */}
-
         </div>
     );
 }

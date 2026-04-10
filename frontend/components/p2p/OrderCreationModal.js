@@ -9,7 +9,7 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
     const { user } = useAuth();
     const [adMode, setAdMode] = useState('SELL'); // 'BUY' or 'SELL'
     const [amount, setAmount] = useState(''); // Max Limit
-    const [rate, setRate] = useState('120'); // Exchange Rate
+    const [rate, setRate] = useState('123'); // Exchange Rate ($1 = 123 BDT)
     const [fiatCurrency, setFiatCurrency] = useState('BDT'); // Fiat Currency
     const defaultMethod = user?.country?.toUpperCase() === 'IN' ? 'phonepe' : user?.country?.toUpperCase() === 'BD' ? 'bkash' : 'binance';
 
@@ -129,13 +129,13 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                         <div className="bg-[#111] p-3 rounded-xl border border-white/10 flex items-start gap-2">
                             <span className="text-yellow-500 text-base leading-none">💡</span>
                             <div className="text-[10px] text-slate-300 font-bold leading-relaxed">
-                                <span className="text-white">Exchange Rate Setup:</span> Set the exchange rate in your local currency for <strong>$1 USD (50 NXS)</strong> (e.g., 120 BDT or 85 INR). Buyers/Sellers will use this rate to calculate fiat payments.
+                                <span className="text-white">Exchange Rate Setup:</span> Set the exchange rate in your local currency for <strong>$1 USD (100 NXS)</strong>. Buyers/Sellers will use this rate to calculate fiat payments.
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Rate (per $1 USD / 50 NXS)</label>
+                                <label className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Rate (per $1 USD / 100 NXS)</label>
                                 <div className="relative flex gap-2">
                                     <select
                                         value={fiatCurrency}
@@ -175,13 +175,13 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                                         <div className="p-2 bg-emerald-500/10 rounded-lg flex justify-between items-center border border-emerald-500/20 shadow-inner">
                                             <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest text-[9px]">Calculated Rate:</span>
                                             <span className="text-sm font-black text-emerald-400">
-                                                1 NXS = {(Number(rate) / 50).toFixed(2)} <span className="text-[10px]">{fiatCurrency}</span>
+                                                1 NXS = {(Number(rate) / 100).toFixed(2)} <span className="text-[10px]">{fiatCurrency}</span>
                                             </span>
                                         </div>
                                         <div className="p-2 bg-slate-800/50 rounded-lg flex justify-between items-center border border-white/5 shadow-inner">
                                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-[9px]">Total Receive:</span>
                                             <span className="text-sm font-black text-white">
-                                                {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{fiatCurrency}</span>
+                                                {((Number(amount) / 100) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{fiatCurrency}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -358,7 +358,7 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
 
                         {adMode === 'SELL' && (
                             <div className="px-2 text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">
-                                *Ensure your selling amount meets your package&apos;s minimum threshold (e.g. 250 NXS).*
+                                *Ensure your selling amount meets your package&apos;s minimum threshold (e.g. 500 NXS).*
                             </div>
                         )}
 

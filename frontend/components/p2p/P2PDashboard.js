@@ -318,11 +318,11 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 <div className="flex items-end justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-2xl font-black text-[#eaeaec]">NXS / USD</h2>
-                            <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">P2P</span>
+                            <h2 className="text-2xl font-black text-[#eaeaec]">USD / BDT</h2>
+                            <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">MARKET RATE</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-lg font-bold text-[#0ecb81]">{marketStats.price ? marketStats.price.toFixed(2) : '---'}</span>
+                            <span className="text-lg font-bold text-[#0ecb81] tracking-tighter">৳{marketStats.price ? marketStats.price.toFixed(2) : '---'}</span>
                             <div className={`text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 border ${userTier.color}`}>
                                 <Zap className="w-3 h-3" /> {userTier.name} FEE: {userTier.fee}
                             </div>
@@ -347,8 +347,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
 
             {/* Price Chart */}
             {(mode === 'buy' || mode === 'sell' || mode === 'active' || mode === 'history') && marketStats?.chartData && marketStats.chartData.length > 0 && (
-                <div className="bg-[#181a20] border-b border-[#2b3139] px-2 py-4 h-[140px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                <div className="bg-[#181a20] border-b border-[#2b3139] px-2 py-4 h-[140px] w-full relative">
+                    <ResponsiveContainer width="99%" height={100}>
                         <AreaChart data={marketStats.chartData}>
                             <defs>
                                 <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -469,7 +469,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                                 {trade.amount} NXS
                                             </div>
                                             <div className="text-[10px] text-[#848e9c] mt-0.5">
-                                                Total: {((trade.amount / 50) * (trade.orderId?.rate || 1.3)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} {trade.orderId?.fiatCurrency || 'BDT'}
+                                                Total: {((trade.amount / 100) * (trade.orderId?.rate || 123)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} {trade.orderId?.fiatCurrency || 'BDT'}
                                             </div>
                                         </div>
                                         <div className="text-right flex items-center gap-2 text-[#848e9c] group-hover:text-[#eaeaec] transition">
@@ -508,7 +508,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex flex-col gap-1.5">
                                             <div className="text-lg font-black font-mono text-[#eaeaec] leading-none">
-                                                {order.rate || 1.3} <span className="text-[10px] text-[#848e9c] ml-0.5">{order.fiatCurrency || 'BDT'} / 50 NXS</span>
+                                                {order.rate || 123} <span className="text-[10px] text-[#848e9c] ml-0.5">{order.fiatCurrency || 'BDT'} / $1 (100 NXS)</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Amount</span>
@@ -516,7 +516,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px]">
                                                 <span className="text-[#848e9c] w-12 border-b border-dashed border-[#2b3139]">Fiat Vol</span>
-                                                <span className="text-[#eaeaec] font-mono">{((order.amount / 50) * (order.rate || 1.3)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} {order.fiatCurrency || 'BDT'}</span>
+                                                <span className="text-[#eaeaec] font-mono">{((order.amount / 100) * (order.rate || 123)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} {order.fiatCurrency || 'BDT'}</span>
                                             </div>
                                         </div>
 

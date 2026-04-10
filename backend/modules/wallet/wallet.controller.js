@@ -200,11 +200,13 @@ exports.transferToMain = async (req, res) => {
             return res.status(400).json({ message: "Invalid Amount" });
         }
 
-        // [v6.5] Financial Hardening: $5 Minimum Limit (250 NXS)
-        if (amountFloat < 250) {
+        const CURRENCY = require('../../config/currency');
+
+        // [v6.5] Financial Hardening: $5 Minimum Limit (Scaled to 1 Cent model)
+        if (amountFloat < CURRENCY.TRANSFER_MINIMUM_NXS) {
             return res.status(400).json({ 
                 success: false, 
-                message: "⚠️ সর্বনিম্ন ট্রান্সফার সীমা ২৫০ NXS ($৫.০০ USD)। অনুগ্রহ করে আরও ইনকাম জমা করুন।" 
+                message: `⚠️ সর্বনিম্ন ট্রান্সফার সীমা ${CURRENCY.TRANSFER_MINIMUM_NXS} NXS ($৫.০০ USD)। অনুগ্রহ করে আরও ইনকাম জমা করুন।` 
             });
         }
 

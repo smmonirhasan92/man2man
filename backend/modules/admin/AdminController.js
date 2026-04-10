@@ -136,11 +136,13 @@ class AdminController {
                 const totalReturn = p.daily_limit * p.task_reward * p.validity_days;
                 const roiPercentage = (totalReturn / p.price) * 100;
 
+const CURRENCY = require('../../config/currency');
+
                 const planData = {
                     name: p.name, // Exactly as inputted by user
                     type: 'server',
                     unlock_price: p.price,
-                    price_usd: (p.price * 0.02).toFixed(2), // Cosmetic conversion
+                    price_usd: (p.price * CURRENCY.NXS_TO_USD).toFixed(2), // Normalized to 1 Cent
                     validity_days: p.validity_days,
                     daily_limit: p.daily_limit,
                     task_reward: p.task_reward,

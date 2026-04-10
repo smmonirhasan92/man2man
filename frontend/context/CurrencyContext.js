@@ -5,34 +5,29 @@ import api from '../services/api';
 const CurrencyContext = createContext();
 
 export function CurrencyProvider({ children }) {
-    // Default to USD, force rate to 1
+    // [v7.0] 1 NXS = 1 Cent ($0.01) Model
+    // No BDT conversion in wallet per user request.
     const [currency, setCurrency] = useState('USD');
-    const [rates, setRates] = useState({
-        USD: 1,
-        USD: 1 // [FIX] Disabled USD conversion. 1 Unit = $1 USD.
+    const [rates] = useState({
+        NXS_TO_USD: 0.01
     });
 
     useEffect(() => {
-        // Force USD preference
-        localStorage.setItem('currencyMode', 'USD');
         setCurrency('USD');
-        setRates({ USD: 1, USD: 1 });
     }, []);
 
     const toggleCurrency = () => {
-        // [FIX] Disabled Toggle. Always USD.
-        setCurrency('USD');
+        // Toggle Logic if needed in future
     };
 
-    // Helper to format money
-    // ASSUMPTION: Backend stores USD.
-    const formatMoney = (amount) => {
-        const val = parseFloat(amount || 0);
-        return `$${val.toFixed(2)}`;
+    // Helper to format in USD ($)
+    const formatMoney = (nxsAmount) => {
+        const usdValue = parseFloat(nxsAmount || 0) * rates.NXS_TO_USD;
+        return `$${usdValue.toFixed(2)}`;
     };
 
     return (
-        <CurrencyContext.Provider value={{ currency, toggleCurrency, formatMoney }}>
+        <CurrencyContext.Provider value={{ currency, toggleCurrency, formatMoney, rates }}>
             {children}
         </CurrencyContext.Provider>
     );

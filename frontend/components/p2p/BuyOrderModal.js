@@ -66,7 +66,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
                             <div className="flex flex-col gap-3 relative z-10">
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400 font-medium">Exchange Rate</span>
-                                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">$1 USD (50 NXS) = {rate} Local Fiat</span>
+                                    <span className="font-bold text-white bg-slate-800 px-2 py-0.5 rounded-md text-xs border border-slate-700">$1 USD (100 NXS) = {rate} BDT</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400 font-medium">Seller's Balance</span>
@@ -168,7 +168,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
                                     <div className="p-3 bg-emerald-500/10 rounded-xl flex justify-between items-center border border-emerald-500/20 shadow-inner">
                                         <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Rate (1 NXS):</span>
                                         <span className="text-sm font-black text-emerald-400">
-                                            {(Number(rate) / 50).toFixed(2)} <span className="text-[10px]">{order.fiatCurrency || 'BDT'}</span>
+                                            {(Number(rate) / 100).toFixed(2)} <span className="text-[10px]">{order.fiatCurrency || 'BDT'}</span>
                                         </span>
                                     </div>
                                     <div className="p-3 bg-[#0b1120] rounded-xl flex justify-between items-center border border-slate-700/50 shadow-2xl">
@@ -176,7 +176,7 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
                                             Total {order.type === 'SELL' ? 'To Pay' : 'To Receive'}:
                                         </span>
                                         <span className="text-lg font-black text-white">
-                                            {((Number(amount) / 50) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{order.fiatCurrency || 'BDT'}</span>
+                                            {((Number(amount) / 100) * Number(rate)).toLocaleString('en-IN', { maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{order.fiatCurrency || 'BDT'}</span>
                                         </span>
                                     </div>
                                 </div>
