@@ -173,10 +173,11 @@ exports.updateUserBalance = async (req, res) => {
 exports.getFinancialStats = async (req, res) => {
     try {
         const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
-        // A. Total Minted (From Ledger)
+        // A. Total Minted (From Ledger) - Include both explicit mints and positive admin credits
         const mintedAgg = await TransactionLedger.aggregate([
-            { $match: { type: 'mint' } },
+            { $match: { type: { $in: ['mint', 'admin_adjustment'] }, amount: { $gt: 0 } } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
         const totalMinted = mintedAgg[0]?.total || 0;
@@ -286,12 +287,25 @@ exports.getFinancialStats = async (req, res) => {
         ]);
         const totalP2PFee = p2pFeeAgg[0]?.total || 0;
 
-        // M. Total Users
+        // M. Game Related Accounting (Bet = Recovery, Win = Liability)
+        const gameBetAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['bet', 'game_bet', 'crash_bet'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalGameBets = gameBetAgg[0]?.total || 0;
+
+        const gameWinAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['game_win', 'crash_win'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+        ]);
+        const totalGameWins = gameWinAgg[0]?.total || 0;
+
+        // N. Total Users
         const totalUsers = await User.countDocuments();
 
         // Calculated Super Totals
-        const totalSystemRecovery = totalServerRevenue + totalLotteryRevenue + totalP2PFee;
-        const totalIncomeGiven = totalTaskIncome + totalLotteryPrizes + totalReferralBonus;
+        const totalSystemRecovery = totalServerRevenue + totalLotteryRevenue + totalP2PFee + totalGameBets;
+        const totalIncomeGiven = totalTaskIncome + totalLotteryPrizes + totalReferralBonus + totalGameWins;
         const netSystemProfit = totalSystemRecovery - totalIncomeGiven;
 
         const totalRevoked = 0; // Placeholder - burn mechanic not yet implemented
@@ -319,7 +333,7 @@ exports.getFinancialStats = async (req, res) => {
         res.json({
             partnerAudit: {
                 totalHouseIncome: gameVault?.balances?.adminIncome || 0,
-                jackpotReservoir: currentJackpotFund,
+                jackpotReservoir: communityDropFund.total,
                 communityDropFund: communityDropFund,
                 activePlayerPool: liveActivePool,
                 systemHealthScore: netSystemProfit > 0 ? 'STABLE' : 'MONITOR',
@@ -377,6 +391,8 @@ exports.getFinancialStats = async (req, res) => {
                 totalLotteryPrizes,
                 totalReferralBonus,
                 totalP2PFee,
+                totalGameBets,
+                totalGameWins,
                 totalSystemRecovery,
                 totalIncomeGiven,
                 netSystemProfit

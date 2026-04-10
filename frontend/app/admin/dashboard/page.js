@@ -45,6 +45,7 @@ export default function AdminDashboard() {
                 if (!isCancelled) {
                     setStats({
                         ...eco,
+                        totalMinted: overview.total_minted || 0,
                         currentLiabilities: overview.current_liabilities || 0,
                         pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0),
                         communityDropFund: partnerAudit.communityDropFund || 0
@@ -144,7 +145,14 @@ export default function AdminDashboard() {
             {/* MAIN CONTENT */}
             <main className="w-full px-6 lg:px-10 py-8 relative z-10">
                 {/* SIMPLE STATS GRID */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    {/* 0. Total Minted (NEW) */}
+                    <div className="bg-[#0f0f0f] border border-[#D4AF37]/30 p-5 rounded-xl text-center shadow-lg shadow-yellow-900/10">
+                        <Gem className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
+                        <h3 className="text-[#D4AF37]/60 text-[10px] font-bold uppercase tracking-widest mb-1">Total NXS Created</h3>
+                        <div className="text-2xl font-black text-[#D4AF37]">{Number(stats.totalMinted || 0).toLocaleString()}</div>
+                    </div>
+
                     {/* 1. Total Users */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
