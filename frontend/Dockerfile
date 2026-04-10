@@ -32,6 +32,8 @@ ENV NODE_ENV=production
 ENV TZ=Asia/Dhaka
 # Important for Next.js standalone on Alpine
 ENV PORT=3000
+# Force Next.js to bind to all interfaces (0.0.0.0) so Nginx can reach it
+ENV HOSTNAME=0.0.0.0
 
 # Install curl for healthcheck
 RUN apk add --no-cache curl

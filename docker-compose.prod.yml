@@ -30,7 +30,6 @@ services:
       # [STANDARDIZED] PORT 5050 — matches Nginx proxy_pass configuration
       - PORT=5050
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://127.0.0.1:27017/universal_game_core_docker
       - TZ=Asia/Dhaka
     volumes:
       - ./uploads:/app/uploads

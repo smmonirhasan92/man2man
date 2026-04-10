@@ -2,11 +2,16 @@
 description: How to deploy code to the live Hostinger VPS
 ---
 
-# Hostinger VPS Deployment Playbook
+# Hostinger VPS Deployment Playbook (DOCKER ENVIRONMENT)
 
-This project is deployed on a Hostinger VPS via GitHub integration. Whenever you write new code, you MUST follow this automated workflow to push the code live. Do NOT ask the user for permission to run these steps unless a step explicitly fails. Follow them automatically.
+> [!WARNING]  
+> **CRITICAL MEMORY FOR AI AGENTS**: As of April 2026, the Main Domain (`usaaffiliatemarketing.com`) has been **strictly and permanently transitioned to DOCKER**.   
+> You must **NEVER** use `pm2` commands for deployment. 
+> You must **NEVER** overwrite the `.env.prod` file with Test Database credentials.
 
-## Deployment Steps
+This project is deployed on a Hostinger VPS via GitHub integration. Whenever you write new code, you MUST follow this Docker-based automated workflow to push the code live. 
+
+## Strict Docker Deployment Steps
 
 1. **Commit to GitHub**
 Commit all your working changes to the `main` branch.
@@ -17,14 +22,14 @@ git commit -m "System updates"
 git push origin main
 ```
 
-2. **Run VPS Pull Script**
-SSH into the Hostinger VPS (76.13.244.202) using the predefined credentials `root` / `Sir@@@admin123`. Navigate to the `/var/www/man2man` folder where the live server is hosted, pull the latest code, and rebuild the React application.
+2. **Run VPS Pull & Docker Build Script**
+SSH into the Hostinger VPS (76.13.244.202) and execute the Docker compose production rebuild. This correctly uses `network_mode: "host"` to communicate securely with the Native MongoDB instance running on the VPS. 
 // turbo
 ```bash
-ssh -o StrictHostKeyChecking=no root@76.13.244.202 "cd /var/www/man2man && git pull origin main && npm install && cd frontend && npm run build && pm2 restart all"
+node scripts/ssh_runner.js "cd /var/www/man2man && git pull origin main && docker compose -f docker-compose.prod.yml up -d --build frontend backend"
 ```
 
-## Important Notes:
-- **Password Prompt:** When executing step 2, the terminal will prompt for a password. Use the `send_command_input` tool immediately to input `Sir@@@admin123\n`.
-- **White Screen Bug:** Ensure `npm run build` is always executed in the `frontend` folder to clear Next.js aggressive caching.
-- **PM2:** `pm2 restart all` restarts both the backend and frontend processes. It does not require a reboot.
+## Immutable Architecture Rules
+1. **Ports:** The live Nginx server routes `localhost:3000` (Frontend) and `localhost:5050` (Backend API). Docker seamlessly binds to these due to `network_mode: "host"`.
+2. **Database:** The LIVE database is `universal_game_core_v1` running native on the VPS `127.0.0.1:27017`. Only the `docker-compose.test.yml` relies on an internal Mongo container.
+3. **PM2 is Dead:** Do not attempt to run `npm run build` locally on the server or `pm2 start`. Docker handles everything via `docker-compose.prod.yml`.
