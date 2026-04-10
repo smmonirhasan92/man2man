@@ -50,7 +50,7 @@ export default function WithdrawalPage() {
                 <div className="flex items-start justify-center gap-1 mt-2">
                     <span className="text-2xl font-thin text-zinc-500 mt-1">$</span>
                     <span className="text-6xl font-thin text-white tracking-tighter">
-                        {balance.main ? (balance.main / 50).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                        {balance.main ? (balance.main / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                     </span>
                 </div>
             </div>

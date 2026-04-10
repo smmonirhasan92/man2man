@@ -62,7 +62,7 @@ export default function GlobalMarketplace() {
 
         // Pricing & Validation based on Country
         const nxsCost = plan.unlock_price || 1000;
-        const usdPrice = nxsCost / 50;
+        const usdPrice = nxsCost / 100;
 
         const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
 
@@ -198,7 +198,7 @@ export default function GlobalMarketplace() {
 
                             // USD First Logic & Local Currency Logic
                             const nxsCost = plan.unlock_price || 1000;
-                            const usdPriceRaw = nxsCost / 50;
+                            const usdPriceRaw = nxsCost / 100;
                             const usdPrice = usdPriceRaw.toFixed(2);
 
                             // [35-DAY CYCLE LOGIC]
