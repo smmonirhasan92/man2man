@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
  * @param {Function} callback - async (session) => { ... }
  */
 async function runTransaction(callback) {
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 5;
     let retries = 0;
 
     while (retries < MAX_RETRIES) {
@@ -35,8 +35,8 @@ async function runTransaction(callback) {
             if (isTransientError && retries < MAX_RETRIES - 1) {
                 console.warn(`⏳ [TX_RETRY] Write Conflict (Transient Error) detected. Retrying ${retries + 1}/${MAX_RETRIES}...`);
                 retries++;
-                // Wait briefly before retrying
-                await new Promise(res => setTimeout(res, 300));
+                // Wait longer between retries with exponential backoff
+                await new Promise(res => setTimeout(res, 500 * retries));
                 continue;
             }
 
