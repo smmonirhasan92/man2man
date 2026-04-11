@@ -541,6 +541,7 @@ class P2PService {
             const transactionLogs = [
                 {
                     userId: trade.sellerId,
+                    relatedUserId: trade.buyerId, // [AUDIT] Track counterparty
                     amount: -trade.amount,
                     type: 'p2p_sell',
                     description: `P2P Settled: ${isAuto ? 'Seller Released' : 'Admin Approved'}`,
@@ -549,6 +550,7 @@ class P2PService {
                 },
                 {
                     userId: trade.buyerId,
+                    relatedUserId: trade.sellerId, // [AUDIT] Track counterparty
                     amount: finalAmount,
                     type: 'p2p_buy',
                     description: `P2P Settled: ${isAuto ? 'Seller Released' : 'Admin Approved'}`,
