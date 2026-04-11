@@ -42,8 +42,9 @@ export default function AdminWithdrawals() {
         const agentId = selectedAgents[id];
 
         let message = `Are you sure you want to ${status} this request?`;
-        if (status === 'completed' && !agentId) {
-            message = "No Agent Selected! Are you sure you want to approve without assigning an Agent? (System funds will be used directly)";
+        if (status === 'completed') {
+            const bdtAmount = (Math.abs(requests.find(r => r.id === id)?.amount || 0) * 1.23).toFixed(2);
+            message = `ATTENTION: You must send ${bdtAmount} BDT to the user's account before confirming. ${!agentId ? '\n\nNo Agent Selected! System funds will be used directly.' : ''}`;
         }
 
         setConfirmModal({
@@ -60,7 +61,7 @@ export default function AdminWithdrawals() {
                         adminComment: status === 'completed' ? 'Approved by Admin' : 'Rejected by Admin',
                         agentId: status === 'completed' ? agentId : null
                     });
-                    setRequests(requests.filter(r => r.id !== id));
+                    setRequests(requests.filter(r => r._id !== id));
                     toast.success(`Request ${status} successfully`);
                     setConfirmModal({ isOpen: false });
                 } catch (err) {
@@ -98,17 +99,16 @@ export default function AdminWithdrawals() {
 
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-800">$ {Math.abs(req.amount).toLocaleString()}</h3>
+                                    <h3 className="font-bold text-lg text-slate-800">{Math.abs(req.amount).toLocaleString()} <span className="text-xs text-slate-400">NXS</span></h3>
                                     <p className="text-sm text-gray-500 flex items-center gap-1">
                                         <Wallet className="w-3 h-3" /> {req.description}
                                     </p>
-                                    {/* [NEW] Delay & Net Payout */}
                                     <div className="mt-1 flex gap-2">
                                         <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-bold border border-slate-200">
                                             {req.metadata?.deliveryTime || '24h'}
                                         </span>
-                                        <span className="text-[10px] bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-700 font-bold border border-emerald-200">
-                                            Net: $ {(Math.abs(req.amount) - (req.fee || 0)).toLocaleString()}
+                                        <span className="text-[10px] bg-emerald-500 px-2 py-0.5 rounded text-white font-black border border-emerald-600 shadow-sm shadow-emerald-500/20">
+                                            PAYABLE: {(Math.abs(req.amount) * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT
                                         </span>
                                     </div>
                                 </div>
@@ -135,13 +135,13 @@ export default function AdminWithdrawals() {
                             </div>
 
                             {/* Agent Selection Dropdown */}
-                            <div className="mt-2">
+                            <div className="mt-2" key={req._id}>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">Assign Agent (for Payout)</label>
-                                <div className="relative">
+                                <div className="relative border border-slate-200 rounded-xl overflow-hidden">
                                     <select
-                                        className="w-full p-2 text-sm border border-gray-200 rounded-lg appearance-none bg-white"
-                                        value={selectedAgents[req.id] || ''}
-                                        onChange={(e) => handleAgentSelect(req.id, e.target.value)}
+                                        className="w-full p-3 text-sm border-none appearance-none bg-emerald-50/30 text-emerald-800 font-bold outline-none"
+                                        value={selectedAgents[req._id] || ''}
+                                        onChange={(e) => handleAgentSelect(req._id, e.target.value)}
                                     >
                                         <option value="">-- Select Agent --</option>
                                         {agents.map(agent => (
@@ -156,15 +156,15 @@ export default function AdminWithdrawals() {
 
                             <div className="flex gap-3 mt-2 border-t border-gray-100 pt-3">
                                 <button
-                                    onClick={() => handleAction(req.id, 'completed')}
-                                    disabled={actionLoading === req.id}
+                                    onClick={() => handleAction(req._id, 'completed')}
+                                    disabled={actionLoading === req._id}
                                     className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-50"
                                 >
                                     <Check className="w-4 h-4" /> Approve
                                 </button>
                                 <button
-                                    onClick={() => handleAction(req.id, 'rejected')}
-                                    disabled={actionLoading === req.id}
+                                    onClick={() => handleAction(req._id, 'rejected')}
+                                    disabled={actionLoading === req._id}
                                     className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-50"
                                 >
                                     <X className="w-4 h-4" /> Reject

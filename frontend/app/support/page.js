@@ -269,8 +269,8 @@ export default function SupportPage() {
                                     
                                     <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-2">
                                         <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">যাকে টাকা পাঠাবেন তাকে দিতে হবে</span>
-                                        <span className="text-3xl font-black text-white">{(p2pAmount * 2.54).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
-                                        <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 2.54 BDT</span>
+                                        <span className="text-3xl font-black text-white">{(p2pAmount * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
+                                        <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 1.23 BDT</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
@@ -305,7 +305,7 @@ export default function SupportPage() {
                                         <div className="flex justify-between items-center mb-3">
                                             <div>
                                                 <span className="text-[9px] text-emerald-400 block mb-1 uppercase font-black">Pay Exactly</span>
-                                                <span className="text-2xl font-black text-emerald-400">{(activeTrx.amount * 2.54).toFixed(2)} BDT</span>
+                                                <span className="text-2xl font-black text-emerald-400">{(activeTrx.amount * 1.23).toFixed(2)} BDT</span>
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[9px] text-slate-500 block mb-1 uppercase font-black">For Amount</span>
@@ -352,8 +352,8 @@ export default function SupportPage() {
 
                                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col items-center justify-center">
                                     <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">আপনি পাবেন (আনুমানিক)</span>
-                                    <span className="text-3xl font-black text-white">{(p2pAmount * 2.54).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
-                                    <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 2.54 BDT</span>
+                                    <span className="text-3xl font-black text-white">{(p2pAmount * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
+                                    <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 1.23 BDT</span>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">

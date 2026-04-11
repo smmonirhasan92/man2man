@@ -74,63 +74,71 @@ const connectDB = async () => {
     }
 };
 
+const CURRENCY = require('./config/currency'); // [NEW] Use central config
+
 const seedPlans = async () => {
     await connectDB();
 
-    console.log("\n=== SEEDING ACCOUNT TIERS ===");
-    await Plan.deleteMany({});
-    console.log("🗑️  Cleared existing plans.\n");
+    console.log("\n=== SEEDING ACCOUNT TIERS [SAFE MODE] ===");
+    // [FIX] Removed deleteMany to protect user custom rates
 
     for (const tier of TIERS) {
-        const maxEarn = parseFloat((tier.tasks * tier.reward * tier.validity).toFixed(2));
+        const nxsPrice = tier.price;
+        const usdPrice = parseFloat((nxsPrice * CURRENCY.NXS_TO_USD).toFixed(2)); // DYNAMIC 1 CENT CALC
+        const rewardNxs = tier.reward;
+        const totalReturn = parseFloat((tier.tasks * rewardNxs * tier.validity).toFixed(2));
+
         try {
-            await Plan.create({
-                _id: tier.id,
-                name: tier.name,
-                type: 'server',
-                unlock_price: tier.price,
-                price_usd: tier.price_usd,
-                daily_limit: tier.tasks,
-                task_reward: tier.reward,
-                reward_multiplier: 1,
-                validity_days: tier.validity,
-                server_id: tier.server_id,
-                is_active: true,
-                features: [
-                    `${tier.tasks} Daily Tasks`,
-                    `${tier.reward} NXS/Task`,
-                    `${tier.validity} Days Validity`,
-                    `Max Earn: ${maxEarn} NXS`
-                ]
-            });
-            console.log(`  ✅ ${tier.name.padEnd(12)} | ${tier.price} NXS | ${tier.tasks} tasks/day | ${tier.reward} NXS/task | ${tier.validity} days | Max: ${maxEarn} NXS`);
+            await Plan.findOneAndUpdate(
+                { node_code: tier.server_id }, // Match by code/id
+                {
+                    $setOnInsert: { // ONLY SET IF NEW
+                        _id: tier.id,
+                        name: tier.name,
+                        type: 'server',
+                        unlock_price: nxsPrice,
+                        price_usd: usdPrice,
+                        daily_limit: tier.tasks,
+                        task_reward: rewardNxs,
+                        reward_multiplier: 1,
+                        validity_days: tier.validity,
+                        server_id: tier.server_id,
+                        is_active: true,
+                        features: [
+                            `${tier.tasks} Daily Tasks`,
+                            `${rewardNxs} NXS/Task`,
+                            `${tier.validity} Days Validity`,
+                            `Max Earn: ${totalReturn} NXS`
+                        ]
+                    }
+                },
+                { upsert: true, new: true }
+            );
+            console.log(`  ℹ️ ${tier.name.padEnd(12)} | Processed: ${nxsPrice} NXS | USD: ${usdPrice}`);
         } catch (e) {
-            console.error(`  ❌ ERROR seeding ${tier.name}:`, e.message);
+            console.error(`  ❌ ERROR processing ${tier.name}:`, e.message);
         }
     }
 
-    console.log("\n=== SEEDING TASK ADS (20 Tasks) ===");
-    await TaskAd.deleteMany({});
-
-    const techGiants = [
-        'NVIDIA', 'Tesla', 'Google', 'Microsoft', 'Amazon',
-        'Apple', 'Meta', 'Netflix', 'Adobe', 'Intel',
-        'AMD', 'Oracle', 'IBM', 'Salesforce', 'Cisco',
-        'Uber', 'Airbnb', 'Spotify', 'Shopify', 'Zoom'
-    ];
-
-    const tasks = techGiants.map((name, i) => ({
-        title: `${name} Cloud Verify`,
-        url: 'https://google.com',
-        imageUrl: 'https://cdn-icons-png.flaticon.com/512/270/270798.png',
-        duration: 10,
-        type: 'ad_view',
-        priority: 100 - i,
-        is_active: true
-    }));
-
-    await TaskAd.insertMany(tasks);
-    console.log(`  ✅ 20 Task Ads Seeded.`);
+    console.log("\n=== SEEDING TASK ADS [EMPTY ONLY] ===");
+    const existingTasks = await TaskAd.countDocuments();
+    
+    if (existingTasks === 0) {
+        const techGiants = ['NVIDIA', 'Tesla', 'Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Adobe', 'Intel'];
+        const tasks = techGiants.map((name, i) => ({
+            title: `${name} Cloud Verify`,
+            url: 'https://google.com',
+            imageUrl: 'https://cdn-icons-png.flaticon.com/512/270/270798.png',
+            duration: 10,
+            type: 'ad_view',
+            priority: 100 - i,
+            is_active: true
+        }));
+        await TaskAd.insertMany(tasks);
+        console.log(`  ✅ ${tasks.length} Initial Task Ads Seeded.`);
+    } else {
+        console.log(`  ℹ️ Tasks already exist (${existingTasks}). Skipping.`);
+    }
 
     // --- [NEW] SEED SUPER ADMIN (01712345678 / 000000) ---
     console.log("\n=== SEEDING SUPER ADMIN ===");

@@ -202,7 +202,7 @@ export default function P2PCommandCenter() {
                                         <div>
                                             <div className="text-xs uppercase text-slate-500 font-bold">Admin Fee (2%)</div>
                                             <div className="text-xl font-mono font-bold text-emerald-400 flex items-center gap-2">
-                                                <USCIcon className="w-5 h-5" /> {(selectedTrade.amount * 0.02).toFixed(2)}
+                                                <USCIcon className="w-5 h-5" /> {(selectedTrade.amount * 0.01).toFixed(2)}
                                             </div>
                                         </div>
                                     </div>

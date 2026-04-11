@@ -90,7 +90,7 @@ export default function AdminRequestsPage() {
                 ) : (
                     <div className="space-y-4">
                         {requests.map(req => (
-                            <div key={req.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                            <div key={req._id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <p className="font-bold text-gray-800">{req.User?.fullName || 'Unknown User'}</p>
@@ -99,9 +99,15 @@ export default function AdminRequestsPage() {
                                     <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-md uppercase">Pending</span>
                                 </div>
 
-                                <div className="bg-gray-50 p-3 rounded-xl mb-4 flex justify-between items-center">
-                                    <span className="text-gray-500 text-sm">Amount Requested</span>
-                                    <span className="font-bold text-lg text-pink-600">$ {req.amount}</span>
+                                <div className="bg-emerald-50/50 p-4 rounded-2xl mb-4 border border-emerald-100">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">NXS Requested</span>
+                                        <span className="font-black text-xl text-emerald-600">{req.amount.toLocaleString()} NXS</span>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-emerald-100/50 pt-2">
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">You Should Receive</span>
+                                        <span className="font-black text-lg text-slate-800">{(req.amount * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
+                                    </div>
                                 </div>
 
                                 {req.proofImage && (
@@ -133,10 +139,10 @@ export default function AdminRequestsPage() {
                                 )}
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={() => handleAction(req.id, 'reject')} className="py-3 rounded-xl border border-red-100 text-red-600 font-bold text-sm hover:bg-red-50 transition flex justify-center items-center gap-2">
+                                    <button onClick={() => handleAction(req._id, 'reject')} className="py-3 rounded-xl border border-red-100 text-red-600 font-bold text-sm hover:bg-red-50 transition flex justify-center items-center gap-2">
                                         <X className="w-4 h-4" /> Reject
                                     </button>
-                                    <button onClick={() => handleAction(req.id, 'approve')} className="py-3 rounded-xl bg-green-500 text-white font-bold text-sm hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-lg shadow-green-500/20">
+                                    <button onClick={() => handleAction(req._id, 'approve')} className="py-3 rounded-xl bg-green-500 text-white font-bold text-sm hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-lg shadow-green-500/20">
                                         <Check className="w-4 h-4" /> Approve
                                     </button>
                                 </div>

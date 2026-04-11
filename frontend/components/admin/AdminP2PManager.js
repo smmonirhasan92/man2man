@@ -113,7 +113,7 @@ export default function AdminP2PManager() {
                                             </a>
                                         ) : <span className="text-red-500 text-xs">Missing</span>}
                                     </td>
-                                    <td className="p-3 font-mono text-emerald-500 flex items-center gap-1"><USCIcon className="w-3 h-3" /> {(t.amount * 0.02).toFixed(2)}</td>
+                                    <td className="p-3 font-mono text-emerald-500 flex items-center gap-1"><USCIcon className="w-3 h-3" /> {(t.amount * 0.01).toFixed(2)}</td>
                                     <td className="p-3 text-right flex justify-end gap-2">
                                         <button onClick={() => resolve(t._id, 'REFUND_TO_SELLER')} className="bg-red-900/40 text-red-500 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded text-xs font-bold transition border border-red-500/20 flex items-center gap-1">
                                             <Ban className="w-3 h-3" /> Reject

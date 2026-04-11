@@ -15,8 +15,9 @@ export default function WalletSwap({ user, onSuccess }) {
         if (!amount || parseFloat(amount) < 5) return;
         setLoading(true);
         try {
-            // [v6.5] Convert USD input to NXS for the backend (1 USD = 50 NXS)
-            const nxsAmount = parseFloat(amount) * 50;
+            // [v7.0] 1 NXS = 1 Cent ($0.01) Model
+            // 1 USD / 0.01 = 100 NXS
+            const nxsAmount = parseFloat(amount) * 100;
             const response = await api.post('/wallet/transfer/main', { amount: nxsAmount });
 
             onSuccess(); // Refresh user data
@@ -57,7 +58,7 @@ export default function WalletSwap({ user, onSuccess }) {
                             From: Income Wallet
                         </div>
                         <div className="text-xs font-bold text-white leading-none">
-                            ${(Number(incomeBalance) * 0.02).toFixed(2)} USD
+                            {formatMoney(incomeBalance)} USD
                         </div>
                     </div>
 

@@ -71,7 +71,7 @@ export default function TransactionCard({
                         </p>
                         <div className="flex flex-col">
                             <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">Payable</p>
-                            <p className="text-sm font-black text-white tracking-tighter">{(trx.amount * 2.54).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</p>
+                            <p className="text-sm font-black text-white tracking-tighter">{(trx.amount * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</p>
                         </div>
                         <div className="h-5 w-px bg-white/10" />
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{trx.method}</p>

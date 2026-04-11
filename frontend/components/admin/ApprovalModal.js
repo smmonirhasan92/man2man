@@ -30,7 +30,7 @@ export default function ApprovalModal({
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex justify-between">
                             <span>Bonus Amount</span>
-                            <span className="text-[10px] text-emerald-600">Rate: 2.54 BDT</span>
+                            <span className="text-[10px] text-emerald-600">Rate: 1.23 BDT</span>
                         </label>
                         <div className="relative">
                             <span className="absolute left-4 top-3.5 text-emerald-600 font-black text-[10px]">NXS</span>
@@ -44,7 +44,7 @@ export default function ApprovalModal({
                             {bonusAmount > 0 && (
                                 <div className="mt-2 p-2 bg-emerald-50 rounded-lg border border-emerald-100 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
                                     <span className="text-[9px] font-black text-emerald-700 uppercase">Est. Payable</span>
-                                    <span className="text-xs font-black text-emerald-700">{(bonusAmount * 2.54).toLocaleString()} BDT</span>
+                                    <span className="text-xs font-black text-emerald-700">{(bonusAmount * 1.23).toLocaleString()} BDT</span>
                                 </div>
                             )}
                         </div>

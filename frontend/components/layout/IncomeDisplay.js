@@ -1,9 +1,9 @@
 import React from 'react';
+import { useCurrency } from '../../context/CurrencyContext'; // [NEW] Centralized Currency
 
 export default function IncomeDisplay({ amount }) {
-    // Convert NXS to USD strictly for display (1 NXS = $0.02)
-    const convertedToUsd = (Number(amount || 0) * 0.02);
-    const displayValue = `$${convertedToUsd.toFixed(2)}`;
+    const { formatMoney } = useCurrency();
+    const displayValue = formatMoney(amount);
 
     return (
         <div className="flex flex-col items-end mr-1">

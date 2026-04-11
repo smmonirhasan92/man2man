@@ -94,7 +94,7 @@ services:
       - TZ=Asia/Dhaka
       - CLIENT_URL=http://76.13.244.202
     # [AUTO-SEED] Seeds Account Tiers + Tasks on startup, then launches server
-    command: sh -c "node seed_root_v2.js && node server.js"
+    command: node server.js
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
