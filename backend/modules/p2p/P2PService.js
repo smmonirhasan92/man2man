@@ -233,45 +233,38 @@ class P2PService {
             );
         }
 
-        // --- AGENT INVISIBILITY & ADMIN FILTERING ---
-        // 1. Fetch current user role to determine if they can see 'Hidden' listings
-        let canSeeHidden = false;
-        if (currentUserId) {
-            const user = await User.findById(currentUserId).select('role');
-            if (user && ['admin', 'super_admin', 'employee_admin'].includes(user.role)) {
-                canSeeHidden = true;
-            }
-        }
-
-        // 2. Filter out stale orders (Sellers must have > 0 balance)
-        // 3. Hide own orders
-        // 4. [PRIVACY] Hide Agents/Admins from public market if requester is not Admin
+        // 1. Filter out stale orders (Sellers must have > 0 balance. Buyers don't need NXS balance)
+        // 2. Hide own orders
         filteredOrders = filteredOrders.filter(o => {
             if (!o.userId) return false;
-            
-            // Basic P2P rules
             if (o.userId._id.toString() === currentUserId?.toString()) return false;
-            if (o.type === 'SELL' && (!o.userId.wallet || o.userId.wallet.main <= 0)) return false;
 
-            // Agent/Admin Invisibility Guard
-            const isHiddenRole = ['agent', 'admin', 'super_admin', 'employee_admin'].includes(o.userId.role);
-            if (isHiddenRole && !canSeeHidden) {
-                return false;
+            // If it's a SELL ad, maker MUST have NXS balance
+            if (o.type === 'SELL') {
+                return o.userId.wallet && o.userId.wallet.main > 0;
             }
 
+            // BUY ad relies on BDT outside, so no NXS balance check
             return true;
         });
 
-        // --- SORTING ---
+        // --- DYNAMIC PRIORITY & RANDOMIZATION ---
+        const agents = filteredOrders.filter(o => o.userId && o.userId.role === 'agent');
+        const others = filteredOrders.filter(o => !o.userId || o.userId.role !== 'agent');
+
+        // Randomized shuffling for agents (Natural appearance)
+        const shuffledAgents = agents.sort(() => Math.random() - 0.5);
+
         // Sorting for other users based on filters
         if (filters.sort === 'lowest') {
-            filteredOrders.sort((a, b) => a.rate - b.rate);
+            others.sort((a, b) => a.rate - b.rate);
         } else if (filters.sort === 'highest') {
-            filteredOrders.sort((a, b) => b.rate - a.rate);
+            others.sort((a, b) => b.rate - a.rate);
         } else {
-            filteredOrders.sort((a, b) => b.createdAt - a.createdAt);
+            others.sort((a, b) => b.createdAt - a.createdAt);
         }
 
+        // Combine: Agents first (shuffled), then others (sorted)
         // Native Pagination since we had to filter in memory
         const page = parseInt(filters.page, 10) || 1;
         const limit = parseInt(filters.limit, 10) || 20;
@@ -548,7 +541,6 @@ class P2PService {
             const transactionLogs = [
                 {
                     userId: trade.sellerId,
-                    relatedUserId: trade.buyerId, // [AUDIT] Log who bought it
                     amount: -trade.amount,
                     type: 'p2p_sell',
                     description: `P2P Settled: ${isAuto ? 'Seller Released' : 'Admin Approved'}`,
@@ -557,7 +549,6 @@ class P2PService {
                 },
                 {
                     userId: trade.buyerId,
-                    relatedUserId: trade.sellerId, // [AUDIT] Log who sold it
                     amount: finalAmount,
                     type: 'p2p_buy',
                     description: `P2P Settled: ${isAuto ? 'Seller Released' : 'Admin Approved'}`,
