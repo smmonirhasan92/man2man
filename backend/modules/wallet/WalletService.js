@@ -85,9 +85,9 @@ class WalletService {
                 throw new Error(`Insufficient funds in ${fromWallet} wallet (Balance: ${balBeforeSource})`);
             }
 
-            // 2. Perform Atomic Swap
+            // 2. Perform Atomic Swap in a single operation
             const user = await User.findOneAndUpdate(
-                { _id: userId, [sourceKey]: { $gte: amt } }, // Double-check race condition
+                { _id: userId, [sourceKey]: { $gte: amt } },
                 {
                     $inc: {
                         [sourceKey]: -amt,
@@ -97,15 +97,20 @@ class WalletService {
                 { new: true, session }
             );
 
-            if (!user) throw new Error(`Transfer Failed: Balance changed or insufficient.`);
+            if (!user) {
+                // Determine if it was total balance failure or race condition
+                const verifyUser = await User.findById(userId).select(sourceKey).session(session);
+                const currentBalance = getVal(verifyUser, sourceKey) || 0;
+                throw new Error(`Transfer Failed: Insufficient balance (Available: ${currentBalance}, Required: ${amt})`);
+            }
 
-            // Get New Balances
+            // Get New Balances after update
             const balAfterSource = getVal(user, sourceKey);
             const balAfterTarget = getVal(user, targetKey);
 
             const trxId = `TRX_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 
-            // 3. Log Main Transfer
+            // 3. Log transactions
             await Transaction.create([{
                 userId,
                 type: 'wallet_transfer',
@@ -113,11 +118,10 @@ class WalletService {
                 status: 'completed',
                 description: (description || `${fromWallet} to ${toWallet}`) + feeDescription,
                 recipientDetails: 'Self Transfer',
-                balanceAfter: user.wallet.main, // Snapshot main balance
-                fee: fee // Store fee if any
+                balanceAfter: user.wallet.main,
+                fee: fee
             }], { session });
 
-            // [LEDGER] Log Source Debit
             await TransactionLedger.create([{
                 userId,
                 type: 'transfer_out',
@@ -126,12 +130,8 @@ class WalletService {
                 balanceBefore: balBeforeSource,
                 balanceAfter: balAfterSource,
                 description: `Transfer to ${toWallet}`,
-                transactionId: `${trxId}_OUT`,
-                metadata: { from: fromWallet, to: toWallet }
-            }], { session });
-
-            // [LEDGER] Log Target Credit
-            await TransactionLedger.create([{
+                transactionId: `${trxId}_OUT`
+            }, {
                 userId,
                 type: 'transfer_in',
                 amount: creditAmount,
@@ -139,11 +139,9 @@ class WalletService {
                 balanceBefore: balBeforeTarget,
                 balanceAfter: balAfterTarget,
                 description: `Transfer from ${fromWallet}`,
-                transactionId: `${trxId}_IN`,
-                metadata: { from: fromWallet, to: toWallet }
+                transactionId: `${trxId}_IN`
             }], { session });
 
-            // 3b. Log Fee Transaction if applicable
             if (fee > 0) {
                 await Transaction.create([{
                     userId,

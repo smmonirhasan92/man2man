@@ -30,8 +30,8 @@ exports.requestWithdrawal = async (req, res) => {
                 throw new Error(`Insufficient ${targetWallet} Balance`);
             }
 
-            // --- TURNOVER FLAG CHECK ---
-            const eligibility = await TurnoverService.checkWithdrawalEligibility(userId);
+            // --- TURNOVER FLAG CHECK (WITH SESSION) ---
+            const eligibility = await TurnoverService.checkWithdrawalEligibility(userId, session);
             if (!eligibility.allowed) {
                 throw new Error(eligibility.message);
             }
@@ -150,6 +150,7 @@ exports.processWithdrawal = async (req, res) => {
                     const totalCredit = reimbursementAmount + commissionAmount;
 
                     agent.wallet.main = (agent.wallet.main || 0) + totalCredit;
+                    // Explicitly saving with session
                     await agent.save({ session });
 
                     // Log Reimbursement

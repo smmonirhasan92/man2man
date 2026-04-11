@@ -33,8 +33,9 @@ class TurnoverService {
     }
 
     // 3. CHECK ELIGIBILITY (Withdrawal)
-    static async checkWithdrawalEligibility(userId) {
-        const user = await User.findById(userId);
+    static async checkWithdrawalEligibility(userId, session = null) {
+        const opts = session ? { session } : {};
+        const user = await User.findById(userId).setOptions(opts);
         if (!user) throw new Error('User not found');
 
         const { required, completed } = user.wallet.turnover || { required: 0, completed: 0 };
