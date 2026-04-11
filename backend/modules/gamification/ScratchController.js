@@ -1,6 +1,8 @@
 const TransactionHelper = require('../common/TransactionHelper');
 const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
+const Transaction = require('../wallet/TransactionModel');
+const TransactionLedger = require('../wallet/TransactionLedgerModel');
 
 const SCRATCH_TIERS = {
   bronze: { costNXS: 3,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
@@ -41,6 +43,58 @@ exports.scratchCard = async (req, res) => {
             if (!isSafe) throw new Error('Security Alert: Excessive Balance Change Blocked.');
 
             user.wallet.main = finalBalance;
+
+            // --- AUDIT LOGGING (Bet & Win) ---
+            const betTxId = `SCRATCH_BET_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+            
+            // 1. Log Bet (Deduction)
+            await Transaction.create([{
+                userId,
+                type: 'game_bet',
+                amount: -cost,
+                currency: 'NXS',
+                status: 'completed',
+                source: 'game',
+                description: `Scratch Card: ${SCRATCH_TIERS[tier].labels.loss} (${tier})`,
+                transactionId: betTxId,
+                balanceAfter: initialBalance - cost
+            }], { session });
+
+            await TransactionLedger.create([{
+                userId,
+                type: 'game_bet',
+                amount: -cost,
+                balanceBefore: initialBalance,
+                balanceAfter: initialBalance - cost,
+                description: `Scratch Card Bet (${tier})`,
+                transactionId: betTxId
+            }], { session });
+
+            // 2. Log Win (if any)
+            if (winAmt > 0) {
+                const winTxId = `SCRATCH_WIN_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+                await Transaction.create([{
+                    userId,
+                    type: 'game_win',
+                    amount: winAmt,
+                    currency: 'NXS',
+                    status: 'completed',
+                    source: 'game',
+                    description: `Scratch Card Win: ${matchResult.label || SCRATCH_TIERS[tier].labels.win}`,
+                    transactionId: winTxId,
+                    balanceAfter: finalBalance
+                }], { session });
+
+                await TransactionLedger.create([{
+                    userId,
+                    type: 'game_win',
+                    amount: winAmt,
+                    balanceBefore: initialBalance - cost,
+                    balanceAfter: finalBalance,
+                    description: `Scratch Card Reward (${tier})`,
+                    transactionId: winTxId
+                }], { session });
+            }
 
             // Stats Update (Real-time P&L Tracking)
             user.gameStats.totalGamesPlayed += 1;

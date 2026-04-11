@@ -1,6 +1,8 @@
 const TransactionHelper = require('../common/TransactionHelper');
 const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
+const Transaction = require('../wallet/TransactionModel');
+const TransactionLedger = require('../wallet/TransactionLedgerModel');
 
 const GIFT_TIERS = {
     free: { cost: 0, mult: 1.0 }, // Free is special
@@ -53,6 +55,62 @@ exports.openGiftBox = async (req, res) => {
             if (!isSafe) throw new Error('Security Alert: Excessive Balance Change Blocked.');
 
             user.wallet.main = finalBalance;
+
+            // --- AUDIT LOGGING (Bet & Win) ---
+            const betTxId = `GIFT_BET_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+            
+            // 1. Log Bet (only if cost > 0)
+            if (cost > 0) {
+                await Transaction.create([{
+                    userId,
+                    type: 'game_bet',
+                    amount: -cost,
+                    currency: 'NXS',
+                    status: 'completed',
+                    source: 'game',
+                    description: `Opened ${tier} Mystery Gift`,
+                    transactionId: betTxId,
+                    balanceAfter: initialBalance - cost
+                }], { session });
+
+                await TransactionLedger.create([{
+                    userId,
+                    type: 'game_bet',
+                    amount: -cost,
+                    balanceBefore: initialBalance,
+                    balanceAfter: initialBalance - cost,
+                    description: `Mystery Gift Bet (${tier})`,
+                    transactionId: betTxId
+                }], { session });
+            }
+
+            // 2. Log Win (if any)
+            if (winAmt > 0) {
+                const winTxId = `GIFT_WIN_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+                const isFree = cost === 0;
+
+                await Transaction.create([{
+                    userId,
+                    type: 'game_win',
+                    amount: winAmt,
+                    currency: 'NXS',
+                    status: 'completed',
+                    source: 'game',
+                    description: `Mystery Gift: ${matchResult.label || (isFree ? 'Free Reward' : 'Prize')}`,
+                    transactionId: winTxId,
+                    balanceAfter: finalBalance
+                }], { session });
+
+                await TransactionLedger.create([{
+                    userId,
+                    type: 'game_win',
+                    amount: winAmt,
+                    balanceBefore: isFree ? initialBalance : initialBalance - cost,
+                    balanceAfter: finalBalance,
+                    description: isFree ? `Free Mystery Gift Reward` : `Mystery Gift Prize (${tier})`,
+                    transactionId: winTxId
+                }], { session });
+            }
 
             // Stats Update
             user.gameStats.totalGamesPlayed += 1;

@@ -25,6 +25,7 @@ export default function UserManagement() {
 
     const [statsModal, setStatsModal] = useState({ show: false, userId: null, username: '' });
     const [profileModal, setProfileModal] = useState({ show: false, userId: null });
+    const [deleteModal, setDeleteModal] = useState({ show: false, userId: null, username: '' });
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -140,6 +141,17 @@ export default function UserManagement() {
             setNewPassword('');
         } catch (err) {
             toast.error('Failed to reset password');
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        try {
+            await api.delete(`/admin/user/${deleteModal.userId}`);
+            toast.success(`User ${deleteModal.username} deleted permanently`);
+            setDeleteModal({ show: false, userId: null, username: '' });
+            fetchUsers();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to delete user');
         }
     };
 
@@ -304,6 +316,13 @@ export default function UserManagement() {
                                         >
                                             <KeyRound className="w-5 h-5" />
                                         </button>
+                                        <button
+                                            onClick={() => setDeleteModal({ show: true, userId: user.id, username: user.fullName })}
+                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition"
+                                            title="Delete User Permanently"
+                                        >
+                                            <Shield className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 </div>
 
@@ -412,6 +431,46 @@ export default function UserManagement() {
                 userId={profileModal.userId}
                 onStatusUpdate={fetchUsers}
             />
+
+            {/* Permanent Deletion Modal */}
+            {deleteModal.show && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl overflow-hidden relative">
+                        {/* Warning Header */}
+                        <div className="absolute top-0 left-0 right-0 h-2 bg-red-500"></div>
+                        
+                        <div className="text-center mb-6">
+                            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 shadow-inner">
+                                <Shield className="w-10 h-10" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">System Hazard!</h3>
+                            <p className="text-sm text-slate-500 px-4 leading-relaxed">
+                                You are about to permanently delete <span className="font-bold text-red-600">{deleteModal.username}</span>. 
+                                This will <span className="underline decoration-red-300 decoration-2">BURN</span> their existing balance and clear all records.
+                            </p>
+                        </div>
+
+                        <div className="bg-red-50 p-4 rounded-2xl border border-red-100 mb-8">
+                            <p className="text-[10px] font-black text-red-700 uppercase tracking-widest text-center">THIS ACTION IS IRREVERSIBLE</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <button 
+                                onClick={() => setDeleteModal({ show: false, userId: null, username: '' })}
+                                className="py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition active:scale-95"
+                            >
+                                ABORT
+                            </button>
+                            <button 
+                                onClick={handleDeleteUser}
+                                className="py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 shadow-xl shadow-red-200 transition active:scale-95"
+                            >
+                                DELETE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

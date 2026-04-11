@@ -1,6 +1,8 @@
 const TransactionHelper = require('../common/TransactionHelper');
 const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
+const Transaction = require('../wallet/TransactionModel');
+const TransactionLedger = require('../wallet/TransactionLedgerModel');
 
 const SPIN_TIERS = {
   bronze: { costNXS: 3,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
@@ -51,6 +53,58 @@ async function processGameRequest(req, res, gameType, windowMs) {
             if (!isSafe) throw new Error('Security Alert: Excessive Balance Change Blocked.');
 
             user.wallet.main = finalBalance;
+
+            // --- AUDIT LOGGING (Bet & Win) ---
+            const betTxId = `SPIN_BET_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+            
+            // 1. Log Bet (Deduction)
+            await Transaction.create([{
+                userId,
+                type: 'game_bet',
+                amount: -cost,
+                currency: 'NXS',
+                status: 'completed',
+                source: 'game',
+                description: `Luck Test: ${tierDict[tier].labels.loss} (${tier})`,
+                transactionId: betTxId,
+                balanceAfter: initialBalance - cost
+            }], { session });
+
+            await TransactionLedger.create([{
+                userId,
+                type: 'game_bet',
+                amount: -cost,
+                balanceBefore: initialBalance,
+                balanceAfter: initialBalance - cost,
+                description: `Luck Test Bet (${tier})`,
+                transactionId: betTxId
+            }], { session });
+
+            // 2. Log Win (if any)
+            if (winAmt > 0) {
+                const winTxId = `SPIN_WIN_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+                await Transaction.create([{
+                    userId,
+                    type: 'game_win',
+                    amount: winAmt,
+                    currency: 'NXS',
+                    status: 'completed',
+                    source: 'game',
+                    description: `Luck Test Win: ${matchResult.label || tierDict[tier].labels.win}`,
+                    transactionId: winTxId,
+                    balanceAfter: finalBalance
+                }], { session });
+
+                await TransactionLedger.create([{
+                    userId,
+                    type: 'game_win',
+                    amount: winAmt,
+                    balanceBefore: initialBalance - cost,
+                    balanceAfter: finalBalance,
+                    description: `Luck Test Reward (${tier})`,
+                    transactionId: winTxId
+                }], { session });
+            }
 
             // Stats Update (Real-time P&L Tracking)
             user.gameStats.totalGamesPlayed += 1;
