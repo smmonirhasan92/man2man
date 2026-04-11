@@ -25,7 +25,9 @@ async function runTransaction(callback) {
         } catch (error) {
             const strError = error.toString();
             // Check for TransientTransactionError (Standard MongoDB Write Conflict handling)
-            const isTransientError = error.hasErrorLabel && error.hasErrorLabel('TransientTransactionError') || error.code === 112;
+            const isTransientError = (error.hasErrorLabel && error.hasErrorLabel('TransientTransactionError')) || 
+                                   error.code === 112 || 
+                                   strError.includes('Write conflict');
             
             // Check if error is due to Standalone instance limitation
             const isStandaloneError = error.code === 20 || strError.includes('Transaction numbers are only allowed');
