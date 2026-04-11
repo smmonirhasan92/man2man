@@ -41,7 +41,8 @@ exports.getAllTransactions = async (req, res) => {
         if (userId) query.userId = userId;
 
         const transactions = await Transaction.find(query)
-            .populate('userId', 'fullName phone')
+            .populate('userId', 'fullName phone username')
+            .populate('relatedUserId', 'fullName phone username') // [NEW] Audit Trail
             .sort({ createdAt: -1 });
 
         res.json(transactions);

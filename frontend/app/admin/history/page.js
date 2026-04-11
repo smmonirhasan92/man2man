@@ -179,10 +179,19 @@ function HistoryContent() {
                                         <div className="space-y-1 px-1">
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-slate-400">User:</span>
-                                                <span className="font-medium text-slate-700">{trx.User?.fullName} <span className="text-slate-400">({trx.User?.phone})</span></span>
+                                                <span className="font-medium text-slate-700">{trx.userId?.fullName || trx.User?.fullName} <span className="text-slate-400">({trx.userId?.phone || trx.User?.phone})</span></span>
                                             </div>
+
+                                            {/* [NEW] Counterparty Info for P2P/Transfers */}
+                                            {trx.relatedUserId && (
+                                                <div className="flex justify-between text-xs p-1.5 bg-indigo-50/50 rounded-lg border border-indigo-100/30 mt-1">
+                                                    <span className="text-indigo-400 font-bold uppercase text-[9px]">Trading With:</span>
+                                                    <span className="font-bold text-indigo-700">{trx.relatedUserId.fullName} <span className="text-indigo-400">({trx.relatedUserId.phone})</span></span>
+                                                </div>
+                                            )}
+
                                             {trx.recipientDetails && (
-                                                <div className="flex justify-between text-xs">
+                                                <div className="flex justify-between text-xs mt-1">
                                                     <span className="text-slate-400">Details:</span>
                                                     <span className="font-medium text-slate-600 max-w-[200px] truncate" title={trx.recipientDetails}>{trx.recipientDetails}</span>
                                                 </div>
