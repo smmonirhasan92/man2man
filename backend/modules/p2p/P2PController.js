@@ -234,12 +234,33 @@ class P2PController {
             res.status(400).json({ message: e.message });
         }
     }
+    // POST /api/p2p/admin/unlock-user/:id
+    async adminUnlockUserP2P(req, res) {
+        try {
+            const user = await P2PService.unlockUserP2P(req.params.id);
+            res.json({ success: true, user });
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
+
+    // POST /api/p2p/admin/resolve-fraud
+    async adminResolveFraudHold(req, res) {
+        try {
+            const { tradeId, action, adminNotes } = req.body;
+            const trade = await P2PService.resolveFraudHold(req.user.user.id, tradeId, action, adminNotes);
+            res.json({ success: true, trade });
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
+
     // POST /api/p2p/trade/:id/rate
     async rateUser(req, res) {
         try {
             const { rating } = req.body;
-            const result = await P2PService.rateTrade(req.user.user.id, req.params.id, rating);
-            res.json(result);
+            const trade = await P2PService.rateUser(req.user.user.id, req.params.id, rating);
+            res.json({ success: true, trade });
         } catch (e) {
             res.status(400).json({ message: e.message });
         }

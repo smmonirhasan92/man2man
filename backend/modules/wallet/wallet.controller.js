@@ -25,11 +25,6 @@ exports.transferMoney = async (req, res) => {
     try {
         const { amount, recipientPhone } = req.body;
 
-        // Restriction: Only Agents can send money (Sell Stock)
-        if (req.user.user.role !== 'agent') {
-            return res.status(403).json({ message: 'Access Denied. Only Agents can send money.' });
-        }
-
         await TransactionHelper.runTransaction(async (session) => {
             const opts = session ? { session } : {}; // Safe options
 
@@ -40,13 +35,22 @@ exports.transferMoney = async (req, res) => {
             if (sender._id.equals(recipient._id)) throw new Error('Cannot send to self');
 
             const amountFloat = parseFloat(amount);
-            if ((sender.wallet.agent || 0) < amountFloat) throw new Error('Insufficient Stock Balance');
+            let sourceWallet = 'main';
 
-            // Deduct Stock
-            sender.wallet.agent -= amountFloat;
+            // Determine source wallet
+            if (sender.role === 'agent' && (sender.wallet.agent || 0) >= amountFloat) {
+                sourceWallet = 'agent';
+            } else if ((sender.wallet.main || 0) >= amountFloat) {
+                sourceWallet = 'main';
+            } else {
+                throw new Error('Insufficient Balance');
+            }
+
+            // Deduct from Sender
+            sender.wallet[sourceWallet] -= amountFloat;
             await sender.save(opts);
 
-            // Credit User Main
+            // Credit Recipient Main
             recipient.wallet.main = (recipient.wallet.main || 0) + amountFloat;
             await recipient.save(opts);
 
@@ -56,8 +60,8 @@ exports.transferMoney = async (req, res) => {
                 type: 'send_money',
                 amount: -amountFloat,
                 status: 'completed',
-                recipientDetails: `Sent to ${recipient.phone}`,
-                description: 'Agent Stock Transfer',
+                recipientDetails: `Sent to ${recipient.primary_phone}`,
+                description: sourceWallet === 'agent' ? 'Agent Stock Transfer' : 'P2P Fund Transfer',
                 metadata: { ip: req.ip }
             }, {
                 userId: recipient._id,

@@ -58,9 +58,13 @@ class UniversalMatchMaker {
 
     async triggerMatch() {
         const q = this.globalQueue;
-        if (!q || q.isProcessing || q.players.length === 0) return;
-        q.isProcessing = true;
+        if (!q || q.players.length === 0) return;
+        
+        // [FIX] Always clear timeout immediately to prevent leaks during processing
         if (q.timeout) { clearTimeout(q.timeout); q.timeout = null; }
+
+        if (q.isProcessing) return;
+        q.isProcessing = true;
 
         try {
             while (q.players.length > 0) {
@@ -143,8 +147,9 @@ class UniversalMatchMaker {
                 // Dynamically expanding budget
                 let padStr = await RedisService.get('livedata:game:admin_reinjection_pad');
                 let reinjectionPad = padStr ? parseFloat(padStr) : 0;
-                const dynamicLimit = 33 + reinjectionPad; // Auto-scales beyond 80-100 NXS based on traffic
-                const isHourlyCapped = (hourlyNetLoss >= dynamicLimit); // [FIX] Abundance shouldn't bypass caps completely if we are bleeding money!
+                // [CURRENCY FIX] Base limit 500 NXS ($5) + Pad. 33 NXS was too low for 1:100 scale.
+                const dynamicLimit = 500 + reinjectionPad; 
+                const isHourlyCapped = (hourlyNetLoss >= dynamicLimit); 
                 const activePhaseA = isAbundance ? true : isPhaseA; 
 
                 console.log(`[ENGINE] Stats: HourlyLoss=${hourlyNetLoss.toFixed(2)}, Pad=${reinjectionPad.toFixed(2)}, Limit=${dynamicLimit.toFixed(2)}, Capped=${isHourlyCapped}, PhaseA=${activePhaseA}`);
@@ -175,20 +180,20 @@ class UniversalMatchMaker {
                     const now = Date.now();
                     let dropActivated = null;
                     
-                    // [THE PULSE ENGINE] AGGRESSIVE JACKPOT THRESHOLDS
-                    // Priority 1: Big Bang (10 min / 50 NXS threshold)
-                    if ((now - lastBigBang) > 10 * 60000 && currentBigBang >= 50) {
-                        dropActivated = { type: 'BIG_BANG', fundKey: 'livedata:game:fund_bigbang', amtConfig: { bronze: 30, silver: 50, gold: 80 } };
+                    // [THE PULSE ENGINE] AGGRESSIVE JACKPOT THRESHOLDS (SCALED FOR 1:100)
+                    // Priority 1: Big Bang (10 min / 1000 NXS threshold - $10)
+                    if ((now - lastBigBang) > 10 * 60000 && currentBigBang >= 1000) {
+                        dropActivated = { type: 'BIG_BANG', fundKey: 'livedata:game:fund_bigbang', amtConfig: { bronze: 300, silver: 500, gold: 800 } };
                         await RedisService.client.set('livedata:game:last_bigbang', now.toString());
                     } 
-                    // Priority 2: Boss Win (3 min / 15 NXS threshold)
-                    else if ((now - lastBoss) > 3 * 60000 && currentBoss >= 15) {
-                        dropActivated = { type: 'BOSS_WIN', fundKey: 'livedata:game:fund_boss', amtConfig: { bronze: 10, silver: 20, gold: 30 } };
+                    // Priority 2: Boss Win (3 min / 250 NXS threshold - $2.5)
+                    else if ((now - lastBoss) > 3 * 60000 && currentBoss >= 250) {
+                        dropActivated = { type: 'BOSS_WIN', fundKey: 'livedata:game:fund_boss', amtConfig: { bronze: 100, silver: 200, gold: 300 } };
                         await RedisService.client.set('livedata:game:last_boss', now.toString());
                     }
-                    // Priority 3: Mega Win (Pulse) (1 min / 3 NXS threshold)
-                    else if ((now - lastMega) > 1 * 60000 && currentMega >= 3) {
-                        dropActivated = { type: 'MEGA_WIN', fundKey: 'livedata:game:fund_mega', amtConfig: { bronze: 5, silver: 8, gold: 12 } };
+                    // Priority 3: Mega Win (Pulse) (1 min / 50 NXS threshold - $0.5)
+                    else if ((now - lastMega) > 1 * 60000 && currentMega >= 50) {
+                        dropActivated = { type: 'MEGA_WIN', fundKey: 'livedata:game:fund_mega', amtConfig: { bronze: 10, silver: 25, gold: 40 } };
                         await RedisService.client.set('livedata:game:last_mega', now.toString());
                     }
 

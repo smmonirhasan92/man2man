@@ -154,7 +154,7 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 <div className="mt-4 h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
                                     <div 
                                         className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-1000"
-                                        style={{ width: `${Math.min(100, ((profile.agentAudit?.p2pSales || 0) / (profile.agentAudit?.initialDebt * 50 || 1)) * 100)}%` }}
+                                        style={{ width: `${Math.min(100, ((profile.agentAudit?.p2pSales || 0) / (profile.agentAudit?.initialDebt * 100 || 1)) * 100)}%` }}
                                     ></div>
                                 </div>
                             </div>

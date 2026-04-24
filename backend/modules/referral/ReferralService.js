@@ -9,9 +9,9 @@ const { runTransaction } = require('../common/TransactionHelper');
 class ReferralService {
 
     static get PLAN_COMMISSION_RATES() {
-        // [MODIFIED] 5-Level Split (Total 5%)
-        // Level 1: 2%, Level 2: 1%, Level 3: 1%, Level 4: 0.5%, Level 5: 0.5%
-        return [2.0, 1.0, 1.0, 0.5, 0.5];
+        // [MODIFIED] 5-Level Split (Total 10%)
+        // Level 1: 8%, Level 2: 1%, Level 3: 0.5%, Level 4: 0.25%, Level 5: 0.25%
+        return [8.0, 1.0, 0.5, 0.25, 0.25];
     }
 
     /**
@@ -95,14 +95,11 @@ class ReferralService {
                     await directUpline.save({ session });
                     currentUser.isReferralBonusPaid = true;
                     await currentUser.save({ session });
-                    console.log(`[Referral] User ${currentUser.username} officially counted. Direct Upline active referrals: ${directUpline.referralCount}`);
                 }
             }
-            // Fetch the Buyer's New Plan to determine standard percentages
-            const buyerPlanObj = await Plan.findOne({ name: planName }).session(session);
-            const buyerDirectPercent = buyerPlanObj ? buyerPlanObj.direct_commission_percent : 7.2;
-
             const rates = ReferralService.PLAN_COMMISSION_RATES;
+            const buyerDirectPercent = rates[0]; // L1 = 8%
+            const buyerPlanObj = await Plan.findOne({ name: planName }).session(session);
             let totalDistributed = 0;
 
             // Loop 5 Levels

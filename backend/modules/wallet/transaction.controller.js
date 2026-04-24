@@ -158,15 +158,15 @@ exports.completeTransaction = async (req, res) => {
                     user.wallet.main = (user.wallet.main || 0) + amountToAdd;
                     await user.save({ session });
 
-                    // Deduct Agent Stock 
-                    const sourceAgentId = transaction.receivedByAgentId || agentId;
+                    // [BINANCE-STYLE] Clear Agent Escrow
+                    const sourceAgentId = transaction.receivedByAgentId;
                     if (sourceAgentId && transaction.type !== 'agent_recharge') {
                         const agent = await User.findById(sourceAgentId).session(session);
                         if (agent) {
-                            if ((agent.wallet.main || 0) < Math.abs(parseFloat(transaction.amount))) {
-                                throw new Error('Insufficient Agent Stock');
-                            }
-                            agent.wallet.main -= Math.abs(parseFloat(transaction.amount));
+                            const deduction = Math.abs(parseFloat(transaction.amount));
+                            // Since it was already deducted from main into rechargeEscrow in requestRecharge,
+                            // we just clear it from escrow here.
+                            agent.wallet.rechargeEscrow = Math.max(0, (agent.wallet.rechargeEscrow || 0) - deduction);
                             await agent.save({ session });
                         }
                     }
@@ -223,6 +223,19 @@ exports.completeTransaction = async (req, res) => {
                 if (user && ['send_money', 'withdraw', 'cash_out', 'mobile_recharge', 'agent_withdraw'].includes(transaction.type)) {
                     user.wallet.main = (user.wallet.main || 0) + Math.abs(parseFloat(transaction.amount));
                     await user.save({ session });
+                }
+
+                // [BINANCE-STYLE] Refund Agent Lock
+                const sourceAgentId = transaction.receivedByAgentId;
+                if (sourceAgentId && ['add_money', 'recharge'].includes(transaction.type)) {
+                    const agent = await User.findById(sourceAgentId).session(session);
+                    if (agent) {
+                        const refundAmt = Math.abs(parseFloat(transaction.amount));
+                        agent.wallet.rechargeEscrow = Math.max(0, (agent.wallet.rechargeEscrow || 0) - refundAmt);
+                        agent.wallet.main += refundAmt;
+                        await agent.save({ session });
+                        console.log(`[RECHARGE REFUND] Agent ${sourceAgentId} refunded ${refundAmt} for rejected request`);
+                    }
                 }
             }
 
@@ -294,12 +307,17 @@ exports.getPaymentSettings = async (req, res) => {
         const bkashSetting = await SystemSetting.findOne({ key: 'bkash_number' });
         const bankSetting = await SystemSetting.findOne({ key: 'bank_details' });
 
-        const agents = await User.find({ role: 'agent' }, 'fullName phone _id');
+        const agents = await User.find({ 
+            role: 'agent', 
+            'wallet.main': { $gt: 0 },
+            'agentData.isActiveForRecharge': { $ne: false }
+        }, 'fullName phone _id wallet.main');
 
         const deposit_agents = agents.map(a => ({
             agentId: a._id,
             agentName: a.fullName,
-            number: a.phone
+            number: a.phone,
+            availableStock: a.wallet.main
         }));
 
         res.json({

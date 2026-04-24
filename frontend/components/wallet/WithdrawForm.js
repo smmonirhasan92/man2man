@@ -49,7 +49,7 @@ export default function WithdrawForm({ balance, onSubmit, loading }) {
 
         // Input is already in USD, convert to NXS for backend
         const usdValue = parseFloat(form.amount);
-        const nxsAmount = usdValue * 50;
+        const nxsAmount = usdValue * 100;
 
         onSubmit({
             ...form,

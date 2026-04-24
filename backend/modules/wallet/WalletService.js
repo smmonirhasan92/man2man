@@ -355,31 +355,50 @@ class WalletService {
 
     // Request Recharge (Add Money)
     static async requestRecharge(userId, amount, method, transactionId, recipientDetails, receivedByAgentId, proofImagePath, ip = 'unknown', status = 'pending') {
-        try {
+        const amt = parseFloat(amount);
+        if (isNaN(amt) || amt <= 0) throw new Error("Invalid recharge amount");
+
+        return await runTransaction(async (session) => {
             // Check for duplicate TrxID on Active Transactions (if provided)
             if (transactionId) {
-                const exists = await Transaction.findOne({ transactionId });
+                const exists = await Transaction.findOne({ transactionId }).session(session);
                 if (exists) throw new Error('Transaction ID already used.');
             }
 
-            const transaction = await Transaction.create({
+            // [BINANCE-STYLE] Lock Agent Escrow if Agent selected
+            if (receivedByAgentId) {
+                const agent = await User.findOneAndUpdate(
+                    { _id: receivedByAgentId, 'wallet.main': { $gte: amt } },
+                    { 
+                        $inc: { 
+                            'wallet.main': -amt,
+                            'wallet.rechargeEscrow': amt 
+                        } 
+                    },
+                    { session, new: true }
+                );
+
+                if (!agent) {
+                    throw new Error("Agent does not have enough stock to handle this recharge.");
+                }
+
+                console.log(`[RECHARGE LOCK] Agent ${receivedByAgentId} locked ${amt} NXS for user ${userId}`);
+            }
+
+            const [transaction] = await Transaction.create([{
                 userId,
                 type: 'add_money',
-                amount: parseFloat(amount),
+                amount: amt,
                 status: status || 'pending',
                 recipientDetails: recipientDetails || `Method: ${method}`,
                 transactionId: transactionId || undefined,
                 proofImage: proofImagePath,
                 assignedAgentId: receivedByAgentId || null,
                 receivedByAgentId: receivedByAgentId || null
-            });
+            }], { session });
 
             return transaction;
-
-        } catch (error) {
-            console.error('WalletService Error:', error);
-            throw error;
-        }
+        });
     }
 
     static async provideInstructions(transactionId, adminInstructions) {

@@ -18,7 +18,8 @@ async function runAudit() {
              console.log(`Financials: TotalBetIn=${b.financials.totalBetIn.toFixed(2)}, RedisContribution(75%)=${b.financials.redisPotContribution.toFixed(2)}, TotalPayoutOut=${b.financials.totalPayoutOut.toFixed(2)}`);
              console.log(`Redis Pot State: Before=${b.redisPotState.before.toFixed(2)} | After=${b.redisPotState.after.toFixed(2)}`);
              b.players.forEach((p, idx) => {
-                 console.log(`  Player ${idx+1}: Bet=${p.betAmount.toFixed(2)} -> Win=${p.winAmount.toFixed(2)} | Profit=${p.netProfit.toFixed(2)}`);
+                 const profit = p.netProfit !== undefined ? p.netProfit : (p.winAmount - p.betAmount);
+                 console.log(`  Player ${idx+1}: Bet=${p.betAmount.toFixed(2)} -> Win=${p.winAmount.toFixed(2)} | Profit=${profit.toFixed(2)}`);
              });
         });
 

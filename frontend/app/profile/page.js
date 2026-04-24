@@ -169,40 +169,14 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-2 bg-gradient-to-r from-blue-900/50 to-red-900/50 border border-white/10 px-6 py-2 rounded-full shadow-inner">
                             <Trophy className={`w-4 h-4 ${user.account_tier === 'Diamond' ? 'text-blue-400' : 'text-yellow-400'}`} />
                             <span className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-1">
-                                {user.account_tier || 'Standard Member'} <span className="text-red-500">★</span>
+                                {user.account_tier === 'Agent' ? 'Verified Member' : (user.account_tier || 'Standard Member')} <span className="text-red-500">★</span>
                             </span>
                         </div>
                         {user.min_withdrawal_usd && (
                             <div className="text-[10px] font-bold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-full border border-white/10 shadow-sm backdrop-blur-sm">
-                                Minimum Transaction Limit: <span className="text-emerald-400">${user.min_withdrawal_usd}</span> ({(user.min_withdrawal_usd * 50).toFixed(0)} NXS)
+                                Minimum Transaction Limit: <span className="text-emerald-400">${user.min_withdrawal_usd}</span> ({(user.min_withdrawal_usd * 100).toFixed(0)} NXS)
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* 2. REFERRAL CARD - USA STYLE */}
-                <div className="relative group overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#0a192f] to-[#050b14] z-0"></div>
-                    {/* Stars Pattern */}
-                    <div className="absolute inset-0 opacity-10 z-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-600/10 blur-3xl rounded-full"></div>
-
-                    <div className="relative z-10 p-6 flex flex-col items-center text-center">
-                        <Sparkles className="w-6 h-6 text-red-500 mb-2 animate-pulse" />
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest mb-1 flex items-center gap-2">
-                            Agent Access ID
-                        </h3>
-                        <p className="text-[10px] text-blue-200/60 mb-4 font-mono">Official USA Affiliate Protocol</p>
-
-                        <button
-                            onClick={() => { navigator.clipboard.writeText(user.referral_code); toast.success('Agent ID Copied! 🇺🇸'); }}
-                            className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-4 rounded-xl transition-all active:scale-95 w-full justify-center group/btn relative overflow-hidden"
-                        >
-                            <div className="absolute left-0 top-0 h-full w-1 bg-red-600"></div>
-                            <span className="text-2xl font-mono font-black text-white tracking-[0.15em] relative z-10">{user.referral_code}</span>
-                            <div className="absolute right-0 top-0 h-full w-1 bg-blue-600"></div>
-                            <Copy className="w-4 h-4 text-slate-400 group-hover/btn:text-white transition-colors" />
-                        </button>
                     </div>
                 </div>
 

@@ -4,6 +4,8 @@ const P2PController = require('../modules/p2p/P2PController');
 const auth = require('../middleware/authMiddleware');
 const User = require('../modules/user/UserModel');
 
+console.log('DEBUG: P2PController methods:', Object.keys(P2PController), Object.getOwnPropertyNames(Object.getPrototypeOf(P2PController)));
+
 // Admin Check Middleware
 const adminCheck = async (req, res, next) => {
     try {
@@ -47,6 +49,8 @@ router.get('/admin/orders', auth, adminCheck, P2PController.getAdminOrders); // 
 router.delete('/admin/orders/:id', auth, adminCheck, P2PController.adminDeleteOrder); // [NEW] Delete ad
 router.post('/admin/resolve', auth, adminCheck, P2PController.resolveDispute);
 router.post('/admin/approve', auth, adminCheck, P2PController.adminApprove);
+router.post('/admin/unlock-user/:id', auth, adminCheck, P2PController.adminUnlockUserP2P);
+router.post('/admin/resolve-fraud', auth, adminCheck, P2PController.adminResolveFraudHold);
 
 // Rating
 router.post('/trade/:id/rate', auth, P2PController.rateUser);

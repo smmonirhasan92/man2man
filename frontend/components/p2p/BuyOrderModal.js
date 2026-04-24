@@ -110,6 +110,22 @@ export default function BuyOrderModal({ isOpen, onClose, order, onConfirm, curre
                                 </button>
                             </div>
 
+                            {/* Quick Select Buttons */}
+                            <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none">
+                                {[500, 1000, 2000, 5000].map(val => (
+                                    val <= maxLimit && (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setAmount(val)}
+                                            className={`flex-1 min-w-[70px] py-2 rounded-lg border text-xs font-bold transition-all ${Number(amount) === val ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                                        >
+                                            {val} NXS
+                                        </button>
+                                    )
+                                ))}
+                            </div>
+
                             {order.type === 'BUY' && (
                                 <div className="mb-8 group">
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">

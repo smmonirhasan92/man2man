@@ -18,14 +18,14 @@ class P2PService {
         if (amount <= 0) throw new Error("Invalid Limit Amount");
 
         // [AUTO-BOUNDARY] Dynamic Rate Limits for Large Transactions
-        if (amount >= 100) {
+        if (amount >= 1000) {
             const standardRate = 123; // System base rate ($1 = 123 BDT)
             const maxVariance = 5; // Maximum allowed difference (+/-)
             const minRate = standardRate - maxVariance;
             const maxRate = standardRate + maxVariance;
 
             if (rate < minRate || rate > maxRate) {
-                throw new Error(`For orders of 50 NXS or more, the exchange rate must be strictly between ${minRate} BDT and ${maxRate} BDT.`);
+                throw new Error(`For orders of 1000 NXS ($10 USD) or more, the exchange rate must be strictly between ${minRate} BDT and ${maxRate} BDT.`);
             }
         } else {
             // Basic fallback for smaller orders (to prevent absolute madness like 5000)
@@ -91,14 +91,21 @@ class P2PService {
             if (order.status !== 'OPEN') throw new Error("Order is no longer available");
             if (order.userId.toString() === takerId.toString()) throw new Error("Cannot trade with your own order");
 
+            // [MVP SECURITY] Check User P2P Status
+            const taker = await User.findById(takerId).session(session);
+            if (taker.p2pStatus === 'locked' || taker.p2pStatus === 'banned') {
+                throw new Error("Your P2P access is restricted. Please contact support.");
+            }
+
             // [MVP SECURITY] Check Active Trade Limit (Anti-Spam)
+            // Limit: 1 Active Trade (CREATED or PAID)
             const activeTradesCount = await P2PTrade.countDocuments({
-                buyerId: takerId,
-                status: 'CREATED'
+                $or: [{ buyerId: takerId }, { sellerId: takerId }],
+                status: { $in: ['CREATED', 'PAID'] }
             }).session(session);
 
-            if (activeTradesCount >= 2) {
-                throw new Error("You have too many active unpaid trades. Please complete or cancel them first.");
+            if (activeTradesCount >= 1) {
+                throw new Error("You have an active trade. Please complete or cancel it before starting a new one.");
             }
 
             // Identify Roles based on Dual-Market Ad Type
@@ -362,8 +369,14 @@ class P2PService {
                 throw new Error("Unauthorized to cancel this trade");
             }
 
+            if (trade.status === 'PAID') {
+                // [ANTI-FRAUD] User is trying to cancel after marking as PAID
+                // Trigger FRAUD_HOLD instead of direct cancellation
+                return await this.triggerFraudHold(trade, userId, session);
+            }
+
             if (trade.status !== 'CREATED') {
-                throw new Error("Cannot cancel a trade that is already Paid or Completed");
+                throw new Error("Cannot cancel a trade that is already Completed or in Dispute");
             }
 
             // 1. Release Seller's Escrow back to Main
@@ -911,6 +924,123 @@ class P2PService {
             minBoundary: min, // Send boundaries back so frontend chart Y-axis scales perfectly
             maxBoundary: max
         };
+    }
+    // --- [ANTI-FRAUD] Trigger Fraud Hold & Penalty ---
+    async triggerFraudHold(trade, userId, session) {
+        console.warn(`🚨 [FRAUD ALERT] User ${userId} attempted to cancel PAID trade ${trade._id}`);
+        
+        // 1. Mark Trade Status
+        trade.status = 'FRAUD_HOLD';
+        const penaltyPercent = 0.10; // 10% Penalty
+        const penaltyAmount = trade.amount * penaltyPercent;
+        
+        trade.fraudMetadata = {
+            penaltyAmount: penaltyAmount,
+            isResolved: false,
+            adminNotes: `Auto-Hold: Attempted cancellation after PAID status by user ${userId}`
+        };
+        await trade.save({ session });
+
+        // 2. Lock User's P2P Access
+        await User.findByIdAndUpdate(userId, {
+            $set: { p2pStatus: 'locked' },
+            $inc: { p2pFraudAttempts: 1 }
+        }, { session });
+
+        // 3. Deduct Penalty from Escrow (Burn)
+        // Note: The rest of the escrow remains locked until Admin resolves it.
+        await User.findByIdAndUpdate(trade.sellerId, {
+            $inc: { 'wallet.escrow_locked': -penaltyAmount }
+        }, { session });
+
+        // 4. Log Penalty Burn
+        await Transaction.create([{
+            userId: trade.sellerId,
+            amount: -penaltyAmount,
+            type: 'fee',
+            description: `P2P Fraud Penalty (10%) - Trade #${trade._id}`,
+            source: 'system',
+            status: 'completed'
+        }], { session });
+
+        // 5. Notify Admin
+        SocketService.broadcast('admin_dashboard', 'p2p_alert', { 
+            type: 'FRAUD_DETECTED', 
+            message: `FRAUD ATTEMPT: User ${userId} locked. Trade #${trade._id} on HOLD.`, 
+            tradeId: trade._id 
+        });
+
+        return trade;
+    }
+
+    // --- [ADMIN] Resolve Fraud Hold ---
+    async resolveFraudHold(adminId, tradeId, action, adminNotes) {
+        // action: 'RELEASE_TO_BUYER', 'REFUND_TO_SELLER'
+        return await TransactionHelper.runTransaction(async (session) => {
+            const trade = await P2PTrade.findById(tradeId).session(session);
+            if (!trade || trade.status !== 'FRAUD_HOLD') throw new Error("Invalid trade status");
+
+            const remainingAmount = trade.amount - trade.fraudMetadata.penaltyAmount;
+
+            if (action === 'RELEASE_TO_BUYER') {
+                // Release remaining escrow to buyer
+                await User.findByIdAndUpdate(trade.sellerId, {
+                    $inc: { 'wallet.escrow_locked': -remainingAmount }
+                }, { session });
+
+                await User.findByIdAndUpdate(trade.buyerId, {
+                    $inc: { 'wallet.main': remainingAmount }
+                }, { session });
+
+                trade.status = 'RESOLVED_BUYER';
+            } else if (action === 'REFUND_TO_SELLER') {
+                // Refund remaining escrow to seller
+                await User.findByIdAndUpdate(trade.sellerId, {
+                    $inc: { 
+                        'wallet.escrow_locked': -remainingAmount,
+                        'wallet.main': remainingAmount
+                    }
+                }, { session });
+
+                trade.status = 'RESOLVED_SELLER';
+            }
+
+            trade.fraudMetadata.isResolved = true;
+            trade.fraudMetadata.resolvedBy = adminId;
+            trade.fraudMetadata.adminNotes += ` | Resolution: ${action}. Admin Notes: ${adminNotes}`;
+            await trade.save({ session });
+
+            return trade;
+        });
+    }
+
+    // --- [ADMIN] Unlock User P2P ---
+    async unlockUserP2P(userId) {
+        const user = await User.findByIdAndUpdate(userId, {
+            $set: { p2pStatus: 'active' }
+        }, { new: true });
+        return user;
+    }
+
+    // --- Rate User ---
+    async rateUser(userId, tradeId, rating) {
+        const trade = await mongoose.model('P2PTrade').findById(tradeId);
+        if (!trade || trade.status !== 'COMPLETED') throw new Error('Trade not found or not completed.');
+
+        const targetId = userId.toString() === trade.buyerId.toString() ? trade.sellerId : trade.buyerId;
+        const user = await User.findById(targetId);
+        if (!user) throw new Error('Target user not found.');
+
+        const r = parseFloat(rating);
+        if (isNaN(r) || r < 1 || r > 5) throw new Error('Invalid rating (1-5).');
+
+        // Weighted Trust Score Calculation
+        const totalRating = (user.trustScore * user.ratingCount) + r;
+        user.ratingCount += 1;
+        user.trustScore = totalRating / user.ratingCount;
+
+        await user.save();
+        return trade;
     }
 }
 

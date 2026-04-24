@@ -11,9 +11,16 @@ const P2PTradeSchema = new mongoose.Schema({
     // Dispute Flow: CREATED/PAID -> DISPUTED -> RESOLVED_BUYER/RESOLVED_SELLER
     status: {
         type: String,
-        enum: ['CREATED', 'PAID', 'AWAITING_ADMIN', 'COMPLETED', 'CANCELLED', 'DISPUTED', 'RESOLVED_BUYER', 'RESOLVED_SELLER'],
+        enum: ['CREATED', 'PAID', 'AWAITING_ADMIN', 'COMPLETED', 'CANCELLED', 'DISPUTED', 'RESOLVED_BUYER', 'RESOLVED_SELLER', 'FRAUD_HOLD'],
         default: 'CREATED',
         index: true
+    },
+
+    fraudMetadata: {
+        penaltyAmount: { type: Number, default: 0 },
+        isResolved: { type: Boolean, default: false },
+        resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        adminNotes: { type: String }
     },
 
     // Timer & Metadata

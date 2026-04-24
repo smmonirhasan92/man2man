@@ -61,6 +61,7 @@ const UserSchema = new mongoose.Schema({
         pending_referral: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
         staked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [STAKING] Locked NXS
         total_earned_staking: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [STAKING] Lifetime earnings
+        rechargeEscrow: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [BINANCE-STYLE] Locked during agent recharge
 
         turnover: {
             required: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
@@ -87,6 +88,7 @@ const UserSchema = new mongoose.Schema({
     agentData: {
         due: { type: Number, default: 0.00 },
         debtLimit: { type: Number, default: 5000 }, // Default limit for new agents
+        isActiveForRecharge: { type: Boolean, default: true }, // [BINANCE-STYLE] Toggle availability
     },
 
     // --- Task System ---
@@ -141,10 +143,16 @@ const UserSchema = new mongoose.Schema({
     dailyActivityHours: { type: Number, default: 0 }, // Tracked by "Pulse" or heartbeat
     loyaltyScore: { type: Number, default: 0 },
 
-    // --- P2P Trust (Reputation) ---
+    // --- P2P Trust & Anti-Fraud ---
     trustScore: { type: Number, default: 5.0 },
     ratingCount: { type: Number, default: 0 },
     isVerifiedMerchant: { type: Boolean, default: false }, // [NEW] Admin assigned verification badge
+    p2pStatus: { 
+        type: String, 
+        enum: ['active', 'locked', 'banned'], 
+        default: 'active' 
+    },
+    p2pFraudAttempts: { type: Number, default: 0 },
 
     // --- Universal Engine Statistics ---
     gameStats: {

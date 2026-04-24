@@ -19,7 +19,8 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'rec
 export default function P2PDashboard({ initialMode, onClose }) {
     const { user } = useAuth();
     const userCountry = user?.country?.toUpperCase() || 'BD';
-    const [mode, setMode] = useState(initialMode || 'buy'); // 'buy', 'sell', 'history', 'my_ads'
+    const [mode, setMode] = useState(initialMode || 'buy'); // 'buy', 'sell', 'history', 'my_ads', 'deposit'
+    const [agents, setAgents] = useState([]); // [NEW] Official Agents for Deposit
 
     // [NEW] Global Advanced Filters
     const [filters, setFilters] = useState({
@@ -157,6 +158,10 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 } else {
                     setOrders(res.data.filter(t => ['COMPLETED', 'CANCELLED', 'RESOLVED_BUYER', 'RESOLVED_SELLER'].includes(t.status)));
                 }
+                setHasMore(false);
+            } else if (mode === 'deposit') {
+                const res = await api.get('/wallet/settings/payment');
+                setAgents(res.data.deposit_agents || []);
                 setHasMore(false);
             }
         } catch (e) {
@@ -383,16 +388,15 @@ export default function P2PDashboard({ initialMode, onClose }) {
             )}
 
             {/* Sleek Tabs */}
-            <div className="flex bg-[#181a20] px-3 overflow-x-auto scrollbar-none border-b border-[#2b3139]">
-                {['buy', 'sell', 'active', 'history', 'my_ads'].map(t => (
+                {['buy', 'sell', 'deposit', 'active', 'history', 'my_ads'].map(t => (
                     <button
                         key={t}
                         onClick={() => setMode(t)}
-                        className={`px-4 py-3 text-sm font-black tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'active' ? 'text-[#fcd535] animate-pulse' : t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : 'text-white') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
+                        className={`px-4 py-3 text-sm font-black tracking-wide transition relative whitespace-nowrap ${mode === t ? (t === 'active' ? 'text-[#fcd535] animate-pulse' : t === 'buy' ? 'text-[#0ecb81]' : t === 'sell' ? 'text-[#f6465d]' : t === 'deposit' ? 'text-blue-400' : 'text-white') : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
                     >
-                        {t === 'active' ? '⏳ RUNNING' : t === 'history' ? '📜 HISTORY' : t.replace('_', ' ').toUpperCase()}
+                        {t === 'active' ? '⏳ RUNNING' : t === 'history' ? '📜 HISTORY' : t === 'deposit' ? '💎 DEPOSIT' : t.replace('_', ' ').toUpperCase()}
                         {mode === t && (
-                            <div className={`absolute bottom-0 left-0 w-full h-[3px] rounded-t-full ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : 'bg-[#fcd535]'}`} />
+                            <div className={`absolute bottom-0 left-0 w-full h-[3px] rounded-t-full ${t === 'buy' ? 'bg-[#0ecb81]' : t === 'sell' ? 'bg-[#f6465d]' : t === 'deposit' ? 'bg-blue-400' : 'bg-[#fcd535]'}`} />
                         )}
                     </button>
                 ))}
@@ -445,9 +449,62 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 </div>
             )}
 
-            {/* Order List */}
-            <div className="pb-32 px-1">
-                {mode === 'active' || mode === 'history' ? (
+                {mode === 'deposit' ? (
+                    <div className="flex flex-col gap-3 p-3">
+                        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-2">
+                            <p className="text-blue-400 text-xs font-bold flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4" /> OFFICIAL MERCHANT GATEWAY
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                                Select a verified merchant to purchase NXS directly. Funds are locked in Escrow for your safety.
+                            </p>
+                        </div>
+                        {agents.map(agent => (
+                            <div key={agent.agentId} className="bg-[#181a20] p-4 rounded-xl border border-[#2b3139] hover:border-blue-500/30 transition group">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 className="text-sm font-black text-[#eaeaec]">{agent.agentName}</h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold uppercase tracking-widest">Merchant</span>
+                                            <span className="text-[10px] text-[#0ecb81] font-bold">● ONLINE</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[9px] text-[#848e9c] font-bold uppercase mb-0.5">Stock Available</div>
+                                        <div className="text-xs font-black text-blue-400 font-mono">{(agent.availableStock || 0).toLocaleString()} NXS</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between mt-4">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] text-[#848e9c] font-bold uppercase">Payment Method</span>
+                                        <span className="text-xs font-bold text-[#eaeaec]">bKash / Nagad / Bank</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            // Open Buy Modal with a virtual "SELL" order
+                                            handleTradeAction({
+                                                _id: `agent_${agent.agentId}`,
+                                                userId: { 
+                                                    _id: agent.agentId, 
+                                                    username: agent.agentName,
+                                                    wallet: { main: agent.availableStock } 
+                                                },
+                                                amount: agent.availableStock,
+                                                rate: 123, // Default fixed rate for official recharges or fetch from settings
+                                                type: 'SELL', // User is buying from agent
+                                                paymentMethod: 'Agent Transfer',
+                                                isOfficial: true
+                                            });
+                                        }}
+                                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-black text-xs transition active:scale-95 shadow-lg shadow-blue-500/20"
+                                    >
+                                        DEPOSIT
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (mode === 'active' || mode === 'history') ? (
                     loading ? <P2PSkeleton /> :
                         orders.length === 0 ? <div className="text-center py-10 text-[#848e9c]">No Trades Found</div> :
                             orders.map(trade => (

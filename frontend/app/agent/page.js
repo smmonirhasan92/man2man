@@ -45,16 +45,16 @@ export default function AgentDashboard() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center">Loading Agent Portal...</div>;
+    if (loading) return <div className="p-8 text-center">Loading Merchant Portal...</div>;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
             {/* Header */}
             <div className="bg-[#1e1b4b] text-white p-6 pb-12 rounded-b-[2.5rem] relative shrink-0">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-xl font-bold">Agent Dashboard</h1>
+                    <h1 className="text-xl font-bold">Merchant Dashboard</h1>
                     <div className="bg-white/10 px-3 py-1 rounded-full text-xs font-bold text-emerald-300 border border-emerald-500/30">
-                        LIVE AGENT
+                        LIVE MERCHANT
                     </div>
                 </div>
 

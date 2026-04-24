@@ -38,7 +38,7 @@ export default function RechargeForm({ settings, onSubmit, loading, activeTab })
 
         if (paymentMode === 'mobile_banking' && selectedDepositAgent) {
             formData.append('receivedByAgentId', selectedDepositAgent.agentId);
-            formData.append('recipientDetails', `Sent to: ${selectedDepositAgent.number} (${selectedDepositAgent.agentName})`);
+            formData.append('recipientDetails', `Sent to: ${selectedDepositAgent.number} (${selectedDepositAgent.agentName}) [Merchant]`);
         } else {
             formData.append('recipientDetails', `Sent to: ${settings.bkash_number}`);
         }
@@ -76,9 +76,9 @@ export default function RechargeForm({ settings, onSubmit, loading, activeTab })
                     </div>
                 )}
 
-                {/* Send Money To (Agent) */}
+                {/* Send Money To (Vendor) */}
                 <div className="mb-4">
-                    <label className="text-[11px] font-bold text-slate-400 mb-1.5 block uppercase tracking-wide">Mobile Number (Send Money To)</label>
+                    <label className="text-[11px] font-bold text-slate-400 mb-1.5 block uppercase tracking-wide">Mobile Number (Send Money To Merchant)</label>
                     <div 
                         onClick={() => {
                             const num = selectedDepositAgent?.number || settings.bkash_number;

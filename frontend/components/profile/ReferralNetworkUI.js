@@ -66,14 +66,14 @@ export default function ReferralNetworkUI() {
                     <span className="text-3xl font-black text-white tracking-tighter">
                         {totalNetworkSize}
                     </span>
-                    <span className="text-blue-300/80 text-[10px] font-bold uppercase tracking-widest mt-1">Agents</span>
+                    <span className="text-blue-300/80 text-[10px] font-bold uppercase tracking-widest mt-1">Members</span>
                 </div>
             </div>
 
             <div className="space-y-3 relative z-10">
                 {[
                     { level: 1, label: 'Direct Referrals', value: levelCounts.level1, earning: networkData.levelEarnings[0], color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: Award },
-                    { level: 2, label: 'Tier 2 Agents', value: levelCounts.level2, earning: networkData.levelEarnings[1], color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: Users },
+                    { level: 2, label: 'Tier 2 Members', value: levelCounts.level2, earning: networkData.levelEarnings[1], color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: Users },
                     { level: 3, label: 'Tier 3 Squad', value: levelCounts.level3, earning: networkData.levelEarnings[2], color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: Users },
                     { level: 4, label: 'Tier 4 Network', value: levelCounts.level4, earning: networkData.levelEarnings[3], color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: Users },
                     { level: 5, label: 'Tier 5 Reach', value: levelCounts.level5, earning: networkData.levelEarnings[4], color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', icon: Zap },
