@@ -414,11 +414,19 @@ exports.sendOtp = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email format' });
         }
 
-        // Check if email already used (unless it's a forgotten password request, but let's handle that in forgotPassword)
-        // This generic sendOtp is for registration or adding email
-        const existingUser = await User.findOne({ email });
-        if (existingUser && req.body.context === 'registration') {
-            return res.status(400).json({ message: 'Email already in use' });
+        // Check if email already used
+        if (req.body.context === 'registration') {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                if (existingUser.emailVerified === true) {
+                    // Fully registered user — block re-registration
+                    return res.status(400).json({ message: 'Email already in use' });
+                } else {
+                    // Partial/failed registration — clean it up and allow retry
+                    console.log(`[sendOtp] Cleaning up partial registration for: ${email}`);
+                    await User.deleteOne({ _id: existingUser._id });
+                }
+            }
         }
 
         const success = await EmailService.generateAndSendOTP(email, req.body.context || 'verification');
