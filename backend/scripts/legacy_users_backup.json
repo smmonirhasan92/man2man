@@ -1,0 +1,3855 @@
+[
+  {
+    "_id": "697c935a089e11a445b8d7c4",
+    "username": "admin3972",
+    "primary_phone": "+8801700000000",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "game": 1482.76,
+      "agent": 0,
+      "pending_referral": 0,
+      "game_locked": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "p2p_locked": 0
+    },
+    "createdAt": "2026-01-30T11:17:46.669Z"
+  },
+  {
+    "_id": "69d726825f1a35968eec9199",
+    "username": "tester6932",
+    "primary_phone": "+8801700000001",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-09T04:09:38.892Z"
+  },
+  {
+    "_id": "69d76cb5d3d164955e67f74d",
+    "username": "test1231773",
+    "primary_phone": "+8801712312312",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-09T09:09:10.013Z"
+  },
+  {
+    "_id": "69d76ccad3d164955e67f750",
+    "username": "test1236768",
+    "primary_phone": "+8801712312322",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-09T09:09:30.014Z"
+  },
+  {
+    "_id": "69ccd964666e406e25427e72",
+    "username": "superadmin-local7344",
+    "primary_phone": "+8801712341234",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-01T08:37:56.999Z"
+  },
+  {
+    "_id": "69d1da465b20b049332d1df0",
+    "username": "test5836",
+    "primary_phone": "+8801712345678",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-05T03:43:02.885Z"
+  },
+  {
+    "_id": "69d77581994a29fdeddd4e23",
+    "username": "uesss3451",
+    "primary_phone": "+8801723585659",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-09T09:46:41.877Z"
+  },
+  {
+    "_id": "69d775ec994a29fdeddd4ea2",
+    "username": "dddaaa4151",
+    "primary_phone": "+8801725362320",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-09T09:48:28.589Z"
+  },
+  {
+    "_id": "69ccdcc04844965acef3a687",
+    "username": "monir7054",
+    "primary_phone": "+8801741414141",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 9000,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-01T08:52:16.843Z"
+  },
+  {
+    "_id": "69cfafa0c52aaccf1c99c067",
+    "username": "doktest9137",
+    "primary_phone": "+8801742434445",
+    "wallet": {
+      "turnover": {
+        "required": 246,
+        "completed": 0
+      },
+      "income": 56.443,
+      "purchase": 0,
+      "main": 9537.69,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0
+    },
+    "createdAt": "2026-04-03T12:16:32.366Z"
+  },
+  {
+    "_id": "69d77b70dff82c531bea5698",
+    "username": "ugrggr2416",
+    "primary_phone": "+8801745424142",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "income": 311.6,
+      "purchase": 0,
+      "main": 97000,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0
+    },
+    "createdAt": "2026-04-09T10:12:00.471Z"
+  },
+  {
+    "_id": "69d77620dff82c531bea5180",
+    "username": "bnhg2397",
+    "primary_phone": "+8801758632145",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-09T09:49:20.709Z"
+  },
+  {
+    "_id": "69e9988064e98f94b591aea9",
+    "username": "fef4139",
+    "primary_phone": "+8801763565643",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "income": 0,
+      "purchase": 0,
+      "main": 9661,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0
+    },
+    "createdAt": "2026-04-23T03:56:48.540Z"
+  },
+  {
+    "_id": "69e993699f5edea22596238e",
+    "username": "test2827",
+    "primary_phone": "+8801765755443",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "income": 116,
+      "purchase": 0,
+      "main": 8550,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0
+    },
+    "createdAt": "2026-04-23T03:35:05.566Z"
+  },
+  {
+    "_id": "69f02c5cb2257625c0ecb38c",
+    "username": "reftest2961",
+    "primary_phone": "+8801766558899",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "income": 240,
+      "purchase": 0,
+      "main": 15368,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0
+    },
+    "createdAt": "2026-04-28T03:41:16.844Z"
+  },
+  {
+    "_id": "69ccd87f666e406e25427e6b",
+    "username": "local--019014",
+    "primary_phone": "+8801785858585",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-01T08:34:07.092Z"
+  },
+  {
+    "_id": "69ccf746ddbf07818aba0b21",
+    "username": "test3468",
+    "primary_phone": "+8801878143212",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "income": 0,
+      "purchase": 0,
+      "main": 0,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-01T10:45:26.912Z"
+  },
+  {
+    "_id": "69f02e2eb2257625c0ecb5b8",
+    "username": "reftest225826",
+    "primary_phone": "+8801987543212",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "income": 0,
+      "purchase": 0,
+      "main": 9345,
+      "agent": 0,
+      "pending_referral": 0,
+      "escrow_locked": 0,
+      "commission": 0,
+      "staked": 0,
+      "total_earned_staking": 0,
+      "rechargeEscrow": 0
+    },
+    "createdAt": "2026-04-28T03:49:02.151Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1d0",
+    "username": "test_user_0",
+    "primary_phone": "1234567890",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.616Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1d2",
+    "username": "test_user_1",
+    "primary_phone": "1234567891",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.630Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1e4",
+    "username": "test_user_10",
+    "primary_phone": "12345678910",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.684Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f298",
+    "username": "test_user_100",
+    "primary_phone": "123456789100",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.084Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f29a",
+    "username": "test_user_101",
+    "primary_phone": "123456789101",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.087Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f29c",
+    "username": "test_user_102",
+    "primary_phone": "123456789102",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.093Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f29e",
+    "username": "test_user_103",
+    "primary_phone": "123456789103",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.098Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2a0",
+    "username": "test_user_104",
+    "primary_phone": "123456789104",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.101Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2a2",
+    "username": "test_user_105",
+    "primary_phone": "123456789105",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.105Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2a4",
+    "username": "test_user_106",
+    "primary_phone": "123456789106",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.111Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2a6",
+    "username": "test_user_107",
+    "primary_phone": "123456789107",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.115Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2a8",
+    "username": "test_user_108",
+    "primary_phone": "123456789108",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.118Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2aa",
+    "username": "test_user_109",
+    "primary_phone": "123456789109",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.124Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1e6",
+    "username": "test_user_11",
+    "primary_phone": "12345678911",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.687Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ac",
+    "username": "test_user_110",
+    "primary_phone": "123456789110",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.129Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ae",
+    "username": "test_user_111",
+    "primary_phone": "123456789111",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.133Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2b0",
+    "username": "test_user_112",
+    "primary_phone": "123456789112",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.137Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2b2",
+    "username": "test_user_113",
+    "primary_phone": "123456789113",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.143Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2b4",
+    "username": "test_user_114",
+    "primary_phone": "123456789114",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.147Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2b6",
+    "username": "test_user_115",
+    "primary_phone": "123456789115",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.152Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2b8",
+    "username": "test_user_116",
+    "primary_phone": "123456789116",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.156Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ba",
+    "username": "test_user_117",
+    "primary_phone": "123456789117",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.162Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2bc",
+    "username": "test_user_118",
+    "primary_phone": "123456789118",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.166Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2be",
+    "username": "test_user_119",
+    "primary_phone": "123456789119",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.169Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1e8",
+    "username": "test_user_12",
+    "primary_phone": "12345678912",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.692Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2c0",
+    "username": "test_user_120",
+    "primary_phone": "123456789120",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.173Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2c2",
+    "username": "test_user_121",
+    "primary_phone": "123456789121",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.178Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2c4",
+    "username": "test_user_122",
+    "primary_phone": "123456789122",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.182Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2c6",
+    "username": "test_user_123",
+    "primary_phone": "123456789123",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.185Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2c8",
+    "username": "test_user_124",
+    "primary_phone": "123456789124",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.192Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ca",
+    "username": "test_user_125",
+    "primary_phone": "123456789125",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.197Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2cc",
+    "username": "test_user_126",
+    "primary_phone": "123456789126",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.200Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ce",
+    "username": "test_user_127",
+    "primary_phone": "123456789127",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.205Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2d0",
+    "username": "test_user_128",
+    "primary_phone": "123456789128",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.211Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2d2",
+    "username": "test_user_129",
+    "primary_phone": "123456789129",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.216Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1ea",
+    "username": "test_user_13",
+    "primary_phone": "12345678913",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.698Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2d4",
+    "username": "test_user_130",
+    "primary_phone": "123456789130",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.221Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2d6",
+    "username": "test_user_131",
+    "primary_phone": "123456789131",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.229Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2d8",
+    "username": "test_user_132",
+    "primary_phone": "123456789132",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.233Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2da",
+    "username": "test_user_133",
+    "primary_phone": "123456789133",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.238Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2dc",
+    "username": "test_user_134",
+    "primary_phone": "123456789134",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.245Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2de",
+    "username": "test_user_135",
+    "primary_phone": "123456789135",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.250Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2e0",
+    "username": "test_user_136",
+    "primary_phone": "123456789136",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.253Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2e2",
+    "username": "test_user_137",
+    "primary_phone": "123456789137",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.259Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2e4",
+    "username": "test_user_138",
+    "primary_phone": "123456789138",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.264Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2e6",
+    "username": "test_user_139",
+    "primary_phone": "123456789139",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.267Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1ec",
+    "username": "test_user_14",
+    "primary_phone": "12345678914",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.701Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2e8",
+    "username": "test_user_140",
+    "primary_phone": "123456789140",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.271Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ea",
+    "username": "test_user_141",
+    "primary_phone": "123456789141",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.278Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ec",
+    "username": "test_user_142",
+    "primary_phone": "123456789142",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.282Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2ee",
+    "username": "test_user_143",
+    "primary_phone": "123456789143",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.286Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2f0",
+    "username": "test_user_144",
+    "primary_phone": "123456789144",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.291Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2f2",
+    "username": "test_user_145",
+    "primary_phone": "123456789145",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.296Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2f4",
+    "username": "test_user_146",
+    "primary_phone": "123456789146",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.301Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2f6",
+    "username": "test_user_147",
+    "primary_phone": "123456789147",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.305Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2f8",
+    "username": "test_user_148",
+    "primary_phone": "123456789148",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.313Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f2fa",
+    "username": "test_user_149",
+    "primary_phone": "123456789149",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.318Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1ee",
+    "username": "test_user_15",
+    "primary_phone": "12345678915",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.706Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1f0",
+    "username": "test_user_16",
+    "primary_phone": "12345678916",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.712Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1f2",
+    "username": "test_user_17",
+    "primary_phone": "12345678917",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.715Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1f4",
+    "username": "test_user_18",
+    "primary_phone": "12345678918",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.718Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1f6",
+    "username": "test_user_19",
+    "primary_phone": "12345678919",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.723Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1d4",
+    "username": "test_user_2",
+    "primary_phone": "1234567892",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.635Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1f8",
+    "username": "test_user_20",
+    "primary_phone": "12345678920",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.729Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1fa",
+    "username": "test_user_21",
+    "primary_phone": "12345678921",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.733Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1fc",
+    "username": "test_user_22",
+    "primary_phone": "12345678922",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.737Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1fe",
+    "username": "test_user_23",
+    "primary_phone": "12345678923",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.741Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f200",
+    "username": "test_user_24",
+    "primary_phone": "12345678924",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.746Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f202",
+    "username": "test_user_25",
+    "primary_phone": "12345678925",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.750Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f204",
+    "username": "test_user_26",
+    "primary_phone": "12345678926",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.754Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f206",
+    "username": "test_user_27",
+    "primary_phone": "12345678927",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.759Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f208",
+    "username": "test_user_28",
+    "primary_phone": "12345678928",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.763Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f20a",
+    "username": "test_user_29",
+    "primary_phone": "12345678929",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.767Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1d6",
+    "username": "test_user_3",
+    "primary_phone": "1234567893",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.642Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f20c",
+    "username": "test_user_30",
+    "primary_phone": "12345678930",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.771Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f20e",
+    "username": "test_user_31",
+    "primary_phone": "12345678931",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.776Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f210",
+    "username": "test_user_32",
+    "primary_phone": "12345678932",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.779Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f212",
+    "username": "test_user_33",
+    "primary_phone": "12345678933",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.783Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f214",
+    "username": "test_user_34",
+    "primary_phone": "12345678934",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.786Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f216",
+    "username": "test_user_35",
+    "primary_phone": "12345678935",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.790Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f218",
+    "username": "test_user_36",
+    "primary_phone": "12345678936",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.794Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f21a",
+    "username": "test_user_37",
+    "primary_phone": "12345678937",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.798Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f21c",
+    "username": "test_user_38",
+    "primary_phone": "12345678938",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.801Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f21e",
+    "username": "test_user_39",
+    "primary_phone": "12345678939",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.804Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1d8",
+    "username": "test_user_4",
+    "primary_phone": "1234567894",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.649Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f220",
+    "username": "test_user_40",
+    "primary_phone": "12345678940",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.808Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f222",
+    "username": "test_user_41",
+    "primary_phone": "12345678941",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.813Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f224",
+    "username": "test_user_42",
+    "primary_phone": "12345678942",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.816Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f226",
+    "username": "test_user_43",
+    "primary_phone": "12345678943",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.820Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f228",
+    "username": "test_user_44",
+    "primary_phone": "12345678944",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.824Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f22a",
+    "username": "test_user_45",
+    "primary_phone": "12345678945",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.828Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f22c",
+    "username": "test_user_46",
+    "primary_phone": "12345678946",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.832Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f22e",
+    "username": "test_user_47",
+    "primary_phone": "12345678947",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.835Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f230",
+    "username": "test_user_48",
+    "primary_phone": "12345678948",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.839Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f232",
+    "username": "test_user_49",
+    "primary_phone": "12345678949",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.845Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1da",
+    "username": "test_user_5",
+    "primary_phone": "1234567895",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.653Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f234",
+    "username": "test_user_50",
+    "primary_phone": "12345678950",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.849Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f236",
+    "username": "test_user_51",
+    "primary_phone": "12345678951",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.852Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f238",
+    "username": "test_user_52",
+    "primary_phone": "12345678952",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.856Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f23a",
+    "username": "test_user_53",
+    "primary_phone": "12345678953",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.861Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f23c",
+    "username": "test_user_54",
+    "primary_phone": "12345678954",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.866Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f23e",
+    "username": "test_user_55",
+    "primary_phone": "12345678955",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.869Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f240",
+    "username": "test_user_56",
+    "primary_phone": "12345678956",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.873Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f242",
+    "username": "test_user_57",
+    "primary_phone": "12345678957",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.879Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f244",
+    "username": "test_user_58",
+    "primary_phone": "12345678958",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.882Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f246",
+    "username": "test_user_59",
+    "primary_phone": "12345678959",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.886Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1dc",
+    "username": "test_user_6",
+    "primary_phone": "1234567896",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.660Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f248",
+    "username": "test_user_60",
+    "primary_phone": "12345678960",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.891Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f24a",
+    "username": "test_user_61",
+    "primary_phone": "12345678961",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.897Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f24c",
+    "username": "test_user_62",
+    "primary_phone": "12345678962",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.900Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f24e",
+    "username": "test_user_63",
+    "primary_phone": "12345678963",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.904Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f250",
+    "username": "test_user_64",
+    "primary_phone": "12345678964",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.910Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f252",
+    "username": "test_user_65",
+    "primary_phone": "12345678965",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.914Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f254",
+    "username": "test_user_66",
+    "primary_phone": "12345678966",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.919Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f256",
+    "username": "test_user_67",
+    "primary_phone": "12345678967",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.924Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f258",
+    "username": "test_user_68",
+    "primary_phone": "12345678968",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.929Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f25a",
+    "username": "test_user_69",
+    "primary_phone": "12345678969",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.933Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1de",
+    "username": "test_user_7",
+    "primary_phone": "1234567897",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.666Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f25c",
+    "username": "test_user_70",
+    "primary_phone": "12345678970",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.936Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f25e",
+    "username": "test_user_71",
+    "primary_phone": "12345678971",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.942Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f260",
+    "username": "test_user_72",
+    "primary_phone": "12345678972",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.946Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f262",
+    "username": "test_user_73",
+    "primary_phone": "12345678973",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.950Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f264",
+    "username": "test_user_74",
+    "primary_phone": "12345678974",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.954Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f266",
+    "username": "test_user_75",
+    "primary_phone": "12345678975",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.959Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f268",
+    "username": "test_user_76",
+    "primary_phone": "12345678976",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.964Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f26a",
+    "username": "test_user_77",
+    "primary_phone": "12345678977",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.969Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f26c",
+    "username": "test_user_78",
+    "primary_phone": "12345678978",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.975Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f26e",
+    "username": "test_user_79",
+    "primary_phone": "12345678979",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.983Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1e0",
+    "username": "test_user_8",
+    "primary_phone": "1234567898",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.671Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f270",
+    "username": "test_user_80",
+    "primary_phone": "12345678980",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.988Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f272",
+    "username": "test_user_81",
+    "primary_phone": "12345678981",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.994Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f274",
+    "username": "test_user_82",
+    "primary_phone": "12345678982",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.999Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f276",
+    "username": "test_user_83",
+    "primary_phone": "12345678983",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.002Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f278",
+    "username": "test_user_84",
+    "primary_phone": "12345678984",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.009Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f27a",
+    "username": "test_user_85",
+    "primary_phone": "12345678985",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.014Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f27c",
+    "username": "test_user_86",
+    "primary_phone": "12345678986",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.018Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f27e",
+    "username": "test_user_87",
+    "primary_phone": "12345678987",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.021Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f280",
+    "username": "test_user_88",
+    "primary_phone": "12345678988",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.028Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f282",
+    "username": "test_user_89",
+    "primary_phone": "12345678989",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.032Z"
+  },
+  {
+    "_id": "69d0e1e913b466652521f1e2",
+    "username": "test_user_9",
+    "primary_phone": "1234567899",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:21.679Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f284",
+    "username": "test_user_90",
+    "primary_phone": "12345678990",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.037Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f286",
+    "username": "test_user_91",
+    "primary_phone": "12345678991",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.043Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f288",
+    "username": "test_user_92",
+    "primary_phone": "12345678992",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.047Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f28a",
+    "username": "test_user_93",
+    "primary_phone": "12345678993",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.051Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f28c",
+    "username": "test_user_94",
+    "primary_phone": "12345678994",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.055Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f28e",
+    "username": "test_user_95",
+    "primary_phone": "12345678995",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.060Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f290",
+    "username": "test_user_96",
+    "primary_phone": "12345678996",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.065Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f292",
+    "username": "test_user_97",
+    "primary_phone": "12345678997",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.069Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f294",
+    "username": "test_user_98",
+    "primary_phone": "12345678998",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.074Z"
+  },
+  {
+    "_id": "69d0e1ea13b466652521f296",
+    "username": "test_user_99",
+    "primary_phone": "12345678999",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:03:22.080Z"
+  },
+  {
+    "_id": "69d0e69f81a170d07a157648",
+    "username": "sim_user_0",
+    "primary_phone": "99999990",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 1000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:23:27.833Z"
+  },
+  {
+    "_id": "69d0e69f81a170d07a15764b",
+    "username": "sim_user_1",
+    "primary_phone": "99999991",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 1000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:23:27.853Z"
+  },
+  {
+    "_id": "69d0e69f81a170d07a15764e",
+    "username": "sim_user_2",
+    "primary_phone": "99999992",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 1000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:23:27.864Z"
+  },
+  {
+    "_id": "69d0e69f81a170d07a157651",
+    "username": "sim_user_3",
+    "primary_phone": "99999993",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 1000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:23:27.878Z"
+  },
+  {
+    "_id": "69d0e69f81a170d07a157654",
+    "username": "sim_user_4",
+    "primary_phone": "99999994",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 1000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T10:23:27.888Z"
+  },
+  {
+    "_id": "69d0f6110cf9fb506522ceef",
+    "username": "retention_sim_v3",
+    "primary_phone": "99999997",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T11:29:21.034Z"
+  },
+  {
+    "_id": "69d0f57ba78858b302c60608",
+    "username": "retention_sim_v2",
+    "primary_phone": "99999998",
+    "wallet": {
+      "turnover": {
+        "required": 0,
+        "completed": 0
+      },
+      "rechargeEscrow": 0,
+      "main": 10000,
+      "income": 0,
+      "purchase": 0,
+      "escrow_locked": 0,
+      "agent": 0,
+      "commission": 0,
+      "pending_referral": 0,
+      "staked": 0,
+      "total_earned_staking": 0
+    },
+    "createdAt": "2026-04-04T11:26:51.060Z"
+  }
+]

@@ -24,7 +24,6 @@ import VPSConnectModal from '../../components/VPSConnectModal';
 import api from '../../services/api';
 import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 import GlobalTourProgress from '../../components/dashboard/GlobalTourProgress';
-import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 
 export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
