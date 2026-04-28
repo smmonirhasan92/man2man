@@ -180,35 +180,39 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* FIELDS */}
+                {/* 1.5 IDENTITY UPDATE FORM */}
                 <form onSubmit={handleUpdate} className="space-y-6">
-                    <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Full Name</label>
-                        <input
-                            type="text"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            className="mt-1 w-full bg-slate-800/50 text-white rounded-xl border border-white/10 p-4 font-bold focus:border-blue-500 focus:bg-slate-800 transition outline-none"
-                        />
+                    <div className="bg-slate-800/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Profile Identity</label>
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <input
+                                type="text"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                placeholder="Legal Full Name"
+                                className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 pl-12 text-sm focus:border-blue-500/50 transition outline-none font-bold shadow-inner"
+                            />
+                        </div>
                     </div>
 
-                    {/* ASSETS GRID */}
+                    {/* ASSETS GRID (Read Only) */}
                     {assets.length > 0 && (
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2 mb-2">
-                                <Wallet className="w-3 h-3" /> Active Assets
+                        <div className="space-y-3">
+                            <label className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                <Wallet className="w-3 h-3" /> Digital Assets
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {assets.map((asset, i) => (
-                                    <div key={i} className="bg-slate-800/50 p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition group flex flex-col gap-2">
+                                    <div key={i} className="bg-slate-800/40 p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition group flex flex-col gap-2 shadow-lg">
                                         <div className="flex justify-between items-start">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-lg">🇺🇸</div>
-                                            <span className="text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]">ACTIVE</span>
+                                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-lg shadow-inner">🇺🇸</div>
+                                            <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">ACTIVE</span>
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-bold text-white leading-tight">{asset.planName}</h4>
-                                            <p className="text-[10px] font-mono text-slate-400 truncate mt-1">
-                                                {asset.syntheticPhone || 'Processing ID...'}
+                                            <h4 className="text-sm font-black text-white leading-tight uppercase tracking-tight">{asset.planName}</h4>
+                                            <p className="text-[10px] font-mono text-slate-500 truncate mt-1">
+                                                ID: {asset.syntheticPhone || 'SECURE_NODE_PENDING'}
                                             </p>
                                         </div>
                                     </div>
@@ -217,95 +221,209 @@ export default function ProfilePage() {
                         </div>
                     )}
 
-                    {/* Password Section */}
-                    <div className="bg-slate-800/30 p-4 rounded-xl border border-white/5 space-y-4">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                            <Lock className="w-3 h-3" /> Security
+                    {/* 2. EMAIL VERIFICATION / BINDING SECTION [NEW] */}
+                    <div className="bg-slate-800/30 p-5 rounded-2xl border border-white/5 space-y-4">
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Account Security Node
+                            </label>
+                            {user.email && user.emailVerified ? (
+                                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-black tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.1)]">Verified ✅</span>
+                            ) : (
+                                <span className="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20 font-black tracking-widest uppercase animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.1)]">Verify Required ⚠️</span>
+                            )}
+                        </div>
+
+                        {!user.email || !user.emailVerified ? (
+                            <div className="space-y-4">
+                                <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                                    {user.email 
+                                        ? "Your email is registered but pending verification. Verify to enable withdrawals."
+                                        : "Link a professional email to secure your payouts and receive trade notifications."
+                                    }
+                                </p>
+                                <div className="relative">
+                                    <input
+                                        type="email"
+                                        placeholder="Enter secure email address"
+                                        defaultValue={user.email || ''}
+                                        onChange={(e) => setUser({ ...user, tempEmail: e.target.value })}
+                                        className="w-full bg-black/50 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-blue-500/50 transition outline-none pr-32 font-bold shadow-inner"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            const email = user.tempEmail || user.email;
+                                            if (!email) return toast.error('Please enter an email');
+                                            try {
+                                                await api.post('/auth/send-otp', { email, context: 'verification' });
+                                                toast.success('Security Code Sent! 📧');
+                                                setUser({ ...user, otpSent: true, tempEmail: email });
+                                            } catch (e) { toast.error(e.response?.data?.message || 'Failed to send OTP'); }
+                                        }}
+                                        className="absolute right-2 top-2 bottom-2 px-4 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition border border-blue-500/20"
+                                    >
+                                        Send OTP
+                                    </button>
+                                </div>
+
+                                {user.otpSent && (
+                                    <div className="space-y-2 animate-in slide-in-from-top-4 duration-500">
+                                        <input
+                                            type="text"
+                                            placeholder="XXXXXX"
+                                            maxLength={6}
+                                            onChange={(e) => setUser({ ...user, otp: e.target.value })}
+                                            className="w-full bg-blue-900/20 text-blue-400 rounded-xl border border-blue-500/30 p-4 text-center text-3xl font-black tracking-[0.5em] focus:border-blue-500 transition outline-none shadow-2xl"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await api.post('/auth/bind-email', { email: user.tempEmail, otp: user.otp });
+                                                    toast.success('Node Secured Successfully! ✨');
+                                                    setUser(prev => ({ ...prev, ...res.data.user, otpSent: false }));
+                                                } catch (e) { toast.error(e.response?.data?.message || 'Invalid Security Code'); }
+                                            }}
+                                            className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-xl text-xs font-black uppercase tracking-widest transition border border-emerald-500/30 shadow-lg shadow-emerald-900/20"
+                                        >
+                                            Validate & Link Node
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-emerald-500/5 border border-emerald-500/10 p-5 rounded-2xl flex items-center justify-between shadow-inner">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Security Email</span>
+                                    <span className="text-sm font-black text-white">{user.email}</span>
+                                </div>
+                                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-lg border border-emerald-500/20">
+                                    <Sparkles className="w-6 h-6" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. PASSWORD SECTION */}
+                    <div className="bg-slate-800/30 p-5 rounded-2xl border border-white/5 space-y-4 shadow-xl">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Lock className="w-3.5 h-3.5 text-red-500" /> Access Protocol
                         </label>
                         <input
                             type="password"
-                            placeholder="Current Password"
+                            placeholder="Current Encryption Password"
                             value={passwords.old}
                             onChange={(e) => setPasswords({ ...passwords, old: e.target.value })}
-                            className="w-full bg-black/20 text-white rounded-lg border border-white/5 p-3 text-sm focus:border-red-500/50 transition outline-none"
+                            className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-red-500/50 transition outline-none font-bold shadow-inner"
                         />
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                             <input
                                 type="password"
-                                placeholder="New"
+                                placeholder="New Protocol"
                                 value={passwords.new}
                                 onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                                className="w-full bg-black/20 text-white rounded-lg border border-white/5 p-3 text-sm focus:border-blue-500/50 transition outline-none"
+                                className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-blue-500/50 transition outline-none font-bold shadow-inner"
                             />
                             <input
                                 type="password"
-                                placeholder="Confirm"
+                                placeholder="Verify New"
                                 value={passwords.confirm}
                                 onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                                className="w-full bg-black/20 text-white rounded-lg border border-white/5 p-3 text-sm focus:border-blue-500/50 transition outline-none"
+                                className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-blue-500/50 transition outline-none font-bold shadow-inner"
                             />
                         </div>
+
+                        {user.emailVerified && (
+                            <div className="space-y-3 pt-2 bg-red-900/5 p-4 rounded-xl border border-red-500/10">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">2FA Challenge Required</span>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            try {
+                                                await api.post('/auth/send-otp', { email: user.email, context: 'password_reset' });
+                                                toast.success('Security Code Dispatched! 🛡️');
+                                                setPasswords(prev => ({ ...prev, otpSent: true }));
+                                            } catch (e) { toast.error(e.response?.data?.message || 'Failed to dispatch OTP'); }
+                                        }}
+                                        className="text-[10px] font-black text-blue-500 uppercase hover:text-blue-400 transition"
+                                    >
+                                        Dispatched OTP
+                                    </button>
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Enter 6-Digit Auth Code"
+                                    maxLength={6}
+                                    value={passwords.otp || ''}
+                                    onChange={(e) => setPasswords({ ...passwords, otp: e.target.value })}
+                                    className="w-full bg-red-900/20 text-red-500 rounded-xl border border-red-500/20 p-4 text-center text-2xl font-black tracking-[0.8em] focus:border-red-500 transition outline-none shadow-inner"
+                                />
+                            </div>
+                        )}
+
                         <button
                             type="button"
                             onClick={handlePasswordChange}
                             disabled={passLoading}
-                            className="w-full py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition border border-white/5"
+                            className="w-full py-4 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition border border-white/10 shadow-lg active:scale-95"
                         >
-                            {passLoading ? 'Updating' : 'Update Credentials'}
+                            {passLoading ? 'Encrypting...' : 'Rotate Security Protocol'}
                         </button>
                     </div>
 
-                    {/* Transaction PIN Section [NEW] */}
-                    <div className="bg-emerald-900/10 p-4 rounded-xl border border-emerald-500/20 space-y-4">
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-2">
-                                <Lock className="w-3 h-3" /> P2P Release PIN
+                    {/* 4. P2P PIN SECTION */}
+                    <div className="bg-emerald-900/5 p-5 rounded-2xl border border-emerald-500/10 space-y-4 shadow-xl">
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-xs font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Lock className="w-3.5 h-3.5" /> P2P Settlement PIN
                             </label>
-                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-bold">REQUIRED FOR P2P</span>
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full font-black border border-emerald-500/20 shadow-lg">ASSET RELEASE REQUIRED</span>
                         </div>
-                        <p className="text-[10px] text-slate-400 leading-tight">Create a secure 6-digit PIN. You will need this to release funds during P2P trades.</p>
+                        <p className="text-[11px] text-slate-500 leading-tight font-medium">Define a persistent 6-digit PIN for authorized P2P fund releases. Do not share this with anyone.</p>
 
                         <input
                             type="password"
-                            placeholder="Current Account Password"
+                            placeholder="Current Encryption Password"
                             value={pinData.password}
                             onChange={(e) => setPinData({ ...pinData, password: e.target.value })}
-                            className="w-full bg-black/20 text-white rounded-lg border border-emerald-500/20 p-3 text-sm focus:border-emerald-500/50 transition outline-none"
+                            className="w-full bg-black/40 text-white rounded-xl border border-emerald-500/20 p-4 text-sm focus:border-emerald-500/50 transition outline-none font-bold shadow-inner"
                         />
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                             <input
                                 type="password"
                                 maxLength={6}
-                                placeholder="6-Digit PIN"
+                                placeholder="Secure PIN"
                                 value={pinData.pin}
                                 onChange={(e) => setPinData({ ...pinData, pin: e.target.value.replace(/\D/g, '') })}
-                                className="w-full bg-black/20 text-white rounded-lg border border-emerald-500/20 p-3 text-center text tracking-widest focus:border-emerald-500/50 transition outline-none"
+                                className="w-full bg-black/40 text-emerald-400 rounded-xl border border-emerald-500/20 p-4 text-center text-2xl font-black tracking-[0.5em] focus:border-emerald-500/50 transition outline-none shadow-inner"
                             />
                             <input
                                 type="password"
                                 maxLength={6}
-                                placeholder="Confirm PIN"
+                                placeholder="Verify PIN"
                                 value={pinData.confirm}
                                 onChange={(e) => setPinData({ ...pinData, confirm: e.target.value.replace(/\D/g, '') })}
-                                className="w-full bg-black/20 text-white rounded-lg border border-emerald-500/20 p-3 text-center text tracking-widest focus:border-emerald-500/50 transition outline-none"
+                                className="w-full bg-black/40 text-emerald-400 rounded-xl border border-emerald-500/20 p-4 text-center text-2xl font-black tracking-[0.5em] focus:border-emerald-500/50 transition outline-none shadow-inner"
                             />
                         </div>
                         <button
                             type="button"
                             onClick={handlePinSetup}
                             disabled={pinLoading}
-                            className="w-full py-2 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-lg text-xs font-bold transition border border-emerald-500/20"
+                            className="w-full py-4 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 rounded-xl text-xs font-black uppercase tracking-widest transition border border-emerald-500/20 shadow-lg active:scale-95"
                         >
-                            {pinLoading ? 'Saving...' : 'Set / Update PIN'}
+                            {pinLoading ? 'Syncing...' : 'Commit Settlement PIN'}
                         </button>
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-base shadow-lg shadow-blue-900/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-black text-lg shadow-[0_20px_40px_-15px_rgba(37,99,235,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border border-white/10"
                     >
-                        {loading ? 'Saving...' : <><Save className="w-4 h-4" /> Save Changes</>}
+                        {loading ? 'Processing...' : <><Save className="w-5 h-5" /> PERSIST CHANGES</>}
                     </button>
                 </form>
 

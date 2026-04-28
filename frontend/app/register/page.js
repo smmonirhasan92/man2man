@@ -119,10 +119,16 @@ function RegisterForm() {
 
                 playSuccess();
                 router.push(res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
-            } else { router.push('/'); }
+            } else { 
+                console.error('Registration response missing token:', res.data);
+                router.push('/'); 
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
+            console.error('REG_ERROR:', err.response?.data || err.message);
+            const msg = err.response?.data?.message || err.response?.data?.error || 'Network Error: Please try again.';
+            setError(msg);
             setLoading(false);
+            playError();
         }
     };
     return (

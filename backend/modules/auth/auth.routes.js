@@ -20,7 +20,8 @@ router.post('/verify-otp', authLimiter, authController.verifyOtp);
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/reset-password', authLimiter, authController.resetPassword);
 
-// --- Legacy User Migration ---
+// --- Legacy User Migration & Email Binding ---
+router.post('/bind-email', authMiddleware, authController.bindEmail);
 router.post('/verify-legacy-email', authMiddleware, authController.verifyLegacyEmail);
 
 module.exports = router;

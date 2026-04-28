@@ -51,52 +51,71 @@ class EmailService {
         const title = isReset ? 'Password Reset Code' : 'Email Verification Code';
         const color = isReset ? '#ef4444' : '#10b981'; // Red for reset, Emerald for verify
 
-        // Premium HTML Template
+        // Premium World-Class HTML Template
         const html = `
         <!DOCTYPE html>
         <html>
-        <body style="margin: 0; padding: 0; background-color: #070b14; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #f1f5f9;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #070b14; padding: 40px 0;">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #020617; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #020617; padding: 40px 0;">
                 <tr>
                     <td align="center">
-                        <table width="100%" max-width="600px" cellpadding="0" cellspacing="0" style="background-color: #0b1221; border-radius: 20px; overflow: hidden; border: 1px solid #1e293b; margin: 0 20px;">
-                            <!-- Header -->
+                        <!-- Main Container -->
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0b1221; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); margin: 0 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                            
+                            <!-- Premium Header Gradient Bar -->
+                            <tr><td height="4" style="background: linear-gradient(90deg, #1d4ed8, #ffffff, #b91c1c); line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+
+                            <!-- Header / Brand -->
                             <tr>
-                                <td style="padding: 30px; text-align: center; border-bottom: 1px solid #1e293b;">
-                                    <h1 style="color: ${color}; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;">USA Affiliate</h1>
-                                    <p style="color: #64748b; margin: 5px 0 0 0; font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;">Security Protocol</p>
+                                <td style="padding: 40px 40px 30px 40px; text-align: center;">
+                                    <div style="margin-bottom: 20px;">
+                                        <span style="font-size: 28px; font-weight: 900; color: #ffffff; letter-spacing: 4px; text-transform: uppercase; display: inline-block;">USA AFFILIATE</span>
+                                    </div>
+                                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); width: 100%;"></div>
                                 </td>
                             </tr>
                             
-                            <!-- Body -->
+                            <!-- Content Body -->
                             <tr>
-                                <td style="padding: 40px 30px;">
-                                    <h2 style="color: #f1f5f9; margin: 0 0 20px 0; font-size: 20px;">${title}</h2>
-                                    <p style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">
-                                        You recently requested a security code for your account. Please use the following 6-digit code to complete your request.
+                                <td style="padding: 0 40px 40px 40px; text-align: center;">
+                                    <h2 style="color: #ffffff; margin: 0 0 16px 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">${title}</h2>
+                                    <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 40px 0; max-width: 400px; margin-left: auto; margin-right: auto;">
+                                        Protecting your account is our top priority. Please use the secure authorization code below to proceed.
                                     </p>
                                     
-                                    <!-- OTP Box -->
-                                    <div style="background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 25px; text-align: center;">
-                                        <span style="font-family: monospace; font-size: 42px; font-weight: bold; letter-spacing: 12px; color: ${color}; text-shadow: 0 0 20px ${color}40;">
+                                    <!-- Premium OTP Display -->
+                                    <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 20px; margin-bottom: 40px; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);">
+                                        <div style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;">Your One-Time Code</div>
+                                        <div style="font-family: 'Courier New', Courier, monospace; font-size: 48px; font-weight: 900; letter-spacing: 16px; color: ${color}; text-shadow: 0 0 30px ${color}40; margin-left: 16px;">
                                             ${otp}
-                                        </span>
+                                        </div>
                                     </div>
                                     
-                                    <p style="color: #64748b; font-size: 13px; text-align: center; margin: 30px 0 0 0;">
-                                        This code will expire in <strong style="color: #e2e8f0;">5 minutes</strong>.<br>
-                                        If you did not request this code, please ignore this email.
-                                    </p>
+                                    <div style="background-color: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                                        <p style="color: #64748b; font-size: 13px; margin: 0;">
+                                            Valid for the next <strong style="color: #f1f5f9;">5 minutes</strong>. <br>
+                                            Request ID: <span style="font-family: monospace;">#${Math.random().toString(36).substring(7).toUpperCase()}</span>
+                                        </p>
+                                    </div>
                                 </td>
                             </tr>
                             
                             <!-- Footer -->
                             <tr>
-                                <td style="background-color: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #1e293b;">
-                                    <p style="color: #475569; font-size: 11px; margin: 0;">
-                                        &copy; ${new Date().getFullYear()} USA Affiliate Network. All rights reserved.<br>
-                                        Secure Automated Message
+                                <td style="background-color: #020617; padding: 30px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                                    <p style="color: #475569; font-size: 12px; line-height: 1.8; margin: 0;">
+                                        <strong>USA Affiliate Network</strong><br>
+                                        Global Operations & Digital Asset Security<br>
+                                        <span style="color: #334155;">&copy; ${new Date().getFullYear()} All Rights Reserved.</span>
                                     </p>
+                                    <div style="margin-top: 20px;">
+                                        <a href="#" style="color: #64748b; text-decoration: none; font-size: 11px; margin: 0 10px;">Privacy Policy</a>
+                                        <a href="#" style="color: #64748b; text-decoration: none; font-size: 11px; margin: 0 10px;">Security Guide</a>
+                                    </div>
                                 </td>
                             </tr>
                         </table>

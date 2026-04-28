@@ -98,23 +98,30 @@ exports.register = async (req, res) => {
         // 7. JWT
         const payload = { user: { id: user._id, role: user.role } };
 
-        jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '1d' }, (err, token) => {
-            if (err) throw err;
-            res.status(201).json({
-                message: 'User registered successfully',
-                token,
-                user: {
-                    id: user._id,
-                    username,
-                    role: user.role,
-                    fullName
-                }
+        // [FIX] Use Promisified JWT sign for better async response handling
+        const token = await new Promise((resolve, reject) => {
+            jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '7d' }, (err, t) => {
+                if (err) reject(err);
+                resolve(t);
             });
+        });
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role,
+                fullName: user.fullName,
+                email: user.email,
+                emailVerified: user.emailVerified
+            }
         });
 
     } catch (err) {
         console.error('Registration Error:', err.stack);
-        res.status(500).json({ message: 'Server Error', error: err.message, stack: err.stack });
+        res.status(500).json({ message: 'Server Error', error: err.message });
     }
 };
 
@@ -160,31 +167,74 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // --- LEGACY USER INTERCEPTION ---
-        let requireEmailVerification = false;
-        if (!user.emailVerified) {
-             requireEmailVerification = true;
-        }
-
         // Generate JWT
         const payload = { user: { id: user._id, role: user.role } };
-
-        jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '1d' }, (err, token) => {
-            if (err) throw err;
-            res.json({
-                token,
-                user: {
-                    id: user._id,
-                    username: user.username,
-                    role: user.role,
-                    fullName: user.fullName,
-                    requireEmailVerification
-                }
+        
+        const token = await new Promise((resolve, reject) => {
+            jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '7d' }, (err, t) => {
+                if (err) reject(err);
+                resolve(t);
             });
         });
+
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role,
+                fullName: user.fullName,
+                email: user.email,
+                emailVerified: user.emailVerified
+            }
+        });
     } catch (err) {
-        console.error('Login Error:', err);
-        res.status(500).json({ message: 'Server Error', error: err.message });
+        console.error('Login Error:', err.stack);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.bindEmail = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+
+        if (!email || !otp) {
+            return res.status(400).json({ message: 'Email and Security Code required' });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // 1. Verify OTP using the central EmailService
+        const isValid = await EmailService.verifyOTP(normalizedEmail, otp, 'verification');
+        if (!isValid) {
+            return res.status(400).json({ message: 'Invalid or expired security code' });
+        }
+
+        // 2. Check if email already used by another account
+        const existingUser = await User.findOne({ email: normalizedEmail, _id: { $ne: userId } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'This email is already linked to another account' });
+        }
+
+        // 3. Update User
+        const user = await User.findByIdAndUpdate(
+            userId, 
+            { email: normalizedEmail, emailVerified: true },
+            { new: true }
+        );
+
+        res.json({
+            message: 'Email linked and verified successfully',
+            user: {
+                id: user._id,
+                email: user.email,
+                emailVerified: user.emailVerified
+            }
+        });
+    } catch (err) {
+        console.error('Bind Email Error:', err.stack);
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -319,10 +369,18 @@ exports.getDynamicKey = async (req, res) => {
 exports.changePassword = async (req, res) => {
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
-        const { oldPassword, newPassword } = req.body;
+        const { oldPassword, newPassword, otp } = req.body;
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // [MANDATORY EMAIL SECURITY]
+        // If user has a verified email, force OTP check for password changes
+        if (user.email && user.emailVerified) {
+            if (!otp) return res.status(400).json({ message: 'Password change requires email OTP verification.' });
+            const isOtpValid = await EmailService.verifyOTP(user.email, otp, 'password_reset');
+            if (!isOtpValid) return res.status(400).json({ message: 'Invalid or expired OTP code.' });
+        }
 
         const isMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isMatch) {
@@ -336,7 +394,7 @@ exports.changePassword = async (req, res) => {
         res.json({ message: 'Password updated successfully' });
 
     } catch (err) {
-        console.error(err);
+        console.error('changePassword Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 };

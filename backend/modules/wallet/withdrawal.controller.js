@@ -26,6 +26,11 @@ exports.requestWithdrawal = async (req, res) => {
             const targetWallet = walletType === 'income' ? 'income' : 'main';
             const currentBalance = user.wallet[targetWallet];
 
+            // [MANDATORY SECURITY] Email must be verified before any withdrawal
+            if (!user.emailVerified) {
+                throw new Error('উইথড্র করার আগে আপনাকে অবশ্যই ইমেইল ভেরিফিকেশন সম্পন্ন করতে হবে। আপনার প্রোফাইলে গিয়ে ইমেইল যোগ করুন।');
+            }
+
             if (currentBalance < parsedAmount) {
                 throw new Error(`Insufficient ${targetWallet} Balance`);
             }
