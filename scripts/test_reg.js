@@ -5,7 +5,7 @@ async function test() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 fullName: 'Test User 1',
-                email: 'testuserx1@gmail.com',
+                email: 'testuserx3@gmail.com',
                 password: 'password123',
                 referralCode: ''
             })
