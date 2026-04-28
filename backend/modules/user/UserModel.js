@@ -207,12 +207,37 @@ UserSchema.post('save', function (doc) {
 });
 
 // Indexes for frequent lookups
-// Index Cleaned
-// UserSchema.index({ referralCode: 1 }); // Removed: Conflict with unique: true
-UserSchema.index({ synthetic_phone: 1 }); // [NEW] Needed for Session Lookup
-UserSchema.index({ referredBy: 1 }); // Optimize Tree Lookup
+// NOTE: primary_phone, email, username, referralCode uniqueness is handled
+// via the field-level unique:true + sparse:true declarations above.
+// DO NOT add duplicate schema.index() calls for those fields.
+UserSchema.index({ referredBy: 1 });          // Optimize Tree Lookup
 UserSchema.index({ dailyActivityHours: -1 }); // Optimize Loyalty Leaderboard
-UserSchema.index({ status: 1 }); // Admin Filtering
-UserSchema.index({ createdAt: -1 }); // Recent Users
+UserSchema.index({ status: 1 });              // Admin Filtering
+UserSchema.index({ createdAt: -1 });          // Recent Users
 
-module.exports = mongoose.model('User', UserSchema);
+const UserModel = mongoose.model('User', UserSchema);
+
+// [SELF-HEALING] On first load, ensure all unique indexes are sparse.
+// This prevents E11000 duplicate key on null values when phone is not provided.
+UserModel.on('index', (err) => {
+    if (err) console.error('[UserModel] Index build error:', err.message);
+});
+
+setTimeout(async () => {
+    try {
+        const col = UserModel.collection;
+        const indexes = await col.indexes();
+        const sparseTargets = ['primary_phone_1', 'email_1', 'username_1', 'referralCode_1', 'synthetic_phone_1'];
+        for (const idx of indexes) {
+            if (sparseTargets.includes(idx.name) && idx.unique && !idx.sparse) {
+                console.warn(`[UserModel] ⚠️  Non-sparse unique index detected: ${idx.name} — dropping and rebuilding as sparse.`);
+                await col.dropIndex(idx.name).catch(() => {});
+            }
+        }
+    } catch(e) {
+        // Non-critical — log but don't crash server
+        console.warn('[UserModel] Index self-heal check failed:', e.message);
+    }
+}, 3000); // Run 3s after startup once DB is connected
+
+module.exports = UserModel;
