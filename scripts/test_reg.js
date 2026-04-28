@@ -1,6 +1,6 @@
 async function test() {
     try {
-        const res = await fetch('http://76.13.244.202:5050/api/auth/register', {
+        const res = await fetch('http://76.13.244.202:5011/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
