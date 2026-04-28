@@ -12,4 +12,15 @@ router.post('/change-password', authMiddleware, authController.changePassword);
 router.post('/set-pin', authMiddleware, authController.setTransactionPin);
 router.post('/change-pin', authMiddleware, authController.changeTransactionPin);
 
+// --- OTP & Email Verification Routes ---
+router.post('/send-otp', authLimiter, authController.sendOtp);
+router.post('/verify-otp', authLimiter, authController.verifyOtp);
+
+// --- Forgot Password ---
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/reset-password', authLimiter, authController.resetPassword);
+
+// --- Legacy User Migration ---
+router.post('/verify-legacy-email', authMiddleware, authController.verifyLegacyEmail);
+
 module.exports = router;

@@ -8,6 +8,9 @@ export default function ReferralNetworkUI() {
     const [networkData, setNetworkData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedLevel, setSelectedLevel] = useState(null); // Level being viewed
+    const [levelMembers, setLevelMembers] = useState([]);
+    const [isModalLoading, setIsModalLoading] = useState(false);
 
     useEffect(() => {
         const fetchNetwork = async () => {
@@ -23,6 +26,19 @@ export default function ReferralNetworkUI() {
         };
         fetchNetwork();
     }, []);
+
+    const fetchLevelMembers = async (level) => {
+        setSelectedLevel(level);
+        setIsModalLoading(true);
+        try {
+            const res = await api.get(`/referral/network?level=${level}`);
+            setLevelMembers(res.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsModalLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -83,10 +99,11 @@ export default function ReferralNetworkUI() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        className={`flex items-center justify-between p-4 rounded-2xl border ${tier.border} ${tier.bg} backdrop-blur-sm shadow-inner`}
+                        onClick={() => fetchLevelMembers(tier.level)}
+                        className={`flex items-center justify-between p-4 rounded-2xl border ${tier.border} ${tier.bg} backdrop-blur-sm shadow-inner cursor-pointer hover:scale-[1.02] active:scale-95 transition-all group`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl bg-slate-950/50 shadow-sm border border-white/5`}>
+                            <div className={`p-2 rounded-xl bg-slate-950/50 shadow-sm border border-white/5 group-hover:border-blue-500/50 transition-colors`}>
                                 <tier.icon className={`w-4 h-4 ${tier.color}`} />
                             </div>
                             <div className="flex flex-col">
@@ -110,6 +127,66 @@ export default function ReferralNetworkUI() {
                     </motion.div>
                 ))}
             </div>
+
+            {/* Level Members Modal */}
+            {selectedLevel && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" onClick={() => setSelectedLevel(null)}>
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl" 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-slate-900 to-indigo-900/20">
+                            <div>
+                                <h3 className="text-white font-bold text-lg">Level {selectedLevel} Team</h3>
+                                <p className="text-slate-400 text-[10px] uppercase font-bold">Network Members</p>
+                            </div>
+                            <button onClick={() => setSelectedLevel(null)} className="text-slate-400 hover:text-white bg-white/5 p-2 rounded-full">✕</button>
+                        </div>
+
+                        <div className="p-4 max-h-[60vh] overflow-y-auto no-scrollbar space-y-2">
+                            {isModalLoading ? (
+                                <div className="text-center py-10">
+                                    <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-2" />
+                                    <p className="text-slate-500 text-xs">Scanning Level {selectedLevel}...</p>
+                                </div>
+                            ) : levelMembers.length === 0 ? (
+                                <div className="text-center py-10">
+                                    <Users className="w-10 h-10 text-slate-700 mx-auto mb-2" />
+                                    <p className="text-slate-500 text-sm">No members found at this level.</p>
+                                </div>
+                            ) : (
+                                levelMembers.map(member => (
+                                    <div key={member._id} className="bg-white/5 p-3 rounded-2xl border border-white/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                                                {member.username?.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white">{member.fullName}</p>
+                                                <p className="text-[10px] text-slate-500">@{member.username}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                member.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'
+                                            }`}>
+                                                {member.status}
+                                            </span>
+                                            <p className="text-[10px] text-slate-400 mt-1">Ref: {member.referralCount || 0}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        
+                        <div className="p-4 bg-slate-950/50 border-t border-white/5 text-center">
+                            <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Total Members: {levelMembers.length}</p>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
 
             <div className="mt-6 text-center text-slate-500 text-[10px] font-bold uppercase tracking-widest relative z-10 flex items-center justify-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

@@ -125,6 +125,7 @@ app.use('/api/staking', require('./routes/stakingRoutes')); // [NEW] P2P Staking
 app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug Route
 app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
 app.use('/api/game', require('./routes/gameRoutes')); // [NEW] Gamification/Luck Test
+app.use('/api/referral', require('./routes/referralRoutes')); // [NEW] Referral Management
 
 // [FIX] Support system registered safely to prevent crashes if files are missing
 try {

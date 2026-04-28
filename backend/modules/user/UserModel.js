@@ -8,14 +8,21 @@ const UserSchema = new mongoose.Schema({
     // --- SECURITY & STEALTH ---
     // Real Phone (READABLE)
     // --- SECURITY ---
-    // Real Phone (Main ID)
-    primary_phone: { type: String, required: true, unique: true },
+    // Real Phone (Main ID) - Made optional for new Email-based USA System
+    primary_phone: { type: String, unique: true, sparse: true },
 
     // Synthetic / Masking Phone (Assigned by Plan)
     synthetic_phone: { type: String, sparse: true },
 
     email: { type: String, unique: true, sparse: true },
+    emailVerified: { type: Boolean, default: false }, // [NEW] True after OTP verification
     password: { type: String, required: true },
+
+    // --- EMPIRE RACE: Financial & Gamification Tracking ---
+    purchaseCount: { type: Number, default: 0 }, // 0 = New User
+    monthlyPurchases: { type: Number, default: 0 },
+    lastPurchaseDate: { type: Date },
+    tourSales: { type: Number, default: 0 }, // Tracks "Big Packages" sold by directs
 
     role: {
         type: String,
@@ -83,6 +90,22 @@ const UserSchema = new mongoose.Schema({
         type: [Number],
         default: [0, 0, 0, 0, 0] // Level 1 to 5
     },
+    referralHands: { type: Number, default: 0 }, // Traditional 5-ref hands
+    handMilestonesClaimed: { type: [Number], default: [] },
+    
+    // [EMPIRE HAND - 5x5]
+    empireHands: [{
+        handIndex: { type: Number, default: 1 },
+        directs: [{ 
+            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            downlineCount: { type: Number, default: 0 }, // Must hit 5
+            isQualified: { type: Boolean, default: false }
+        }],
+        status: { type: String, enum: ['active', 'matured', 'claimed'], default: 'active' },
+        maturityDate: { type: Date },
+        bonusAmount: { type: Number, default: 0 }
+    }],
+    
     isReferralBonusPaid: { type: Boolean, default: false },
     commissionRate: { type: Number, default: 0.00 },
     agentData: {

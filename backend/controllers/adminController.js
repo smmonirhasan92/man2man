@@ -613,8 +613,8 @@ exports.getUserDetails = async (req, res) => {
         // [CURRENCY FIX] Define USD vs NXS Buckets
         // USD: Real money flow (Deposits, Mobile Recharge, Admin Adjustments in USD)
         // NXS: Ecosystem tokens (Task Rewards, Commissions, Plan Purchases, Withdrawals)
-        // Ratio: 1 USD = 50 NXS
-        const NXS_RATIO = 50;
+        // Ratio: 1 USD = 100 NXS
+        const NXS_RATIO = 100;
 
         const self_deposits = await Transaction.aggregate([
             { $match: { userId: user._id, type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed' } },

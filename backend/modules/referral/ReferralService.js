@@ -9,9 +9,9 @@ const { runTransaction } = require('../common/TransactionHelper');
 class ReferralService {
 
     static get PLAN_COMMISSION_RATES() {
-        // [MODIFIED] 5-Level Split (Total 10%)
-        // Level 1: 8%, Level 2: 1%, Level 3: 0.5%, Level 4: 0.25%, Level 5: 0.25%
-        return [8.0, 1.0, 0.5, 0.25, 0.25];
+        // [MODIFIED] Empire Race 3-Level Split
+        // Level 1: 12%, Level 2: 6%, Level 3: 2.5%
+        return [12.0, 6.0, 2.5];
     }
 
     /**
@@ -61,40 +61,82 @@ class ReferralService {
                         }], { session });
                     }
 
-                    // 4. Check & Award Promotional Tier Upgrades
-                    try {
-                        let tiers = JSON.parse(getSet('referral_tiers', '[]'));
-                        if (Array.isArray(tiers) && tiers.length > 0) {
-                            for (const tier of tiers) {
-                                // If they EXACTLY hit the target, award the tier bonus once
-                                if (directUpline.referralCount === tier.targetReferrals && tier.bonusAmount > 0) {
-                                    // [MODIFIED] Promotional Tier bonuses now go to the Income Wallet as per v6.5 "All-to-Income" policy
-                                    directUpline.wallet.income = (directUpline.wallet.income || 0) + tier.bonusAmount;
-                                    directUpline.referralIncome = (directUpline.referralIncome || 0) + tier.bonusAmount;
-
-                                    // Mark as Promoted for Admin visibility
-                                    if (directUpline.taskData) directUpline.taskData.promotionalStatus = 'promoted';
-
-                                    await Transaction.create([{
-                                        userId: directUpline._id,
-                                        type: 'referral_commission',
-                                        amount: tier.bonusAmount,
-                                        status: 'completed',
-                                        description: `🏆 ${tier.name} Tier Promotion Bonus!`,
-                                        metadata: { tierName: tier.name, target: tier.targetReferrals }
-                                    }], { session });
-
-                                    console.log(`🚀 Tier Upgrade: ${directUpline.username} achieved ${tier.name}! Awarded ${tier.bonusAmount} NXS`);
-                                }
-                            }
+                    // 4. [NEW] Hand Completion Logic (Power of 5)
+                    // ... (keep existing 5-ref hand logic)
+                    const HAND_SIZE = 5;
+                    const currentCount = directUpline.referralCount || 0;
+                    
+                    if (currentCount > 0 && currentCount % HAND_SIZE === 0) {
+                        const milestoneValue = currentCount;
+                        if (!directUpline.handMilestonesClaimed?.includes(milestoneValue)) {
+                            const HAND_BONUS = 50; 
+                            directUpline.referralHands = (directUpline.referralHands || 0) + 1;
+                            directUpline.wallet.income += HAND_BONUS;
+                            directUpline.referralIncome += HAND_BONUS;
+                            if (!directUpline.handMilestonesClaimed) directUpline.handMilestonesClaimed = [];
+                            directUpline.handMilestonesClaimed.push(milestoneValue);
+                            await Transaction.create([{
+                                userId: directUpline._id,
+                                type: 'referral_commission',
+                                amount: HAND_BONUS,
+                                status: 'completed',
+                                description: `🤚 Hand #${directUpline.referralHands} Completed! (${milestoneValue} Referrals)`,
+                                metadata: { milestone: milestoneValue, handCount: directUpline.referralHands }
+                            }], { session });
+                            NotificationService.send(
+                                directUpline._id, 
+                                `You've completed Hand #${directUpline.referralHands}. ${HAND_BONUS} NXS bonus added!`, 
+                                'success',
+                                { title: "Hand Completed! 🤚" }
+                            ).catch(() => {});
                         }
-                    } catch (e) {
-                        console.error('Invalid referral_tiers JSON in DB', e);
                     }
+
+                    // --- [NEW] EMPIRE HAND (5x5) TRACKING ENGINE ---
+                    // This logic tracks the "Fingers" of the Empire Hand.
+                    // We check if the BUYER is a direct of the UPLINE.
+                    let activeHand = directUpline.empireHands.find(h => h.status === 'active');
+                    if (!activeHand) {
+                        directUpline.empireHands.push({ handIndex: (directUpline.empireHands.length || 0) + 1, directs: [], status: 'active' });
+                        activeHand = directUpline.empireHands[directUpline.empireHands.length - 1];
+                    }
+
+                    // If buyer is a direct, add them as a "Finger" if there's room
+                    if (activeHand.directs.length < 5 && !activeHand.directs.find(d => d.userId.toString() === userId.toString())) {
+                        activeHand.directs.push({ userId: userId, downlineCount: 0, isQualified: false });
+                    }
+                    // --- END EMPIRE TRACKING ---
 
                     await directUpline.save({ session });
                     currentUser.isReferralBonusPaid = true;
                     await currentUser.save({ session });
+                }
+            }
+
+            // --- [NEW] EMPIRE RACE: PACKAGE TRACKING ---
+            // Independent of one-time bonuses, we track EVERY plan purchase for the direct upline
+            if (uplineCode) {
+                const directUpline = await User.findOne({ referralCode: uplineCode }).session(session);
+                if (directUpline) {
+                    directUpline.purchaseCount = (directUpline.purchaseCount || 0) + 1;
+                    directUpline.monthlyPurchases = (directUpline.monthlyPurchases || 0) + 1;
+                    directUpline.lastPurchaseDate = new Date();
+
+                    // If Plan is considered a "Big Package" (e.g. >= 5000 NXS or 50 USD)
+                    // They get 1 Tour Point
+                    if (planAmount >= 5000) {
+                        directUpline.tourSales = (directUpline.tourSales || 0) + 1;
+                        
+                        // Notify Upline about Tour Progress
+                        NotificationService.send(
+                            directUpline._id,
+                            `A direct downline purchased a premium package! Tour Sales: ${directUpline.tourSales}/20`,
+                            'success',
+                            { title: "Empire Tour Progress! ✈️" }
+                        ).catch(() => {});
+                    }
+
+                    await directUpline.save({ session });
                 }
             }
             const rates = ReferralService.PLAN_COMMISSION_RATES;
@@ -176,7 +218,7 @@ class ReferralService {
                     uplineUser.wallet.income = (uplineUser.wallet.income || 0) + commission;
                     uplineUser.referralIncome = (uplineUser.referralIncome || 0) + commission;
                     // [NEW] Update level-wise stats
-                    if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0, 0, 0];
+                    if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0];
                     uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + commission;
                     uplineUser.markModified('referralEarningsByLevel'); // Required for mixed arrays in Mongoose
 
@@ -204,6 +246,42 @@ class ReferralService {
 
                 // Move Up
                 uplineCode = uplineUser.referredBy;
+
+                // --- [NEW] EMPIRE HAND DOWNLINE PROGRESSION ---
+                // If we are at Level 2-5, we check if the upline has an active Empire Hand
+                // and if the "Parent" of the buyer is one of the "Fingers" of the Empire Hand.
+                if (i >= 1) { // L2 to L5
+                    const grandUpline = uplineUser; // The one receiving the L2+ commission
+                    const activeEmpireHand = grandUpline.empireHands?.find(h => h.status === 'active');
+                    if (activeEmpireHand) {
+                        // We need to find which "Finger" (Direct) this buyer belongs to.
+                        // For L2, the referredBy is the direct.
+                        // For L3+, we'd need to trace back. For simplicity, we check if any direct of grandUpline is in the path.
+                        // Let's find the direct who started this chain.
+                        const buyerPath = currentUser.referredBy; 
+                        // Find the direct of grandUpline who is the parent/grandparent of the buyer.
+                        // This is computationally expensive to do recursively here, 
+                        // so we check if the user who referred the buyer is a direct of grandUpline.
+                        const finger = activeEmpireHand.directs.find(d => d.userId.toString() === currentUser.referredBy.toString());
+                        if (finger && !finger.isQualified) {
+                            finger.downlineCount = (finger.downlineCount || 0) + 1;
+                            if (finger.downlineCount >= 5) {
+                                finger.isQualified = true;
+                                console.log(`🚀 Finger Qualified for ${grandUpline.username}!`);
+                            }
+                            
+                            // Check if Hand is Matured (All 5 fingers qualified)
+                            if (activeEmpireHand.directs.length === 5 && activeEmpireHand.directs.every(d => d.isQualified)) {
+                                activeEmpireHand.status = 'matured';
+                                activeEmpireHand.maturityDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 Days Buffer
+                                activeEmpireHand.bonusAmount = 1500; // Base $15
+                                console.log(`🏆 EMPIRE HAND MATURED for ${grandUpline.username}! Matures on ${activeEmpireHand.maturityDate}`);
+                            }
+                            grandUpline.markModified('empireHands');
+                            await grandUpline.save({ session });
+                        }
+                    }
+                }
             }
 
             return { success: true, distributed: totalDistributed };

@@ -388,6 +388,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
             )}
 
             {/* Sleek Tabs */}
+            <div className="flex items-center overflow-x-auto no-scrollbar bg-[#181a20] border-b border-[#2b3139] px-2 sticky top-0 z-40">
                 {['buy', 'sell', 'deposit', 'active', 'history', 'my_ads'].map(t => (
                     <button
                         key={t}
@@ -449,6 +450,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 </div>
             )}
 
+            <div className="flex-1 overflow-y-auto">
                 {mode === 'deposit' ? (
                     <div className="flex flex-col gap-3 p-3">
                         <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-2">

@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -22,6 +22,9 @@ import GiftBox from '../../components/gamification/GiftBox';
 import NodeCarousel from '../../components/dashboard/NodeCarousel';
 import VPSConnectModal from '../../components/VPSConnectModal';
 import api from '../../services/api';
+import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
+import GlobalTourProgress from '../../components/dashboard/GlobalTourProgress';
+import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 
 export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
@@ -131,6 +134,17 @@ function DashboardContent() {
 
     return (
         <div className="min-h-screen font-sans text-slate-200 pb-32 relative overflow-y-auto overflow-x-hidden bg-[#0A2540]">
+            
+            {/* [NEW] Legacy User Email Verification Interceptor */}
+            {user?.requireEmailVerification && (
+                <EmailVerificationModal 
+                    user={user} 
+                    onVerified={() => {
+                        setUser(prev => ({ ...prev, requireEmailVerification: false, emailVerified: true }));
+                    }} 
+                />
+            )}
+
 
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1080')] bg-cover bg-center opacity-30"></div>
@@ -208,6 +222,9 @@ function DashboardContent() {
                     </button>
                 </div>
 
+                {/* The Empire Tour Tracker */}
+                <GlobalTourProgress tourSales={user?.tourSales || 0} />
+
                 <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
                     <button 
                         onClick={() => setP2pMode('buy')} 
@@ -240,6 +257,11 @@ function DashboardContent() {
                         {/* Core Features */}
                         <FolderCard href="/dashboard/invest" icon={DollarSign} label="Invest" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
                         
+                        <div className="relative group">
+                            <FolderCard href="/dashboard/referral-empire" icon={Crown} label="Empire" color="text-yellow-400" gradient="from-yellow-600/20 to-yellow-900/40" border="border-yellow-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">HOT</div>
+                        </div>
+
                         <div className="relative group">
                             <FolderCard href="/dashboard/luck-test" icon={Gamepad2} label="Luck Test" color="text-orange-400" gradient="from-orange-600/20 to-orange-900/40" border="border-orange-500/30" />
                         </div>

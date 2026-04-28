@@ -6,6 +6,7 @@ import api from '../../services/api';
 import NetworkEmpire from './NetworkEmpire';
 import ShareCard from './ShareCard';
 import OrganicTree from './OrganicTree';
+import ReferralEmpireUI from './ReferralEmpireUI';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '../../utils/uiUtils';
@@ -19,7 +20,15 @@ export default function ReferralDashboard() {
     const [loading, setLoading] = useState(true);
     const [leaderboard, setLeaderboard] = useState([]);
     const [data, setData] = useState({
-        stats: { totalEarnings: 0, activeReferrals: 0, totalReferrals: 0, balance: 0 },
+        stats: { 
+            totalEarnings: 0, 
+            activeReferrals: 0, 
+            totalReferrals: 0, 
+            balance: 0,
+            referralHands: 0,
+            handProgress: 0,
+            remainingForHand: 5
+        },
         logs: [],
         network: [],
         referralCode: ''
@@ -141,6 +150,52 @@ export default function ReferralDashboard() {
                     </button>
                 </div>
             </div>
+
+            {/* [NEW] Hand Progress Card */}
+            <div className="bg-slate-900/50 border border-indigo-500/20 p-6 rounded-3xl relative overflow-hidden group">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
+                
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                            <span className="text-2xl">🤚</span> Current Hand Progress
+                        </h3>
+                        <p className="text-indigo-300/60 text-xs">Complete 5 referrals to finish a Hand and earn bonuses!</p>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-2xl font-black text-indigo-400">#{data.stats.referralHands + 1}</span>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">Active Hand</p>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center gap-2">
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                            <div className={`w-full h-2 rounded-full transition-all duration-500 ${
+                                i <= data.stats.handProgress 
+                                ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
+                                : 'bg-slate-800'
+                            }`}></div>
+                            <div className={`text-[10px] font-bold ${i <= data.stats.handProgress ? 'text-indigo-400' : 'text-slate-600'}`}>
+                                {i <= data.stats.handProgress ? '✓' : i}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-6 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-slate-400">
+                        <Users className="w-4 h-4" />
+                        <span>{data.stats.handProgress}/5 Found</span>
+                    </div>
+                    <div className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full font-bold border border-indigo-500/20 animate-pulse">
+                        {data.stats.remainingForHand} more to complete Hand Up!
+                    </div>
+                </div>
+            </div>
+
+            {/* [NEW] Empire Hand (5x5) UI */}
+            <ReferralEmpireUI empireHands={data.stats.empireHands} />
 
             {/* Organic Tree Section */}
             {showOrganic && (

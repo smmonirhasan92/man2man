@@ -85,7 +85,7 @@ services:
       - "5011:5050"
     # [SECURITY] All secrets loaded from gitignored .env.test — never hardcoded here
     env_file:
-      - ./backend/.env.test
+      - ./backend/.env.test.vps
     environment:
       - PORT=5050
       - NODE_ENV=production

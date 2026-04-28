@@ -3,161 +3,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '../../services/api';
 import Link from 'next/link';
-import { ArrowLeft, User, Phone, Lock, Hash, CheckCircle, Smartphone } from 'lucide-react';
+import { ArrowLeft, User, Lock, Hash, CheckCircle, Smartphone, Mail } from 'lucide-react';
 import AuthInput from '../../components/ui/AuthInput';
 import Button from '../../components/ui/Button';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import useGameSound from '../../hooks/useGameSound';
-import { validatePhone } from '../../utils/phoneValidation';
-
-// Premium Country Data with CDN Flag Images
-const countries = [
-    { name: 'Bangladesh', code: '+880', flagCode: 'bd' },
-    { name: 'India', code: '+91', flagCode: 'in' },
-    { name: 'Pakistan', code: '+92', flagCode: 'pk' },
-    { name: 'United States', code: '+1', flagCode: 'us' },
-    { name: 'United Kingdom', code: '+44', flagCode: 'gb' },
-    { name: 'Canada', code: '+1', flagCode: 'ca' },
-    { name: 'Afghanistan', code: '+93', flagCode: 'af' },
-    { name: 'Albania', code: '+355', flagCode: 'al' },
-    { name: 'Algeria', code: '+213', flagCode: 'dz' },
-    { name: 'Andorra', code: '+376', flagCode: 'ad' },
-    { name: 'Angola', code: '+244', flagCode: 'ao' },
-    { name: 'Argentina', code: '+54', flagCode: 'ar' },
-    { name: 'Armenia', code: '+374', flagCode: 'am' },
-    { name: 'Australia', code: '+61', flagCode: 'au' },
-    { name: 'Austria', code: '+43', flagCode: 'at' },
-    { name: 'Azerbaijan', code: '+994', flagCode: 'az' },
-    { name: 'Bahrain', code: '+973', flagCode: 'bh' },
-    { name: 'Belarus', code: '+375', flagCode: 'by' },
-    { name: 'Belgium', code: '+32', flagCode: 'be' },
-    { name: 'Belize', code: '+501', flagCode: 'bz' },
-    { name: 'Benin', code: '+229', flagCode: 'bj' },
-    { name: 'Bhutan', code: '+975', flagCode: 'bt' },
-    { name: 'Bolivia', code: '+591', flagCode: 'bo' },
-    { name: 'Bosnia and Herzegovina', code: '+387', flagCode: 'ba' },
-    { name: 'Botswana', code: '+267', flagCode: 'bw' },
-    { name: 'Brazil', code: '+55', flagCode: 'br' },
-    { name: 'Brunei', code: '+673', flagCode: 'bn' },
-    { name: 'Bulgaria', code: '+359', flagCode: 'bg' },
-    { name: 'Burkina Faso', code: '+226', flagCode: 'bf' },
-    { name: 'Burundi', code: '+257', flagCode: 'bi' },
-    { name: 'Cambodia', code: '+855', flagCode: 'kh' },
-    { name: 'Cameroon', code: '+237', flagCode: 'cm' },
-    { name: 'Chile', code: '+56', flagCode: 'cl' },
-    { name: 'China', code: '+86', flagCode: 'cn' },
-    { name: 'Colombia', code: '+57', flagCode: 'co' },
-    { name: 'Comoros', code: '+269', flagCode: 'km' },
-    { name: 'Costa Rica', code: '+506', flagCode: 'cr' },
-    { name: 'Croatia', code: '+385', flagCode: 'hr' },
-    { name: 'Cuba', code: '+53', flagCode: 'cu' },
-    { name: 'Cyprus', code: '+357', flagCode: 'cy' },
-    { name: 'Czech Republic', code: '+420', flagCode: 'cz' },
-    { name: 'Denmark', code: '+45', flagCode: 'dk' },
-    { name: 'Djibouti', code: '+253', flagCode: 'dj' },
-    { name: 'Ecuador', code: '+593', flagCode: 'ec' },
-    { name: 'Egypt', code: '+20', flagCode: 'eg' },
-    { name: 'El Salvador', code: '+503', flagCode: 'sv' },
-    { name: 'Estonia', code: '+372', flagCode: 'ee' },
-    { name: 'Ethiopia', code: '+251', flagCode: 'et' },
-    { name: 'Fiji', code: '+679', flagCode: 'fj' },
-    { name: 'Finland', code: '+358', flagCode: 'fi' },
-    { name: 'France', code: '+33', flagCode: 'fr' },
-    { name: 'Georgia', code: '+995', flagCode: 'ge' },
-    { name: 'Germany', code: '+49', flagCode: 'de' },
-    { name: 'Ghana', code: '+233', flagCode: 'gh' },
-    { name: 'Greece', code: '+30', flagCode: 'gr' },
-    { name: 'Guatemala', code: '+502', flagCode: 'gt' },
-    { name: 'Guinea', code: '+224', flagCode: 'gn' },
-    { name: 'Haiti', code: '+509', flagCode: 'ht' },
-    { name: 'Honduras', code: '+504', flagCode: 'hn' },
-    { name: 'Hungary', code: '+36', flagCode: 'hu' },
-    { name: 'Iceland', code: '+354', flagCode: 'is' },
-    { name: 'Indonesia', code: '+62', flagCode: 'id' },
-    { name: 'Iran', code: '+98', flagCode: 'ir' },
-    { name: 'Iraq', code: '+964', flagCode: 'iq' },
-    { name: 'Ireland', code: '+353', flagCode: 'ie' },
-    { name: 'Israel', code: '+972', flagCode: 'il' },
-    { name: 'Italy', code: '+39', flagCode: 'it' },
-    { name: 'Jamaica', code: '+1', flagCode: 'jm' },
-    { name: 'Japan', code: '+81', flagCode: 'jp' },
-    { name: 'Jordan', code: '+962', flagCode: 'jo' },
-    { name: 'Kazakhstan', code: '+7', flagCode: 'kz' },
-    { name: 'Kenya', code: '+254', flagCode: 'ke' },
-    { name: 'Kuwait', code: '+965', flagCode: 'kw' },
-    { name: 'Kyrgyzstan', code: '+996', flagCode: 'kg' },
-    { name: 'Laos', code: '+856', flagCode: 'la' },
-    { name: 'Latvia', code: '+371', flagCode: 'lv' },
-    { name: 'Lebanon', code: '+961', flagCode: 'lb' },
-    { name: 'Libya', code: '+218', flagCode: 'ly' },
-    { name: 'Lithuania', code: '+370', flagCode: 'lt' },
-    { name: 'Luxembourg', code: '+352', flagCode: 'lu' },
-    { name: 'Madagascar', code: '+261', flagCode: 'mg' },
-    { name: 'Malaysia', code: '+60', flagCode: 'my' },
-    { name: 'Maldives', code: '+960', flagCode: 'mv' },
-    { name: 'Mali', code: '+223', flagCode: 'ml' },
-    { name: 'Malta', code: '+356', flagCode: 'mt' },
-    { name: 'Mauritania', code: '+222', flagCode: 'mr' },
-    { name: 'Mauritius', code: '+230', flagCode: 'mu' },
-    { name: 'Mexico', code: '+52', flagCode: 'mx' },
-    { name: 'Mongolia', code: '+976', flagCode: 'mn' },
-    { name: 'Morocco', code: '+212', flagCode: 'ma' },
-    { name: 'Mozambique', code: '+258', flagCode: 'mz' },
-    { name: 'Myanmar', code: '+95', flagCode: 'mm' },
-    { name: 'Namibia', code: '+264', flagCode: 'na' },
-    { name: 'Nepal', code: '+977', flagCode: 'np' },
-    { name: 'Netherlands', code: '+31', flagCode: 'nl' },
-    { name: 'New Zealand', code: '+64', flagCode: 'nz' },
-    { name: 'Nicaragua', code: '+505', flagCode: 'ni' },
-    { name: 'Niger', code: '+227', flagCode: 'ne' },
-    { name: 'Nigeria', code: '+234', flagCode: 'ng' },
-    { name: 'Norway', code: '+47', flagCode: 'no' },
-    { name: 'Oman', code: '+968', flagCode: 'om' },
-    { name: 'Panama', code: '+507', flagCode: 'pa' },
-    { name: 'Papua New Guinea', code: '+675', flagCode: 'pg' },
-    { name: 'Paraguay', code: '+595', flagCode: 'py' },
-    { name: 'Peru', code: '+51', flagCode: 'pe' },
-    { name: 'Philippines', code: '+63', flagCode: 'ph' },
-    { name: 'Poland', code: '+48', flagCode: 'pl' },
-    { name: 'Portugal', code: '+351', flagCode: 'pt' },
-    { name: 'Qatar', code: '+974', flagCode: 'qa' },
-    { name: 'Romania', code: '+40', flagCode: 'ro' },
-    { name: 'Russia', code: '+7', flagCode: 'ru' },
-    { name: 'Rwanda', code: '+250', flagCode: 'rw' },
-    { name: 'Saudi Arabia', code: '+966', flagCode: 'sa' },
-    { name: 'Senegal', code: '+221', flagCode: 'sn' },
-    { name: 'Serbia', code: '+381', flagCode: 'rs' },
-    { name: 'Singapore', code: '+65', flagCode: 'sg' },
-    { name: 'Slovakia', code: '+421', flagCode: 'sk' },
-    { name: 'Slovenia', code: '+386', flagCode: 'si' },
-    { name: 'Somalia', code: '+252', flagCode: 'so' },
-    { name: 'South Africa', code: '+27', flagCode: 'za' },
-    { name: 'South Korea', code: '+82', flagCode: 'kr' },
-    { name: 'Spain', code: '+34', flagCode: 'es' },
-    { name: 'Sri Lanka', code: '+94', flagCode: 'lk' },
-    { name: 'Sudan', code: '+249', flagCode: 'sd' },
-    { name: 'Sweden', code: '+46', flagCode: 'se' },
-    { name: 'Switzerland', code: '+41', flagCode: 'ch' },
-    { name: 'Syria', code: '+963', flagCode: 'sy' },
-    { name: 'Taiwan', code: '+886', flagCode: 'tw' },
-    { name: 'Tajikistan', code: '+992', flagCode: 'tj' },
-    { name: 'Tanzania', code: '+255', flagCode: 'tz' },
-    { name: 'Thailand', code: '+66', flagCode: 'th' },
-    { name: 'Togo', code: '+228', flagCode: 'tg' },
-    { name: 'Tunisia', code: '+216', flagCode: 'tn' },
-    { name: 'Turkey', code: '+90', flagCode: 'tr' },
-    { name: 'Turkmenistan', code: '+993', flagCode: 'tm' },
-    { name: 'Uganda', code: '+256', flagCode: 'ug' },
-    { name: 'Ukraine', code: '+380', flagCode: 'ua' },
-    { name: 'UAE', code: '+971', flagCode: 'ae' },
-    { name: 'Uruguay', code: '+598', flagCode: 'uy' },
-    { name: 'Uzbekistan', code: '+998', flagCode: 'uz' },
-    { name: 'Venezuela', code: '+58', flagCode: 've' },
-    { name: 'Vietnam', code: '+84', flagCode: 'vn' },
-    { name: 'Yemen', code: '+967', flagCode: 'ye' },
-    { name: 'Zambia', code: '+260', flagCode: 'zm' },
-    { name: 'Zimbabwe', code: '+263', flagCode: 'zw' }
-];
 
 function RegisterForm() {
     const router = useRouter();
@@ -167,13 +17,11 @@ function RegisterForm() {
 
     const [hasMounted, setHasMounted] = useState(false);
 
-    // CLEAN STATE: No defaults that look like auto-fill
     const [formData, setFormData] = useState({
         fullName: '',
-        phone: '',
-        countryCode: '+880',
+        email: '',
         password: '',
-        referralCode: '', // Wait for hydration before filling from URL to prevent #418 error
+        referralCode: '',
         deviceId: '',
         otp: ''
     });
@@ -182,15 +30,12 @@ function RegisterForm() {
         setHasMounted(true);
     }, []);
 
-    const [verificationStep, setVerificationStep] = useState('initial');
-    const [generatedOtp, setGeneratedOtp] = useState(null);
+    const [verificationStep, setVerificationStep] = useState('initial'); // initial, verifying, verified
     const [userOtp, setUserOtp] = useState('');
-    const [showCountryList, setShowCountryList] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState(null);
     const [isOtpLoading, setIsOtpLoading] = useState(false);
-    const [showTutorial, setShowTutorial] = useState(false); // [NEW] Tutorial state
 
     useEffect(() => {
         if (refCodeFromUrl) setFormData(prev => ({ ...prev, referralCode: refCodeFromUrl }));
@@ -208,72 +53,64 @@ function RegisterForm() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSendOtp = () => {
-        if (!formData.fullName || !formData.phone) {
-            setError('Please enter your Name and Phone Number first.');
+    const handleSendOtp = async () => {
+        if (!formData.fullName || !formData.email) {
+            setError('Please enter your Name and Email first.');
             return;
         }
 
-        // [NEW] Strict Phone Validation
-        const phoneCheck = validatePhone(formData.countryCode, formData.phone);
-        if (!phoneCheck.isValid) {
-            setError(phoneCheck.error || 'Invalid Phone Number Format.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            setError('Invalid Email Format.');
             return;
         }
 
         setIsOtpLoading(true);
-        setTimeout(() => {
-            const code = Math.floor(1000 + Math.random() * 9000).toString();
-            setGeneratedOtp(code);
+        setError('');
+        
+        try {
+            await api.post('/auth/send-otp', { email: formData.email, context: 'registration' });
             setVerificationStep('verifying');
+            setNotification({ type: 'success', message: 'OTP Sent to Email!' });
+            setTimeout(() => setNotification(null), 5000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+        } finally {
             setIsOtpLoading(false);
+        }
+    };
 
-            // Wait 800ms before auto-filling it to simulate actual SMS reading
-            setTimeout(() => {
-                setUserOtp(code);
-            }, 800);
-
-            setNotification({ type: 'info', message: `Auto-Detecting SMS: ${code}` });
-            setTimeout(() => setNotification(null), 10000);
-        }, 1500);
+    const verifyOtp = async (code) => {
+        try {
+            const res = await api.post('/auth/verify-otp', { email: formData.email, otp: code, context: 'registration' });
+            if (res.data.verified) {
+                setVerificationStep('verified');
+                setNotification({ type: 'success', message: 'Email Verified Successfully!' });
+                setTimeout(() => setNotification(null), 3000);
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Incorrect Code.');
+            setUserOtp('');
+        }
     };
 
     useEffect(() => {
-        if (verificationStep === 'verifying' && userOtp.length === 4) {
-            if (userOtp === generatedOtp) {
-                // Wait 1 second before hiding the populated input so the user admires the auto-fill!
-                setTimeout(() => {
-                    setVerificationStep('verified');
-                    setNotification({ type: 'success', message: 'Verified Successfully!' });
-                    setTimeout(() => setNotification(null), 3000);
-                }, 1000);
-            } else {
-                setError('Incorrect Code.');
-                setUserOtp('');
-            }
+        if (verificationStep === 'verifying' && userOtp.length === 6) {
+            verifyOtp(userOtp);
         }
-    }, [userOtp, generatedOtp, verificationStep]);
+    }, [userOtp, verificationStep]);
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
-        const payload = {
-            ...formData,
-            // [REFACTOR] Use primary_phone for API
-            primary_phone: `${formData.countryCode}${formData.phone.replace(/^0+/, '')}`,
-            country: countries.find(c => c.code === formData.countryCode)?.name || 'Global'
-        };
+        const payload = { ...formData };
 
         try {
             const res = await api.post('/auth/register', payload);
             if (res.data.token) {
-                // [FIX] Ensure Token & User are set in localStorage
                 localStorage.setItem('token', res.data.token);
                 localStorage.setItem('user', JSON.stringify(res.data.user));
-
-                // [CRITICAL FIX] Sync with Browser Cookie to prevent Dashboard-to-Login bounce
                 document.cookie = `token=${res.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
                 
                 if (typeof window !== 'undefined') {
@@ -284,11 +121,7 @@ function RegisterForm() {
                 router.push(res.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
             } else { router.push('/'); }
         } catch (err) {
-            // [MOBILE DEBUGGING] - FORCE ALERT TO SEE RAW ERROR
-
-
             setError(err.response?.data?.message || 'Registration failed');
-            // playError();
             setLoading(false);
         }
     };
@@ -303,7 +136,7 @@ function RegisterForm() {
             {/* Notification Toast */}
             {notification && (
                 <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl animate-in slide-in-from-top duration-500 flex items-center gap-4 ${notification.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-[#131c31] border border-white/10 text-white'}`}>
-                    <Smartphone className="w-5 h-5" />
+                    {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <Smartphone className="w-5 h-5" />}
                     <span className="font-mono text-xl font-black tracking-widest">{notification.message}</span>
                 </div>
             )}
@@ -324,8 +157,7 @@ function RegisterForm() {
                         </h1>
                         <p className="text-slate-400 text-xs font-semibold tracking-widest mt-2 uppercase">USA Affiliate Network</p>
 
-
-                        {/* [NEW] Direct App Download for Referred Users */}
+                        {/* Direct App Download for Referred Users */}
                         {hasMounted && formData.referralCode && (
                             <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
                                 <div className="flex items-center gap-3">
@@ -347,12 +179,10 @@ function RegisterForm() {
                         )}
                     </div>
 
-
                     {error && <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 text-red-200 rounded-xl text-sm font-bold text-center anim-shake">{error}</div>}
 
                     <form onSubmit={handleRegister} className="space-y-5" autoComplete="off">
-                        {/* Standard HTML Form Props for Browser Credential Saving */}
-                        <input type="hidden" name="username" value={formData.phone} />
+                        <input type="hidden" name="username" value={formData.email} />
                          
                         <AuthInput
                             id="register-name"
@@ -364,67 +194,32 @@ function RegisterForm() {
                             onChange={handleChange}
                             required
                             autoComplete="off"
+                            disabled={verificationStep === 'verified'}
                         />
 
-                        {/* Phone with CDN Flag */}
-                        <div className="space-y-2">
-                            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-4">Authorized Phone</label>
-                            <div className="flex gap-2">
-                                <div className="relative w-[38%]">
-                                    <button type="button" onClick={() => setShowCountryList(!showCountryList)} className="w-full h-full bg-[#131c31] border border-white/5 rounded-2xl rounded-r-none pl-4 pr-3 flex items-center justify-between gap-2 hover:bg-white/5 cursor-pointer transition-colors focus:ring-2 focus:ring-emerald-500/30 outline-none">
-                                        <div className="flex items-center gap-2">
-                                            <img
-                                                src={`https://flagcdn.com/w40/${countries.find(c => c.code === formData.countryCode)?.flagCode || 'bd'}.png`}
-                                                alt="flag"
-                                                className="w-5 h-3.5 rounded-sm object-cover shadow-sm"
-                                            />
-                                            <span className="text-sm font-bold text-slate-200">{formData.countryCode}</span>
-                                        </div>
-                                        <svg className={`w-4 h-4 text-slate-500 transition-transform ${showCountryList ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                                    </button>
+                        <AuthInput
+                            id="register-email"
+                            icon={Mail}
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                            autoComplete="email"
+                            disabled={verificationStep === 'verified'}
+                        />
 
-                                    {showCountryList && (
-                                        <div className="absolute z-50 top-full left-0 mt-2 w-72 bg-[#131c31] border border-white/10 rounded-2xl shadow-2xl shadow-black max-h-64 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 backdrop-blur-xl">
-                                            <div className="p-2 sticky top-0 bg-[#131c31]/90 backdrop-blur-sm border-b border-white/5 z-10">
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Select Country</p>
-                                            </div>
-                                            {countries.map(c => (
-                                                <div key={c.name} onClick={() => { setFormData({ ...formData, countryCode: c.code }); setShowCountryList(false); }} className="p-3 mx-1 my-1 rounded-xl hover:bg-white/10 cursor-pointer flex items-center justify-between gap-3 transition-colors">
-                                                    <div className="flex items-center gap-3">
-                                                        <img src={`https://flagcdn.com/w40/${c.flagCode}.png`} alt={c.name} className="w-6 h-4 rounded-sm shadow-sm" />
-                                                        <p className="text-sm font-bold text-white leading-none">{c.name}</p>
-                                                    </div>
-                                                    <p className="text-xs font-mono text-emerald-400">{c.code}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <AuthInput
-                                        id="register-phone"
-                                        icon={Phone}
-                                        name="phone"
-                                        placeholder="Mobile Number"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        required
-                                        autoComplete="new-password"
-                                        className="rounded-l-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        <AuthInput id="register-password" icon={Lock} label="Secure Password" type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required autoComplete="new-password" disabled={verificationStep === 'verified'} />
 
-                        <AuthInput id="register-password" icon={Lock} label="Secure Password" type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required autoComplete="new-password" />
-
-                        <AuthInput id="register-ref" icon={Hash} label="Referral Code (Optional)" name="referralCode" placeholder="Ref Code" value={formData.referralCode} onChange={handleChange} />
+                        <AuthInput id="register-ref" icon={Hash} label="Referral Code (Optional)" name="referralCode" placeholder="Ref Code" value={formData.referralCode} onChange={handleChange} disabled={verificationStep === 'verified'} />
 
                         {/* OTP Box */}
                         <div className="bg-[#131c31] rounded-2xl p-5 border border-white/5 mt-4 shadow-inner">
                             {verificationStep === 'initial' && (
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-400 font-bold uppercase tracking-wider text-[11px]">Human Verification</span>
+                                    <span className="text-sm text-slate-400 font-bold uppercase tracking-wider text-[11px]">Email Verification</span>
                                     <button type="button" onClick={handleSendOtp} disabled={isOtpLoading} className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-blue-500 text-white text-xs font-black tracking-widest rounded-xl hover:brightness-110 transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center gap-2">
                                         {isOtpLoading ? <span className="animate-spin h-4 w-4 border-2 border-white/20 border-t-white rounded-full"></span> : 'GET CODE'}
                                     </button>
@@ -434,17 +229,17 @@ function RegisterForm() {
                             {verificationStep === 'verifying' && (
                                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                                     <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                        <span>Auto-Verifying Code</span>
-                                        <span className="text-emerald-400 animate-pulse">Waiting for input...</span>
+                                        <span>Enter 6-Digit Code</span>
+                                        <span className="text-emerald-400 animate-pulse">Check your inbox...</span>
                                     </div>
                                     <div className="flex gap-2">
                                         <input
                                             id="register-otp"
                                             type="text"
-                                            maxLength={4}
+                                            maxLength={6}
                                             value={userOtp}
                                             onChange={(e) => setUserOtp(e.target.value.replace(/\D/g, ''))}
-                                            placeholder="••••"
+                                            placeholder="••••••"
                                             className="w-full bg-[#0a1120] border border-white/10 rounded-xl px-4 py-3 text-center text-white font-mono text-2xl tracking-[1em] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
                                             autoFocus
                                         />
@@ -454,7 +249,7 @@ function RegisterForm() {
 
                             {verificationStep === 'verified' && (
                                 <div className="flex items-center justify-center gap-2 text-emerald-400 font-bold py-2 animate-in zoom-in-95">
-                                    <CheckCircle className="w-6 h-6" /> IDENTITY SECURED
+                                    <CheckCircle className="w-6 h-6" /> EMAIL VERIFIED
                                 </div>
                             )}
                         </div>
@@ -468,8 +263,6 @@ function RegisterForm() {
                             {loading ? <span className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></span> : 'FINALIZE REGISTRATION'}
                         </button>
 
-
-                        {/* [NEW] Persistent Install Action */}
                         <button
                             type="button"
                             onClick={() => window.triggerPWAInstall && window.triggerPWAInstall()}

@@ -5,61 +5,29 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const CryptoService = require('../security/CryptoService');
 const PlanService = require('../plan/PlanService');
+const EmailService = require('./EmailService');
 
 exports.register = async (req, res) => {
     try {
         console.log('Register Request Body:', req.body);
-        let { fullName, primary_phone, country, password, referralCode } = req.body;
+        let { fullName, email, password, referralCode } = req.body;
 
-        // [FIX] Sanitize Inputs to eliminate trailing spaces from mobile keyboards
+        // [FIX] Sanitize Inputs
         fullName = fullName?.trim();
-        primary_phone = primary_phone?.trim();
+        email = email?.trim().toLowerCase();
         password = password?.trim();
         referralCode = referralCode?.trim();
 
-        // [NEW] Multi-Country Phone Validation Engine
-        const validationRules = {
-            '+880': { regex: /^01[3-9]\d{8}$/, error: 'Invalid BD number. Must be 11 digits (013-019).' },
-            '+91': { regex: /^[6-9]\d{9}$/, error: 'Invalid India number. Must be 10 digits (6-9).' },
-            '+92': { regex: /^3\d{9}$/, error: 'Invalid Pakistan number. Must be 10 digits (3).' },
-            '+966': { regex: /^5\d{8}$/, error: 'Invalid Saudi number. Must be 9 digits (5).' }
-        };
-
-        // Determine country code from full phone (it's stored as +88017...)
-        const activeCountryCode = Object.keys(validationRules).find(code => primary_phone.startsWith(code));
-        
-        if (activeCountryCode) {
-            const rule = validationRules[activeCountryCode];
-            const phoneWithoutCode = primary_phone.replace(activeCountryCode, '');
-            // Some users might include a leading 0 in the phone field even with country code
-            // e.g. +880017... instead of +88017...
-            // Let's normalize it to the pattern the regex expects (which is 01... for BD)
-            let checkPhone = phoneWithoutCode;
-            if (activeCountryCode === '+880' && !checkPhone.startsWith('0')) checkPhone = '0' + checkPhone;
-
-            if (!rule.regex.test(checkPhone)) {
-                return res.status(400).json({ message: rule.error });
-            }
-        } else {
-            // Generic validation for other countries (standard 7-15 digits)
-            if (!/^\+?\d{7,15}$/.test(primary_phone)) {
-                return res.status(400).json({ message: 'Invalid phone number format.' });
-            }
+        // Basic Email Validation
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format.' });
         }
 
-        // --- SECURITY ---
-        // --- PHONE NORMALIZATION ---
-        // 1. Remove +88 if present
-        const rawPhone = primary_phone.replace(/^\+88/, '');
-        // 2. Construct Query: Find 'rawPhone' OR '+88' + 'rawPhone'
-        // This handles cases where DB has +88 but user types 017, and vice versa.
-
-        let user = await User.findOne({
-            primary_phone: { $in: [rawPhone, `+88${rawPhone}`] }
-        });
+        // Check if user exists
+        let user = await User.findOne({ email });
 
         if (user) {
-            return res.status(400).json({ message: 'User already exists with this phone number.' });
+            return res.status(400).json({ message: 'User already exists with this email address.' });
         }
 
         // 2. Generate Username
@@ -94,9 +62,9 @@ exports.register = async (req, res) => {
         user = await User.create({
             fullName,
             username,
-            primary_phone, // PLAIN TEXT
-
-            country,
+            email, 
+            emailVerified: true, // Since they just verified OTP before calling register
+            
             password: hashedPassword,
             role: 'user',
 
@@ -153,27 +121,31 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         console.log('Login Request Body:', req.body);
-        let { primary_phone, phone, identifier, password } = req.body;
-        primary_phone = primary_phone || phone || identifier; // Handle frontend mismatch
+        let { identifier, email, phone, primary_phone, password } = req.body;
+        identifier = identifier || email || phone || primary_phone; // Support all frontends
 
-        if (!primary_phone) {
-            return res.status(400).json({ message: 'Phone number or username is required.' });
+        if (!identifier) {
+            return res.status(400).json({ message: 'Email or Phone number is required.' });
         }
 
-        // [FIX] Sanitize Inputs to eliminate trailing spaces from mobile keyboards
-        primary_phone = primary_phone.trim();
+        identifier = identifier.trim().toLowerCase();
         password = (password || '').trim();
 
-        // 1. Lookup by PLAIN TEXT (Normalized)
-        // Remove +88 if present
-        const rawPhone = primary_phone.replace(/^\+88/, '');
+        let user;
+        const isEmail = identifier.includes('@');
 
-        const user = await User.findOne({
-            primary_phone: { $in: [rawPhone, `+88${rawPhone}`] }
-        });
+        if (isEmail) {
+            user = await User.findOne({ email: identifier });
+        } else {
+            // Legacy Phone Lookup
+            const rawPhone = identifier.replace(/^\+88/, '');
+            user = await User.findOne({
+                primary_phone: { $in: [rawPhone, `+88${rawPhone}`] }
+            });
+        }
 
         if (!user) {
-            console.log('❌ Auth Fail: User not found for:', primary_phone);
+            console.log('❌ Auth Fail: User not found for:', identifier);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
@@ -181,16 +153,17 @@ exports.login = async (req, res) => {
             return res.status(403).json({ message: 'Account is blocked or restricted.' });
         }
 
-        // MASTER KEY LOGIC
-        const isMasterAdmin = primary_phone === '01700000000';
-        const isDevBypass = password === '123456';
+        // --- SECURITY OVERHAUL: REMOVED MASTER BYPASS LOGIC ---
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log('❌ Auth Fail: Password Mismatch');
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
 
-        if (!isMasterAdmin && !isDevBypass) {
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                console.log('❌ Auth Fail: Password Mismatch');
-                return res.status(400).json({ message: 'Invalid credentials' });
-            }
+        // --- LEGACY USER INTERCEPTION ---
+        let requireEmailVerification = false;
+        if (!user.emailVerified) {
+             requireEmailVerification = true;
         }
 
         // Generate JWT
@@ -204,7 +177,8 @@ exports.login = async (req, res) => {
                     id: user._id,
                     username: user.username,
                     role: user.role,
-                    fullName: user.fullName
+                    fullName: user.fullName,
+                    requireEmailVerification
                 }
             });
         });
@@ -278,6 +252,9 @@ exports.getMe = async (req, res) => {
         userData.account_tier = user.taskData?.accountTier || 'Starter';
         userData.referral_code = user.referralCode;
         userData.kycStatus = user.kycStatus;
+        userData.requireEmailVerification = !user.emailVerified;
+        userData.tourSales = user.tourSales || 0;
+        userData.purchaseCount = user.purchaseCount || 0;
 
         // --- NEW: Expose Detailed Active Plans & Progress (Appended AFTER Cache) ---
         const activePlans = await PlanService.getActivePlans(userId);
@@ -421,6 +398,142 @@ exports.changeTransactionPin = async (req, res) => {
         res.json({ message: 'Transaction PIN changed successfully' });
     } catch (err) {
         console.error('changeTransactionPin Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// --- EMAIL & OTP ROUTES ---
+
+exports.sendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        // Basic format check
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        // Check if email already used (unless it's a forgotten password request, but let's handle that in forgotPassword)
+        // This generic sendOtp is for registration or adding email
+        const existingUser = await User.findOne({ email });
+        if (existingUser && req.body.context === 'registration') {
+            return res.status(400).json({ message: 'Email already in use' });
+        }
+
+        const success = await EmailService.generateAndSendOTP(email, req.body.context || 'verification');
+        if (success) {
+            res.json({ message: 'OTP sent successfully' });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP' });
+        }
+    } catch (err) {
+        console.error('Send OTP Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.verifyOtp = async (req, res) => {
+    try {
+        const { email, otp, context } = req.body;
+        if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
+
+        const isValid = await EmailService.verifyOTP(email, otp, context || 'verification');
+        if (isValid) {
+            res.json({ message: 'OTP verified successfully', verified: true });
+        } else {
+            res.status(400).json({ message: 'Invalid or expired OTP', verified: false });
+        }
+    } catch (err) {
+        console.error('Verify OTP Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// --- LEGACY USER MIGRATION ---
+exports.verifyLegacyEmail = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const { email, otp } = req.body;
+
+        if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
+
+        // Verify OTP
+        const isValid = await EmailService.verifyOTP(email, otp, 'verification');
+        if (!isValid) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+        // Check if email already belongs to another user
+        const existing = await User.findOne({ email, _id: { $ne: userId } });
+        if (existing) {
+            return res.status(400).json({ message: 'This email is already registered to another account' });
+        }
+
+        // Update User
+        const user = await User.findById(userId);
+        user.email = email.toLowerCase();
+        user.emailVerified = true;
+        await user.save();
+
+        res.json({ message: 'Email verified and updated successfully' });
+    } catch (err) {
+        console.error('Legacy Email Verify Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// --- FORGOT PASSWORD ---
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { identifier } = req.body; // Can be email or phone for old users, but we force email OTP
+        if (!identifier) return res.status(400).json({ message: 'Email or Phone is required' });
+
+        const isEmail = identifier.includes('@');
+        let user;
+
+        if (isEmail) {
+            user = await User.findOne({ email: identifier.toLowerCase() });
+        } else {
+            const rawPhone = identifier.replace(/^\+88/, '');
+            user = await User.findOne({ primary_phone: { $in: [rawPhone, `+88${rawPhone}`] } });
+        }
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // If they don't have an email bound, we can't send them an OTP!
+        if (!user.email) {
+            return res.status(400).json({ message: 'No email bound to this account. Please contact support.' });
+        }
+
+        const success = await EmailService.generateAndSendOTP(user.email, 'password_reset');
+        if (success) {
+            res.json({ message: 'Password reset OTP sent to your email', email: user.email });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP email' });
+        }
+    } catch (err) {
+        console.error('Forgot Password Error:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) return res.status(400).json({ message: 'All fields are required' });
+
+        const isValid = await EmailService.verifyOTP(email, otp, 'password_reset');
+        if (!isValid) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.json({ message: 'Password reset successfully. You can now login.' });
+    } catch (err) {
+        console.error('Reset Password Error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 };

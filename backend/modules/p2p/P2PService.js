@@ -10,6 +10,7 @@ const NotificationService = require('../notification/NotificationService');
 const systemEvents = require('../../utils/events');
 const SystemSetting = require('../settings/SystemSettingModel');
 const bcrypt = require('bcryptjs');
+const EmailService = require('../auth/EmailService');
 
 class P2PService {
 
@@ -200,6 +201,20 @@ class P2PService {
             // So we manually broadcast the new balance to the global market or just personal room.
             const updatedSeller = await User.findById(trade.sellerId);
             SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
+
+            // [NEW] Email Notification
+            if (updatedSeller.email) {
+                // Fetch order to get the rate for fiat calculation
+                const order = await P2POrder.findById(trade.orderId);
+                const fiatAmount = order ? (trade.amount * (order.rate / 100)).toFixed(2) : 'N/A'; // Assuming 1 USD = 100 NXS base, rate is BDT per NXS? 
+                // Actually if rate is 123 BDT per NXS: trade.amount * rate
+                const fiatCalculated = order ? (trade.amount * order.rate).toFixed(2) : 'N/A';
+                
+                EmailService.sendP2PNotification(updatedSeller.email, 'new_buy_order', {
+                    amount: trade.amount,
+                    fiatAmount: fiatCalculated
+                }).catch(() => {});
+            }
 
             return trade;
         });
@@ -459,6 +474,14 @@ class P2PService {
 
         await this.addSystemMessage(trade._id, `Buyer marked payment as sent. TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'}`);
 
+        // [NEW] Email Notification to Seller
+        const seller = await User.findById(trade.sellerId);
+        if (seller && seller.email) {
+            EmailService.sendP2PNotification(seller.email, 'order_paid', {
+                orderId: trade._id
+            }).catch(() => {});
+        }
+
         return trade;
     }
 
@@ -592,10 +615,15 @@ class P2PService {
             SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
 
             // [FIX] Force Wallet Refresh UI with fresh data
-            const buyer = await User.findById(trade.buyerId);
-            const seller = await User.findById(trade.sellerId);
-
-            if (buyer) SocketService.broadcast(`user_${trade.buyerId}`, 'balance_update', buyer.wallet);
+            if (buyer) {
+                SocketService.broadcast(`user_${trade.buyerId}`, 'balance_update', buyer.wallet);
+                // [NEW] Email Notification to Buyer
+                if (buyer.email) {
+                    EmailService.sendP2PNotification(buyer.email, 'order_completed', {
+                        amount: trade.amount
+                    }).catch(() => {});
+                }
+            }
             if (seller) SocketService.broadcast(`user_${trade.sellerId}`, 'balance_update', seller.wallet);
 
             this.addSystemMessage(trade._id, `Trade Approved by Admin. Fee: ${trade.fee} NXS deducted.`);

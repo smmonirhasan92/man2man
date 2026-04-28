@@ -7,18 +7,18 @@ import { Lock, Smartphone, ArrowRight, AlertCircle, CheckCircle } from 'lucide-r
 export default function LoginForm() {
     const router = useRouter();
     const [formData, setFormData] = useState({
-        phone: '',
+        identifier: '',
         password: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Load saved phone number on mount
+    // Load saved identifier on mount
     useEffect(() => {
-        const savedPhone = localStorage.getItem('savedPhone');
-        if (savedPhone) {
-            setFormData(prev => ({ ...prev, phone: savedPhone }));
+        const savedIdentifier = localStorage.getItem('savedIdentifier');
+        if (savedIdentifier) {
+            setFormData(prev => ({ ...prev, identifier: savedIdentifier }));
         }
     }, []);
 
@@ -41,15 +41,13 @@ export default function LoginForm() {
         }
 
         try {
-            // [REFACTOR] Send primary_phone to match Backend
             // [FIX] Sanitize inputs to remove hidden trailing spaces from mobile keyboards
-            const cleanPhone = formData.phone.trim();
+            const cleanIdentifier = formData.identifier.trim();
             const cleanPassword = formData.password.trim();
 
             const payload = {
-                phone: cleanPhone,
-                password: cleanPassword,
-                primary_phone: cleanPhone
+                identifier: cleanIdentifier,
+                password: cleanPassword
             };
             const res = await api.post('/auth/login', payload);
             const { token, user } = res.data;
@@ -57,8 +55,8 @@ export default function LoginForm() {
             // Store Auth Data
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
-            // Remember phone for next login
-            localStorage.setItem('savedPhone', cleanPhone);
+            // Remember identifier for next login
+            localStorage.setItem('savedIdentifier', cleanIdentifier);
             // [FIX] Also store in cookie so Next.js middleware can protect routes server-side
             document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
 
@@ -98,26 +96,29 @@ export default function LoginForm() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Phone Number</label>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Email or Phone</label>
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <Smartphone className="h-5 w-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
                         </div>
                         <input
-                            type="tel"
-                            name="phone"
+                            type="text"
+                            name="identifier"
                             autoComplete="username"
                             required
                             className="bg-[#131c31] border border-white/5 text-white text-sm rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 block w-full pl-11 p-4 placeholder-slate-500 transition-all font-bold tracking-wide"
-                            placeholder="01xxxxxxxxx"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            placeholder="Email or Phone Number"
+                            value={formData.identifier}
+                            onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                         />
                     </div>
                 </div>
 
                 <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Password</label>
+                    <div className="flex justify-between items-center pr-2">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">Password</label>
+                        <a href="/forgot-password" className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors">Forgot Password?</a>
+                    </div>
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
