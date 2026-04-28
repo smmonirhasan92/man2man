@@ -113,8 +113,8 @@ exports.register = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Registration Error:', err);
-        res.status(500).json({ message: 'Server Error', error: err.message });
+        console.error('Registration Error:', err.stack);
+        res.status(500).json({ message: 'Server Error', error: err.message, stack: err.stack });
     }
 };
 
