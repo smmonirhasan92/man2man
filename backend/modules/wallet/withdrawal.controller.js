@@ -49,12 +49,6 @@ exports.requestWithdrawal = async (req, res) => {
             let adminComment = null;
             let gatewayTrxId = null;
 
-            if (parsedAmount < 5000) {
-                newStatus = 'completed';
-                adminComment = 'Auto-Approved by Settlement Gateway (Under 5k limit)';
-                gatewayTrxId = `AUTO_${Date.now()}`;
-            }
-
             const [transaction] = await Transaction.create([{
                 userId,
                 type: 'cash_out',
@@ -71,10 +65,11 @@ exports.requestWithdrawal = async (req, res) => {
 
         // --- Emit Real-time Update to Admin Room ---
         const SocketService = require('../common/SocketService');
-        SocketService.broadcast('admin_dashboard', 'transaction_update', { 
+        SocketService.broadcast('admin_dashboard', 'new_transaction_request', { 
             transactionId: result._id, 
             status: result.status,
-            message: 'New Cash-out Request'
+            type: 'withdraw',
+            message: `New Cash-out Request: ${parsedAmount} NXS`
         });
 
         res.json({ message: 'Withdrawal requested successfully', transaction: result });
