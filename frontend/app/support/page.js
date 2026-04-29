@@ -19,6 +19,7 @@ export default function SupportPage() {
     const [p2pAmount, setP2pAmount] = useState('');
     const [p2pMethod, setP2pMethod] = useState('Bkash');
     const [p2pUserNumber, setP2pUserNumber] = useState('');
+    const [p2pAccountType, setP2pAccountType] = useState('Personal (Send Money)');
     const [p2pTxID, setP2pTxID] = useState('');
     const [p2pProof, setP2pProof] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -364,6 +365,24 @@ export default function SupportPage() {
                             <div className="relative">
                                 <input type="text" placeholder="যে নাম্বারে টাকা নিবেন" value={p2pUserNumber} onChange={(e)=>setP2pUserNumber(e.target.value)} className="w-full bg-white/5 rounded-2xl p-4 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
                             </div>
+                            
+                            {/* [NEW] Personal / Agent Toggle */}
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                {['Personal (Send Money)', 'Agent (Cash Out)'].map(type => (
+                                    <button 
+                                        key={type} 
+                                        onClick={() => setP2pAccountType(type)} 
+                                        className={`py-3 rounded-xl font-bold text-[10px] uppercase border transition-all ${
+                                            p2pAccountType === type 
+                                                ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-inner scale-[1.02]' 
+                                                : 'bg-white/5 text-slate-500 border-white/5 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
+
                             <button onClick={async () => {
                                 if (!p2pAmount || p2pAmount <= 0) return toast.error('Enter valid amount');
                                 if (!p2pUserNumber) return toast.error('Enter your number');
@@ -372,7 +391,7 @@ export default function SupportPage() {
                                     // FIXED PAYLOAD: accountDetails vs details
                                     await api.post('/withdrawals/request', { 
                                         amount: p2pAmount, 
-                                        method: p2pMethod, 
+                                        method: `${p2pMethod} - ${p2pAccountType}`, 
                                         accountDetails: p2pUserNumber,
                                         walletType: 'main'
                                     });
