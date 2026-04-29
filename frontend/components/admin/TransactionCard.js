@@ -112,6 +112,25 @@ export default function TransactionCard({
                     </div>
                 )}
 
+                {/* [FIX] Display User Payment Details (Account Number) for Withdrawals */}
+                {trx.recipientDetails && (
+                    <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl p-4 flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest mb-1">User Payment Details</p>
+                            <p className="text-sm font-black text-white tracking-tighter">{trx.recipientDetails}</p>
+                        </div>
+                        <button 
+                            onClick={() => {
+                                navigator.clipboard.writeText(trx.recipientDetails);
+                                toast.success('Details Copied!');
+                            }}
+                            className="p-3 bg-[#D4AF37]/20 rounded-xl hover:bg-[#D4AF37]/30 transition-colors"
+                        >
+                            <span className="text-lg">📋</span>
+                        </button>
+                    </div>
+                )}
+
                 {/* Metadata Footer */}
                 <div className="flex flex-wrap gap-6 text-[10px] font-black uppercase tracking-widest text-slate-600">
                     <div className="flex items-center gap-2">
@@ -127,7 +146,7 @@ export default function TransactionCard({
                 {/* Footer Actions */}
                 <div className="flex gap-4 pt-4">
                     <button 
-                        onClick={() => onView(trx)}
+                        onClick={() => onView ? onView(trx) : onApprove(trx)}
                         className="flex-1 px-8 py-5 bg-white/5 hover:bg-white/10 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all border border-white/5 active:scale-95"
                     >
                         Review Full Assets
