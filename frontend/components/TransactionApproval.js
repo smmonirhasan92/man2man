@@ -172,9 +172,10 @@ export default function TransactionApproval() {
                         <p className="text-slate-400 text-sm mt-2">No pending transactions to review.</p>
                     </div>
                 ) : (
-                    transactions.map(trx => (
+                    transactions.map((trx, index) => (
                         <TransactionCard
                             key={trx._id}
+                            index={index}
                             trx={trx}
                             agents={agents}
                             selectedAgentId={selectedAgent[trx._id]}
