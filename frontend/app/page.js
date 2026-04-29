@@ -184,22 +184,29 @@ export default function LoginPage() {
         setLoading(true);
         setError('');
         try {
-            // [NEW] Format Phone Payload to include country code (stripped of leading zeros)
-            const formattedPhone = `${countryCode}${phone.replace(/^0+/, '')}`;
+            let payloadValue = phone.trim();
+            
+            // Check if user entered an email address instead of a phone number
+            if (!payloadValue.includes('@')) {
+                // It's a phone number, format it with the country code
+                payloadValue = `${countryCode}${payloadValue.replace(/^0+/, '')}`;
+            }
 
-            const res = await api.post('/auth/login', { phone: formattedPhone, password });
+            // Use 'identifier' to match the updated backend that supports both email and phone
+            const res = await api.post('/auth/login', { identifier: payloadValue, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             // Save phone and country for automatic pre-fill next time
             localStorage.setItem('remembered_phone', phone);
             localStorage.setItem('remembered_country', countryCode);
+            document.cookie = `token=${res.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
 
             const adminRoles = ['admin', 'super_admin', 'employee_admin'];
 
             if (adminRoles.includes(res.data.user.role)) {
-                router.push('/admin/dashboard');
+                window.location.href = '/admin/dashboard';
             } else {
-                router.push('/dashboard');
+                window.location.href = '/dashboard';
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
@@ -256,7 +263,7 @@ export default function LoginPage() {
 
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-slate-300 ml-1">Phone Number</label>
+                            <label className="block text-sm font-semibold text-slate-300 ml-1">Email or Phone Number</label>
                             <div className="flex gap-2">
                                 <div className="relative w-[35%]">
                                     <button
@@ -303,8 +310,8 @@ export default function LoginPage() {
                                         <Smartphone className="w-5 h-5" />
                                     </div>
                                     <input
-                                        type="tel"
-                                        placeholder="Mobile Number"
+                                        type="text"
+                                        placeholder="Mobile or Email"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         required
