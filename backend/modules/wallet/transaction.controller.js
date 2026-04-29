@@ -172,12 +172,12 @@ exports.completeTransaction = async (req, res) => {
                     }
 
                     // Turnover
-                    await TurnoverService.addRequirement(user._id, amountToAdd, 1);
+                    await TurnoverService.addRequirement(user._id, amountToAdd, 1, session);
 
                     // Referral Bonus
                     if (!user.isReferralBonusPaid && user.referredBy) {
                         try {
-                            await ReferralService.distributeIncome(user._id, amountToAdd, 'joining');
+                            await ReferralService.distributeIncome(user._id, amountToAdd, 'joining', session);
                             const referrer = await User.findOne({ referralCode: user.referredBy }).session(session);
                             if (referrer) {
                                 referrer.wallet.main = (referrer.wallet.main || 0) + 20;
