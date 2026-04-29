@@ -18,7 +18,7 @@ export default function AdminLayout({ children }) {
         }
 
         if (socket) {
-            socket.emit('join_room', 'admin_dashboard');
+            socket.emit('join_admin_room', 'adminToken'); // Changed to match backend listener
             
             socket.on('new_transaction_request', (data) => {
                 // Play notification sound
