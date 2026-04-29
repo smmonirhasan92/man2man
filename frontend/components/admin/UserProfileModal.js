@@ -238,6 +238,34 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 </div>
                             </div>
 
+                            {/* [NEW] Gamification Stats */}
+                            {profile.gamificationStats && (
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/5 mt-4">
+                                    <h4 className="text-[10px] uppercase font-bold text-rose-400 tracking-widest mb-3 flex items-center gap-2">
+                                        <Activity className="w-4 h-4" /> Gamification & Luck Test Stats
+                                    </h4>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
+                                        <div className="bg-black/20 p-2 rounded-xl border border-white/5">
+                                            <p className="text-[8px] uppercase font-bold text-slate-500 mb-1">Total Spins/Bets</p>
+                                            <p className="text-lg font-black text-slate-200">{profile.gamificationStats.totalBetsCount}</p>
+                                            <p className="text-[9px] font-bold text-rose-400 mt-1">-{profile.gamificationStats.totalBetsNxs.toFixed(2)} NXS</p>
+                                        </div>
+                                        <div className="bg-black/20 p-2 rounded-xl border border-white/5">
+                                            <p className="text-[8px] uppercase font-bold text-slate-500 mb-1">Total Wins</p>
+                                            <p className="text-lg font-black text-slate-200">{profile.gamificationStats.totalWinsCount}</p>
+                                            <p className="text-[9px] font-bold text-emerald-400 mt-1">+{profile.gamificationStats.totalWinsNxs.toFixed(2)} NXS</p>
+                                        </div>
+                                        <div className="bg-black/20 p-2 rounded-xl border border-white/5 col-span-2 sm:col-span-1 flex flex-col justify-center">
+                                            <p className="text-[8px] uppercase font-bold text-slate-500 mb-1">Net P/L</p>
+                                            <p className={`text-xl font-black ${profile.gamificationStats.netProfitLoss >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                                                {profile.gamificationStats.netProfitLoss >= 0 ? '+' : ''}{profile.gamificationStats.netProfitLoss.toFixed(2)}
+                                            </p>
+                                            <p className="text-[8px] font-bold text-slate-400 mt-0.5">NXS</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Net Settlement Indicator */}
                             <div className={`mt-4 p-4 rounded-xl border flex items-center justify-between ${(profile.financials?.netAccounting || 0) >= 0
                                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'

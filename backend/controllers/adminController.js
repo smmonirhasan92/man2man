@@ -724,6 +724,28 @@ exports.getUserDetails = async (req, res) => {
         const p2pBuysNxs = p2pBuysAgg[0]?.total || 0;
         const p2pBuysCount = p2pBuysAgg[0]?.count || 0;
 
+        // [NEW] Gamification Stats
+        const gameBetsAgg = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'game_bet', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } }, count: { $sum: 1 } } }
+        ]);
+        
+        const gameWinsAgg = await Transaction.aggregate([
+            { $match: { userId: user._id, type: { $in: ['game_win', 'lottery_win'] }, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } }, count: { $sum: 1 } } }
+        ]);
+
+        const gameBetsTotal = gameBetsAgg[0]?.total || 0;
+        const gameWinsTotal = gameWinsAgg[0]?.total || 0;
+
+        user.gamificationStats = {
+            totalBetsCount: gameBetsAgg[0]?.count || 0,
+            totalBetsNxs: gameBetsTotal,
+            totalWinsCount: gameWinsAgg[0]?.count || 0,
+            totalWinsNxs: gameWinsTotal,
+            netProfitLoss: parseFloat((gameWinsTotal - gameBetsTotal).toFixed(2))
+        };
+
         user.agentAudit = {
             initialDebt: initialDebtUsd,
             p2pSales: p2pSalesNxs, 

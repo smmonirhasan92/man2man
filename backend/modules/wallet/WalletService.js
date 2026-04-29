@@ -134,7 +134,7 @@ class WalletService {
             }, {
                 userId,
                 type: 'transfer_in',
-                amount: creditAmount,
+                amount: amt, // [FIX] Must pass gross amount here so pre-save integrity check (amt - fee) resolves correctly
                 fee: fee,
                 balanceBefore: balBeforeTarget,
                 balanceAfter: balAfterTarget,

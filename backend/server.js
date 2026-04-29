@@ -111,6 +111,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/transaction', transactionRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/withdrawal', withdrawalRoutes); // [FIX] Added alias for singular frontend requests
 app.use('/api/user', userRoutes);
 app.use('/api/task', taskRoutes);
 app.use('/api/admin', adminRoutes);
