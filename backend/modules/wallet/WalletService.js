@@ -397,6 +397,19 @@ class WalletService {
                 receivedByAgentId: receivedByAgentId || null
             }], { session });
 
+            // [NEW] Real-time Admin Notification
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.broadcast('admin_dashboard', 'new_transaction_request', {
+                    type: 'deposit',
+                    amount: amt,
+                    userId: userId,
+                    message: `New Deposit Request: ${amt} NXS`
+                });
+            } catch (e) {
+                console.error(`[SOCKET] Failed to broadcast deposit alert: ${e.message}`);
+            }
+
             return transaction;
         });
     }

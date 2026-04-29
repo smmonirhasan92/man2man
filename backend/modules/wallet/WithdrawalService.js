@@ -83,7 +83,8 @@ class WithdrawalService {
             // [NEW] Real-time Admin Notification
             try {
                 const SocketService = require('../common/SocketService');
-                SocketService.broadcast('admin_dashboard', 'new_withdrawal_request', {
+                SocketService.broadcast('admin_dashboard', 'new_transaction_request', {
+                    type: 'withdraw',
                     amount: amount,
                     userId: userId,
                     message: `New Withdrawal Request: ${amount} NXS`
