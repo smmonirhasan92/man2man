@@ -121,8 +121,23 @@ export default function TransactionCard({
                         </div>
                         <button 
                             onClick={() => {
-                                navigator.clipboard.writeText(trx.recipientDetails);
-                                toast.success('Details Copied!');
+                                // [FIX] Fallback for non-HTTPS environments
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(trx.recipientDetails);
+                                    toast.success('Details Copied!');
+                                } else {
+                                    const textArea = document.createElement("textarea");
+                                    textArea.value = trx.recipientDetails;
+                                    document.body.appendChild(textArea);
+                                    textArea.select();
+                                    try {
+                                        document.execCommand('copy');
+                                        toast.success('Details Copied!');
+                                    } catch (err) {
+                                        toast.error('Failed to copy');
+                                    }
+                                    document.body.removeChild(textArea);
+                                }
                             }}
                             className="p-3 bg-[#D4AF37]/20 rounded-xl hover:bg-[#D4AF37]/30 transition-colors"
                         >
@@ -152,12 +167,12 @@ export default function TransactionCard({
                         Review Full Assets
                     </button>
                     
-                    {trx.status === 'final_review' && (
+                    {['pending', 'final_review'].includes(trx.status) && (
                         <button 
                             onClick={() => onApprove(trx)}
                             className="flex-1 px-8 py-5 bg-emerald-500 text-black rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all"
                         >
-                            Confirm & Credit
+                            {trx.type === 'cash_out' || trx.type === 'withdraw' ? 'Approve Cash-out' : 'Confirm & Credit'}
                         </button>
                     )}
 
