@@ -128,35 +128,68 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                             </div>
                         </div>
 
-                        {/* [AGENT ONLY] Recovery Progress */}
+                        {/* [AGENT ONLY] Recovery Progress & Activity Tracking */}
                         {profile.agentAudit && (
-                            <div className="mb-8 p-5 bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-[2rem] shadow-xl">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h4 className="text-xs font-black text-indigo-300 uppercase tracking-[0.2em]">Agent Recovery Tracker</h4>
-                                    <span className="text-[10px] bg-indigo-500/20 px-2 py-1 rounded-full text-indigo-300 font-bold border border-indigo-500/20">
-                                        Debt Limit: ${profile.agentAudit.debtLimit || 0}
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4 text-center">
-                                    <div>
-                                        <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Initial Stock</p>
-                                        <p className="text-lg font-black text-white">${(profile.agentAudit?.initialDebt || 0).toFixed(2)}</p>
+                            <div className="mb-8 space-y-4">
+                                <div className="p-5 bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-[2rem] shadow-xl">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h4 className="text-xs font-black text-indigo-300 uppercase tracking-[0.2em]">Agent Recovery Tracker</h4>
+                                        <span className="text-[10px] bg-indigo-500/20 px-2 py-1 rounded-full text-indigo-300 font-bold border border-indigo-500/20">
+                                            Debt Limit: ${profile.agentAudit.debtLimit || 0}
+                                        </span>
                                     </div>
-                                    <div>
-                                        <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">P2P Sales (BDT)</p>
-                                        <p className="text-lg font-black text-emerald-400">${((profile.agentAudit?.p2pSales || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
+                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                        <div>
+                                            <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Initial Stock</p>
+                                            <p className="text-lg font-black text-white">${(profile.agentAudit?.initialDebt || 0).toFixed(2)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">P2P Sales (BDT)</p>
+                                            <p className="text-lg font-black text-emerald-400">${((profile.agentAudit?.p2pSales || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Remaining Debt</p>
+                                            <p className="text-lg font-black text-rose-400">${(profile.agentAudit?.netLiability || 0).toFixed(2)}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Remaining Debt</p>
-                                        <p className="text-lg font-black text-rose-400">${(profile.agentAudit?.netLiability || 0).toFixed(2)}</p>
+                                    <div className="mt-4 h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                        <div 
+                                            className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-1000"
+                                            style={{ width: `${Math.min(100, ((profile.agentAudit?.p2pSales || 0) / (profile.agentAudit?.initialDebt * 100 || 1)) * 100)}%` }}
+                                        ></div>
                                     </div>
                                 </div>
-                                <div className="mt-4 h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-1000"
-                                        style={{ width: `${Math.min(100, ((profile.agentAudit?.p2pSales || 0) / (profile.agentAudit?.initialDebt * 100 || 1)) * 100)}%` }}
-                                    ></div>
-                                </div>
+
+                                {/* [NEW] Agent Activity & Productivity Metrics */}
+                                {profile.agentAudit.activity && (
+                                    <div className="p-4 bg-emerald-900/10 border border-emerald-500/20 rounded-[1.5rem]">
+                                        <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                            <Activity className="w-4 h-4" /> Merchant Productivity Matrix
+                                        </h4>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            <div className="bg-black/20 p-3 rounded-xl border border-white/5 text-center">
+                                                <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">P2P Orders Sold</p>
+                                                <p className="text-xl font-black text-emerald-400">{profile.agentAudit.activity.totalSalesCount || 0}</p>
+                                            </div>
+                                            <div className="bg-black/20 p-3 rounded-xl border border-white/5 text-center">
+                                                <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">P2P Orders Bought</p>
+                                                <p className="text-xl font-black text-indigo-400">{profile.agentAudit.activity.totalBuysCount || 0}</p>
+                                            </div>
+                                            <div className="bg-black/20 p-3 rounded-xl border border-white/5 text-center">
+                                                <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Total Volume (NXS)</p>
+                                                <p className="text-xl font-black text-white">{profile.agentAudit.activity.totalVolumeNxs || 0}</p>
+                                            </div>
+                                            <div className="bg-black/20 p-3 rounded-xl border border-white/5 text-center flex flex-col justify-center">
+                                                <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Last Active Sync</p>
+                                                <p className="text-[10px] font-bold text-slate-300">
+                                                    {profile.agentAudit.activity.lastActive 
+                                                        ? new Date(profile.agentAudit.activity.lastActive).toLocaleDateString() 
+                                                        : 'Unknown'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 

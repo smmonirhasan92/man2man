@@ -699,7 +699,7 @@ exports.getUserDetails = async (req, res) => {
             user.wallet.game = 0;
         }
 
-        // [AGENT REQ] Debt vs Recovery Audit
+        // [AGENT REQ] Debt vs Recovery Audit & Activity Tracking
         const initialDebtAgg = await TransactionLedger.aggregate([
             { $match: { userId: user._id, type: { $in: ['admin_adjustment', 'mint', 'admin_credit'] }, amount: { $gt: 0 } } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
@@ -707,18 +707,34 @@ exports.getUserDetails = async (req, res) => {
         const initialDebtNxs = initialDebtAgg[0]?.total || 0;
         const initialDebtUsd = initialDebtNxs / NXS_RATIO;
 
+        // P2P Sales (NXS Sold by Agent)
         const p2pSalesAgg = await Transaction.aggregate([
             { $match: { userId: user._id, type: 'p2p_sell', status: 'completed' } },
-            { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } }, count: { $sum: 1 } } }
         ]);
         const p2pSalesNxs = p2pSalesAgg[0]?.total || 0;
+        const p2pSalesCount = p2pSalesAgg[0]?.count || 0;
         const p2pSalesUsd = p2pSalesNxs / NXS_RATIO;
+
+        // P2P Buys (NXS Bought by Agent)
+        const p2pBuysAgg = await Transaction.aggregate([
+            { $match: { userId: user._id, type: 'p2p_buy', status: 'completed' } },
+            { $group: { _id: null, total: { $sum: { $abs: "$amount" } }, count: { $sum: 1 } } }
+        ]);
+        const p2pBuysNxs = p2pBuysAgg[0]?.total || 0;
+        const p2pBuysCount = p2pBuysAgg[0]?.count || 0;
 
         user.agentAudit = {
             initialDebt: initialDebtUsd,
-            p2pSales: p2pSalesNxs, // Keep NXS for the progress bar logic or convert to USD in UI?
+            p2pSales: p2pSalesNxs, 
             netLiability: parseFloat((initialDebtUsd - p2pSalesUsd).toFixed(2)),
-            debtLimit: user.agentData?.debtLimit || 0
+            debtLimit: user.agentData?.debtLimit || 0,
+            activity: {
+                totalSalesCount: p2pSalesCount,
+                totalBuysCount: p2pBuysCount,
+                totalVolumeNxs: p2pSalesNxs + p2pBuysNxs,
+                lastActive: user.lastLogin || user.updatedAt
+            }
         };
 
         res.json(user);
