@@ -14,16 +14,20 @@ export default function AdminLayout({ children }) {
         
         // Initialize Audio object for notifications
         if (typeof window !== 'undefined') {
-            audioRef.current = new Audio('/sounds/notification.mp3'); // Create this file or it will gracefully fail
+            audioRef.current = new Audio('/sounds/notification-v2.mp3');
         }
 
         if (socket) {
             socket.emit('join_admin_room', 'adminToken'); // Changed to match backend listener
             
             socket.on('new_transaction_request', (data) => {
-                // Play notification sound
+                // Play notification sound robustly
                 if (audioRef.current) {
-                    audioRef.current.play().catch(e => console.log('Audio play prevented by browser', e));
+                    try {
+                        audioRef.current.play().catch(e => console.log('Audio play prevented by browser', e));
+                    } catch (err) {
+                        console.error("Audio playback error:", err);
+                    }
                 }
 
                 toast.success(data.message || `New ${data.type} request received!`, {
