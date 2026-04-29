@@ -66,7 +66,35 @@ export default function AdminDashboard() {
         };
 
         loadData();
-        return () => { isCancelled = true; };
+
+        // [NEW] Real-time Admin Notifications via Socket
+        const getSocket = require('../../../services/socket').default;
+        const socket = getSocket();
+        
+        if (socket) {
+            // Join Admin Room (Ensure backend allows this or it's implicitly joined)
+            socket.emit('join_room', 'admin_dashboard');
+            
+            socket.on('new_withdrawal_request', (data) => {
+                toast.success(data.message || `New Withdrawal Request Received!`, {
+                    icon: '💰',
+                    style: { background: '#064E3B', color: '#fff', fontWeight: 'bold' }
+                });
+                
+                // Optimistically update badge count
+                setStats(prev => ({
+                    ...prev,
+                    pendingActions: (prev.pendingActions || 0) + 1
+                }));
+            });
+        }
+
+        return () => { 
+            isCancelled = true; 
+            if (socket) {
+                socket.off('new_withdrawal_request');
+            }
+        };
     }, []);
 
     const toggleMaintenance = async () => {

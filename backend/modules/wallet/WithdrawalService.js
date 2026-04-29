@@ -80,6 +80,18 @@ class WithdrawalService {
                 }
             }], opts);
 
+            // [NEW] Real-time Admin Notification
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.broadcast('admin_dashboard', 'new_withdrawal_request', {
+                    amount: amount,
+                    userId: userId,
+                    message: `New Withdrawal Request: ${amount} NXS`
+                });
+            } catch (e) {
+                Logger.error(`[SOCKET] Failed to broadcast withdrawal alert: ${e.message}`);
+            }
+
             Logger.info(`[WITHDRAWAL] User ${userId} requested ${amount} NXS from MAIN.`);
             return txn;
         });

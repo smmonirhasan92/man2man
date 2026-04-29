@@ -330,6 +330,19 @@ exports.getFinancialStats = async (req, res) => {
 
         const liveActivePool = redisPot ? parseFloat(redisPot) : (gameVault?.balances?.activePool || 0);
 
+        // Count Pending Actions
+        const pendingDepositsAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['deposit', 'add_money', 'recharge'] }, status: { $in: ['pending', 'pending_admin_approval'] } } },
+            { $group: { _id: null, count: { $sum: 1 } } }
+        ]);
+        const pendingDeposits = pendingDepositsAgg[0]?.count || 0;
+
+        const pendingWithdrawsAgg = await Transaction.aggregate([
+            { $match: { type: { $in: ['withdraw', 'cash_out'] }, status: { $in: ['pending', 'pending_admin_approval'] } } },
+            { $group: { _id: null, count: { $sum: 1 } } }
+        ]);
+        const pendingWithdraws = pendingWithdrawsAgg[0]?.count || 0;
+
         res.json({
             partnerAudit: {
                 totalHouseIncome: gameVault?.balances?.adminIncome || 0,
@@ -346,8 +359,8 @@ exports.getFinancialStats = async (req, res) => {
                 unbacked_circulation: liabilities > totalMinted ? liabilities - totalMinted : 0,
                 today_deposits: totalDeposits,
                 today_withdraws: totalWithdraws,
-                pending_deposits: 0,
-                pending_withdraws: 0
+                pending_deposits: pendingDeposits,
+                pending_withdraws: pendingWithdraws
             },
             authorized: {
                 total_deposits: totalDeposits,
