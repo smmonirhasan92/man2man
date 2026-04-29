@@ -84,7 +84,7 @@ export default function TransactionApproval() {
     };
 
     const openApprovalModal = (transaction) => {
-        setApprovalModal({ show: true, transactionId: transaction._id, type: transaction.recipientDetails?.includes('Method:') ? 'mobile' : 'bank' });
+        setApprovalModal({ show: true, transactionId: transaction._id, type: transaction.recipientDetails?.includes('Method:') ? 'mobile' : 'bank', transaction });
         setBonusAmount('');
         setAdminComment('');
         setReceivedAgent('');
@@ -202,6 +202,7 @@ export default function TransactionApproval() {
                 agents={agents}
                 secKeys={secKeys}
                 setSecKeys={setSecKeys}
+                transaction={approvalModal.transaction}
             />
 
             <div className="fixed bottom-6 right-6 z-20">

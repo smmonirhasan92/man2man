@@ -112,39 +112,64 @@ export default function TransactionCard({
                     </div>
                 )}
 
-                {/* [FIX] Display User Payment Details (Account Number) for Withdrawals */}
-                {trx.recipientDetails && (
-                    <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-2xl p-4 flex items-center justify-between">
-                        <div>
-                            <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest mb-1">User Payment Details</p>
-                            <p className="text-sm font-black text-white tracking-tighter">{trx.recipientDetails}</p>
-                        </div>
-                        <button 
-                            onClick={() => {
-                                // [FIX] Fallback for non-HTTPS environments
-                                if (navigator.clipboard && navigator.clipboard.writeText) {
-                                    navigator.clipboard.writeText(trx.recipientDetails);
-                                    toast.success('Details Copied!');
-                                } else {
-                                    const textArea = document.createElement("textarea");
-                                    textArea.value = trx.recipientDetails;
-                                    document.body.appendChild(textArea);
-                                    textArea.select();
-                                    try {
-                                        document.execCommand('copy');
-                                        toast.success('Details Copied!');
-                                    } catch (err) {
-                                        toast.error('Failed to copy');
-                                    }
-                                    document.body.removeChild(textArea);
-                                }
-                            }}
-                            className="p-3 bg-[#D4AF37]/20 rounded-xl hover:bg-[#D4AF37]/30 transition-colors"
+                {/* [REDESIGNED] Payment Details - Number Shown Prominently */}
+                {trx.recipientDetails && (() => {
+                    // Parse: "Bkash - Personal (Send Money) - 01987786543 (main wallet)"
+                    // or old format: "Bkash - 01987786543 (main wallet)"
+                    const parts = trx.recipientDetails.split(' - ');
+                    let method = parts[0]?.trim() || '';
+                    let accountType = '';
+                    let number = '';
+
+                    if (parts.length >= 3) {
+                        accountType = parts[1]?.trim() || '';
+                        number = parts[2]?.split('(')[0]?.trim() || '';
+                    } else {
+                        number = parts[1]?.split('(')[0]?.trim() || '';
+                    }
+
+                    const isBkash = method.toLowerCase().includes('bkash');
+                    const isAgent = accountType.toLowerCase().includes('agent');
+
+                    const doCopy = () => {
+                        const copyTarget = number || trx.recipientDetails;
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(copyTarget);
+                            toast.success('Number Copied!');
+                        } else {
+                            const el = document.createElement('textarea');
+                            el.value = copyTarget;
+                            document.body.appendChild(el);
+                            el.select();
+                            try { document.execCommand('copy'); toast.success('Number Copied!'); }
+                            catch { toast.error('Could not copy'); }
+                            document.body.removeChild(el);
+                        }
+                    };
+
+                    return (
+                        <div
+                            onClick={doCopy}
+                            className="cursor-pointer bg-[#D4AF37]/10 border-2 border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-2xl p-5 transition-all active:scale-98 group"
                         >
-                            <span className="text-lg">📋</span>
-                        </button>
-                    </div>
-                )}
+                            {/* Badges */}
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                    isBkash ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                }`}>{method || 'MFS'}</span>
+                                {accountType && (
+                                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                        isAgent ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                    }`}>{isAgent ? 'Cash Out (Agent)' : 'Send Money'}</span>
+                                )}
+                            </div>
+                            {/* The Number - BIG */}
+                            <p className="text-3xl font-black text-white tracking-widest mb-2">{number || '—'}</p>
+                            {/* Copy hint */}
+                            <p className="text-[9px] font-black text-[#D4AF37]/50 uppercase tracking-widest group-hover:text-[#D4AF37]/80 transition-colors">📋 Tap to copy number</p>
+                        </div>
+                    );
+                })()}
 
                 {/* Metadata Footer */}
                 <div className="flex flex-wrap gap-6 text-[10px] font-black uppercase tracking-widest text-slate-600">
