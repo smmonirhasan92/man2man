@@ -195,15 +195,18 @@ const UserSchema = new mongoose.Schema({
 // [PHASE 3: LIVE SYNC] Automatic Wallet Sync via Socket
 UserSchema.post('save', function (doc) {
     // We broadcast the new wallet balance to the user's personal room instantly.
-    try {
-        const SocketService = require('../common/SocketService');
-        if (SocketService.getIO()) {
-            SocketService.broadcast(`user_${doc._id}`, `balance_update_${doc._id}`, doc.wallet.main); // Legacy compatibility
-            SocketService.broadcast(`user_${doc._id}`, `balance_update`, doc.wallet); // Standard new format
+    // Using setImmediate to unblock the main Node event loop for High-Hype environments (1000+ users)
+    setImmediate(() => {
+        try {
+            const SocketService = require('../common/SocketService');
+            if (SocketService.getIO()) {
+                SocketService.broadcast(`user_${doc._id}`, `balance_update_${doc._id}`, doc.wallet.main); // Legacy compatibility
+                SocketService.broadcast(`user_${doc._id}`, `balance_update`, doc.wallet); // Standard new format
+            }
+        } catch (e) {
+            console.error("[LIVE SYNC] Failed to broadcast wallet update", e);
         }
-    } catch (e) {
-        console.error("[LIVE SYNC] Failed to broadcast wallet update", e);
-    }
+    });
 });
 
 // Indexes for frequent lookups

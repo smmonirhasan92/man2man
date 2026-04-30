@@ -152,9 +152,9 @@ router.post('/test-notify', authMiddleware, adminCheck, async (req, res) => {
 
 // --- Admin Analytics & War Room ---
 const analyticsController = require('../controllers/analyticsController');
-router.get('/admin/stats', authMiddleware, analyticsController.getFinancialStats); // Secure later with role check
-router.get('/admin/locked-users', authMiddleware, analyticsController.getLockedUsers);
-router.get('/admin/settings', authMiddleware, analyticsController.getWarRoomSettings);
-router.post('/admin/settings', authMiddleware, analyticsController.updateWarRoomSettings);
+router.get('/admin/stats', authMiddleware, adminCheck, analyticsController.getFinancialStats); // Secure later with role check
+router.get('/admin/locked-users', authMiddleware, adminCheck, analyticsController.getLockedUsers);
+router.get('/admin/settings', authMiddleware, adminCheck, analyticsController.getWarRoomSettings);
+router.post('/admin/settings', authMiddleware, adminCheck, analyticsController.updateWarRoomSettings);
 
 module.exports = router;

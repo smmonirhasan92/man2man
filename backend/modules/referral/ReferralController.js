@@ -46,7 +46,7 @@ exports.getDashboardData = async (req, res) => {
                 empireHands: user.empireHands || []
             },
             lockedCommissions,
-            logs: logs,
+            logs: [],
             referralCode: user.referralCode
         });
     } catch (err) {

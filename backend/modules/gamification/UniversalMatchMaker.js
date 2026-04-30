@@ -2,6 +2,7 @@ const GameVault = require('./GameVaultModel');
 const RedisService = require('../../services/RedisService');
 const P2PAudit = require('./P2PAuditModel');
 const SocketService = require('../common/SocketService');
+const TransactionHelper = require('../common/TransactionHelper');
 const crypto = require('crypto');
 
 const UNIVERSAL_MULTIPLIERS = [5, 3.3, 2.6, 2, 1.5, 1, 0.5, 0];
@@ -138,11 +139,14 @@ class UniversalMatchMaker {
                 return null;
             };
 
+            let totalBasePayouts = 0;
+
             // Process results
             for (const p of batch) {
                 let winAmount = 0;
                 let label = 'Miss';
                 let isWin = false;
+                let bonusAmount = 0;
 
                 if (isEmergencyRecovery && p.consecutiveLosses < 4) {
                     winAmount = 0;
@@ -153,6 +157,7 @@ class UniversalMatchMaker {
 
                     const bonus = await handleBonusDrops(p);
                     if (bonus) {
+                        bonusAmount = bonus.amount;
                         winAmount += bonus.amount;
                         label = bonus.label;
                         SocketService.emitToUser(p.userId, 'legendary_win', {
@@ -166,6 +171,9 @@ class UniversalMatchMaker {
                     isWin = false;
                 }
 
+                // Track total payouts that come strictly from the activePool (base winAmount)
+                totalBasePayouts += (winAmount - bonusAmount);
+
                 p.resolve({
                     winAmount: parseFloat(winAmount.toFixed(2)),
                     isWin,
@@ -176,13 +184,15 @@ class UniversalMatchMaker {
                 });
             }
 
-            // Sync to MongoDB Audit
-            await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
-                $inc: {
-                    'balances.adminIncome': adminFeeIn,
-                    'balances.userInterest': interestFeeIn,
-                    'balances.activePool': parseFloat((activePoolIn - (mainWinner.winAmount || 0)).toFixed(2)) // Approximate sync
-                }
+            // Sync to MongoDB Audit Atomically
+            await TransactionHelper.runTransaction(async (session) => {
+                await GameVault.updateOne({ vaultId: 'MASTER_VAULT' }, {
+                    $inc: {
+                        'balances.adminIncome': adminFeeIn,
+                        'balances.userInterest': interestFeeIn,
+                        'balances.activePool': parseFloat((activePoolIn - totalBasePayouts).toFixed(2)) // 100% Accurate Sync
+                    }
+                }, { session });
             });
 
             // Admin Dashboard Broadcast

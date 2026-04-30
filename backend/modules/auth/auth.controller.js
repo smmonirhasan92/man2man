@@ -98,6 +98,18 @@ exports.register = async (req, res) => {
         // 8. Background Tasks (Non-blocking)
         EmailService.sendWelcomeEmail(email, fullName).catch(e => console.error("[WELCOME EMAIL] Failed:", e.message));
 
+        // [PHASE 4] FOMO: Broadcast New Registration
+        try {
+            const SocketService = require('../common/SocketService');
+            const partialName = username ? username.substring(0, 3) + '***' : 'User***';
+            SocketService.broadcast('global', 'BROADCAST_NEW_USER', {
+                username: partialName,
+                timestamp: Date.now()
+            });
+        } catch (e) {
+            console.error("[FOMO BROADCAST] Failed:", e.message);
+        }
+
         res.status(201).json({
             success: true,
             message: 'User registered successfully',
