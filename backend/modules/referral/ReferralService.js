@@ -89,6 +89,15 @@ class ReferralService {
                                 'success',
                                 { title: "Hand Completed! 🤚" }
                             ).catch(() => {});
+
+                            // [SOCKET] Real-time Milestone Alert
+                            try {
+                                const SocketService = require('../common/SocketService');
+                                SocketService.emitToUser(directUpline._id, 'milestone_alert', {
+                                    message: `🤚 Hand #${directUpline.referralHands} Completed!`,
+                                    bonus: HAND_BONUS
+                                });
+                            } catch (e) { }
                         }
                     }
 
@@ -253,6 +262,21 @@ class ReferralService {
                         }
                     }], { session });
 
+                    // [SOCKET] Real-time Commission Alert
+                    try {
+                        const SocketService = require('../common/SocketService');
+                        SocketService.emitToUser(uplineUser._id, 'commission_alert', {
+                            message: commissionDesc,
+                            amount: commission,
+                            source: currentUser.username,
+                            status: 'locked'
+                        });
+                        // Also update wallet UI
+                        SocketService.emitToUser(uplineUser._id, 'wallet_update', {
+                            pending_referral: uplineUser.wallet.pending_referral
+                        });
+                    } catch (e) { }
+
                     totalDistributed += commission;
                     console.log(`   -> Locked L${i + 1} (${uplineUser.username}): ${commission} (Release: ${releaseDate.toLocaleDateString()})`);
                 }
@@ -378,6 +402,21 @@ class ReferralService {
                             releaseDate: releaseDate
                         }
                     }], { session });
+
+                    // [SOCKET] Real-time Commission Alert
+                    try {
+                        const SocketService = require('../common/SocketService');
+                        SocketService.emitToUser(uplineUser._id, 'commission_alert', {
+                            message: `L${i + 1} Task Bonus from ${sourceUserId}`,
+                            amount: comm,
+                            source: sourceUserId,
+                            status: 'locked'
+                        });
+                        // Also update wallet UI
+                        SocketService.emitToUser(uplineUser._id, 'wallet_update', {
+                            pending_referral: uplineUser.wallet.pending_referral
+                        });
+                    } catch (e) { }
 
                     // [REDIS] Invalidate Upline Cache
                     try {

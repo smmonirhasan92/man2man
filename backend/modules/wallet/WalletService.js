@@ -153,10 +153,15 @@ class WalletService {
                 }], { session });
             }
 
-            // [REDIS] Invalidate Cache
+            // [SOCKET] Real-time User Update
             try {
-                const redisInv = require('../../config/redis');
-                await redisInv.client.del(`user_profile:${userId}`);
+                const SocketService = require('../common/SocketService');
+                SocketService.emitToUser(userId, 'wallet_update', {
+                    main: user.wallet.main,
+                    income: user.wallet.income,
+                    purchase: user.wallet.purchase,
+                    agent: user.wallet.agent
+                });
             } catch (e) { }
 
             return { success: true, newBalances: user.wallet, fee, creditAmount };
@@ -212,6 +217,17 @@ class WalletService {
                 }
             }
 
+            // [SOCKET] Real-time User Update
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.emitToUser(userId, 'wallet_update', {
+                    main: user.wallet.main,
+                    income: user.wallet.income,
+                    purchase: user.wallet.purchase,
+                    agent: user.wallet.agent
+                });
+            } catch (e) { }
+
             return user;
         });
     }
@@ -248,6 +264,17 @@ class WalletService {
                 description: reason,
                 transactionId: `CDT_${Date.now()}_${Math.floor(Math.random() * 1000)}`
             }], { session });
+
+            // [SOCKET] Real-time User Update
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.emitToUser(userId, 'wallet_update', {
+                    main: user.wallet.main,
+                    income: user.wallet.income,
+                    purchase: user.wallet.purchase,
+                    agent: user.wallet.agent
+                });
+            } catch (e) { }
 
             return user;
         });
