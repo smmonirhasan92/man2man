@@ -164,6 +164,14 @@ class WalletService {
                 });
             } catch (e) { }
 
+            // [CACHE] Invalidate Redis User Cache
+            try {
+                const redisConfig = require('../../config/redis');
+                if (redisConfig.client.isOpen) {
+                    await redisConfig.client.del(`user_profile:${userId}`);
+                }
+            } catch (e) { }
+
             return { success: true, newBalances: user.wallet, fee, creditAmount };
         });
     }

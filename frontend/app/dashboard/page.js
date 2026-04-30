@@ -78,8 +78,29 @@ function DashboardContent() {
             const getSocket = (await import('../../services/socket')).default;
             const socket = getSocket();
             if (socket && user?._id) {
+                // Legacy Event
                 socket.on(`balance_update_${user._id}`, (newBalance) => {
                     setUser(prev => ({ ...prev, wallet_balance: newBalance }));
+                });
+                
+                // Unified Wallet Update (Real-time sync)
+                socket.on('wallet_update', (balances) => {
+                    setUser(prev => {
+                        const updatedUser = { ...prev };
+                        
+                        // Update root aliases
+                        if (balances.main !== undefined) updatedUser.wallet_balance = balances.main;
+                        if (balances.income !== undefined) updatedUser.income_balance = balances.income;
+                        if (balances.purchase !== undefined) updatedUser.purchase_balance = balances.purchase;
+                        
+                        // Update nested wallet
+                        if (!updatedUser.wallet) updatedUser.wallet = {};
+                        if (balances.main !== undefined) updatedUser.wallet.main = balances.main;
+                        if (balances.income !== undefined) updatedUser.wallet.income = balances.income;
+                        if (balances.purchase !== undefined) updatedUser.wallet.purchase = balances.purchase;
+                        
+                        return updatedUser;
+                    });
                 });
             }
         };
