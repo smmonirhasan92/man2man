@@ -13,5 +13,10 @@ module.exports = {
         if (ioInstance) {
             ioInstance.to(room).emit(event, data);
         }
+    },
+    emitToUser: (userId, event, data) => {
+        if (ioInstance) {
+            ioInstance.to(`user_${userId}`).emit(event, data);
+        }
     }
 };

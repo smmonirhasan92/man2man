@@ -27,91 +27,93 @@ exports.scratchCard = async (req, res) => {
         const userDoc = await User.findById(userId).select('gameStats.consecutiveLosses').lean();
         const consecutiveLosses = userDoc?.gameStats?.consecutiveLosses || 0;
 
-        // Process through Pure Pooling Engine
-        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
-        const winAmt = matchResult.winAmount;
-
-        const result = await TransactionHelper.runTransaction(async (session) => {
+        // [PHASE 2] STEP 1: DEDUCT BET FIRST (Atomic Protection)
+        const betResult = await TransactionHelper.runTransaction(async (session) => {
             const user = await User.findById(userId).session(session);
             if (user.wallet.main < cost) throw new Error('Insufficient Balance');
 
-            const initialBalance = user.wallet.main;
-            const finalBalance = initialBalance - cost + winAmt;
+            const initBal = user.wallet.main;
+            const finalBal = initBal - cost;
+            user.wallet.main = finalBal;
 
-            // [SECURITY] SANITY CHECK
-            const isSafe = await TransactionHelper.checkBalanceSafety(initialBalance, finalBalance);
-            if (!isSafe) throw new Error('Security Alert: Excessive Balance Change Blocked.');
-
-            user.wallet.main = finalBalance;
-
-            // --- AUDIT LOGGING (Bet & Win) ---
             const betTxId = `SCRATCH_BET_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
             
-            // 1. Log Bet (Deduction)
             await Transaction.create([{
-                userId,
-                type: 'game_bet',
-                amount: -cost,
-                currency: 'NXS',
-                status: 'completed',
-                source: 'game',
+                userId, type: 'game_bet', amount: -cost, currency: 'NXS',
+                status: 'completed', source: 'game',
                 description: `Scratch Card: ${SCRATCH_TIERS[tier].labels.loss} (${tier})`,
                 transactionId: betTxId,
-                balanceAfter: initialBalance - cost
+                balanceAfter: finalBal
             }], { session });
 
             await TransactionLedger.create([{
-                userId,
-                type: 'game_bet',
-                amount: -cost,
-                balanceBefore: initialBalance,
-                balanceAfter: initialBalance - cost,
+                userId, type: 'game_bet', amount: -cost,
+                balanceBefore: initBal, balanceAfter: finalBal,
                 description: `Scratch Card Bet (${tier})`,
                 transactionId: betTxId
             }], { session });
 
-            // 2. Log Win (if any)
-            if (winAmt > 0) {
+            user.markModified('wallet.main');
+            await user.save({ session });
+            return { finalBalance: finalBal };
+        });
+
+        // [PHASE 2] STEP 2: PROCESS MATCH THROUGH ENGINE
+        const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
+        const winAmt = matchResult.winAmount;
+
+        // [PHASE 2] STEP 3: CREDIT WIN (Separate Atomic Step)
+        let finalUserBalance = betResult.finalBalance;
+        if (winAmt > 0) {
+            const winResult = await TransactionHelper.runTransaction(async (session) => {
+                const user = await User.findById(userId).session(session);
+                const initBal = user.wallet.main;
+                const finalBal = initBal + winAmt;
+                
+                user.wallet.main = finalBal;
+
                 const winTxId = `SCRATCH_WIN_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
                 await Transaction.create([{
-                    userId,
-                    type: 'game_win',
-                    amount: winAmt,
-                    currency: 'NXS',
-                    status: 'completed',
-                    source: 'game',
+                    userId, type: 'game_win', amount: winAmt, currency: 'NXS',
+                    status: 'completed', source: 'game',
                     description: `Scratch Card Win: ${matchResult.label || SCRATCH_TIERS[tier].labels.win}`,
                     transactionId: winTxId,
-                    balanceAfter: finalBalance
+                    balanceAfter: finalBal
                 }], { session });
 
                 await TransactionLedger.create([{
-                    userId,
-                    type: 'game_win',
-                    amount: winAmt,
-                    balanceBefore: initialBalance - cost,
-                    balanceAfter: finalBalance,
+                    userId, type: 'game_win', amount: winAmt,
+                    balanceBefore: initBal, balanceAfter: finalBal,
                     description: `Scratch Card Reward (${tier})`,
                     transactionId: winTxId
                 }], { session });
-            }
 
-            // Stats Update (Real-time P&L Tracking)
-            user.gameStats.totalGamesPlayed += 1;
-            user.gameStats.netProfitLoss += (winAmt - cost);
-            if (matchResult.isWin) {
-                user.gameStats.totalGamesWon += 1;
-                user.gameStats.consecutiveLosses = 0;
-            } else {
-                user.gameStats.consecutiveLosses += 1;
-            }
+                // Stats Update
+                user.gameStats.totalGamesPlayed += 1;
+                user.gameStats.netProfitLoss += (winAmt - cost);
+                if (matchResult.isWin) {
+                    user.gameStats.totalGamesWon += 1;
+                    user.gameStats.consecutiveLosses = 0;
+                } else {
+                    user.gameStats.consecutiveLosses += 1;
+                }
 
-            user.markModified('wallet.main');
-            user.markModified('gameStats');
-            await user.save({ session });
-
-            return { winAmt, finalBalance: user.wallet.main };
-        });
+                user.markModified('wallet.main');
+                user.markModified('gameStats');
+                await user.save({ session });
+                return finalBal;
+            });
+            finalUserBalance = winResult;
+        } else {
+             // Record loss stats
+             await User.updateOne({ _id: userId }, {
+                $inc: { 
+                    'gameStats.totalGamesPlayed': 1,
+                    'gameStats.netProfitLoss': -cost,
+                    'gameStats.consecutiveLosses': 1
+                }
+            });
+        }
 
         // SUCCESS Bridge Response (NO SLICE INDEX)
         return res.json({
@@ -124,7 +126,7 @@ exports.scratchCard = async (req, res) => {
                 isWin: matchResult.isWin,
                 mode: matchResult.mode
             },
-            newBalance: result.finalBalance
+            newBalance: finalUserBalance
         });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });

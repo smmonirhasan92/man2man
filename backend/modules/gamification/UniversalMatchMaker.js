@@ -164,6 +164,14 @@ class UniversalMatchMaker {
                 batch.sort((a, b) => a.timestamp - b.timestamp); // [FIX] Preserving First-Click Order (Ascending)
 
                 if (isMultiplayer) {
+                    // [PHASE 2] Visual Thrill: Signal players that a human opponent was found!
+                    batch.forEach(p => {
+                        SocketService.emitToUser(p.userId, 'p2p_match_found', { 
+                            opponentCount: batch.length - 1,
+                            timestamp: Date.now() 
+                        });
+                    });
+
                     // [NEW] SEPARATED FUND TRIGGER LOGIC
                     let fundMegaStr    = await RedisService.get('livedata:game:fund_mega');
                     let fundBossStr    = await RedisService.get('livedata:game:fund_boss');
