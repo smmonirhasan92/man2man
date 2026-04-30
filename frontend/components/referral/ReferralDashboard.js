@@ -1,12 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Users, Trophy, DollarSign, Share2, Copy, CheckCircle, ChevronRight, Activity, Crown } from 'lucide-react';
+import { Users, Trophy, DollarSign, Share2, Copy, CheckCircle, Activity, Crown, Star, ChevronRight, Lock, Unlock } from 'lucide-react';
 import CommissionHistory from './CommissionHistory';
 import api from '../../services/api';
 import NetworkEmpire from './NetworkEmpire';
 import ShareCard from './ShareCard';
 import OrganicTree from './OrganicTree';
-import ReferralEmpireUI from './ReferralEmpireUI';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '../../utils/uiUtils';
@@ -25,9 +24,12 @@ export default function ReferralDashboard() {
             activeReferrals: 0, 
             totalReferrals: 0, 
             balance: 0,
+            pendingReferral: 0,
+            empireProgress: 0,
+            empireGoal: 20,
+            empirePercentage: 0,
             referralHands: 0,
             handProgress: 0,
-            remainingForHand: 5
         },
         logs: [],
         network: [],
@@ -80,168 +82,156 @@ export default function ReferralDashboard() {
         <div className="space-y-6">
             <NetworkEmpire isOpen={showEmpire} onClose={() => setShowEmpire(false)} />
 
-            {/* 1. Header Card */}
-            <div className="bg-gradient-to-r from-indigo-900 to-purple-900 p-6 rounded-3xl border border-white/10 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-
-                {/* Share Modal */}
-                {showShare && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowShare(false)}>
-                        <div className="bg-slate-900 border border-amber-500/20 p-6 rounded-3xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Share2 className="w-5 h-5 text-amber-400" /> Share My Empire
-                                </h3>
-                                <button onClick={() => setShowShare(false)} className="text-slate-400 hover:text-white">✕</button>
-                            </div>
-                            <ShareCard user={{ username: 'Me', referralCode: data.referralCode }} stats={data.stats} />
-                        </div>
-                    </div>
-                )}
-
-                {/* Visualizer Toggles */}
-                <div className="absolute top-4 right-4 flex gap-2 z-20">
-                    <button
-                        onClick={() => setShowOrganic(!showOrganic)}
-                        className={`p-2 rounded-full backdrop-blur-md border border-white/10 transition-transform hover:scale-110 ${showOrganic ? 'bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-white/10'}`}
-                        title="Toggle Organic Tree"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={showOrganic ? "text-emerald-400" : "text-white"}><path d="M12 10a6 6 0 0 0-6-6s-3 0-3 6c0 6 3 6 3 6s3 0 3 6c0 6 3 6 3 6s3 0 3-6" /></svg>
-                    </button>
-                    <button
-                        onClick={() => setShowEmpire(true)}
-                        className="bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/10 transition-transform hover:scale-110"
-                        title="View Network Empire"
-                    >
-                        <Activity className="w-5 h-5 text-yellow-400" />
-                    </button>
-                </div>
-
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            {/* 1. Empire Stats Header */}
+            <div className="bg-[#0f172a] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden shadow-2xl">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/10 rounded-full blur-[80px]"></div>
+                
+                <div className="flex justify-between items-start mb-8 relative z-10">
                     <div>
-                        <p className="text-indigo-300 text-sm font-medium mb-1">Total Commission Earned</p>
-                        <h1 className="text-4xl font-bold text-white">${data.stats.totalEarnings?.toFixed(2) || '0.00'}</h1>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Empire Revenue</p>
+                        <h1 className="text-4xl font-black text-white flex items-baseline gap-1">
+                            ${data.stats.totalEarnings?.toFixed(2)}
+                            <span className="text-xs text-emerald-400 ml-2">Active</span>
+                        </h1>
                     </div>
-
-                    <div className="flex gap-3 w-full md:w-auto">
-                        <div className="bg-white/10 p-3 rounded-2xl flex-1 md:flex-none backdrop-blur-md">
-                            <div className="flex items-center gap-2 text-indigo-200 text-xs mb-1">
-                                <Users className="w-3 h-3" /> Team Size
-                            </div>
-                            <p className="text-xl font-bold text-white">{data.stats.totalReferrals}</p>
-                        </div>
-                        <div className="bg-emerald-500/10 p-3 rounded-2xl flex-1 md:flex-none backdrop-blur-md border border-emerald-500/20">
-                            <div className="flex items-center gap-2 text-emerald-300 text-xs mb-1">
-                                <Activity className="w-3 h-3" /> Active
-                            </div>
-                            <p className="text-xl font-bold text-emerald-400">{data.stats.activeReferrals}</p>
-                        </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => setShowShare(true)} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all active:scale-95">
+                            <Share2 className="w-5 h-5 text-indigo-400" />
+                        </button>
+                        <button onClick={() => setShowEmpire(true)} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all active:scale-95">
+                            <Activity className="w-5 h-5 text-amber-400" />
+                        </button>
                     </div>
                 </div>
 
-                {/* Invite Bar */}
-                <div className="mt-6 bg-black/20 p-3 rounded-xl flex items-center justify-between backdrop-blur-sm">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-indigo-300 uppercase tracking-wider">My Invite Code</span>
-                        <span className="text-lg font-mono font-bold text-white tracking-widest">{data.referralCode || '...'}</span>
+                <div className="grid grid-cols-2 gap-4 relative z-10">
+                    <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Direct Referrals</p>
+                        <p className="text-2xl font-black text-white">{data.stats.totalReferrals}</p>
                     </div>
-                    <button onClick={copyCode} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition active:scale-95 text-white">
-                        {copied ? <CheckCircle className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+                    <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Locked Commissions</p>
+                        <p className="text-2xl font-black text-amber-400">${data.stats.pendingReferral?.toFixed(2)}</p>
+                    </div>
+                </div>
+
+                {/* Invite Code Bar */}
+                <div className="mt-6 flex items-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/5">
+                    <div className="flex-1 px-4">
+                        <p className="text-[8px] font-bold text-slate-500 uppercase">My Referral ID</p>
+                        <p className="text-sm font-black text-white tracking-[0.2em]">{data.referralCode || 'GENERATING...'}</p>
+                    </div>
+                    <button onClick={copyCode} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
+                        {copied ? 'COPIED!' : 'COPY'}
                     </button>
                 </div>
             </div>
 
-            {/* [NEW] Hand Progress Card */}
-            <div className="bg-slate-900/50 border border-indigo-500/20 p-6 rounded-3xl relative overflow-hidden group">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
-                
+            {/* 2. [NEW] 20-REFERRAL EMPIRE ROADMAP */}
+            <div className="bg-[#0f172a] p-6 rounded-[2rem] border border-white/5 relative">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                            <span className="text-2xl">🤚</span> Current Hand Progress
-                        </h3>
-                        <p className="text-indigo-300/60 text-xs">Complete 5 referrals to finish a Hand and earn bonuses!</p>
+                        <h3 className="text-white font-black text-lg tracking-tight">Empire Roadmap</h3>
+                        <p className="text-slate-500 text-xs">Reach 20 referrals to unlock the Grand Empire Reward</p>
                     </div>
-                    <div className="text-right">
-                        <span className="text-2xl font-black text-indigo-400">#{data.stats.referralHands + 1}</span>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold">Active Hand</p>
+                    <div className="bg-indigo-600/20 px-3 py-1 rounded-full border border-indigo-500/30">
+                        <span className="text-xs font-black text-indigo-400">{data.stats.empireProgress}/20</span>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center gap-2">
-                    {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                            <div className={`w-full h-2 rounded-full transition-all duration-500 ${
-                                i <= data.stats.handProgress 
-                                ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
-                                : 'bg-slate-800'
-                            }`}></div>
-                            <div className={`text-[10px] font-bold ${i <= data.stats.handProgress ? 'text-indigo-400' : 'text-slate-600'}`}>
-                                {i <= data.stats.handProgress ? '✓' : i}
+                {/* Circular Progress (Visual Focus) */}
+                <div className="flex justify-center mb-8 relative">
+                    <div className="relative w-40 h-40">
+                        <svg className="w-full h-full -rotate-90">
+                            <circle cx="80" cy="80" r="70" className="stroke-white/5 fill-none" strokeWidth="12" />
+                            <circle 
+                                cx="80" cy="80" r="70" 
+                                className="stroke-indigo-600 fill-none transition-all duration-1000 ease-out" 
+                                strokeWidth="12" 
+                                strokeDasharray={440} 
+                                strokeDashoffset={440 - (440 * data.stats.empirePercentage) / 100}
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-3xl font-black text-white">{Math.round(data.stats.empirePercentage)}%</span>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Progress</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Step Roadmap */}
+                <div className="relative flex justify-between px-2">
+                    <div className="absolute top-4 left-0 right-0 h-1 bg-white/5 -z-10 mx-6"></div>
+                    <div className="absolute top-4 left-0 h-1 bg-indigo-600 transition-all duration-1000 -z-10 mx-6" style={{ width: `${data.stats.empirePercentage}%` }}></div>
+                    
+                    {[0, 5, 10, 15, 20].map((step) => (
+                        <div key={step} className="flex flex-col items-center gap-2">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${
+                                data.stats.empireProgress >= step 
+                                ? 'bg-indigo-600 border-[#0f172a] text-white' 
+                                : 'bg-[#1e293b] border-[#0f172a] text-slate-600'
+                            }`}>
+                                {data.stats.empireProgress >= step ? <CheckCircle className="w-4 h-4" /> : <span className="text-[10px] font-black">{step}</span>}
                             </div>
+                            <span className={`text-[9px] font-black uppercase tracking-tighter ${data.stats.empireProgress >= step ? 'text-indigo-400' : 'text-slate-600'}`}>
+                                {step === 0 ? 'Start' : step === 20 ? 'Empire' : `Goal ${step}`}
+                            </span>
                         </div>
                     ))}
                 </div>
 
-                <div className="mt-6 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 text-slate-400">
-                        <Users className="w-4 h-4" />
-                        <span>{data.stats.handProgress}/5 Found</span>
+                {data.stats.empireProgress >= 20 && (
+                    <div className="mt-8">
+                        <button 
+                            onClick={() => {
+                                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                                toast.success("EMPIRE REWARD UNLOCKED!");
+                            }}
+                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black rounded-2xl shadow-xl shadow-amber-500/20 animate-bounce"
+                        >
+                            CLAIM EMPIRE REWARD 👑
+                        </button>
                     </div>
-                    <div className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full font-bold border border-indigo-500/20 animate-pulse">
-                        {data.stats.remainingForHand} more to complete Hand Up!
-                    </div>
+                )}
+            </div>
+
+            {/* 3. SOCIAL PROOF: Top Performers Preview */}
+            <div className="bg-[#0f172a] p-6 rounded-[2rem] border border-white/5">
+                <h3 className="text-white font-black text-lg mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-amber-400" /> Top Performers
+                </h3>
+                <div className="space-y-3">
+                    {leaderboard.slice(0, 3).map((user, idx) => (
+                        <div key={user._id} className="bg-white/5 p-3 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
+                                    idx === 0 ? 'bg-yellow-500 text-black' : 'bg-slate-700 text-white'
+                                }`}>
+                                    {idx + 1}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-white">{user.username}</p>
+                                    <p className="text-[10px] text-slate-500">{user.referralCount} Sales Completed</p>
+                                </div>
+                            </div>
+                            <div className="bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                                <span className="text-[10px] font-black text-emerald-400">${user.referralIncome?.toFixed(0)}</span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* [NEW] Empire Hand (5x5) UI */}
-            <ReferralEmpireUI empireHands={data.stats.empireHands} />
-
-            {/* Organic Tree Section */}
-            {showOrganic && (
-                <div className="mb-6 animate-in fade-in zoom-in duration-500">
-                    <OrganicTree />
-                </div>
-            )}
-
-            {/* Reward Claim (Gamification) */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-x-0 md:static md:mt-2 text-center"
-                style={{ display: data.stats.balance > 0 ? 'block' : 'none' }}>
-                <button
-                    onClick={() => {
-                        confetti({
-                            particleCount: 100,
-                            spread: 70,
-                            origin: { y: 0.6 }
-                        });
-                        toast.success('Rewards Claimed! (Simulation)');
-                    }}
-                    className="bg-yellow-400 text-black px-6 py-2 rounded-full font-black shadow-lg shadow-yellow-400/50 hover:scale-105 active:scale-95 transition-transform animate-bounce"
-                >
-                    CLAIM REWARDS 🎁
-                </button>
-            </div>
-
-            {/* Share Button (Action) */}
-            <div className="flex justify-end -mt-4 mb-4">
-                <button
-                    onClick={() => setShowShare(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors border border-white/5"
-                >
-                    <Share2 className="w-3 h-3 text-amber-400" />
-                    CREATE VIRAL CARD
-                </button>
-            </div>
-
-            {/* 2. Navigation Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {/* Navigation Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar bg-white/5 p-2 rounded-2xl">
                 {['overview', 'network', 'leaderboard', 'history'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 rounded-full text-sm font-bold capitalize whitespace-nowrap transition-colors ${activeTab === tab
-                            ? 'bg-white text-indigo-900 shadow-lg'
-                            : 'bg-[#1f2937] text-slate-400 hover:text-white'
+                        className={`px-6 py-2 rounded-xl text-xs font-black capitalize whitespace-nowrap transition-all ${activeTab === tab
+                            ? 'bg-indigo-600 text-white shadow-lg'
+                            : 'text-slate-500 hover:text-slate-300'
                             }`}
                     >
                         {tab}
@@ -249,130 +239,73 @@ export default function ReferralDashboard() {
                 ))}
             </div>
 
-            {/* 3. Tab Content */}
-            <div className="min-h-[300px]">
-                {/* OVERVIEW TAB */}
+            {/* Tab Content */}
+            <div className="min-h-[200px]">
                 {activeTab === 'overview' && (
                     <div className="space-y-4">
                         <CommissionHistory logs={data.logs.slice(0, 5)} />
-                        <button
-                            onClick={() => setActiveTab('history')}
-                            className="w-full py-3 text-center text-sm text-indigo-400 font-medium hover:text-indigo-300 border border-dashed border-indigo-500/30 rounded-xl"
-                        >
-                            View Full History
-                        </button>
                     </div>
                 )}
-
-                {/* NETWORK TAB */}
                 {activeTab === 'network' && (
                     <div className="space-y-4">
                         <div className="flex gap-2 overflow-x-auto pb-2">
-                            {[...Array(10)].map((_, i) => (
+                            {[1, 2, 3].map((lvl) => (
                                 <button
-                                    key={i}
-                                    onClick={() => setLevel(i + 1)}
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${level === i + 1
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50 scale-105'
-                                        : 'bg-[#1f2937] text-slate-500 hover:bg-slate-800'
+                                    key={lvl}
+                                    onClick={() => setLevel(lvl)}
+                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all ${level === lvl
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-white/5 text-slate-500 hover:bg-white/10'
                                         }`}
                                 >
-                                    L{i + 1}
+                                    L{lvl}
                                 </button>
                             ))}
                         </div>
-
-                        <div className="flex justify-between items-center text-xs text-slate-400 px-1">
-                            <span>Level {level} Team</span>
-                            <span>{data.network.length} Members</span>
-                        </div>
-
                         <div className="space-y-2">
-                            {loading ? (
-                                <div className="text-center py-10 text-slate-500">Loading Level {level}...</div>
-                            ) : data.network.length === 0 ? (
-                                <div className="text-center py-10 bg-[#1f2937]/50 rounded-xl border border-dashed border-slate-700">
-                                    <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                                    <p className="text-slate-500 text-sm">No members in Level {level} yet.</p>
-                                </div>
-                            ) : (
-                                data.network.map(member => (
-                                    <div key={member._id} className="bg-[#1f2937] p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                                                {member.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-white">{member.fullName}</p>
-                                                <p className="text-[10px] text-slate-500">{member.username}</p>
-                                            </div>
+                            {data.network.map(member => (
+                                <div key={member._id} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-black">
+                                            {member.username.charAt(0).toUpperCase()}
                                         </div>
-                                        <div className="text-right">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${member.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
-                                                }`}>
-                                                {member.status}
-                                            </span>
-                                            <p className="text-[10px] text-slate-500 mt-1">
-                                                Comm: ${member.commission?.toFixed(2) || '0.00'}
-                                            </p>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">{member.fullName}</p>
+                                            <p className="text-[10px] text-slate-500">@{member.username}</p>
                                         </div>
                                     </div>
-                                ))
-                            )}
+                                    <div className="text-right">
+                                        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${
+                                            member.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                                        }`}>
+                                            {member.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
-
-                {/* LEADERBOARD TAB */}
                 {activeTab === 'leaderboard' && (
                     <div className="space-y-4">
-                        <div className="bg-gradient-to-r from-amber-600/20 to-yellow-600/20 p-4 rounded-xl border border-amber-500/20 text-center mb-6">
-                            <h3 className="text-amber-400 font-bold uppercase text-xs tracking-widest mb-1">Weekly Royal Dividend</h3>
-                            <p className="text-white text-sm">Top 3 Empire Builders earn cash bonuses every Sunday!</p>
-                        </div>
-
                         {leaderboard.map((user, idx) => (
-                            <div key={user._id || idx} className={`p-4 rounded-xl flex items-center justify-between border ${idx < 3 ? 'bg-gradient-to-r from-slate-800 to-slate-900 border-amber-500/30' : 'bg-[#1f2937] border-white/5'
-                                }`}>
+                            <div key={user._id} className="bg-white/5 p-4 rounded-2xl flex items-center justify-between border border-white/5">
                                 <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${idx === 0 ? 'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]' :
-                                            idx === 1 ? 'bg-slate-400' :
-                                                idx === 2 ? 'bg-amber-700' : 'bg-slate-700'
-                                            }`}>
-                                            {idx + 1}
-                                        </div>
-                                        {idx < 3 && <Crown className="w-4 h-4 text-yellow-400 absolute -top-2 -right-1 rotate-12" />}
-                                    </div>
+                                    <span className="text-slate-500 font-black">#{idx + 1}</span>
                                     <div>
-                                        <p className="text-white font-bold flex items-center gap-2">
-                                            {user.username}
-                                            {idx === 0 && <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-1.5 rounded border border-yellow-500/30">KING</span>}
-                                        </p>
-                                        <div className="flex gap-3 text-[10px] text-slate-400">
-                                            <span>👥 {user.referralCount} Members</span>
-                                            <span>💰 ${user.referralIncome?.toFixed(0)}</span>
-                                        </div>
+                                        <p className="text-white font-bold">{user.username}</p>
+                                        <p className="text-[10px] text-slate-500">{user.referralCount} Members</p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-mono font-bold text-emerald-400">
-                                        {((user.referralCount * 0.6) + (user.referralIncome * 0.4)).toFixed(0)} PTS
-                                    </p>
-                                </div>
+                                <p className="text-indigo-400 font-black">${user.referralIncome?.toFixed(0)}</p>
                             </div>
                         ))}
                     </div>
                 )}
-
-                {/* HISTORY TAB */}
                 {activeTab === 'history' && (
-                    <div>
-                        <h3 className="text-slate-400 text-sm font-bold uppercase mb-4">All Transactions</h3>
-                        <CommissionHistory logs={data.logs} />
-                    </div>
+                    <CommissionHistory logs={data.logs} />
                 )}
             </div>
-        </div >
+        </div>
     );
 }

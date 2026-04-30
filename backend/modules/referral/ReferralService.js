@@ -214,38 +214,68 @@ class ReferralService {
                 commission = Math.round(commission * 10000) / 10000;
 
                 if (commission > 0) {
-                    // Credit INCOME WALLET directly (Module C Requirement)
-                    uplineUser.wallet.income = (uplineUser.wallet.income || 0) + commission;
-                    uplineUser.referralIncome = (uplineUser.referralIncome || 0) + commission;
-                    // [NEW] Update level-wise stats
+                    // [MODIFIED] Lock Commission for 5 days instead of direct credit
+                    const releaseDate = new Date();
+                    releaseDate.setDate(releaseDate.getDate() + 5);
+
+                    uplineUser.wallet.pending_referral = (uplineUser.wallet.pending_referral || 0) + commission;
+                    
+                    // [NEW] Track residual to Admin Reserve Fund
+                    if (liabilitySaved > 0) {
+                        await SystemSetting.findOneAndUpdate(
+                            { key: 'admin_reserve_fund' },
+                            { $inc: { value: liabilitySaved } },
+                            { upsert: true }
+                        );
+                    }
+
+                    // [NEW] Update level-wise stats (Keep tracking for progress)
                     if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0];
                     uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + commission;
-                    uplineUser.markModified('referralEarningsByLevel'); // Required for mixed arrays in Mongoose
+                    uplineUser.markModified('referralEarningsByLevel');
 
                     await uplineUser.save({ session });
 
-                    // Log Transaction
+                    // Log Transaction as LOCKED
                     await Transaction.create([{
                         userId: uplineUser._id,
                         type: 'referral_commission',
                         source: 'referral',
                         amount: commission,
-                        status: 'completed',
+                        status: 'locked', // [UX PHASE]
                         description: commissionDesc,
                         metadata: {
                             sourceUser: userId,
                             level: i + 1,
                             planAmount: planAmount,
+                            releaseDate: releaseDate, // For claim logic
                             liabilitySaved: liabilitySaved > 0 ? liabilitySaved : undefined
                         }
                     }], { session });
 
                     totalDistributed += commission;
-                    console.log(`   -> Credited L${i + 1} (${uplineUser.username}): ${commission}`);
+                    console.log(`   -> Locked L${i + 1} (${uplineUser.username}): ${commission} (Release: ${releaseDate.toLocaleDateString()})`);
                 }
 
                 // Move Up
+                const oldUplineCode = uplineCode;
                 uplineCode = uplineUser.referredBy;
+
+                // [NEW] If next level exists in rates but no upline found, track as residual (Incomplete Lines)
+                if (!uplineCode && i + 1 < rates.length) {
+                    let residualSum = 0;
+                    for (let j = i + 1; j < rates.length; j++) {
+                        residualSum += (planAmount * rates[j]) / 100;
+                    }
+                    if (residualSum > 0) {
+                        await SystemSetting.findOneAndUpdate(
+                            { key: 'admin_reserve_fund' },
+                            { $inc: { value: residualSum } },
+                            { upsert: true }
+                        );
+                        console.log(`🏦 [Residual] Saved ${residualSum.toFixed(4)} NXS from Incomplete Line to Admin Fund.`);
+                    }
+                }
 
                 // --- [NEW] EMPIRE HAND DOWNLINE PROGRESSION ---
                 // If we are at Level 2-5, we check if the upline has an active Empire Hand
@@ -320,10 +350,12 @@ class ReferralService {
                 comm = Math.round(comm * 10000) / 10000;
 
                 if (comm > 0) {
-                    uplineUser.wallet.income = (uplineUser.wallet.income || 0) + comm;
-                    uplineUser.referralIncome = (uplineUser.referralIncome || 0) + comm;
+                    // [MODIFIED] Lock Task Referral Commission too
+                    const releaseDate = new Date();
+                    releaseDate.setDate(releaseDate.getDate() + 5);
 
-                    // [NEW] Update level-wise stats
+                    uplineUser.wallet.pending_referral = (uplineUser.wallet.pending_referral || 0) + comm;
+                    
                     if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0, 0, 0];
                     uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + comm;
                     uplineUser.markModified('referralEarningsByLevel');
@@ -335,14 +367,15 @@ class ReferralService {
                         type: 'referral_commission',
                         source: 'referral',
                         amount: comm,
-                        status: 'completed',
+                        status: 'locked',
                         description: type === 'batched_daily_task_reward'
                             ? `L${i + 1} Batched Daily Task Rewards from ${sourceUserId}`
                             : `L${i + 1} Task Bonus from ${sourceUserId}`,
                         metadata: {
                             level: i + 1,
                             sourceUser: sourceUserId,
-                            type: type
+                            type: type,
+                            releaseDate: releaseDate
                         }
                     }], { session });
 
@@ -353,7 +386,7 @@ class ReferralService {
                     } catch (e) { }
 
                     totalDistributed += comm;
-                    console.log(`   -> Task Bonus L${i + 1}: ${comm} to ${uplineUser.username}`);
+                    console.log(`   -> Task Bonus L${i + 1} LOCKED: ${comm} to ${uplineUser.username}`);
                 }
                 uplineCode = uplineUser.referredBy;
             }

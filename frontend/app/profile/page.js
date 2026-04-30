@@ -39,6 +39,11 @@ export default function ProfilePage() {
                 setUser(res.data);
                 setFullName(res.data.fullName);
                 if (res.data.photoUrl) setPreview(`https://usaaffiliatemarketing.com/api/${res.data.photoUrl}`);
+                
+                // [NEW] Fetch Locked Commissions for UX Phase
+                api.get('/referral/dashboard-data').then(refRes => {
+                    setUser(prev => ({ ...prev, lockedCommissions: refRes.data.lockedCommissions }));
+                }).catch(console.error);
             })
             .catch(() => router.push('/'));
 
@@ -430,6 +435,65 @@ export default function ProfilePage() {
                 {/* REFERRAL NETWORK EMPIRE */}
                 <div className="pt-4 pb-2">
                     <ReferralNetworkUI />
+                </div>
+
+                {/* [NEW] LOCKED COMMISSIONS SECTION */}
+                <div className="bg-[#0f172a] p-6 rounded-[2rem] border border-white/5 space-y-4 shadow-2xl">
+                    <div className="flex justify-between items-center">
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Lock className="w-3.5 h-3.5 text-amber-500" /> Locked Commissions
+                        </label>
+                        <span className="text-[10px] font-black text-slate-400">5-Day Lock Protocol</span>
+                    </div>
+
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                        {loading ? (
+                            <div className="text-center py-10 animate-pulse text-slate-600">Scanning Nodes...</div>
+                        ) : !user.lockedCommissions || user.lockedCommissions.length === 0 ? (
+                            <div className="text-center py-8 bg-white/[0.02] rounded-2xl border border-dashed border-white/5">
+                                <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">No Locked Assets Found</p>
+                            </div>
+                        ) : (
+                            user.lockedCommissions.map((trx) => {
+                                const releaseDate = new Date(trx.metadata?.releaseDate);
+                                const isMatured = releaseDate <= new Date();
+                                return (
+                                    <div key={trx._id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all">
+                                        <div>
+                                            <p className="text-sm font-black text-white">${trx.amount.toFixed(2)}</p>
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">
+                                                {isMatured ? 'MATURED ✓' : `RELEASES: ${releaseDate.toLocaleDateString()}`}
+                                            </p>
+                                        </div>
+                                        <button
+                                            disabled={!isMatured || loading}
+                                            onClick={async () => {
+                                                setLoading(true);
+                                                try {
+                                                    await api.post('/referral/claim', { transactionId: trx._id });
+                                                    toast.success(`Claimed $${trx.amount}! 💰`);
+                                                    // Refresh data
+                                                    const res = await api.get('/referral/dashboard-data');
+                                                    setUser(prev => ({ ...prev, lockedCommissions: res.data.lockedCommissions }));
+                                                } catch (e) {
+                                                    toast.error(e.response?.data?.message || 'Claim failed');
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }}
+                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                                                isMatured 
+                                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20' 
+                                                : 'bg-white/5 text-slate-600 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            {isMatured ? 'CLAIM' : <Lock className="w-3 h-3" />}
+                                        </button>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
 
                 {/* LOGOUT */}

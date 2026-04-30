@@ -11,17 +11,23 @@ exports.getDashboardData = async (req, res) => {
         
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Fetch recent logs
-        const logs = await Transaction.find({ 
-            userId: user._id, 
-            type: 'referral_commission' 
-        }).sort({ createdAt: -1 }).limit(20);
-
-        // Calculate hand progress
+        // Calculate hand progress (Old system - keeping for compatibility)
         const HAND_SIZE = 5;
         const referralCount = user.referralCount || 0;
         const progressInHand = referralCount % HAND_SIZE;
         const remainingForHand = HAND_SIZE - progressInHand;
+
+        // [UX PHASE] 20-Referral Empire Progress
+        const empireGoal = 20;
+        const empireProgress = Math.min(referralCount, empireGoal);
+        const empirePercentage = (empireProgress / empireGoal) * 100;
+
+        // Fetch Locked Commissions for Profile
+        const lockedCommissions = await Transaction.find({
+            userId: user._id,
+            type: 'referral_commission',
+            status: 'locked'
+        }).sort({ createdAt: -1 });
 
         res.json({
             stats: {
@@ -32,15 +38,67 @@ exports.getDashboardData = async (req, res) => {
                 handProgress: progressInHand,
                 remainingForHand: remainingForHand,
                 balance: user.wallet.income,
+                pendingReferral: user.wallet.pending_referral || 0,
+                empireProgress,
+                empireGoal,
+                empirePercentage,
                 // [NEW] Empire Stats
                 empireHands: user.empireHands || []
             },
+            lockedCommissions,
             logs: logs,
             referralCode: user.referralCode
         });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server Error" });
+    }
+};
+
+/**
+ * Claim matured commissions (after 5 days)
+ */
+exports.claimCommission = async (req, res) => {
+    const { runTransaction } = require('../common/TransactionHelper');
+    const WalletService = require('../wallet/WalletService');
+    
+    try {
+        const userId = req.user.user.id;
+        const { transactionId } = req.body;
+
+        const result = await runTransaction(async (session) => {
+            const trx = await Transaction.findOne({
+                _id: transactionId,
+                userId: userId,
+                status: 'locked'
+            }).session(session);
+
+            if (!trx) throw new Error("Commission not found or already claimed");
+
+            const releaseDate = new Date(trx.metadata.releaseDate);
+            if (releaseDate > new Date()) {
+                throw new Error(`Commission is locked until ${releaseDate.toLocaleDateString()}`);
+            }
+
+            const user = await User.findById(userId).session(session);
+            
+            // Move funds
+            const amount = trx.amount;
+            user.wallet.pending_referral = Math.max(0, (user.wallet.pending_referral || 0) - amount);
+            user.wallet.income = (user.wallet.income || 0) + amount;
+            user.referralIncome = (user.referralIncome || 0) + amount;
+
+            trx.status = 'completed';
+            
+            await user.save({ session });
+            await trx.save({ session });
+
+            return { success: true, amount };
+        });
+
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };
 

@@ -9,5 +9,6 @@ router.get('/network', authMiddleware, referralController.getNetworkMembers); //
 router.get('/logs', authMiddleware, referralController.getDashboardData); // Dashboard data includes logs
 router.get('/dashboard-data', authMiddleware, referralController.getDashboardData);
 router.get('/leaderboard', authMiddleware, referralController.getLeaderboard);
+router.post('/claim', authMiddleware, referralController.claimCommission);
 
 module.exports = router;
