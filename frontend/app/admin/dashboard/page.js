@@ -232,6 +232,11 @@ export default function AdminDashboard() {
                     <DashboardCard href="/admin/users" title="Manage Users" description="Edit, Ban, Verify" icon={Users} colorClass="indigo" />
                     <DashboardCard href="/admin/agents" title="Agent Network" description="Commission & Trees" icon={Briefcase} colorClass="green" />
                     <DashboardCard href="/admin/plans" title="Plan Manager" description="Create/Edit Tiers" icon={Gem} colorClass="amber" />
+                    <DashboardCard href="/admin/tasks" title="Manage Tasks" description="Create / Edit Video Ads" icon={ClipboardList} colorClass="cyan" />
+                    <DashboardCard href="/admin/audit" title="Financial Audit" description="Profit/Loss Reports" icon={Shield} colorClass="red" />
+                    <DashboardCard href="/admin/lottery" title="Lottery Control" description="Draws & Tickets" icon={Ticket} colorClass="pink" />
+                    <DashboardCard href="/admin/support" title="User Support" description="Help & Tickets" icon={MessageSquare} colorClass="cyan" />
+                    <DashboardCard href="/admin/p2p-tribunal" title="P2P Tribunal" description="Dispute Resolution" icon={AlertTriangle} colorClass="amber" />
                     <DashboardCard href="/admin/settings" title="System Settings" description="Global Config" icon={Settings} colorClass="gray" />
                 </div>
 
