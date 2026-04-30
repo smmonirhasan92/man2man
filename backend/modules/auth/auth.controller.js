@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const CryptoService = require('../security/CryptoService');
 const PlanService = require('../plan/PlanService');
 const EmailService = require('./EmailService');
+const TransactionHelper = require('../common/TransactionHelper');
 
 exports.register = async (req, res) => {
     try {
@@ -23,99 +24,91 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email format.' });
         }
 
-        // Check if user exists
-        let user = await User.findOne({ email });
-
-        if (user) {
-            return res.status(400).json({ message: 'User already exists with this email address.' });
-        }
-
         // 2. Generate Username
         const username = fullName.split(' ')[0].toLowerCase() + Math.floor(1000 + Math.random() * 9000);
 
         // 3. Generate PERMANENT Referral ID
         const myReferralCode = CryptoService.generateReferralId();
-        const expiresAt = null; // [MODIFIED] User requested permanent referral ID instead of 15 days
+        const expiresAt = null;
 
-        // 4. Referral Logic
-        let referrerCodeStored = null;
-        let referrerDoc = null;
-        if (referralCode) {
-            const referrer = await User.findOne({ referralCode });
-            if (referrer) {
-                referrerCodeStored = referralCode;
-                referrerDoc = referrer;
-                referrer.referralCount = (referrer.referralCount || 0) + 1;
-
-                // [FIX] Bonus moved to first deposit approval
-                // referrer.wallet.main = (referrer.wallet.main || 0) + 20.00;
-                // referrer.referralIncome = (referrer.referralIncome || 0) + 20.00;
-                await referrer.save();
-            }
-        }
-
-        // 5. Plain Text Storage (User Requirement)
+        // 4. Password Hashing
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 6. Create User
-        user = await User.create({
-            fullName,
-            username,
-            email, 
-            emailVerified: true, // Since they just verified OTP before calling register
-            
-            password: hashedPassword,
-            role: 'user',
+        // 5 & 6: Atomic Registration
+        const result = await TransactionHelper.runTransaction(async (session) => {
+            // Check again inside session for absolute safety
+            const existingUser = await User.findOne({ email }).session(session);
+            if (existingUser) throw new Error('User already exists');
 
-            // [FIX] CORRECT NESTED WALLET STRUCTURE
-            wallet: {
-                main: 0.00, // Welcome Bonus moved to first deposit
-                game: 0.00,
-                income: 0.00,
-                purchase: 0.00,
-                pending_referral: 0.00,
-                agent: 0.00
-            },
+            // Referral Logic
+            let referrerCodeStored = null;
+            if (referralCode) {
+                const referrer = await User.findOne({ referralCode }).session(session);
+                if (referrer) {
+                    referrerCodeStored = referralCode;
+                    referrer.referralCount = (referrer.referralCount || 0) + 1;
+                    await referrer.save({ session });
+                }
+            }
 
-            referralCode: myReferralCode,
-            referralSecurity: {
-                currentId: myReferralCode,
-                expiresAt: expiresAt,
-                history: []
-            },
+            // Create User
+            const newUser = await User.create([{
+                fullName,
+                username,
+                email, 
+                emailVerified: true,
+                password: hashedPassword,
+                role: 'user',
+                wallet: {
+                    main: 0.00,
+                    game: 0.00,
+                    income: 0.00,
+                    purchase: 0.00,
+                    pending_referral: 0.00,
+                    agent: 0.00
+                },
+                referralCode: myReferralCode,
+                referralSecurity: {
+                    currentId: myReferralCode,
+                    expiresAt: expiresAt,
+                    history: []
+                },
+                referredBy: referrerCodeStored,
+                taskData: { accountTier: 'Starter' },
+                deviceId: req.body.deviceId || null,
+                lastIp: req.ip || '0.0.0.0',
+                status: 'active'
+            }], { session });
 
-            referredBy: referrerCodeStored,
-            taskData: { accountTier: 'Starter' },
-            deviceId: null,
-            lastIp: '0.0.0.0',
-            status: 'active'
-        });
+            const userDoc = newUser[0];
 
-        // 6.5 Log Referral Transactions
-        // Referral and Welcome bonus transactions are now moved to first deposit logic.
-
-        // 7. JWT
-        const payload = { user: { id: user._id, role: user.role } };
-
-        // [FIX] Use Promisified JWT sign for better async response handling
-        const token = await new Promise((resolve, reject) => {
-            jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '7d' }, (err, t) => {
-                if (err) reject(err);
-                resolve(t);
+            // Generate JWT
+            const payload = { user: { id: userDoc._id, role: userDoc.role } };
+            const token = await new Promise((resolve, reject) => {
+                jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '7d' }, (err, t) => {
+                    if (err) reject(err);
+                    resolve(t);
+                });
             });
+
+            return { user: userDoc, token };
         });
+
+        // 8. Background Tasks (Non-blocking)
+        EmailService.sendWelcomeEmail(email, fullName).catch(e => console.error("[WELCOME EMAIL] Failed:", e.message));
 
         res.status(201).json({
+            success: true,
             message: 'User registered successfully',
-            token,
+            token: result.token,
             user: {
-                id: user._id,
-                username: user.username,
-                role: user.role,
-                fullName: user.fullName,
-                email: user.email,
-                emailVerified: user.emailVerified
+                id: result.user._id,
+                username: result.user.username,
+                role: result.user.role,
+                fullName: result.user.fullName,
+                email: result.user.email,
+                emailVerified: result.user.emailVerified
             }
         });
 
@@ -506,9 +499,9 @@ exports.verifyOtp = async (req, res) => {
 
         const isValid = await EmailService.verifyOTP(email, otp, context || 'verification');
         if (isValid) {
-            res.json({ message: 'OTP verified successfully', verified: true });
+            res.json({ success: true, message: 'OTP verified successfully', verified: true });
         } else {
-            res.status(400).json({ message: 'Invalid or expired OTP', verified: false });
+            res.status(400).json({ success: false, message: 'Invalid or expired OTP', verified: false });
         }
     } catch (err) {
         console.error('Verify OTP Error:', err);

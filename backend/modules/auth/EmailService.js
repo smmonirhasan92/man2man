@@ -148,6 +148,41 @@ class EmailService {
         return false;
     }
 
+    async sendWelcomeEmail(email, fullName) {
+        const title = 'Welcome to USA Affiliate Network! 🚀';
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <body style="margin: 0; padding: 0; background-color: #020617; font-family: sans-serif; color: #f8fafc;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #020617; padding: 40px 0;">
+                <tr>
+                    <td align="center">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0b1221; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+                            <tr><td height="4" style="background: linear-gradient(90deg, #10b981, #3b82f6);"></td></tr>
+                            <tr>
+                                <td style="padding: 40px; text-align: center;">
+                                    <h1 style="color: #ffffff; font-size: 28px; margin-bottom: 20px;">Welcome, ${fullName}!</h1>
+                                    <p style="color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                                        Your account has been successfully created. You are now part of the most advanced affiliate network in the USA.
+                                    </p>
+                                    <div style="margin: 40px 0;">
+                                        <a href="https://usaaffiliatemarketing.com/dashboard" style="background: #10b981; color: white; padding: 15px 30px; border-radius: 12px; text-decoration: none; font-weight: bold;">Enter Dashboard</a>
+                                    </div>
+                                    <p style="color: #64748b; font-size: 14px;">
+                                        If you didn't create this account, please ignore this email.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        `;
+        return await this.sendEmail(email, title, html);
+    }
+
     async sendP2PNotification(email, type, transactionData) {
         if (!email) return;
 
