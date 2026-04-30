@@ -280,13 +280,6 @@ function DashboardContent() {
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-rose-500 to-red-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-bounce">FREE</div>
                         </div>
 
-                        <FolderCard href="/history" icon={Briefcase} label="History" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-white/20" />
-                        
-                        <FolderCard href="#" icon={Zap} label="AI Node Center" color="text-yellow-400" gradient="from-yellow-600/20 to-yellow-900/40" border="border-yellow-500/30" onClick={() => toast('AI Deployment Center: Beta coming soon!', { icon: '🚀', style: { borderRadius: '10px', background: '#333', color: '#fff' } })} />
-
-                        {/* Dummy Feature for Testing Local-to-VPS Deployment Pipeline */}
-                        <FolderCard href="#" icon={Zap} label="AI Note 2" color="text-cyan-400" gradient="from-cyan-600/20 to-cyan-900/40" border="border-cyan-500/30" onClick={() => toast('AI Note 2 deployed successfully via Docker workflow!', { icon: '✅', style: { borderRadius: '10px', background: '#333', color: '#fff' } })} />
-
                         {/* Support Restored */}
                         <FolderCard href="/support" icon={LifeBuoy} label="Support" color="text-teal-400" gradient="from-teal-600/20 to-teal-900/40" border="border-teal-500/30" />
                     </div>
