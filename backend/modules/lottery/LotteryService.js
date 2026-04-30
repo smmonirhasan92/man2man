@@ -258,7 +258,7 @@ class LotteryService {
                 status: 'completed',
                 description: `Bought ${quantity} Tickets (${slot.tier} Slot)`,
                 timestamp: new Date()
-            }], { session });
+            }], { session, ordered: true });
 
             // 4. Update Slot Sales & Tickets
             const ticketEntries = [];
@@ -449,7 +449,7 @@ class LotteryService {
                             status: 'completed',
                             description: `Won ${tier.name} (Slot ${slot._id})`,
                             timestamp: new Date()
-                        }], { session });
+                        }], { session, ordered: true });
 
                         // Add to Slot Winners
                         const winEntry = {

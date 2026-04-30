@@ -161,7 +161,7 @@ class P2PService {
                 transactionType: takerTransactionType || order.transactionType || 'SEND_MONEY', // [NEW v3.0] Track actual payment paradigm for this specific trade
                 status: 'CREATED',
                 expiresAt: expiresAt
-            }], { session });
+            }], { session, ordered: true });
 
             // 3. Log Escrow Transaction
             await Transaction.create([{
@@ -989,7 +989,7 @@ class P2PService {
             description: `P2P Fraud Penalty (10%) - Trade #${trade._id}`,
             source: 'system',
             status: 'completed'
-        }], { session });
+        }], { session, ordered: true });
 
         // 5. Notify Admin
         SocketService.broadcast('admin_dashboard', 'p2p_alert', { 

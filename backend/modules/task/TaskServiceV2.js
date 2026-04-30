@@ -174,7 +174,7 @@ class TaskServiceV2 {
                 description: `Task V2 Reward (${planDetails.name})`,
                 balanceAfter: userUpd.wallet.income,
                 metadata: { gross: rewardAmount, system_fee: systemDeductionAmount }
-            }], { session });
+            }], { session, ordered: true });
 
             // [REFERRAL BATCHING] Trigger only on final task
             if (isFinalTask && userUpd.referredBy) {

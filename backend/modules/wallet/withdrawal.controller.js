@@ -58,7 +58,7 @@ exports.requestWithdrawal = async (req, res) => {
                 description: `Withdrawal Request from ${targetWallet} wallet`,
                 adminComment: adminComment,
                 gatewayTransactionId: gatewayTrxId
-            }], { session });
+            }], { session, ordered: true });
 
             return transaction;
         });
@@ -162,7 +162,7 @@ exports.processWithdrawal = async (req, res) => {
                         description: `Reimbursement for Cash-Out TrxID: ${transactionId}`,
                         recipientDetails: `User: ${transaction.userId} Cash Out`,
                         relatedUserId: transaction.userId
-                    }], { session });
+                    }], { session, ordered: true });
 
                     // Log Commission
                     if (commissionAmount > 0) {
@@ -174,7 +174,7 @@ exports.processWithdrawal = async (req, res) => {
                             description: `Commission (${commissionPercent}%) for Cash-Out TrxID: ${transactionId}`,
                             recipientDetails: `System Bonus`,
                             relatedUserId: transaction.userId
-                        }], { session });
+                        }], { session, ordered: true });
                     }
                 }
             }

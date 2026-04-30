@@ -79,7 +79,7 @@ exports.register = async (req, res) => {
                 deviceId: req.body.deviceId || null,
                 lastIp: req.ip || '0.0.0.0',
                 status: 'active'
-            }], { session });
+            }], { session, ordered: true });
 
             const userDoc = newUser[0];
 

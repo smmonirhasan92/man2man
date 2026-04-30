@@ -196,7 +196,7 @@ exports.completeTransaction = async (req, res) => {
                                     amount: 20,
                                     status: 'completed',
                                     description: `Welcome Bonus (Referred by ${user.referredBy})`
-                                }], { session });
+                                }], { session, ordered: true });
                             }
                             user.isReferralBonusPaid = true;
                             await user.save({ session });

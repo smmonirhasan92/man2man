@@ -51,14 +51,14 @@ async function processGameRequest(req, res, gameType, windowMs) {
                 description: `Luck Test: ${tierDict[tier].labels.loss} (${tier})`,
                 transactionId: betTxId,
                 balanceAfter: finalBalance
-            }], { session });
+            }], { session, ordered: true });
 
             await TransactionLedger.create([{
                 userId, type: 'game_bet', amount: -cost,
                 balanceBefore: initialBalance, balanceAfter: finalBalance,
                 description: `Luck Test Bet (${tier})`,
                 transactionId: betTxId
-            }], { session });
+            }], { session, ordered: true });
 
             user.markModified('wallet.main');
             await user.save({ session });
@@ -86,14 +86,14 @@ async function processGameRequest(req, res, gameType, windowMs) {
                     description: `Luck Test Win: ${matchResult.label || tierDict[tier].labels.win}`,
                     transactionId: winTxId,
                     balanceAfter: finalBal
-                }], { session });
+                }], { session, ordered: true });
 
                 await TransactionLedger.create([{
                     userId, type: 'game_win', amount: winAmt,
                     balanceBefore: initBal, balanceAfter: finalBal,
                     description: `Luck Test Reward (${tier})`,
                     transactionId: winTxId
-                }], { session });
+                }], { session, ordered: true });
 
                 // Stats Update
                 user.gameStats.totalGamesPlayed += 1;

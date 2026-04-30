@@ -47,14 +47,14 @@ exports.openGiftBox = async (req, res) => {
                     description: `Opened ${tier} Mystery Gift`,
                     transactionId: betTxId,
                     balanceAfter: finalBal
-                }], { session });
+                }], { session, ordered: true });
 
                 await TransactionLedger.create([{
                     userId, type: 'game_bet', amount: -cost,
                     balanceBefore: initBal, balanceAfter: finalBal,
                     description: `Mystery Gift Bet (${tier})`,
                     transactionId: betTxId
-                }], { session });
+                }], { session, ordered: true });
 
                 user.markModified('wallet.main');
                 await user.save({ session });
@@ -104,14 +104,14 @@ exports.openGiftBox = async (req, res) => {
                     description: `Mystery Gift: ${matchResult.label || (isFree ? 'Free Reward' : 'Prize')}`,
                     transactionId: winTxId,
                     balanceAfter: finalBal
-                }], { session });
+                }], { session, ordered: true });
 
                 await TransactionLedger.create([{
                     userId, type: 'game_win', amount: winAmt,
                     balanceBefore: initBal, balanceAfter: finalBal,
                     description: isFree ? `Free Mystery Gift Reward` : `Mystery Gift Prize (${tier})`,
                     transactionId: winTxId
-                }], { session });
+                }], { session, ordered: true });
 
                 // Stats Update
                 user.gameStats.totalGamesPlayed += 1;

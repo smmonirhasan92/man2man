@@ -58,7 +58,7 @@ class ReferralService {
                             status: 'completed',
                             description: `Fixed Referral Bonus from ${currentUser.username}`,
                             metadata: { sourceUser: userId }
-                        }], { session });
+                        }], { session, ordered: true });
                     }
 
                     // 4. [NEW] Hand Completion Logic (Power of 5)
@@ -82,7 +82,7 @@ class ReferralService {
                                 status: 'completed',
                                 description: `🤚 Hand #${directUpline.referralHands} Completed! (${milestoneValue} Referrals)`,
                                 metadata: { milestone: milestoneValue, handCount: directUpline.referralHands }
-                            }], { session });
+                            }], { session, ordered: true });
                             NotificationService.send(
                                 directUpline._id, 
                                 `You've completed Hand #${directUpline.referralHands}. ${HAND_BONUS} NXS bonus added!`, 
@@ -260,7 +260,7 @@ class ReferralService {
                             releaseDate: releaseDate, // For claim logic
                             liabilitySaved: liabilitySaved > 0 ? liabilitySaved : undefined
                         }
-                    }], { session });
+                    }], { session, ordered: true });
 
                     // [SOCKET] Real-time Commission Alert
                     try {
@@ -401,7 +401,7 @@ class ReferralService {
                             type: type,
                             releaseDate: releaseDate
                         }
-                    }], { session });
+                    }], { session, ordered: true });
 
                     // [SOCKET] Real-time Commission Alert
                     try {

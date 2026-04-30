@@ -44,14 +44,14 @@ exports.scratchCard = async (req, res) => {
                 description: `Scratch Card: ${SCRATCH_TIERS[tier].labels.loss} (${tier})`,
                 transactionId: betTxId,
                 balanceAfter: finalBal
-            }], { session });
+            }], { session, ordered: true });
 
             await TransactionLedger.create([{
                 userId, type: 'game_bet', amount: -cost,
                 balanceBefore: initBal, balanceAfter: finalBal,
                 description: `Scratch Card Bet (${tier})`,
                 transactionId: betTxId
-            }], { session });
+            }], { session, ordered: true });
 
             user.markModified('wallet.main');
             await user.save({ session });
@@ -79,14 +79,14 @@ exports.scratchCard = async (req, res) => {
                     description: `Scratch Card Win: ${matchResult.label || SCRATCH_TIERS[tier].labels.win}`,
                     transactionId: winTxId,
                     balanceAfter: finalBal
-                }], { session });
+                }], { session, ordered: true });
 
                 await TransactionLedger.create([{
                     userId, type: 'game_win', amount: winAmt,
                     balanceBefore: initBal, balanceAfter: finalBal,
                     description: `Scratch Card Reward (${tier})`,
                     transactionId: winTxId
-                }], { session });
+                }], { session, ordered: true });
 
                 // Stats Update
                 user.gameStats.totalGamesPlayed += 1;

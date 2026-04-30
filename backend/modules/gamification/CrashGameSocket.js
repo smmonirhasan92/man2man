@@ -90,7 +90,7 @@ class CrashGameManager {
                     playersActive: this.bets.size,
                     status: 'flying',
                     startTime: new Date()
-                }], { session });
+                }], { session, ordered: true });
             });
 
             // 2. Algorithm Generation!
@@ -203,7 +203,7 @@ class CrashGameManager {
                 balanceBefore: mainBal, balanceAfter: user.wallet.main,
                 description: `Crash Entry: ${amount} NXS`,
                 transactionId: trxId
-            }], { session });
+            }], { session, ordered: true });
             
             // Note: Dashboard UI Transaction not needed for BET, only for NET result at the end of round
         });
@@ -248,7 +248,7 @@ class CrashGameManager {
                 balanceBefore: initBal, balanceAfter: finalBal,
                 description: `Crash Cashed Out @${lockedMultiplier}x`,
                 transactionId: trxId
-            }], { session });
+            }], { session, ordered: true });
 
             // UI Transaction (Net profit = Win - Initial Bet)
             const netProfit = winAmount - betData.amount;
@@ -260,7 +260,7 @@ class CrashGameManager {
                 source: 'game',
                 recipientDetails: `Win: ${winAmount} NXS`,
                 transactionId: `${trxId}_UI`
-            }], { session });
+            }], { session, ordered: true });
         });
 
         // Update local memory

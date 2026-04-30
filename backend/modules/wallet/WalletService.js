@@ -120,7 +120,7 @@ class WalletService {
                 recipientDetails: 'Self Transfer',
                 balanceAfter: user.wallet.main,
                 fee: fee
-            }], { session });
+            }], { session, ordered: true });
 
             await TransactionLedger.create([{
                 userId,
@@ -140,7 +140,7 @@ class WalletService {
                 balanceAfter: balAfterTarget,
                 description: `Transfer from ${fromWallet}`,
                 transactionId: `${trxId}_IN`
-            }], { session });
+            }], { session, ordered: true });
 
             if (fee > 0) {
                 await Transaction.create([{
@@ -150,7 +150,7 @@ class WalletService {
                     status: 'completed',
                     description: `Exchange Fee (3%) - ${fromWallet} to ${toWallet}`,
                     recipientDetails: 'System'
-                }], { session });
+                }], { session, ordered: true });
             }
 
             // [SOCKET] Real-time User Update
@@ -203,7 +203,7 @@ class WalletService {
                 balanceAfter: balAfter,
                 description: reason,
                 transactionId: `DBT_${Date.now()}_${Math.floor(Math.random() * 1000)}`
-            }], { session });
+            }], { session, ordered: true });
 
             // [AGENT GUARD]
             if (walletType === 'agent' || walletType === 'wallet.agent') {
@@ -263,7 +263,7 @@ class WalletService {
                 balanceAfter: balAfter,
                 description: reason,
                 transactionId: `CDT_${Date.now()}_${Math.floor(Math.random() * 1000)}`
-            }], { session });
+            }], { session, ordered: true });
 
             // [SOCKET] Real-time User Update
             try {
@@ -347,7 +347,7 @@ class WalletService {
                     description: `P2P Send to ${recipientPhone} (Income)`,
                     transactionId: `${trxId}_INC`,
                     metadata: { recipient: recipient.id }
-                }], { session });
+                }], { session, ordered: true });
             }
 
             if (deductMain > 0) {
@@ -361,7 +361,7 @@ class WalletService {
                     description: `P2P Send to ${recipientPhone} (Main)`,
                     transactionId: `${trxId}_MAIN`,
                     metadata: { recipient: recipient.id }
-                }], { session });
+                }], { session, ordered: true });
             }
 
             // Create UI Transaction
@@ -374,7 +374,7 @@ class WalletService {
                 relatedUserId: recipient.id,
                 assignedAgentId: null,
                 metadata: { ip }
-            }], { session });
+            }], { session, ordered: true });
 
             return { message: 'Send Money Request Pending Approval' };
         });
@@ -422,7 +422,7 @@ class WalletService {
                 proofImage: proofImagePath,
                 assignedAgentId: receivedByAgentId || null,
                 receivedByAgentId: receivedByAgentId || null
-            }], { session });
+            }], { session, ordered: true });
 
             // [NEW] Real-time Admin Notification
             try {

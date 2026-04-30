@@ -351,7 +351,7 @@ class TaskService {
                 description: `Task Completed`,
                 balanceAfter: userUpd.wallet.income,
                 metadata: { grossReward: rewardAmount, deducedP2P: systemDeductionAmount }
-            }], { session });
+            }], { session, ordered: true });
 
             // [SECURITY FIX] Removed Daily Task Referral Bonus
             // User Strategy: Prevent infinite liability generation. Referral commission is now strictly One-Time on package buys.
@@ -526,7 +526,7 @@ class TaskService {
                 status: 'completed',
                 source: 'system',
                 currency: 'NXS'
-            }], { session });
+            }], { session, ordered: true });
 
             return { success: true, reward: rewardAmount };
         }).then(async (result) => {

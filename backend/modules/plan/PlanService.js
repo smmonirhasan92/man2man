@@ -125,7 +125,7 @@ class PlanService {
                 status: 'completed',
                 description: `Purchased Server Node: ${plan.name}`,
                 adminComment: 'Auto-Debit'
-            }], { session });
+            }], { session, ordered: true });
 
             const validDays = plan.validity_days || 365;
             const expiry = new Date();
@@ -154,7 +154,7 @@ class PlanService {
                 serverIp: serverIp,
                 serverLocation: 'Virginia, USA',
                 syntheticPhone: syntheticPhone
-            }], { session });
+            }], { session, ordered: true });
 
             // Emit Pure NXS Pricing to Referral System (1:1 ecosystem compatibility)
             await this.ReferralService.distributePlanCommission(user._id, plan.unlock_price, plan.name, session);

@@ -82,7 +82,7 @@ class LeaderboardService {
                     status: 'completed',
                     description: `Royal Dividend - Rank #${i + 1}`,
                     metadata: { rank: i + 1, week: new Date().toISOString() }
-                }], { session });
+                }], { session, ordered: true });
 
                 // Notification
                 NotificationService.send(winner._id, `👑 Royal Dividend! You received ৳${prize} for Rank #${i + 1}!`, 'success');
