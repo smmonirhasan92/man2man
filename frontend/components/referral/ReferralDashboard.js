@@ -70,11 +70,14 @@ export default function ReferralDashboard() {
         }
     };
 
-    const copyCode = () => {
-        if (copyToClipboard(data.referralCode)) {
+    const copyCode = async () => {
+        const success = await copyToClipboard(data.referralCode);
+        if (success) {
             setCopied(true);
             toast.success("Referral Code Copied!");
             setTimeout(() => setCopied(false), 2000);
+        } else {
+            toast.error("Failed to copy code");
         }
     };
 
@@ -115,14 +118,21 @@ export default function ReferralDashboard() {
                     </div>
                 </div>
 
-                {/* Invite Code Bar */}
-                <div className="mt-6 flex items-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/5">
-                    <div className="flex-1 px-4">
-                        <p className="text-[8px] font-bold text-slate-500 uppercase">My Referral ID</p>
-                        <p className="text-sm font-black text-white tracking-[0.2em]">{data.referralCode || 'GENERATING...'}</p>
+                {/* Invite Code Bar - High Visibility */}
+                <div className="mt-8 flex items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/10 shadow-inner">
+                    <div className="flex-1">
+                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">My Referral Link ID</p>
+                        <p className="text-xl font-black text-white tracking-[0.1em] drop-shadow-md">
+                            {data.referralCode || 'REF-LOADING...'}
+                        </p>
                     </div>
-                    <button onClick={copyCode} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs transition-all active:scale-95 shadow-lg shadow-indigo-600/20">
-                        {copied ? 'COPIED!' : 'COPY'}
+                    <button 
+                        onClick={copyCode} 
+                        className={`px-8 py-4 rounded-xl font-black text-xs transition-all active:scale-95 shadow-xl ${
+                            copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                        }`}
+                    >
+                        {copied ? 'COPIED! ✅' : 'COPY ID'}
                     </button>
                 </div>
             </div>
