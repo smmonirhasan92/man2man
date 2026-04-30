@@ -64,7 +64,16 @@ export const useGameSound = (enabled = true) => {
         }
     }, [enabled]);
 
-    return { play };
+    const playSuccess = useCallback(() => play('success'), [play]);
+    const playError = useCallback(() => play('error'), [play]);
+    const playNotification = useCallback(() => play('notification'), [play]);
+
+    return { 
+        play,
+        playSuccess,
+        playError,
+        playNotification
+    };
 };
 
 export default useGameSound;

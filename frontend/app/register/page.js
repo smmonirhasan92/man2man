@@ -248,6 +248,8 @@ function RegisterForm() {
                                             placeholder="••••••"
                                             className="w-full bg-[#0a1120] border border-white/10 rounded-xl px-4 py-3 text-center text-white font-mono text-2xl tracking-[1em] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
                                             autoFocus
+                                            autoComplete="one-time-code"
+                                            inputMode="numeric"
                                         />
                                     </div>
                                 </div>

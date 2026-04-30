@@ -48,7 +48,7 @@ class EmailService {
         }
 
         const isReset = context === 'password_reset';
-        const title = isReset ? 'Password Reset Code' : 'Email Verification Code';
+        const title = isReset ? 'Reset Your Password' : 'Verify Your Email';
         const color = isReset ? '#ef4444' : '#10b981'; // Red for reset, Emerald for verify
 
         // Premium World-Class HTML Template
@@ -108,9 +108,9 @@ class EmailService {
                             <tr>
                                 <td style="background-color: #020617; padding: 30px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);">
                                     <p style="color: #475569; font-size: 12px; line-height: 1.8; margin: 0;">
-                                        <strong>USA Affiliate Network</strong><br>
-                                        Global Operations & Digital Asset Security<br>
-                                        <span style="color: #334155;">&copy; ${new Date().getFullYear()} All Rights Reserved.</span>
+                                        <strong>USA Affiliate Official</strong><br>
+                                        Secure Access Portal & Node Network<br>
+                                        <span style="color: #334155;">&copy; ${new Date().getFullYear()} Global Operations.</span>
                                     </p>
                                     <div style="margin-top: 20px;">
                                         <a href="#" style="color: #64748b; text-decoration: none; font-size: 11px; margin: 0 10px;">Privacy Policy</a>
@@ -126,7 +126,8 @@ class EmailService {
         </html>
         `;
 
-        await this.sendEmail(email, title, html);
+        const subject = `${title} [${otp}]`; // Include code in subject for better visibility
+        await this.sendEmail(email, subject, html);
         return true;
     }
 
