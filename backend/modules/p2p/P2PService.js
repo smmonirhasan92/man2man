@@ -762,6 +762,14 @@ class P2PService {
     }
 
     // --- 7. ADMIN DISPUTE RESOLUTION ---
+    async getAdminDisputes() {
+        const P2PTrade = require('./P2PTradeModel');
+        return await P2PTrade.find({ status: 'DISPUTED' })
+            .populate('buyerId', 'username fullName primary_phone')
+            .populate('sellerId', 'username fullName primary_phone')
+            .sort({ createdAt: -1 });
+    }
+
     async resolveDispute(adminId, tradeId, resolution, ip = 'unknown') {
         // resolution: 'RELEASE_TO_BUYER' | 'REFUND_TO_SELLER'
 

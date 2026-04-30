@@ -194,6 +194,16 @@ class P2PController {
             res.status(400).json({ message: e.message });
         }
     }
+    // GET /api/p2p/admin/disputes
+    async getAdminDisputes(req, res) {
+        try {
+            const trades = await P2PService.getAdminDisputes();
+            res.json({ success: true, trades });
+        } catch (e) {
+            res.status(400).json({ message: e.message });
+        }
+    }
+
     // POST /api/p2p/admin/resolve
     async resolveDispute(req, res) {
         try {

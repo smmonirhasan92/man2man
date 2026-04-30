@@ -47,6 +47,7 @@ router.get('/trade/:id/chat', auth, P2PController.getChat);
 router.get('/admin/trades', auth, adminCheck, P2PController.getAdminTrades);
 router.get('/admin/orders', auth, adminCheck, P2PController.getAdminOrders); // [NEW] Read all ads
 router.delete('/admin/orders/:id', auth, adminCheck, P2PController.adminDeleteOrder); // [NEW] Delete ad
+router.get('/admin/disputes', auth, adminCheck, P2PController.getAdminDisputes); // [NEW] P2P Tribunal
 router.post('/admin/resolve', auth, adminCheck, P2PController.resolveDispute);
 router.post('/admin/approve', auth, adminCheck, P2PController.adminApprove);
 router.post('/admin/unlock-user/:id', auth, adminCheck, P2PController.adminUnlockUserP2P);
