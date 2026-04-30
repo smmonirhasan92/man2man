@@ -144,55 +144,65 @@ export default function AdminDashboard() {
 
             {/* MAIN CONTENT */}
             <main className="w-full px-6 lg:px-10 py-8 relative z-10">
-                {/* SIMPLE STATS GRID */}
+                {/* TRANSPARENT ACCOUNTING GRID */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    {/* 0. Total Minted (NEW) */}
-                    <div className="bg-[#0f0f0f] border border-[#D4AF37]/30 p-5 rounded-xl text-center shadow-lg shadow-yellow-900/10">
-                        <Gem className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
-                        <h3 className="text-[#D4AF37]/60 text-[10px] font-bold uppercase tracking-widest mb-1">Total NXS Created</h3>
-                        <div className="text-2xl font-black text-[#D4AF37]">{Number(stats.totalMinted || 0).toLocaleString()}</div>
+                    
+                    {/* 1. System Profit / Loss */}
+                    <div className={`border p-5 rounded-xl text-center shadow-lg ${stats.netSystemProfit >= 0 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                        <Activity className={`w-8 h-8 mx-auto mb-2 ${stats.netSystemProfit >= 0 ? 'text-emerald-500' : 'text-rose-500'}`} />
+                        <h3 className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Net Profit / Loss</h3>
+                        <div className={`text-2xl font-black ${stats.netSystemProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {stats.netSystemProfit >= 0 ? '+' : ''}{Number(stats.netSystemProfit || 0).toLocaleString()} NXS
+                        </div>
                     </div>
 
-                    {/* 1. Total Users */}
-                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
-                        <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Users</h3>
-                        <div className="text-2xl font-black text-white">{Number(stats.totalUsers || 0).toLocaleString()}</div>
-                    </div>
-
-                    {/* 2. User Wallets */}
+                    {/* 2. Fees Collected */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <Wallet className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">User Wallets</h3>
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">System Fees Collected</h3>
+                        <div className="text-2xl font-black text-white">{Number((stats.totalP2PFee || 0) + (stats.total_commission || 0)).toLocaleString()} NXS</div>
+                    </div>
+
+                    {/* 3. Server Sales Revenue */}
+                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
+                        <ShieldCheck className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Package Sales</h3>
+                        <div className="text-2xl font-black text-white">{Number(stats.totalServerRevenue || 0).toLocaleString()} NXS</div>
+                    </div>
+
+                    {/* 4. Daily Mining / Task Payouts */}
+                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
+                        <ArrowLeft className="w-8 h-8 text-rose-500 mx-auto mb-2 -rotate-[135deg]" />
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Task Mining Payouts</h3>
+                        <div className="text-2xl font-black text-white">{Number(stats.totalTaskIncome || 0).toLocaleString()} NXS</div>
+                    </div>
+
+                    {/* 5. Game Pool Income */}
+                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
+                        <Gem className="w-8 h-8 text-fuchsia-500 mx-auto mb-2" />
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Game Pool Income</h3>
+                        <div className="text-2xl font-black text-white">{Number((stats.totalGameBets || 0) - (stats.totalGameWins || 0)).toLocaleString()} NXS</div>
+                    </div>
+
+                    {/* 6. Total User Wallets (Liability) */}
+                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
+                        <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">User Wallets Liability</h3>
                         <div className="text-2xl font-black text-white">{Number(stats.currentLiabilities || 0).toLocaleString()} NXS</div>
                     </div>
 
-                    {/* 3. Total Deposits */}
+                    {/* 7. Total Deposits */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
                         <TrendingUp className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Deposits</h3>
                         <div className="text-2xl font-black text-white">{Number(stats.totalDeposits || 0).toLocaleString()} NXS</div>
                     </div>
 
-                    {/* 4. Total Withdrawals */}
+                    {/* 8. Total Withdrawals */}
                     <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
-                        <ArrowLeft className="w-8 h-8 text-rose-500 mx-auto mb-2 -rotate-[135deg]" />
+                        <FileText className="w-8 h-8 text-rose-500 mx-auto mb-2" />
                         <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Withdrawals</h3>
                         <div className="text-2xl font-black text-white">{Number(stats.totalWithdraws || 0).toLocaleString()} NXS</div>
-                    </div>
-
-                    {/* 5. Server Sales */}
-                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
-                        <ShieldCheck className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
-                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Server Sales</h3>
-                        <div className="text-2xl font-black text-white">{Number(stats.totalServerRevenue || 0).toLocaleString()} NXS</div>
-                    </div>
-
-                    {/* 6. Task Earnings */}
-                    <div className="bg-[#0f0f0f] border border-white/5 p-5 rounded-xl text-center">
-                        <Activity className="w-8 h-8 text-cyan-500 mx-auto mb-2" />
-                        <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Task Earnings</h3>
-                        <div className="text-2xl font-black text-white">{Number(stats.totalTaskIncome || 0).toLocaleString()} NXS</div>
                     </div>
                 </div>
 
@@ -222,13 +232,7 @@ export default function AdminDashboard() {
                     <DashboardCard href="/admin/users" title="Manage Users" description="Edit, Ban, Verify" icon={Users} colorClass="indigo" />
                     <DashboardCard href="/admin/agents" title="Agent Network" description="Commission & Trees" icon={Briefcase} colorClass="green" />
                     <DashboardCard href="/admin/plans" title="Plan Manager" description="Create/Edit Tiers" icon={Gem} colorClass="amber" />
-                    <DashboardCard href="/admin/tasks" title="Manage 20 Tasks" description="Edit Video Ads" icon={ClipboardList} colorClass="cyan" />
                     <DashboardCard href="/admin/settings" title="System Settings" description="Global Config" icon={Settings} colorClass="gray" />
-                    <DashboardCard href="/admin/audit" title="Financial Audit" description="Profit/Loss Reports" icon={Shield} colorClass="red" />
-
-                    <DashboardCard href="/admin/lottery" title="Lottery Control" description="Draws & Tickets" icon={Ticket} colorClass="pink" />
-                    <DashboardCard href="/admin/support" title="User Support" description="Help & Tickets" icon={MessageSquare} colorClass="cyan" />
-
                 </div>
 
             </main>

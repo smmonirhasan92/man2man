@@ -4,6 +4,7 @@ const TransactionLedger = require('../modules/wallet/TransactionLedgerModel');
 const Transaction = require('../modules/wallet/TransactionModel'); // Legacy/UI
 const P2PTrade = require('../modules/p2p/P2PTradeModel');
 const SocketService = require('../modules/common/SocketService');
+const GameVault = require('../modules/gamification/GameVaultModel');
 
 exports.mintUSC = async (req, res) => {
     // 1. Auth Check (Middleware should handle role, but check PIN here)
