@@ -219,9 +219,9 @@ export default function AdminDashboard() {
                     </div>
                     <div className="mt-4 md:mt-0 text-center md:text-right">
                         <div className="text-3xl font-black text-white drop-shadow-[0_0_10px_rgba(217,70,239,0.8)]">
-                            {Number(stats.communityDropFund || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span className="text-fuchsia-400 text-lg">NXS</span>
+                            {Number(stats.communityDropFund?.total ?? stats.communityDropFund ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span className="text-fuchsia-400 text-lg">NXS</span>
                         </div>
-                        <div className="text-[10px] uppercase font-bold text-fuchsia-300/70 tracking-widest mt-1">Ready for Big Bang ({stats.communityDropFund >= 100 ? 'Unlocked' : 'Pending'})</div>
+                        <div className="text-[10px] uppercase font-bold text-fuchsia-300/70 tracking-widest mt-1">Ready for Big Bang ({(stats.communityDropFund?.total ?? stats.communityDropFund ?? 0) >= 100 ? 'Unlocked' : 'Pending'})</div>
                     </div>
                 </div>
 
