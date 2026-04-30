@@ -139,6 +139,24 @@ class LotteryService {
                 await this.startDrawSequence(slot._id);
             }
 
+            // [PHASE 4] SMART COUNTDOWN (60s Heartbeat)
+            const upcomingSlots = await LotterySlot.find({
+                status: 'ACTIVE',
+                endTime: { 
+                    $gt: new Date(), 
+                    $lte: new Date(Date.now() + 61000) // Next 60-61 seconds
+                }
+            });
+
+            for (const slot of upcomingSlots) {
+                const timeLeft = Math.floor((new Date(slot.endTime).getTime() - Date.now()) / 1000);
+                SocketService.broadcast(`LOTTERY_HEARTBEAT_${slot.tier}`, {
+                    slotId: slot._id,
+                    timeLeft,
+                    message: timeLeft <= 10 ? '🔥 FINAL MOMENTS!' : '⏳ DRAW APPROACHING!'
+                });
+            }
+
             // 2. Auto-Create Next Slot from Active Templates
             const templates = await LotteryTemplate.find({ isActive: true });
 
@@ -282,8 +300,17 @@ class LotteryService {
                     main: result.user.wallet.main,
                     income: result.user.wallet.income // Broadcast income safely
                 });
-                // Global Slot Update (Filtered by Tier implicitly by ID, but clients need to update correct tab)
+                // Global Slot Update
                 io.emit('LOTTERY_UPDATE', this._formatSlotData(result.slot));
+
+                // [PHASE 4] FOMO: Broadcast Ticket Sale
+                const partialName = result.user.username ? result.user.username.substring(0, 3) + '***' : 'User***';
+                io.emit('BROADCAST_TICKET_SALE', {
+                    username: partialName,
+                    quantity: result.tickets,
+                    tier: result.slot.tier,
+                    timestamp: Date.now()
+                });
             }
 
             // Target Sales Trigger (Only for INSTANT usually, or maybe others if they sell out?)
@@ -323,11 +350,14 @@ class LotteryService {
 
         const io = SocketService.getIO();
         if (io) {
-            // 7-second Drum Animation Broadcast
+            // [PHASE 4] VISUAL SHUFFLING: Send all ticket IDs for the frontend drum
+            const allTicketIds = slot.tickets.map(t => t.ticketId);
+            
             io.emit('LOTTERY_DRAW_START', {
                 duration: 7000,
                 slotId: slot._id,
-                tier: slot.tier // [FIX] Include Tier for client filtering
+                tier: slot.tier,
+                ticketIds: allTicketIds.slice(0, 500) // Safety cap for socket payload
             });
         }
 
