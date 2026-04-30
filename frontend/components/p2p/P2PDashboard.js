@@ -45,6 +45,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
     
     // [NEW] Global Running Trades Count for Smart Banner
     const [runningCount, setRunningCount] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
 
 
     const [marketStats, setMarketStats] = useState({ price: 0, high: 0, low: 0, vol: 0, change: 0 });
@@ -252,7 +253,10 @@ export default function P2PDashboard({ initialMode, onClose }) {
         return 'bg-[#1a2c3d] text-cyan-400 border-cyan-500/20';
     };
 
-    const displayOrders = orders;
+    const displayOrders = orders.filter(o =>
+        !searchQuery ||
+        (o.userId?.username || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     // If active trade, show Chat Room
     if (activeTradeId) {
@@ -412,6 +416,25 @@ export default function P2PDashboard({ initialMode, onClose }) {
                     <Plus className="w-5 h-5" /> POST NEW AD
                 </button>
             </div>
+
+            {/* Search Bar */}
+            {(mode === 'buy' || mode === 'sell') && (
+                <div className="px-3 pt-3 bg-[#0b0e11]">
+                    <div className="flex items-center gap-2 bg-[#181a20] border border-[#2b3139] rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-[#848e9c] flex-shrink-0" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by username..."
+                            className="flex-1 bg-transparent text-[#eaeaec] text-sm outline-none placeholder-[#848e9c]/50 font-bold"
+                        />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} className="text-[#848e9c] hover:text-[#eaeaec] text-xs font-bold transition">✕</button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Advanced Filters */}
             {(mode === 'buy' || mode === 'sell') && (

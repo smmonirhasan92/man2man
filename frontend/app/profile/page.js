@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Camera, Save, User, LogOut, History, Wallet, Lock, Copy, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, Camera, Save, User, LogOut, History, Wallet, Lock, Copy, Sparkles, Trophy, ChevronDown, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import ImageCropper from '../../components/profile/ImageCropper';
 import ReferralNetworkUI from '../../components/profile/ReferralNetworkUI';
@@ -29,6 +29,7 @@ export default function ProfilePage() {
     const [pinData, setPinData] = useState({ password: '', pin: '', confirm: '' });
     const [pinLoading, setPinLoading] = useState(false);
 
+    const [securityOpen, setSecurityOpen] = useState(false);
     const router = useRouter();
     const { logout } = useAuth();
     const [assets, setAssets] = useState([]);
@@ -310,125 +311,12 @@ export default function ProfilePage() {
                         )}
                     </div>
 
-                    {/* 3. PASSWORD SECTION */}
-                    <div className="bg-slate-800/30 p-5 rounded-2xl border border-white/5 space-y-4 shadow-xl">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Lock className="w-3.5 h-3.5 text-red-500" /> Access Protocol
-                        </label>
-                        <input
-                            type="password"
-                            placeholder="Current Encryption Password"
-                            value={passwords.old}
-                            onChange={(e) => setPasswords({ ...passwords, old: e.target.value })}
-                            className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-red-500/50 transition outline-none font-bold shadow-inner"
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                            <input
-                                type="password"
-                                placeholder="New Protocol"
-                                value={passwords.new}
-                                onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                                className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-blue-500/50 transition outline-none font-bold shadow-inner"
-                            />
-                            <input
-                                type="password"
-                                placeholder="Verify New"
-                                value={passwords.confirm}
-                                onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                                className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-4 text-sm focus:border-blue-500/50 transition outline-none font-bold shadow-inner"
-                            />
-                        </div>
-
-                        {user.emailVerified && (
-                            <div className="space-y-3 pt-2 bg-red-900/5 p-4 rounded-xl border border-red-500/10">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">2FA Challenge Required</span>
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            try {
-                                                await api.post('/auth/send-otp', { email: user.email, context: 'password_reset' });
-                                                toast.success('Security Code Dispatched! 🛡️');
-                                                setPasswords(prev => ({ ...prev, otpSent: true }));
-                                            } catch (e) { toast.error(e.response?.data?.message || 'Failed to dispatch OTP'); }
-                                        }}
-                                        className="text-[10px] font-black text-blue-500 uppercase hover:text-blue-400 transition"
-                                    >
-                                        Dispatched OTP
-                                    </button>
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Enter 6-Digit Auth Code"
-                                    maxLength={6}
-                                    value={passwords.otp || ''}
-                                    onChange={(e) => setPasswords({ ...passwords, otp: e.target.value })}
-                                    className="w-full bg-red-900/20 text-red-500 rounded-xl border border-red-500/20 p-4 text-center text-2xl font-black tracking-[0.8em] focus:border-red-500 transition outline-none shadow-inner"
-                                />
-                            </div>
-                        )}
-
-                        <button
-                            type="button"
-                            onClick={handlePasswordChange}
-                            disabled={passLoading}
-                            className="w-full py-4 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition border border-white/10 shadow-lg active:scale-95"
-                        >
-                            {passLoading ? 'Encrypting...' : 'Rotate Security Protocol'}
-                        </button>
-                    </div>
-
-                    {/* 4. P2P PIN SECTION */}
-                    <div className="bg-emerald-900/5 p-5 rounded-2xl border border-emerald-500/10 space-y-4 shadow-xl">
-                        <div className="flex justify-between items-center mb-1">
-                            <label className="text-xs font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <Lock className="w-3.5 h-3.5" /> P2P Settlement PIN
-                            </label>
-                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full font-black border border-emerald-500/20 shadow-lg">ASSET RELEASE REQUIRED</span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 leading-tight font-medium">Define a persistent 6-digit PIN for authorized P2P fund releases. Do not share this with anyone.</p>
-
-                        <input
-                            type="password"
-                            placeholder="Current Encryption Password"
-                            value={pinData.password}
-                            onChange={(e) => setPinData({ ...pinData, password: e.target.value })}
-                            className="w-full bg-black/40 text-white rounded-xl border border-emerald-500/20 p-4 text-sm focus:border-emerald-500/50 transition outline-none font-bold shadow-inner"
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                            <input
-                                type="password"
-                                maxLength={6}
-                                placeholder="Secure PIN"
-                                value={pinData.pin}
-                                onChange={(e) => setPinData({ ...pinData, pin: e.target.value.replace(/\D/g, '') })}
-                                className="w-full bg-black/40 text-emerald-400 rounded-xl border border-emerald-500/20 p-4 text-center text-2xl font-black tracking-[0.5em] focus:border-emerald-500/50 transition outline-none shadow-inner"
-                            />
-                            <input
-                                type="password"
-                                maxLength={6}
-                                placeholder="Verify PIN"
-                                value={pinData.confirm}
-                                onChange={(e) => setPinData({ ...pinData, confirm: e.target.value.replace(/\D/g, '') })}
-                                className="w-full bg-black/40 text-emerald-400 rounded-xl border border-emerald-500/20 p-4 text-center text-2xl font-black tracking-[0.5em] focus:border-emerald-500/50 transition outline-none shadow-inner"
-                            />
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handlePinSetup}
-                            disabled={pinLoading}
-                            className="w-full py-4 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 rounded-xl text-xs font-black uppercase tracking-widest transition border border-emerald-500/20 shadow-lg active:scale-95"
-                        >
-                            {pinLoading ? 'Syncing...' : 'Commit Settlement PIN'}
-                        </button>
-                    </div>
-
                     <button
                         type="submit"
                         disabled={loading}
                         className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-black text-lg shadow-[0_20px_40px_-15px_rgba(37,99,235,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border border-white/10"
                     >
-                        {loading ? 'Processing...' : <><Save className="w-5 h-5" /> PERSIST CHANGES</>}
+                        {loading ? 'Processing...' : <><Save className="w-5 h-5" /> Save Profile</>}
                     </button>
                 </form>
 
@@ -494,6 +382,92 @@ export default function ProfilePage() {
                             })
                         )}
                     </div>
+                </div>
+
+                {/* SECURITY SETTINGS — Collapsible Accordion (Bottom) */}
+                <div className="border border-white/5 rounded-2xl overflow-hidden">
+                    <button
+                        type="button"
+                        onClick={() => setSecurityOpen(v => !v)}
+                        className="w-full flex items-center justify-between p-5 bg-slate-800/20 hover:bg-slate-800/40 transition"
+                    >
+                        <span className="flex items-center gap-2 text-sm font-black text-slate-400 uppercase tracking-widest">
+                            <Shield className="w-4 h-4 text-slate-500" /> Account Security
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${securityOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {securityOpen && (
+                        <div className="p-5 space-y-6 bg-black/20 border-t border-white/5">
+                            {/* Change Password */}
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Lock className="w-3 h-3 text-red-500/70" /> Change Password
+                                </p>
+                                <input
+                                    type="password"
+                                    placeholder="Current Password"
+                                    value={passwords.old}
+                                    onChange={(e) => setPasswords({ ...passwords, old: e.target.value })}
+                                    className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-3 text-sm focus:border-red-500/50 transition outline-none font-bold"
+                                />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input type="password" placeholder="New Password" value={passwords.new}
+                                        onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                                        className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-3 text-sm focus:border-blue-500/50 transition outline-none font-bold" />
+                                    <input type="password" placeholder="Confirm New" value={passwords.confirm}
+                                        onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                                        className="w-full bg-black/40 text-white rounded-xl border border-white/10 p-3 text-sm focus:border-blue-500/50 transition outline-none font-bold" />
+                                </div>
+                                {user.emailVerified && (
+                                    <div className="space-y-2 bg-red-900/5 p-3 rounded-xl border border-red-500/10">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black text-red-500/70 uppercase tracking-widest">2FA Verification</span>
+                                            <button type="button" onClick={async () => {
+                                                try {
+                                                    await api.post('/auth/send-otp', { email: user.email, context: 'password_reset' });
+                                                    toast.success('OTP Sent to your email! 🛡️');
+                                                    setPasswords(prev => ({ ...prev, otpSent: true }));
+                                                } catch (e) { toast.error(e.response?.data?.message || 'Failed'); }
+                                            }} className="text-[10px] font-black text-blue-400 uppercase hover:text-blue-300 transition">Send OTP</button>
+                                        </div>
+                                        <input type="text" placeholder="6-Digit OTP" maxLength={6} value={passwords.otp || ''}
+                                            onChange={(e) => setPasswords({ ...passwords, otp: e.target.value })}
+                                            className="w-full bg-red-900/20 text-red-400 rounded-xl border border-red-500/20 p-3 text-center text-xl font-black tracking-[0.8em] focus:border-red-500 transition outline-none" />
+                                    </div>
+                                )}
+                                <button type="button" onClick={handlePasswordChange} disabled={passLoading}
+                                    className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition border border-white/10 active:scale-95">
+                                    {passLoading ? 'Updating...' : 'Update Password'}
+                                </button>
+                            </div>
+
+                            <div className="border-t border-white/5" />
+
+                            {/* P2P PIN */}
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Lock className="w-3 h-3 text-emerald-500/70" /> P2P Transaction PIN
+                                </p>
+                                <p className="text-[11px] text-slate-600 leading-tight">A 6-digit PIN required to confirm all P2P fund releases.</p>
+                                <input type="password" placeholder="Account Password (to verify it's you)"
+                                    value={pinData.password} onChange={(e) => setPinData({ ...pinData, password: e.target.value })}
+                                    className="w-full bg-black/40 text-white rounded-xl border border-emerald-500/10 p-3 text-sm focus:border-emerald-500/30 transition outline-none font-bold" />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input type="password" maxLength={6} placeholder="New PIN"
+                                        value={pinData.pin} onChange={(e) => setPinData({ ...pinData, pin: e.target.value.replace(/\D/g, '') })}
+                                        className="w-full bg-black/40 text-emerald-400 rounded-xl border border-emerald-500/10 p-3 text-center text-xl font-black tracking-[0.5em] focus:border-emerald-500/30 transition outline-none" />
+                                    <input type="password" maxLength={6} placeholder="Confirm PIN"
+                                        value={pinData.confirm} onChange={(e) => setPinData({ ...pinData, confirm: e.target.value.replace(/\D/g, '') })}
+                                        className="w-full bg-black/40 text-emerald-400 rounded-xl border border-emerald-500/10 p-3 text-center text-xl font-black tracking-[0.5em] focus:border-emerald-500/30 transition outline-none" />
+                                </div>
+                                <button type="button" onClick={handlePinSetup} disabled={pinLoading}
+                                    className="w-full py-3 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 rounded-xl text-xs font-black uppercase tracking-widest transition border border-emerald-500/20 active:scale-95">
+                                    {pinLoading ? 'Saving...' : 'Set P2P PIN'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* LOGOUT */}
