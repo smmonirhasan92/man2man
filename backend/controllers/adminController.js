@@ -841,7 +841,6 @@ exports.deleteUser = async (req, res) => {
 };
 
 // [ADMIN] Triple-Tier Game Vault Control
-const GameVault = require('../modules/gamification/GameVaultModel');
 
 exports.getGameVault = async (req, res) => {
     try {
