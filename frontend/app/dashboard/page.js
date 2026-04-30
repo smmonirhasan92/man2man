@@ -121,6 +121,10 @@ function DashboardContent() {
     }, [user, activeNodeId]);
 
     const handleNodeSelect = (node) => {
+        if (node.id === activeNodeId) {
+            router.push('/tasks');
+            return;
+        }
         setConnectingNode(node);
     };
 
