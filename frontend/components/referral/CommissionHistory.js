@@ -1,7 +1,9 @@
 'use client';
 import { Activity, ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export default function CommissionHistory({ logs = [] }) {
+    const { formatNXS } = useCurrency();
     if (!logs || logs.length === 0) {
         return (
             <div className="text-center py-10 bg-[#1f2937] rounded-xl border border-white/5">
@@ -28,7 +30,7 @@ export default function CommissionHistory({ logs = [] }) {
                     </div>
                     <div className="text-right">
                         <p className={`font-bold ${log.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {log.amount > 0 ? '+' : ''}{parseFloat(log.amount).toFixed(2)}
+                            {log.amount > 0 ? '+' : ''}{formatNXS(log.amount)}
                         </p>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 uppercase">
                             {log.type.replace('_', ' ')}

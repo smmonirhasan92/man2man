@@ -230,7 +230,7 @@ export default function ReferralDashboard() {
                                 </div>
                             </div>
                             <div className="bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                                <span className="text-[10px] font-black text-emerald-400">${user.referralIncome?.toFixed(0)}</span>
+                                <span className="text-[10px] font-black text-emerald-400">{formatNXS(user.referralIncome)}</span>
                             </div>
                         </div>
                     ))}
@@ -311,7 +311,7 @@ export default function ReferralDashboard() {
                                         <p className="text-[10px] text-slate-500">{user.referralCount} Members</p>
                                     </div>
                                 </div>
-                                <p className="text-indigo-400 font-black">${user.referralIncome?.toFixed(0)}</p>
+                                <p className="text-indigo-400 font-black">{formatNXS(user.referralIncome)}</p>
                             </div>
                         ))}
                     </div>
