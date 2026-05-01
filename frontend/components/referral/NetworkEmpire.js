@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, Activity, TrendingUp, ChevronRight, Layers } from 'lucide-react';
 import api from '../../services/api';
 import EmpireTicker from './EmpireTicker';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export default function NetworkEmpire({ isOpen, onClose }) {
+    const { formatNXS } = useCurrency();
     const [stats, setStats] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -115,7 +117,7 @@ export default function NetworkEmpire({ isOpen, onClose }) {
                                             <div className="flex items-center gap-4 z-10">
                                                 <div className="text-right">
                                                     <p className="text-xs text-slate-400 font-medium">Earnings</p>
-                                                    <p className="text-yellow-400 font-mono font-bold">${level.earnings?.toFixed(0)}</p>
+                                                    <p className="text-yellow-400 font-mono font-bold">{formatNXS(level.earnings)}</p>
                                                 </div>
 
                                                 {/* Circular Meter (Mini) */}

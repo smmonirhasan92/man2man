@@ -9,8 +9,10 @@ import OrganicTree from './OrganicTree';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { copyToClipboard } from '../../utils/uiUtils';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export default function ReferralDashboard() {
+    const { formatNXS } = useCurrency();
     const [activeTab, setActiveTab] = useState('overview'); // overview, network, leaderboard, history
     const [level, setLevel] = useState(1);
     const [showEmpire, setShowEmpire] = useState(false);
@@ -93,7 +95,7 @@ export default function ReferralDashboard() {
                     <div>
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Empire Revenue</p>
                         <h1 className="text-4xl font-black text-white flex items-baseline gap-1">
-                            ${data.stats.totalEarnings?.toFixed(2)}
+                            {formatNXS(data.stats.totalEarnings)}
                             <span className="text-xs text-emerald-400 ml-2">Active</span>
                         </h1>
                     </div>
@@ -114,7 +116,7 @@ export default function ReferralDashboard() {
                     </div>
                     <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
                         <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Locked Commissions</p>
-                        <p className="text-2xl font-black text-amber-400">${data.stats.pendingReferral?.toFixed(2)}</p>
+                        <p className="text-2xl font-black text-amber-400">{formatNXS(data.stats.pendingReferral)}</p>
                     </div>
                 </div>
 

@@ -26,8 +26,14 @@ export function CurrencyProvider({ children }) {
         return `$${usdValue.toFixed(2)}`;
     };
 
+    // [v7.1] Helper to format in NXS (Standard)
+    const formatNXS = (usdAmount) => {
+        const nxsValue = Math.round(parseFloat(usdAmount || 0) * 100);
+        return `${nxsValue} NXS`;
+    };
+
     return (
-        <CurrencyContext.Provider value={{ currency, toggleCurrency, formatMoney, rates }}>
+        <CurrencyContext.Provider value={{ currency, toggleCurrency, formatMoney, formatNXS, rates }}>
             {children}
         </CurrencyContext.Provider>
     );
