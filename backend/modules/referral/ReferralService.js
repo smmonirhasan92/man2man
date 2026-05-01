@@ -27,7 +27,7 @@ class ReferralService {
             let uplineCode = currentUser.referredBy;
 
             // --- [NEW] ONE-TIME FIXED REFERRAL BONUS & PROMOTIONAL TIER UPGRADES ---
-            if (uplineCode && !currentUser.isReferralBonusPaid) {
+            if (uplineCode && uplineCode !== currentUser.referralCode && !currentUser.isReferralBonusPaid) {
                 const directUpline = await User.findOne({ referralCode: uplineCode }).session(session);
                 if (directUpline) {
                     // 1. Activate referral count (User officially bought a plan)
@@ -124,7 +124,7 @@ class ReferralService {
 
             // --- [NEW] EMPIRE RACE: PACKAGE TRACKING ---
             // Independent of one-time bonuses, we track EVERY plan purchase for the direct upline
-            if (uplineCode) {
+            if (uplineCode && uplineCode !== currentUser.referralCode) {
                 const directUpline = await User.findOne({ referralCode: uplineCode }).session(session);
                 if (directUpline) {
                     directUpline.purchaseCount = (directUpline.purchaseCount || 0) + 1;
@@ -369,11 +369,19 @@ class ReferralService {
                 const uplineUser = await User.findOne({ referralCode: uplineCode }).session(session);
                 if (!uplineUser) break;
 
+                // Self-referral check: prevent circular earnings
+                if (uplineUser._id.toString() === sourceUserId.toString()) break;
+
                 let comm = (amount * rates[i]) / 100;
                 // Fix precision to 4 decimals
                 comm = Math.round(comm * 10000) / 10000;
 
                 if (comm > 0) {
+                    // [UX PHASE] 20-Referral Empire Progress (Big Packages / Tour Sales)
+                    const empireGoal = 20;
+                    const empireProgress = Math.min(uplineUser.tourSales || 0, empireGoal);
+                    const empirePercentage = (empireProgress / empireGoal) * 100;
+
                     // [MODIFIED] Lock Task Referral Commission too
                     const releaseDate = new Date();
                     releaseDate.setDate(releaseDate.getDate() + 5);

@@ -17,9 +17,9 @@ exports.getDashboardData = async (req, res) => {
         const progressInHand = referralCount % HAND_SIZE;
         const remainingForHand = HAND_SIZE - progressInHand;
 
-        // [UX PHASE] 20-Referral Empire Progress
+        // [UX PHASE] 20-Referral Empire Progress (Big Packages / Tour Sales)
         const empireGoal = 20;
-        const empireProgress = Math.min(referralCount, empireGoal);
+        const empireProgress = Math.min(user.tourSales || 0, empireGoal);
         const empirePercentage = (empireProgress / empireGoal) * 100;
 
         // Fetch Locked Commissions for Profile

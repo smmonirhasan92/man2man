@@ -93,6 +93,12 @@ const UserSchema = new mongoose.Schema({
     referralHands: { type: Number, default: 0 }, // Traditional 5-ref hands
     handMilestonesClaimed: { type: [Number], default: [] },
     
+    // [EMPIRE TRACKING]
+    tourSales: { type: Number, default: 0 }, // Counts "Big" package purchases by directs
+    purchaseCount: { type: Number, default: 0 }, // Counts total package purchases by directs
+    monthlyPurchases: { type: Number, default: 0 },
+    lastPurchaseDate: { type: Date },
+    
     // [EMPIRE HAND - 5x5]
     empireHands: [{
         handIndex: { type: Number, default: 1 },

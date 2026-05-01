@@ -43,12 +43,13 @@ exports.register = async (req, res) => {
 
             // Referral Logic
             let referrerCodeStored = null;
-            if (referralCode) {
+            if (referralCode && referralCode !== myReferralCode) {
                 const referrer = await User.findOne({ referralCode }).session(session);
                 if (referrer) {
                     referrerCodeStored = referralCode;
-                    referrer.referralCount = (referrer.referralCount || 0) + 1;
-                    await referrer.save({ session });
+                    // [FIX] Don't increment count here. 
+                    // Increment happens in ReferralService.distributePlanCommission when they buy a plan.
+                    // This prevents "1 referral = 2 count" bug.
                 }
             }
 
