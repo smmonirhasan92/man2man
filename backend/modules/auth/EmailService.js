@@ -57,61 +57,68 @@ class EmailService {
         const title = isReset ? 'Reset Your Password' : 'Verify Your Email';
         const color = isReset ? '#ef4444' : '#10b981'; // Red for reset, Emerald for verify
 
-        // Premium World-Class HTML Template
+        // [NEW] Premium World-Class Professional HTML Template
         const html = `
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${title}</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+                body { margin: 0; padding: 0; background-color: #020617; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; }
+                .wrapper { width: 100%; table-layout: fixed; background-color: #020617; padding-bottom: 60px; }
+                .main { background-color: #0b1221; margin: 0 auto; width: 100%; max-width: 500px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; margin-top: 50px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+                .header { padding: 40px; text-align: center; background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0) 100%); }
+                .brand { font-size: 20px; font-weight: 900; color: #10b981; letter-spacing: 4px; text-transform: uppercase; margin: 0; }
+                .content { padding: 0 40px 40px 40px; text-align: center; }
+                .title { color: #ffffff; font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+                .subtitle { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 35px; }
+                .otp-box { background: rgba(2, 6, 23, 0.8); border: 1px solid #1e293b; border-radius: 20px; padding: 35px; margin-bottom: 30px; position: relative; }
+                .otp-code { font-size: 48px; font-weight: 900; letter-spacing: 12px; color: ${color}; margin: 0; line-height: 1; }
+                .copy-hint { color: #64748b; font-size: 11px; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+                .footer { padding: 30px; text-align: center; background-color: #020617; border-top: 1px solid #1e293b; }
+                .footer-text { color: #475569; font-size: 11px; margin: 0; letter-spacing: 0.5px; }
+                .divider { height: 1px; background: linear-gradient(90deg, transparent, #1e293b, transparent); margin: 30px 0; }
+            </style>
         </head>
-        <body style="margin: 0; padding: 0; background-color: #020617; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #020617; padding: 40px 0;">
-                <tr>
-                    <td align="center">
-                        <!-- Main Container -->
-                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0b1221; border-radius: 24px; overflow: hidden; border: 1px solid #1e293b; margin: 0 20px;">
+        <body>
+            <center class="wrapper">
+                <table class="main" width="100%">
+                    <tr>
+                        <td class="header">
+                            <h1 class="brand">USA AFFILIATE</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+                            <h2 class="title">${title}</h2>
+                            <p class="subtitle">Secure authorization required. Use the unique access code below to complete your process.</p>
                             
-                            <!-- Header / Brand -->
-                            <tr>
-                                <td style="padding: 40px; text-align: center;">
-                                    <div style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">USA AFFILIATE</div>
-                                </td>
-                            </tr>
+                            <div class="otp-box">
+                                <h3 class="otp-code">${otp}</h3>
+                                <p class="copy-hint">Double tap to select and copy</p>
+                            </div>
                             
-                            <!-- Content Body -->
-                            <tr>
-                                <td style="padding: 0 40px 40px 40px; text-align: center;">
-                                    <h2 style="color: #ffffff; margin: 0 0 16px 0; font-size: 20px; font-weight: 800;">${title}</h2>
-                                    <p style="color: #94a3b8; font-size: 15px; line-height: 1.5; margin-bottom: 30px;">
-                                        Please use the following authorization code to verify your action.
-                                    </p>
-                                    
-                                    <div style="background-color: #020617; border: 1px solid #1e293b; border-radius: 16px; padding: 30px; margin-bottom: 30px;">
-                                        <div style="font-family: monospace; font-size: 40px; font-weight: 900; letter-spacing: 10px; color: ${color};">
-                                            ${otp}
-                                        </div>
-                                    </div>
-                                    
-                                    <p style="color: #64748b; font-size: 12px;">Valid for 5 minutes.</p>
-                                </td>
-                            </tr>
-                            
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color: #020617; padding: 20px; text-align: center; border-top: 1px solid #1e293b;">
-                                    <p style="color: #475569; font-size: 11px; margin: 0;">USA Affiliate Official Node Network</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+                            <p style="color: #64748b; font-size: 12px; margin: 0;">This code will expire in 5 minutes for your security.</p>
+                            <div class="divider"></div>
+                            <p style="color: #475569; font-size: 11px; line-height: 1.5;">If you did not request this code, please ignore this email or contact support if you feel this is a mistake.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <p class="footer-text">© ${new Date().getFullYear()} USA Affiliate Official Node Network</p>
+                            <p style="color: #1e293b; font-size: 10px; margin-top: 10px;">Security Protocol: X-Mailer: USA-Affiliate-Node-v2</p>
+                        </td>
+                    </tr>
+                </table>
+            </center>
         </body>
         </html>
         `;
 
-        const subject = `${title} [${otp}]`; // Include code in subject for better visibility
+        const subject = `${otp} is your USA Affiliate code`; // Code first for mobile notifications
         await this.sendEmail(email, subject, html);
         return true;
     }
