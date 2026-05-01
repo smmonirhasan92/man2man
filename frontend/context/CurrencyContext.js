@@ -29,7 +29,8 @@ export function CurrencyProvider({ children }) {
     // [v7.1] Helper to format in NXS (Standard)
     const formatNXS = (usdAmount) => {
         const nxsValue = Math.round(parseFloat(usdAmount || 0) * 100);
-        return `${nxsValue.toLocaleString()} NXS`;
+        const usdValue = parseFloat(usdAmount || 0).toFixed(2);
+        return `${nxsValue.toLocaleString()} NXS ($${usdValue})`;
     };
 
     return (
