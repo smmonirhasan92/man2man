@@ -6,7 +6,7 @@ const Transaction = require('../wallet/TransactionModel');
  */
 exports.getDashboardData = async (req, res) => {
     try {
-        const userId = req.user.user.id;
+        const userId = req.user.id || (req.user.user && req.user.user.id);
         const user = await User.findById(userId);
         
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -63,7 +63,7 @@ exports.claimCommission = async (req, res) => {
     const WalletService = require('../wallet/WalletService');
     
     try {
-        const userId = req.user.user.id;
+        const userId = req.user.id || (req.user.user && req.user.user.id);
         const { transactionId } = req.body;
 
         const result = await runTransaction(async (session) => {
@@ -107,7 +107,7 @@ exports.claimCommission = async (req, res) => {
  */
 exports.getNetworkMembers = async (req, res) => {
     try {
-        const userId = req.user.user.id;
+        const userId = req.user.id || (req.user.user && req.user.user.id);
         const { level = 1 } = req.query;
         const targetLevel = parseInt(level);
         const user = await User.findById(userId);
