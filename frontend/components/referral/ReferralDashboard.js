@@ -123,12 +123,14 @@ export default function ReferralDashboard() {
                     <div className="flex-1">
                         <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">My Referral Link ID</p>
                         <p className="text-xl font-black text-white tracking-[0.1em] drop-shadow-md">
-                            {data.referralCode || 'REF-LOADING...'}
+                            {loading ? 'LOADING...' : (data.referralCode || 'N/A')}
                         </p>
                     </div>
                     <button 
                         onClick={copyCode} 
+                        disabled={!data.referralCode}
                         className={`px-8 py-4 rounded-xl font-black text-xs transition-all active:scale-95 shadow-xl ${
+                            !data.referralCode ? 'opacity-50 cursor-not-allowed bg-slate-700' :
                             copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
                         }`}
                     >

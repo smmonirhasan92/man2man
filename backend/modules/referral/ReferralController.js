@@ -47,7 +47,7 @@ exports.getDashboardData = async (req, res) => {
             },
             lockedCommissions,
             logs: [],
-            referralCode: user.referralCode
+            referralCode: user.referralCode || user.username?.toUpperCase() || 'MEMBER'
         });
     } catch (err) {
         console.error(err);
