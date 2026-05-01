@@ -31,7 +31,7 @@ exports.getDashboardData = async (req, res) => {
 
         res.json({
             stats: {
-                totalEarnings: user.referralIncome || 0,
+                totalEarnings: (user.referralIncome || 0) + (user.wallet.pending_referral || 0),
                 totalReferrals: user.referralCount || 0,
                 activeReferrals: user.referralCount || 0,
                 referralHands: user.referralHands || 0,
