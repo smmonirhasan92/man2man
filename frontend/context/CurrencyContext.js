@@ -9,7 +9,7 @@ export function CurrencyProvider({ children }) {
     // No BDT conversion in wallet per user request.
     const [currency, setCurrency] = useState('USD');
     const [rates] = useState({
-        NXS_TO_USD: 0.01
+        NXS_TO_USD: 0.1
     });
 
     useEffect(() => {
@@ -28,7 +28,7 @@ export function CurrencyProvider({ children }) {
 
     // [v7.1] Helper to format in NXS (Standard)
     const formatNXS = (usdAmount) => {
-        const nxsValue = Math.round(parseFloat(usdAmount || 0) * 100);
+        const nxsValue = Math.round(parseFloat(usdAmount || 0) * 10);
         return `${nxsValue.toLocaleString()} NXS`;
     };
 
