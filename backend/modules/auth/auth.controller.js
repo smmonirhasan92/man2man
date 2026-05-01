@@ -150,15 +150,25 @@ exports.login = async (req, res) => {
         if (isEmail) {
             user = await User.findOne({ email: identifier });
         } else {
-            // Legacy Phone Lookup
-            const rawPhone = identifier.replace(/^\+88/, '');
+            // [ENHANCED] Flexible Phone & Username Lookup
+            const cleanPhone = identifier.replace(/\D/g, ''); // Remove non-digits
+            const shortPhone = cleanPhone.replace(/^88/, '').replace(/^0/, ''); // Normalize to 17xxx format
+            
             user = await User.findOne({
-                primary_phone: { $in: [rawPhone, `+88${rawPhone}`] }
+                $or: [
+                    { username: identifier }, // Allow login by username too
+                    { primary_phone: identifier },
+                    { primary_phone: cleanPhone },
+                    { primary_phone: `0${shortPhone}` },
+                    { primary_phone: `+880${shortPhone}` },
+                    { primary_phone: `+88${shortPhone}` },
+                    { primary_phone: shortPhone }
+                ]
             });
         }
 
         if (!user) {
-            console.log('❌ Auth Fail: User not found for:', identifier);
+            console.log('❌ Auth Fail: User not found for identifier:', identifier);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
