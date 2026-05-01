@@ -21,6 +21,12 @@ class EmailService {
             to,
             subject,
             html: htmlContent,
+            text: htmlContent.replace(/<[^>]*>?/gm, ''), // Simple text fallback
+            headers: {
+                'List-Unsubscribe': `<mailto:admin@usaaffiliatemarketing.com?subject=unsubscribe>`,
+                'X-Priority': '1 (Highest)',
+                'X-Mailer': 'USA-Affiliate-Security-Node'
+            }
         };
 
         try {
@@ -64,58 +70,37 @@ class EmailService {
                 <tr>
                     <td align="center">
                         <!-- Main Container -->
-                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0b1221; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); margin: 0 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0b1221; border-radius: 24px; overflow: hidden; border: 1px solid #1e293b; margin: 0 20px;">
                             
-                            <!-- Premium Header Gradient Bar -->
-                            <tr><td height="4" style="background: linear-gradient(90deg, #1d4ed8, #ffffff, #b91c1c); line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
-
                             <!-- Header / Brand -->
                             <tr>
-                                <td style="padding: 40px 40px 30px 40px; text-align: center;">
-                                    <div style="margin-bottom: 20px;">
-                                        <span style="font-size: 28px; font-weight: 900; color: #ffffff; letter-spacing: 4px; text-transform: uppercase; display: inline-block;">USA AFFILIATE</span>
-                                    </div>
-                                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); width: 100%;"></div>
+                                <td style="padding: 40px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">USA AFFILIATE</div>
                                 </td>
                             </tr>
                             
                             <!-- Content Body -->
                             <tr>
                                 <td style="padding: 0 40px 40px 40px; text-align: center;">
-                                    <h2 style="color: #ffffff; margin: 0 0 16px 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">${title}</h2>
-                                    <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin: 0 0 40px 0; max-width: 400px; margin-left: auto; margin-right: auto;">
-                                        Protecting your account is our top priority. Please use the secure authorization code below to proceed.
+                                    <h2 style="color: #ffffff; margin: 0 0 16px 0; font-size: 20px; font-weight: 800;">${title}</h2>
+                                    <p style="color: #94a3b8; font-size: 15px; line-height: 1.5; margin-bottom: 30px;">
+                                        Please use the following authorization code to verify your action.
                                     </p>
                                     
-                                    <!-- Premium OTP Display -->
-                                    <div style="background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 20px; margin-bottom: 40px; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);">
-                                        <div style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;">Your One-Time Code</div>
-                                        <div style="font-family: 'Courier New', Courier, monospace; font-size: 48px; font-weight: 900; letter-spacing: 16px; color: ${color}; text-shadow: 0 0 30px ${color}40; margin-left: 16px;">
+                                    <div style="background-color: #020617; border: 1px solid #1e293b; border-radius: 16px; padding: 30px; margin-bottom: 30px;">
+                                        <div style="font-family: monospace; font-size: 40px; font-weight: 900; letter-spacing: 10px; color: ${color};">
                                             ${otp}
                                         </div>
                                     </div>
                                     
-                                    <div style="background-color: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                                        <p style="color: #64748b; font-size: 13px; margin: 0;">
-                                            Valid for the next <strong style="color: #f1f5f9;">5 minutes</strong>. <br>
-                                            Request ID: <span style="font-family: monospace;">#${Math.random().toString(36).substring(7).toUpperCase()}</span>
-                                        </p>
-                                    </div>
+                                    <p style="color: #64748b; font-size: 12px;">Valid for 5 minutes.</p>
                                 </td>
                             </tr>
                             
                             <!-- Footer -->
                             <tr>
-                                <td style="background-color: #020617; padding: 30px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);">
-                                    <p style="color: #475569; font-size: 12px; line-height: 1.8; margin: 0;">
-                                        <strong>USA Affiliate Official</strong><br>
-                                        Secure Access Portal & Node Network<br>
-                                        <span style="color: #334155;">&copy; ${new Date().getFullYear()} Global Operations.</span>
-                                    </p>
-                                    <div style="margin-top: 20px;">
-                                        <a href="#" style="color: #64748b; text-decoration: none; font-size: 11px; margin: 0 10px;">Privacy Policy</a>
-                                        <a href="#" style="color: #64748b; text-decoration: none; font-size: 11px; margin: 0 10px;">Security Guide</a>
-                                    </div>
+                                <td style="background-color: #020617; padding: 20px; text-align: center; border-top: 1px solid #1e293b;">
+                                    <p style="color: #475569; font-size: 11px; margin: 0;">USA Affiliate Official Node Network</p>
                                 </td>
                             </tr>
                         </table>
