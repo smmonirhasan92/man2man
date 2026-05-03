@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock, Globe2, ArrowDownCircle, ArrowUpCircle, Zap, TrendingUp, BarChart2 } from 'lucide-react';
+import PermissionGuard from '../common/PermissionGuard';
+import { playSoundEffect } from '../../utils/soundEngine';
 import OrderCreationModal from './OrderCreationModal';
 import BuyOrderModal from './BuyOrderModal';
 import P2PChatRoom from './P2PChatRoom';
@@ -294,7 +296,8 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const userTier = getFeeTier(user?.completedTrades || 0);
 
     return (
-        <div className="min-h-screen bg-[#0b0e11] text-[#eaeaec] font-sans pb-24 overflow-x-hidden">
+        <PermissionGuard>
+            <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-blue-500/30">
 
             {/* Notification Permission Banner */}
             {permission === 'default' && (
