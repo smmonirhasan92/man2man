@@ -69,7 +69,12 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     useEffect(() => {
         fetchTradeData();
         fetchChatHistory();
-    }, [tradeId]);
+        
+        // [WORLD-CLASS] Explicitly join room on load
+        if (socket) {
+            socket.emit('join_trade_room', tradeId);
+        }
+    }, [tradeId, socket]);
 
     // Socket Listeners
     useEffect(() => {

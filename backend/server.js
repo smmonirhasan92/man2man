@@ -256,6 +256,13 @@ systemNamespace.on('connection', (socket) => {
     socket.on('join_user_room', (userId) => {
         if (userId) socket.join(`user_${userId}`);
     });
+
+    socket.on('join_trade_room', (tradeId) => {
+        if (tradeId) {
+            socket.join(`trade_${tradeId}`);
+            // console.log(`[SOCKET] User ${socket.id} joined Trade Room: trade_${tradeId}`);
+        }
+    });
     
     socket.on('join_admin_room', (adminToken) => {
         socket.join('admin_dashboard');

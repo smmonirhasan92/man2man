@@ -648,11 +648,11 @@ class P2PService {
         // Get Trade to know rooms
         const trade = await P2PTrade.findById(tradeId);
 
-        // [FIX] Broadcast only to the OTHER party, not the sender. 
-        // This prevents self-notification sounds and redundant UI updates.
-        const recipientId = trade.sellerId.toString() === senderId.toString() ? trade.buyerId : trade.sellerId;
-        
-        SocketService.emitToUser(recipientId, 'p2p_message', { ...msg.toObject(), sound: 'message_in' });
+        // [WORLD-CLASS] Broadcast to the Trade Room for Instant Chat Display
+        SocketService.broadcast(`trade_${tradeId}`, 'p2p_message', msg);
+
+        // Keep individual signals for sound/vibration/notification triggers
+        SocketService.emitToUser(recipientId, 'p2p_message_alert', { ...msg.toObject(), sound: 'message_in' });
         SocketService.emitToUser(senderId, 'p2p_message_sent', { ...msg.toObject(), sound: 'message_out' }); 
         
         // [INSTANT UI] Force Counterparty to fetch trade state if first message
