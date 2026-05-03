@@ -1,25 +1,33 @@
 const mongoose = require('mongoose');
+const User = require('./modules/user/UserModel');
 
-async function run() {
-    await mongoose.connect('mongodb://m2m-mongodb-test:27017/universal_game_core_docker?replicaSet=rs0');
-    
-    const email = 'smmmonirhasan92@gmail.com';
-    const user = await mongoose.connection.collection('users').findOne(
-        { email },
-        { projection: { _id: 1, email: 1, fullName: 1, createdAt: 1 } }
-    );
-    
-    if (user) {
-        console.log('FOUND DUPLICATE USER:', JSON.stringify(user, null, 2));
-        console.log('\nDeleting duplicate entry...');
-        await mongoose.connection.collection('users').deleteOne({ email });
-        console.log('DELETED. User can now re-register freshly.');
-    } else {
-        console.log('No user found with that email. Listing all users:');
-        const all = await mongoose.connection.collection('users').find({}, { projection: { email: 1, fullName: 1, createdAt: 1 } }).toArray();
-        console.log(JSON.stringify(all, null, 2));
+async function check() {
+    try {
+        await mongoose.connect('mongodb://m2m-mongodb:27017/man2man');
+        const phoneToCheck = '017212321';
+        const user = await User.findOne({
+            $or: [
+                { primary_phone: phoneToCheck },
+                { primary_phone: phoneToCheck.replace(/^0/, '') },
+                { primary_phone: '+88' + phoneToCheck },
+                { username: phoneToCheck }
+            ]
+        });
+        
+        if (user) {
+            console.log('--- USER FOUND ---');
+            console.log('Username:', user.username);
+            console.log('Email:', user.email);
+            console.log('Phone:', user.primary_phone);
+            console.log('Status:', user.status);
+        } else {
+            console.log('--- USER NOT FOUND ---');
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        process.exit(0);
     }
-    
-    process.exit(0);
 }
-run().catch(e => { console.error(e); process.exit(1); });
+
+check();
