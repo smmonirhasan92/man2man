@@ -208,7 +208,7 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     };
 
     // [WORLD-CLASS] Ultra-Fast Sound Engine
-    const playSoundEffect = (type) => {
+    window.playSoundEffect = (type) => {
         try {
             const soundUrls = {
                 notification: 'https://usaaffiliatemarketing.com/sounds/notification-v2.mp3',
@@ -228,8 +228,8 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         }
     };
 
-    const playDing = () => playSoundEffect('notification');
-    const playSuccess = () => playSoundEffect('success');
+    const playDing = () => window.playSoundEffect('notification');
+    const playSuccess = () => window.playSoundEffect('success');
 
     const sendMessage = async () => {
         if (!input.trim()) return;

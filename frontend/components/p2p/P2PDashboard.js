@@ -105,7 +105,9 @@ export default function P2PDashboard({ initialMode, onClose }) {
             });
             socket.on('p2p_mark_paid', (trade) => {
                 handleMarkPaid(trade);
-                if (trade.sellerId === (user?._id || user?.id)) playSound('notification');
+                if (trade.sellerId === (user?._id || user?.id)) {
+                    if (window.playSoundEffect) window.playSoundEffect('notification');
+                }
             });
             socket.on('p2p_trade_dispute', handleDispute);
             socket.on('p2p_trade_start', (data) => {
@@ -114,7 +116,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 const currentUserId = user?._id || user?.id;
                 if (data.sound === 'trade_start' || data.playNotification) {
                     if (trade.sellerId === currentUserId || trade.buyerId === currentUserId) {
-                        playSoundEffect('notification');
+                        if (window.playSoundEffect) window.playSoundEffect('notification');
                         toast.success(data.message || "New P2P Match!");
                     }
                 }
