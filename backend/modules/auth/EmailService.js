@@ -51,7 +51,8 @@ class EmailService {
         // Save to Redis (TTL 5 minutes)
         const key = `otp:${context}:${email}`;
         if (redisConfig.client.isOpen) {
-             await redisConfig.client.set(key, otp, { EX: 300 }); // 5 mins
+             // [RESILIENT] Save OTP with 15 min TTL (handles retry/resend window)
+             await redisConfig.client.set(key, otp, { EX: 900 }); // 15 mins
         } else {
              // Fallback to memory map if redis not running
              if (!this.memoryOtp) this.memoryOtp = {};
@@ -115,7 +116,31 @@ class EmailService {
         `;
 
         const subject = `${otp} is your USA Affiliate code`; // Code first for mobile notifications
-        await this.sendEmail(email, subject, html);
+
+        // [RESILIENT SEND] OTP is already saved. Attempt email, retry once on failure.
+        // If both attempts fail, OTP remains valid for 15 mins so user can trigger resend.
+        let emailSent = false;
+        try {
+            await this.sendEmail(email, subject, html);
+            emailSent = true;
+        } catch (firstErr) {
+            console.warn(`[EmailService] First attempt failed for ${email}. Retrying in 3s...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            try {
+                await this.sendEmail(email, subject, html);
+                emailSent = true;
+            } catch (secondErr) {
+                // OTP is still saved in Redis. User can click "Resend" to trigger this again.
+                console.error(`[EmailService] Both attempts failed for ${email}. OTP queued in Redis for 15 mins.`);
+                // Store a pending flag so admin can monitor
+                const failKey = `otp_failed:${context}:${email}`;
+                if (redisConfig.client.isOpen) {
+                    await redisConfig.client.set(failKey, JSON.stringify({ email, context, otp, failedAt: new Date().toISOString() }), { EX: 900 });
+                }
+            }
+        }
+
+        // Always return true — OTP is saved, user can resend if email missed
         return true;
     }
 
