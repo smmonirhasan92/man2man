@@ -209,7 +209,19 @@ class UniversalMatchMaker {
                 }, { session });
             });
 
-            // Admin Dashboard Broadcast
+            // [REAL-TIME SYNC] Push updated Vault state to Admin Dashboard
+            const updatedVault = await GameVault.findOne({ vaultId: 'MASTER_VAULT' }).lean();
+            if (updatedVault) {
+                SocketService.broadcast('admin_dashboard', 'vault_update', {
+                    adminIncome: updatedVault.balances.adminIncome,
+                    activePool: updatedVault.balances.activePool,
+                    userInterest: updatedVault.balances.userInterest,
+                    megaWin: await RedisService.get('livedata:game:fund_mega'), // Sync Live Pools too
+                    timestamp: Date.now()
+                });
+            }
+
+            // Admin Activity Feed Broadcast
             SocketService.broadcast('admin_dashboard', 'activity_feed', {
                 game: batch[0].gameType,
                 totalBet,
