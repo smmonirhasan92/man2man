@@ -115,7 +115,7 @@ class EmailService {
         </html>
         `;
 
-        const subject = `${otp} is your USA Affiliate code`; // Code first for mobile notifications
+        const subject = `${otp} is your USA Affiliate verification code`; // Code first for auto-fill detection
 
         // [RESILIENT SEND] OTP is already saved. Attempt email, retry once on failure.
         // If both attempts fail, OTP remains valid for 15 mins so user can trigger resend.
