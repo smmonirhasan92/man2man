@@ -93,23 +93,23 @@ export default function P2PDashboard({ initialMode, onClose }) {
             };
 
             socket.on('p2p_alert', handleAlert);
-            socket.on('p2p_completed', (trade) => {
+            socket.on('p2p_market', (data) => {
+                if (data.event === 'new_order') fetchOrders();
+            });
+            socket.on('p2p_completed', (data) => {
+                const trade = data.trade || data;
                 handleCompleted(trade);
-                playSound('success');
-                toast.success("Trade Completed!");
+                if (data.sound === 'success') playSound('success');
             });
             socket.on('p2p_mark_paid', (trade) => {
                 handleMarkPaid(trade);
-                if (trade.sellerId === user?._id) {
-                    playSound('notification');
-                    toast.success("Buyer marked as PAID!");
-                }
+                if (trade.sellerId === user?._id) playSound('notification');
             });
             socket.on('p2p_trade_dispute', handleDispute);
             socket.on('p2p_trade_start', (data) => {
                 const trade = data.trade || data;
                 handleTradeStart(trade);
-                if (data.playNotification) {
+                if (data.sound === 'trade_start' || data.playNotification) {
                     playSound('notification');
                     toast.success(data.message || "New P2P Match!");
                 }

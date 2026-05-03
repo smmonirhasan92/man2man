@@ -193,12 +193,14 @@ class P2PService {
                 ? `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`
                 : `New P2P Match! Seller accepted your BUY listing for ${trade.amount} NXS`;
 
-            // [FIX] ONLY Notify the recipient (makerId), NOT the person who initiated it.
+            // [WORLD-CLASS] Notify with High Priority & Sound
             SocketService.emitToUser(makerId, 'p2p_trade_start', { 
                 trade, 
                 playNotification: true, 
+                sound: 'trade_start', 
                 message: notifMsg 
             });
+            SocketService.broadcast('p2p_market', 'new_trade_alert', { orderId: trade.orderId });
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
             await NotificationService.send(makerId, notifMsg, 'success', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
@@ -436,9 +438,9 @@ class P2PService {
 
             return trade;
         }).then(async (trade) => {
-            // Notify System & Users out of session
-            SocketService.emitToUser(trade.buyerId, 'p2p_completed', trade); // 'completed' acts as terminal state to update UI
-            SocketService.emitToUser(trade.sellerId, 'p2p_completed', trade);
+            // [WORLD-CLASS] Terminate with UI refresh
+            SocketService.emitToUser(trade.buyerId, 'p2p_completed', { trade, sound: 'success', message: 'Trade Finished' });
+            SocketService.emitToUser(trade.sellerId, 'p2p_completed', { trade, sound: 'success', message: 'Trade Finished' });
 
             const updatedSeller = await User.findById(trade.sellerId);
             SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
@@ -650,9 +652,13 @@ class P2PService {
         // This prevents self-notification sounds and redundant UI updates.
         const recipientId = trade.sellerId.toString() === senderId.toString() ? trade.buyerId : trade.sellerId;
         
-        SocketService.emitToUser(recipientId, 'p2p_message', msg);
-        SocketService.emitToUser(senderId, 'p2p_message_sent', msg); // Optional: for sender's UI confirmation
-
+        SocketService.emitToUser(recipientId, 'p2p_message', { ...msg.toObject(), sound: 'message_in' });
+        SocketService.emitToUser(senderId, 'p2p_message_sent', { ...msg.toObject(), sound: 'message_out' }); 
+        
+        // [INSTANT UI] Force Counterparty to fetch trade state if first message
+        if (trade.status === 'CREATED') {
+            SocketService.emitToUser(recipientId, 'p2p_status_update', { tradeId: trade._id, status: trade.status });
+        }
         // Send Offline Push Notification (Web Push)
         // Determine recipient (Already defined above)
         

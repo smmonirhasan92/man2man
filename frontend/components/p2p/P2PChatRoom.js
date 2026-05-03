@@ -118,9 +118,22 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             }
         };
 
-        socket.on('p2p_message', handleP2PMessage);
+        socket.on('p2p_message', (data) => {
+            handleP2PMessage(data);
+            if (data.sound === 'message_in') playSound('notification');
+        });
+        socket.on('p2p_message_sent', (data) => {
+            if (data.sound === 'message_out') playSound('success');
+        });
         socket.on('p2p_mark_paid', handleMarkPaid);
-        socket.on('p2p_completed', handleCompleted);
+        socket.on('p2p_completed', (data) => {
+            handleCompleted(data.trade || data);
+            playSound('success');
+            toast.success(data.message || "Trade Finished!");
+        });
+        socket.on('p2p_status_update', (data) => {
+            if (String(data.tradeId) === String(tradeId)) fetchTradeData();
+        });
         socket.on('p2p_trade_dispute', handleDispute);
 
         return () => {
