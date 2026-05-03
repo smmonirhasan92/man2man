@@ -482,7 +482,7 @@ class WalletService {
 
             // 1. Check if user already has an active loan
             if (user.is_loan_active || user.loan_due > 0) {
-                throw new Error('আপনার ইতিমধ্যে একটি লোন অ্যাক্টিভ আছে। নতুন লোন নেওয়ার আগে আগের লোনটি পরিশোধ করুন।');
+                throw new Error('You already have an active loan. Please repay it before requesting a new one.');
             }
 
             // 2. Grant Loan: 300 NXS

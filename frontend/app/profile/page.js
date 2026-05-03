@@ -246,28 +246,28 @@ export default function ProfilePage() {
                         <div className="relative z-10 space-y-4">
                             {user.is_loan_active || (user.loan_due && user.loan_due > 0) ? (
                                 <div className="space-y-2">
-                                    <p className="text-sm text-amber-100/70 font-medium">আপনার একটি লোন বর্তমানে অ্যাক্টিভ আছে। নতুন লোন নেওয়ার জন্য বা উইথড্র করার জন্য এটি পরিশোধ করা আবশ্যক।</p>
+                                    <p className="text-sm text-amber-100/70 font-medium">You have an active loan. Repay it before requesting a new loan or making a withdrawal.</p>
                                     <div className="bg-black/40 p-4 rounded-xl border border-amber-500/20 flex justify-between items-center">
                                         <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Loan Due</span>
                                         <span className="text-xl font-black text-amber-500">{user.loan_due?.toFixed(2) || '300.00'} NXS</span>
                                     </div>
                                     <p className="text-[10px] text-red-400/80 font-bold leading-tight">
-                                        * লোন থাকা অবস্থায় কোনো ফান্ড উইথড্র করা যাবে না। উইথড্র রিকোয়েস্ট দিলে সিস্টেম স্বয়ংক্রিয়ভাবে ব্যালেন্স থেকে লোন রিকভার করবে।
+                                        * Withdrawals are blocked while a loan is active. When you request a withdrawal, the system will automatically recover the loan amount from your balance first.
                                     </p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     <p className="text-xs text-amber-200/60 font-medium leading-relaxed">
-                                        আপনি চাইলে ইমার্জেন্সি ফান্ড হিসেবে <strong className="text-amber-400">৩০০ NXS</strong> পর্যন্ত লোন নিতে পারেন, যা সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।
+                                        Take an emergency fund of up to <strong className="text-amber-400">300 NXS</strong> as a loan, added directly to your Main Balance.
                                     </p>
                                     <button
                                         type="button"
                                         onClick={async () => {
-                                            if (confirm('আপনি কি ৩০০ NXS লোন নিতে চান? এটি আপনার মেইন ব্যালেন্সে যুক্ত হবে।')) {
+                                            if (confirm('Are you sure you want to take a 300 NXS loan? This will be added to your Main Balance.')) {
                                                 setLoading(true);
                                                 try {
                                                     await api.post('/wallet/take-loan');
-                                                    toast.success('৩০০ NXS লোন সফলভাবে যুক্ত হয়েছে! 💰');
+                                                    toast.success('300 NXS Loan granted successfully! 💰');
                                                     // Refresh User Data
                                                     const res = await api.get('/auth/me');
                                                     setUser(prev => ({ ...prev, ...res.data }));

@@ -16,6 +16,11 @@ class EmailService {
     }
 
     async sendEmail(to, subject, htmlContent) {
+        // [GUARD] If DISABLE_EMAIL=true (Test VPS), silently skip. Emails only from Main Domain.
+        if (process.env.DISABLE_EMAIL === 'true') {
+            console.log(`[EmailService] DISABLED on this server. Skipped email to: ${to} | Subject: ${subject}`);
+            return { skipped: true };
+        }
         const mailOptions = {
             from: `"${process.env.APP_NAME || 'USA Affiliate'}" <${process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@usaaffiliatemarketing.com'}>`,
             to,
