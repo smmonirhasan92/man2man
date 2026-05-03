@@ -207,26 +207,29 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     };
 
-    const playDing = () => {
-        if (notificationAudio.current) {
-            notificationAudio.current.currentTime = 0;
-            // Force interaction context
-            const playPromise = notificationAudio.current.play();
+    // [WORLD-CLASS] Ultra-Fast Sound Engine
+    const playSoundEffect = (type) => {
+        try {
+            const soundUrls = {
+                notification: 'https://usaaffiliatemarketing.com/sounds/notification-v2.mp3',
+                success: 'https://usaaffiliatemarketing.com/sounds/success-v2.mp3',
+                error: 'https://usaaffiliatemarketing.com/sounds/error-v2.mp3'
+            };
+            const audio = new Audio(soundUrls[type] || soundUrls.notification);
+            audio.volume = 1.0;
+            const playPromise = audio.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log("[AUDIO] Autoplay prevented. Waiting for interaction.");
+                playPromise.catch(e => {
+                    console.warn("[AUDIO] Playback blocked by browser. Interaction required.", e.message);
                 });
             }
+        } catch (e) {
+            console.error("[AUDIO] Engine Error:", e);
         }
     };
 
-    const playSuccess = () => {
-        if (successAudio.current) {
-            successAudio.current.currentTime = 0;
-            successAudio.current.play().catch(e => console.log('Audio Blocked:', e));
-        }
-        // Native notification handles alerts globally via NotificationContext
-    };
+    const playDing = () => playSoundEffect('notification');
+    const playSuccess = () => playSoundEffect('success');
 
     const sendMessage = async () => {
         if (!input.trim()) return;

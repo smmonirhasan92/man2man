@@ -112,7 +112,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 const currentUserId = user?._id || user?.id;
                 if (data.sound === 'trade_start' || data.playNotification) {
                     if (trade.sellerId === currentUserId || trade.buyerId === currentUserId) {
-                        playSound('notification');
+                        playSoundEffect('notification');
                         toast.success(data.message || "New P2P Match!");
                     }
                 }
