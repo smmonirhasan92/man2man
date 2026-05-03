@@ -112,6 +112,7 @@ export default function EmailVerificationModal({ user, onVerified }) {
                                     className="w-full bg-[#131c31] border border-white/10 rounded-2xl px-4 py-4 text-center text-white font-mono text-3xl tracking-[0.5em] outline-none focus:border-emerald-500 transition-colors"
                                     autoFocus
                                     required
+                                    autoComplete="one-time-code"
                                 />
                             </div>
                             <button

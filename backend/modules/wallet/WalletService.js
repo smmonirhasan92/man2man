@@ -474,6 +474,40 @@ class WalletService {
 
         return transaction;
     }
+    // [NEW] Smart Loan System
+    static async takeLoan(userId) {
+        return await runTransaction(async (session) => {
+            const user = await User.findById(userId).session(session);
+            if (!user) throw new Error('User not found');
+
+            // 1. Check if user already has an active loan
+            if (user.is_loan_active || user.loan_due > 0) {
+                throw new Error('আপনার ইতিমধ্যে একটি লোন অ্যাক্টিভ আছে। নতুন লোন নেওয়ার আগে আগের লোনটি পরিশোধ করুন।');
+            }
+
+            // 2. Grant Loan: 300 NXS
+            const LOAN_AMOUNT = 300;
+            user.wallet.main = (user.wallet.main || 0) + LOAN_AMOUNT;
+            user.loan_due = LOAN_AMOUNT;
+            user.is_loan_active = true;
+
+            await user.save({ session });
+
+            // 3. Log Transaction
+            const txn = new Transaction({
+                userId: user._id,
+                type: 'add_money',
+                amount: LOAN_AMOUNT,
+                status: 'completed',
+                description: 'Smart Loan Received',
+                metadata: { is_loan: true }
+            });
+            await txn.save({ session });
+
+            return txn;
+        });
+    }
+
 }
 
 module.exports = WalletService;

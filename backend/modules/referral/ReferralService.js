@@ -149,7 +149,8 @@ class ReferralService {
                 }
             }
             const rates = ReferralService.PLAN_COMMISSION_RATES;
-            const buyerDirectPercent = rates[0]; // L1 = 8%
+            // [MODIFIED] Randomize L1 fast referral bonus between 9% and 12%
+            const buyerDirectPercent = 9.0 + (Math.random() * 3.0); // 9% to 12%
             const buyerPlanObj = await Plan.findOne({ name: planName }).session(session);
             let totalDistributed = 0;
 
@@ -223,9 +224,33 @@ class ReferralService {
                 commission = Math.round(commission * 10000) / 10000;
 
                 if (commission > 0) {
-                    // [MODIFIED] Lock Commission for 5 days instead of direct credit
-                    const releaseDate = new Date();
-                    releaseDate.setDate(releaseDate.getDate() + 5);
+                    // --- [NEW] VALIDATOR LOGIC ---
+                    const UserPlanForValidation = require('../plan/UserPlanModel');
+                    const uplineActivePlans = await UserPlanForValidation.find({
+                        userId: uplineUser._id,
+                        status: 'active',
+                        expiryDate: { $gt: new Date() }
+                    }).session(session);
+
+                    let hasValidLongTermPlan = false;
+                    const tenDaysFromNow = new Date();
+                    tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
+                    
+                    for (const p of uplineActivePlans) {
+                        if (p.expiryDate > tenDaysFromNow) {
+                            hasValidLongTermPlan = true;
+                            break;
+                        }
+                    }
+
+                    // [MODIFIED] Lock Commission based on Validity Logic
+                    let releaseDate = new Date();
+                    if (hasValidLongTermPlan) {
+                        releaseDate.setDate(releaseDate.getDate() + 5); // Standard 5 days
+                    } else {
+                        // "Pending Status" - effectively locked indefinitely until validation met
+                        releaseDate = null; 
+                    }
 
                     uplineUser.wallet.pending_referral = (uplineUser.wallet.pending_referral || 0) + commission;
                     

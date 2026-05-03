@@ -75,6 +75,29 @@ exports.claimCommission = async (req, res) => {
 
             if (!trx) throw new Error("Commission not found or already claimed");
 
+            // --- [NEW] MINIMUM PACKAGE CHECK ---
+            const UserPlanForClaim = require('../plan/UserPlanModel');
+            const PlanForClaim = require('../admin/PlanModel');
+            
+            const userPlans = await UserPlanForClaim.find({ userId }).session(session);
+            let hasMinPackage = false;
+            
+            if (userPlans.length > 0) {
+                const planIds = userPlans.map(p => p.planId);
+                const plans = await PlanForClaim.find({ _id: { $in: planIds }, unlock_price: { $gte: 500 } }).session(session);
+                if (plans.length > 0) {
+                    hasMinPackage = true;
+                }
+            }
+
+            if (!hasMinPackage) {
+                throw new Error("বোনাস ক্লেইম করার জন্য আপনাকে অন্তত ৫০০ NXS ($5) মূল্যের একটি প্যাকেজ কিনতে হবে।");
+            }
+
+            if (!trx.metadata.releaseDate) {
+                 throw new Error("Validation Guard: You must have an active package with >10 days validity to unlock this commission.");
+            }
+
             const releaseDate = new Date(trx.metadata.releaseDate);
             if (releaseDate > new Date()) {
                 throw new Error(`Commission is locked until ${releaseDate.toLocaleDateString()}`);

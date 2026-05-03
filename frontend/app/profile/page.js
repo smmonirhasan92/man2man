@@ -227,6 +227,67 @@ export default function ProfilePage() {
                         </div>
                     )}
 
+                    {/* [NEW] 1.6 SMART LOAN SYSTEM */}
+                    <div className="bg-gradient-to-br from-amber-900/20 to-orange-900/10 p-5 rounded-2xl border border-amber-500/20 space-y-4 shadow-lg relative overflow-hidden mt-6 mb-6">
+                        {/* Background Decoration */}
+                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                        
+                        <div className="flex justify-between items-center relative z-10">
+                            <label className="text-xs font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Sparkles className="w-4 h-4" /> Smart Loan System
+                            </label>
+                            {user.is_loan_active || (user.loan_due && user.loan_due > 0) ? (
+                                <span className="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20 font-black tracking-widest uppercase shadow-[0_0_15px_rgba(239,68,68,0.1)]">Loan Active</span>
+                            ) : (
+                                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-black tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.1)]">Available</span>
+                            )}
+                        </div>
+
+                        <div className="relative z-10 space-y-4">
+                            {user.is_loan_active || (user.loan_due && user.loan_due > 0) ? (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-amber-100/70 font-medium">আপনার একটি লোন বর্তমানে অ্যাক্টিভ আছে। নতুন লোন নেওয়ার জন্য বা উইথড্র করার জন্য এটি পরিশোধ করা আবশ্যক।</p>
+                                    <div className="bg-black/40 p-4 rounded-xl border border-amber-500/20 flex justify-between items-center">
+                                        <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Loan Due</span>
+                                        <span className="text-xl font-black text-amber-500">{user.loan_due?.toFixed(2) || '300.00'} NXS</span>
+                                    </div>
+                                    <p className="text-[10px] text-red-400/80 font-bold leading-tight">
+                                        * লোন থাকা অবস্থায় কোনো ফান্ড উইথড্র করা যাবে না। উইথড্র রিকোয়েস্ট দিলে সিস্টেম স্বয়ংক্রিয়ভাবে ব্যালেন্স থেকে লোন রিকভার করবে।
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <p className="text-xs text-amber-200/60 font-medium leading-relaxed">
+                                        আপনি চাইলে ইমার্জেন্সি ফান্ড হিসেবে <strong className="text-amber-400">৩০০ NXS</strong> পর্যন্ত লোন নিতে পারেন, যা সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত হবে।
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (confirm('আপনি কি ৩০০ NXS লোন নিতে চান? এটি আপনার মেইন ব্যালেন্সে যুক্ত হবে।')) {
+                                                setLoading(true);
+                                                try {
+                                                    await api.post('/wallet/take-loan');
+                                                    toast.success('৩০০ NXS লোন সফলভাবে যুক্ত হয়েছে! 💰');
+                                                    // Refresh User Data
+                                                    const res = await api.get('/auth/me');
+                                                    setUser(prev => ({ ...prev, ...res.data }));
+                                                } catch (err) {
+                                                    toast.error(err.response?.data?.message || 'Failed to take loan');
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }
+                                        }}
+                                        disabled={loading}
+                                        className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(245,158,11,0.5)] active:scale-95 border border-amber-400/50"
+                                    >
+                                        Take 300 NXS Loan
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* 2. EMAIL VERIFICATION / BINDING SECTION [NEW] */}
                     <div className="bg-slate-800/30 p-5 rounded-2xl border border-white/5 space-y-4">
                         <div className="flex justify-between items-center mb-1">

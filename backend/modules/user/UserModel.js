@@ -63,6 +63,8 @@ const UserSchema = new mongoose.Schema({
         main: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // Renamed from main_balance
         // Game wallets removed per "No Games" policy constraint
         escrow_locked: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [P2P SAFE] Held funds during trade
+        loan_due: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [SMART LOAN] Tracks unpaid loans
+
         agent: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
         commission: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) }, // [ADMIN/AGENT] Fee Earnings
         pending_referral: { type: Number, default: 0.000000, set: v => parseFloat(v.toFixed(6)) },
@@ -146,6 +148,8 @@ const UserSchema = new mongoose.Schema({
 
     // --- Meta ---
     isActive: { type: Boolean, default: true },
+    is_loan_active: { type: Boolean, default: false }, // [SMART LOAN] Active flag
+
     pushSubscriptions: [{
         endpoint: String,
         expirationTime: Date,

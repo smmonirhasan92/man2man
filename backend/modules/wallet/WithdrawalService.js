@@ -41,9 +41,48 @@ class WithdrawalService {
                 throw new Error(eligibility.message);
             }
 
-            // 4. Balance Check & Deduct
-            const user = await User.findById(userId);
+            // 4. [NEW] Minimum Package Check (Security Guard)
+            const UserPlanForWithdraw = require('../plan/UserPlanModel');
+            const PlanForWithdraw = require('../admin/PlanModel');
+            const userPlans = await UserPlanForWithdraw.find({ userId }).session(session);
+            let hasMinPackage = false;
+            if (userPlans.length > 0) {
+                const planIds = userPlans.map(p => p.planId);
+                const plans = await PlanForWithdraw.find({ _id: { $in: planIds }, unlock_price: { $gte: 500 } }).session(session);
+                if (plans.length > 0) hasMinPackage = true;
+            }
+            if (!hasMinPackage) {
+                throw new Error("উইথড্র করার জন্য আপনাকে অন্তত ৫০০ NXS ($5) মূল্যের একটি প্যাকেজ কিনে অ্যাকাউন্ট ভেরিফাই করতে হবে।");
+            }
+
+            // 5. Balance Check & Deduct
+            const user = await User.findById(userId).session(session);
             if (!user) throw new Error('ইউজার পাওয়া যায়নি!');
+            
+            // --- [NEW] SMART LOAN AUTO-RECOVERY ---
+            if (user.is_loan_active && (user.wallet.loan_due || 0) > 0) {
+                const requiredAmount = amount + user.wallet.loan_due;
+                if ((user.wallet.main || 0) >= requiredAmount) {
+                    // Auto recover the loan
+                    user.wallet.main -= user.wallet.loan_due;
+                    
+                    // Create Transaction Log for Loan Recovery
+                    await Transaction.create([{
+                        userId: user._id,
+                        type: 'admin_debit',
+                        amount: -user.wallet.loan_due,
+                        status: 'completed',
+                        description: `Smart Loan Auto-Recovery (${user.wallet.loan_due} NXS)`,
+                        adminComment: 'System Auto-Recovery'
+                    }], opts);
+
+                    user.wallet.loan_due = 0;
+                    user.is_loan_active = false;
+                } else {
+                    throw new Error(`আপনার ${user.wallet.loan_due} NXS লোন বকেয়া আছে। উইথড্র করার জন্য পর্যাপ্ত ব্যালেন্স নেই।`);
+                }
+            }
+
             if ((user.wallet.main || 0) < amount) {
                 throw new Error(`❌ অপর্যাপ্ত মেইন ওয়ালেট ব্যালেন্স! আপনার ব্যালেন্স: ${(user.wallet.main || 0).toFixed(2)} NXS`);
             }

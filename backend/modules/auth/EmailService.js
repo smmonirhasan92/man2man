@@ -17,7 +17,7 @@ class EmailService {
 
     async sendEmail(to, subject, htmlContent) {
         const mailOptions = {
-            from: `"${process.env.APP_NAME || 'USA Affiliate'}" <${process.env.SMTP_FROM || 'noreply@usaaffiliatemarketing.com'}>`,
+            from: `"${process.env.APP_NAME || 'USA Affiliate'}" <${process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@usaaffiliatemarketing.com'}>`,
             to,
             subject,
             html: htmlContent,
@@ -57,7 +57,7 @@ class EmailService {
         const title = isReset ? 'Reset Your Password' : 'Verify Your Email';
         const color = isReset ? '#ef4444' : '#10b981'; // Red for reset, Emerald for verify
 
-        // [NEW] Premium World-Class Professional HTML Template
+        // [NEW] Professional Finance Clean UI Template
         const html = `
         <!DOCTYPE html>
         <html lang="en">
@@ -65,55 +65,46 @@ class EmailService {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${title}</title>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-                body { margin: 0; padding: 0; background-color: #020617; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; }
-                .wrapper { width: 100%; table-layout: fixed; background-color: #020617; padding-bottom: 60px; }
-                .main { background-color: #0b1221; margin: 0 auto; width: 100%; max-width: 500px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; margin-top: 50px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-                .header { padding: 40px; text-align: center; background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0) 100%); }
-                .brand { font-size: 20px; font-weight: 900; color: #10b981; letter-spacing: 4px; text-transform: uppercase; margin: 0; }
-                .content { padding: 0 40px 40px 40px; text-align: center; }
-                .title { color: #ffffff; font-size: 24px; font-weight: 800; margin-bottom: 12px; }
-                .subtitle { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 35px; }
-                .otp-box { background: rgba(2, 6, 23, 0.8); border: 1px solid #1e293b; border-radius: 20px; padding: 35px; margin-bottom: 30px; position: relative; }
-                .otp-code { font-size: 48px; font-weight: 900; letter-spacing: 12px; color: ${color}; margin: 0; line-height: 1; }
-                .copy-hint { color: #64748b; font-size: 11px; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-                .footer { padding: 30px; text-align: center; background-color: #020617; border-top: 1px solid #1e293b; }
-                .footer-text { color: #475569; font-size: 11px; margin: 0; letter-spacing: 0.5px; }
-                .divider { height: 1px; background: linear-gradient(90deg, transparent, #1e293b, transparent); margin: 30px 0; }
-            </style>
         </head>
-        <body>
-            <center class="wrapper">
-                <table class="main" width="100%">
-                    <tr>
-                        <td class="header">
-                            <h1 class="brand">USA AFFILIATE</h1>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="content">
-                            <h2 class="title">${title}</h2>
-                            <p class="subtitle">Secure authorization required. Use the unique access code below to complete your process.</p>
-                            
-                            <div class="otp-box">
-                                <h3 class="otp-code">${otp}</h3>
-                                <p class="copy-hint">Double tap to select and copy</p>
-                            </div>
-                            
-                            <p style="color: #64748b; font-size: 12px; margin: 0;">This code will expire in 5 minutes for your security.</p>
-                            <div class="divider"></div>
-                            <p style="color: #475569; font-size: 11px; line-height: 1.5;">If you did not request this code, please ignore this email or contact support if you feel this is a mistake.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="footer">
-                            <p class="footer-text">© ${new Date().getFullYear()} USA Affiliate Official Node Network</p>
-                            <p style="color: #1e293b; font-size: 10px; margin-top: 10px;">Security Protocol: X-Mailer: USA-Affiliate-Node-v2</p>
-                        </td>
-                    </tr>
-                </table>
-            </center>
+        <body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: Arial, Helvetica, sans-serif; color: #000000; -webkit-font-smoothing: antialiased;">
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 40px 0;">
+                <tr>
+                    <td align="center">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #10b981;">
+                            <tr>
+                                <td align="center" style="padding: 30px;">
+                                    <h1 style="color: #10b981; font-size: 24px; margin: 0; font-weight: bold; text-transform: uppercase;">USA Affiliate</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0 40px 40px 40px; text-align: center;">
+                                    <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">${title}</h2>
+                                    <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">Secure authorization required. Use the unique access code below to complete your process.</p>
+                                    
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <div style="background-color: #f1f5f9; border: 2px dashed #cbd5e1; padding: 20px; display: inline-block;">
+                                                    <span style="font-size: 42px; font-weight: bold; color: ${color}; letter-spacing: 8px;">${otp}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <p style="color: #64748b; font-size: 12px; margin-bottom: 20px;">This code will expire in 5 minutes for your security.</p>
+                                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                                    <p style="color: #94a3b8; font-size: 11px; line-height: 1.5;">If you did not request this code, please ignore this email or contact support if you feel this is a mistake.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #e2e8f0;">
+                                    <p style="color: #64748b; font-size: 11px; margin: 0;">© ${new Date().getFullYear()} USA Affiliate Official Node Network</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </body>
         </html>
         `;
@@ -146,24 +137,37 @@ class EmailService {
         const html = `
         <!DOCTYPE html>
         <html>
-        <body style="margin: 0; padding: 0; background-color: #020617; font-family: sans-serif; color: #f8fafc;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #020617; padding: 40px 0;">
+        <body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: Arial, Helvetica, sans-serif; color: #000000;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 40px 0;">
                 <tr>
                     <td align="center">
-                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #0b1221; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
-                            <tr><td height="4" style="background: linear-gradient(90deg, #10b981, #3b82f6);"></td></tr>
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #10b981;">
+                            <tr>
+                                <td align="center" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                                    <h1 style="color: #10b981; font-size: 24px; margin: 0; font-weight: bold; text-transform: uppercase;">USA Affiliate</h1>
+                                </td>
+                            </tr>
                             <tr>
                                 <td style="padding: 40px; text-align: center;">
-                                    <h1 style="color: #ffffff; font-size: 28px; margin-bottom: 20px;">Welcome, ${fullName}!</h1>
-                                    <p style="color: #94a3b8; font-size: 16px; line-height: 1.6;">
+                                    <h2 style="color: #000000; font-size: 24px; margin-bottom: 20px;">Welcome, ${fullName}!</h2>
+                                    <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
                                         Your account has been successfully created. You are now part of the most advanced affiliate network in the USA.
                                     </p>
-                                    <div style="margin: 40px 0;">
-                                        <a href="https://usaaffiliatemarketing.com/dashboard" style="background: #10b981; color: white; padding: 15px 30px; border-radius: 12px; text-decoration: none; font-weight: bold;">Enter Dashboard</a>
-                                    </div>
-                                    <p style="color: #64748b; font-size: 14px;">
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="https://usaaffiliatemarketing.com/dashboard" style="background-color: #10b981; color: #ffffff; padding: 15px 30px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">Enter Dashboard</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="color: #94a3b8; font-size: 12px;">
                                         If you didn't create this account, please ignore this email.
                                     </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #e2e8f0;">
+                                    <p style="color: #64748b; font-size: 11px; margin: 0;">© ${new Date().getFullYear()} USA Affiliate Official Node Network</p>
                                 </td>
                             </tr>
                         </table>
@@ -187,31 +191,31 @@ class EmailService {
             title = 'New Purchase Request';
             headerColor = '#3b82f6'; // Blue
             messageHtml = `
-                <p style="color: #94a3b8; font-size: 15px; line-height: 1.6;">A buyer wants to purchase NXS from you.</p>
-                <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <p style="color: #f1f5f9; margin: 0 0 10px 0;">Amount: <strong style="color: #3b82f6;">${transactionData.amount} NXS</strong></p>
-                    <p style="color: #f1f5f9; margin: 0;">Fiat Value: <strong>$${transactionData.fiatAmount}</strong></p>
+                <p>A buyer wants to purchase NXS from you.</p>
+                <div style="background-color: #f1f5f9; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;">Amount: <strong style="color: #3b82f6;">${transactionData.amount} NXS</strong></p>
+                    <p style="margin: 0;">Fiat Value: <strong>$${transactionData.fiatAmount}</strong></p>
                 </div>
-                <p style="color: #e2e8f0; font-weight: bold;">Please check your P2P Dashboard to release the funds or chat with the buyer.</p>
+                <p style="font-weight: bold; color: #000000;">Please check your P2P Dashboard to release the funds or chat with the buyer.</p>
             `;
         } else if (type === 'order_paid') {
             title = 'Payment Sent by Buyer';
             headerColor = '#f59e0b'; // Amber
             messageHtml = `
-                <p style="color: #94a3b8; font-size: 15px; line-height: 1.6;">The buyer has marked the payment as sent.</p>
-                <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <p style="color: #f1f5f9; margin: 0;">Order ID: <strong>${transactionData.orderId}</strong></p>
+                <p>The buyer has marked the payment as sent.</p>
+                <div style="background-color: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+                    <p style="margin: 0;">Order ID: <strong>${transactionData.orderId}</strong></p>
                 </div>
-                <p style="color: #e2e8f0; font-weight: bold;">Please verify the payment in your bank/wallet before releasing the NXS.</p>
+                <p style="font-weight: bold; color: #000000;">Please verify the payment in your bank/wallet before releasing the NXS.</p>
             `;
         } else if (type === 'order_completed') {
             title = 'Transaction Completed';
             headerColor = '#10b981'; // Emerald
             messageHtml = `
-                <p style="color: #94a3b8; font-size: 15px; line-height: 1.6;">The seller has released the NXS to your wallet!</p>
-                <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <p style="color: #f1f5f9; margin: 0 0 10px 0;">Received: <strong style="color: #10b981;">${transactionData.amount} NXS</strong></p>
-                    <p style="color: #f1f5f9; margin: 0;">Status: <strong style="color: #10b981;">SUCCESS</strong></p>
+                <p>The seller has released the NXS to your wallet!</p>
+                <div style="background-color: #ecfdf5; padding: 15px; border-left: 4px solid #10b981; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;">Received: <strong style="color: #10b981;">${transactionData.amount} NXS</strong></p>
+                    <p style="margin: 0;">Status: <strong style="color: #10b981;">SUCCESS</strong></p>
                 </div>
             `;
         }
@@ -219,37 +223,34 @@ class EmailService {
         const html = `
         <!DOCTYPE html>
         <html>
-        <body style="margin: 0; padding: 0; background-color: #070b14; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #f1f5f9;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #070b14; padding: 40px 0;">
+        <body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: Arial, Helvetica, sans-serif; color: #000000;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 40px 0;">
                 <tr>
                     <td align="center">
-                        <table width="100%" max-width="600px" cellpadding="0" cellspacing="0" style="background-color: #0b1221; border-radius: 20px; overflow: hidden; border: 1px solid #1e293b; margin: 0 20px;">
-                            <!-- Header -->
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid ${headerColor};">
                             <tr>
-                                <td style="padding: 30px; text-align: center; border-bottom: 1px solid #1e293b;">
-                                    <h1 style="color: ${headerColor}; margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;">P2P Trading Desk</h1>
+                                <td align="center" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
+                                    <h1 style="color: ${headerColor}; font-size: 20px; margin: 0; font-weight: bold; text-transform: uppercase;">P2P Trading Desk</h1>
                                 </td>
                             </tr>
-                            
-                            <!-- Body -->
                             <tr>
                                 <td style="padding: 40px 30px;">
-                                    <h2 style="color: #f1f5f9; margin: 0 0 20px 0; font-size: 20px;">${title}</h2>
-                                    ${messageHtml}
-                                    
-                                    <div style="text-align: center; margin-top: 30px;">
-                                        <a href="https://usaaffiliatemarketing.com/dashboard/p2p" style="background-color: ${headerColor}; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; display: inline-block;">View Transaction</a>
+                                    <h2 style="color: #000000; margin: 0 0 20px 0; font-size: 20px;">${title}</h2>
+                                    <div style="color: #475569; font-size: 15px; line-height: 1.6;">
+                                        ${messageHtml}
                                     </div>
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="https://usaaffiliatemarketing.com/dashboard/p2p" style="background-color: ${headerColor}; color: #ffffff; padding: 12px 25px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">View Transaction</a>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
                             </tr>
-                            
-                            <!-- Footer -->
                             <tr>
-                                <td style="background-color: #0f172a; padding: 20px; text-align: center; border-top: 1px solid #1e293b;">
-                                    <p style="color: #475569; font-size: 11px; margin: 0;">
-                                        USA Affiliate Network - Global P2P Exchange<br>
-                                        Do not reply to this email.
-                                    </p>
+                                <td align="center" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #e2e8f0;">
+                                    <p style="color: #64748b; font-size: 11px; margin: 0;">USA Affiliate Network - Global P2P Exchange<br>Do not reply to this email.</p>
                                 </td>
                             </tr>
                         </table>

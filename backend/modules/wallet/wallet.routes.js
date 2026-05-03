@@ -14,6 +14,7 @@ router.post('/load-purchase', authMiddleware, walletController.loadPurchaseWalle
 router.post('/transfer', authMiddleware, walletController.transferMoney);
 
 router.get('/balance', authMiddleware, walletController.getWallet);
+router.post('/take-loan', authMiddleware, walletController.takeLoan);
 router.post('/recharge', authMiddleware, upload.single('proofImage'), walletLimiter, walletController.requestRecharge);
 
 // router.post('/activate', authMiddleware, upload.single('kycImage'), walletController.activateWallet);

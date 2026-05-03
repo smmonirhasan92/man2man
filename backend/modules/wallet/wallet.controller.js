@@ -281,3 +281,20 @@ exports.loadPurchaseWallet = async (req, res) => {
 };
 
 // End of Wallet Controller
+
+// [NEW] Smart Loan System: Take Loan
+exports.takeLoan = async (req, res) => {
+    try {
+        const userId = req.user.user.id;
+        const WalletService = require('./WalletService');
+        const result = await WalletService.takeLoan(userId);
+        res.json({
+            success: true,
+            message: '৩০০ NXS লোন সফলভাবে আপনার মেইন ব্যালেন্সে যুক্ত হয়েছে।',
+            transaction: result
+        });
+    } catch (err) {
+        console.error('Take Loan Error:', err);
+        res.status(400).json({ success: false, message: err.message || 'Server Error' });
+    }
+};
