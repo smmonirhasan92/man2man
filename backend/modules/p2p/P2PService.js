@@ -193,8 +193,12 @@ class P2PService {
                 ? `New P2P Match! Buyer is ready to pay for ${trade.amount} NXS`
                 : `New P2P Match! Seller accepted your BUY listing for ${trade.amount} NXS`;
 
-            // Notify System & Users out of session
-            SocketService.emitToUser(makerId, 'p2p_trade_start', trade);
+            // [FIX] ONLY Notify the recipient (makerId), NOT the person who initiated it.
+            SocketService.emitToUser(makerId, 'p2p_trade_start', { 
+                trade, 
+                playNotification: true, 
+                message: notifMsg 
+            });
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
             await NotificationService.send(makerId, notifMsg, 'success', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
@@ -642,9 +646,12 @@ class P2PService {
         // Get Trade to know rooms
         const trade = await P2PTrade.findById(tradeId);
 
-        // Broadcast to both users
-        SocketService.emitToUser(trade.sellerId, 'p2p_message', msg);
-        SocketService.emitToUser(trade.buyerId, 'p2p_message', msg);
+        // [FIX] Broadcast only to the OTHER party, not the sender. 
+        // This prevents self-notification sounds and redundant UI updates.
+        const recipientId = trade.sellerId.toString() === senderId.toString() ? trade.buyerId : trade.sellerId;
+        
+        SocketService.emitToUser(recipientId, 'p2p_message', msg);
+        SocketService.emitToUser(senderId, 'p2p_message_sent', msg); // Optional: for sender's UI confirmation
 
         // Send Offline Push Notification (Web Push)
         // Determine recipient

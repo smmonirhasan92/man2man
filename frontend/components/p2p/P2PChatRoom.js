@@ -76,18 +76,23 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         if (!socket) return;
 
         const handleP2PMessage = (msg) => {
-            if (String(msg.tradeId) === String(tradeId)) {
+            console.log("P2P Message Received:", msg);
+            // Relaxed ID check to ensure it catches the message
+            if (msg.tradeId === tradeId || String(msg.tradeId) === String(tradeId)) {
                 setMessages(prev => {
                     if (prev.some(m => m._id === msg._id)) return prev;
                     return [...prev, msg];
                 });
-                scrollToBottom();
-                const parsedSenderId = msg.senderId?._id ? String(msg.senderId._id) : String(msg.senderId);
-                const currentUserStr = String(user?._id || user?.id);
                 
-                if (parsedSenderId && currentUserStr && parsedSenderId !== currentUserStr) {
+                // Audio Alert for Recipient ONLY
+                const senderIdStr = msg.senderId?._id ? String(msg.senderId._id) : String(msg.senderId);
+                const currentUserIdStr = String(user?._id || user?.id);
+                
+                if (senderIdStr !== currentUserIdStr) {
                     playDing();
                 }
+                
+                scrollToBottom();
             }
         };
 
