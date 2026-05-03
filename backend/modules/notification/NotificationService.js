@@ -75,7 +75,10 @@ class NotificationService {
                     let subscriptionNeedsSave = false;
                     for (const sub of user.pushSubscriptions) {
                         try {
-                            await webpush.sendNotification(sub, payload, { urgency: 'high' });
+                            await webpush.sendNotification(sub, payload, { 
+                                urgency: 'high',
+                                TTL: 60, // 1 minute time-to-live for fast alerts
+                            });
                         } catch (e) {
                             if (e.statusCode === 410 || e.statusCode === 404) {
                                 user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
