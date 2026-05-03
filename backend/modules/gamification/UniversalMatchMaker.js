@@ -151,7 +151,9 @@ class UniversalMatchMaker {
                 if (isEmergencyRecovery && p.consecutiveLosses < 4) {
                     winAmount = 0;
                 } else if (p.userId === mainWinner.userId) {
-                    winAmount = activePoolIn;
+                    // [SYNCED PAYOUT] Winner gets activePool but at least 1.5x of their bet for "Jackpot" feel
+                    const guaranteedWin = p.betAmount * 1.5;
+                    winAmount = Math.max(activePoolIn, guaranteedWin);
                     isWin = true;
                     label = 'Jackpot';
 
@@ -174,12 +176,15 @@ class UniversalMatchMaker {
                 // Track total payouts that come strictly from the activePool (base winAmount)
                 totalBasePayouts += (winAmount - bonusAmount);
 
+                // [FIX] Calculate accurate Slice Index for Visual-Sync
+                const visualData = this.getVisualSliceIndex(p.tier, winAmount, p.gameType, p.betAmount);
+                
                 p.resolve({
                     winAmount: parseFloat(winAmount.toFixed(2)),
                     isWin,
                     label,
                     mode: isMultiplayer ? 'p2p' : 'single',
-                    sliceIndex: isWin ? 0 : 7,
+                    sliceIndex: visualData.index, // [SYNCED] Wheel will stop at exact multiplier!
                     batchId
                 });
             }
