@@ -148,41 +148,42 @@ class UniversalMatchMaker {
                 let isWin = false;
                 let bonusAmount = 0;
 
-                // [STRICT P2P PROTECTION] 
-                // Ensure system never creates money out of thin air.
-                // Maximum payout is limited to the current Active Pool.
-                let maxAllowedWin = activePoolIn * 0.95; // 5% buffer always stays in pool
+                // [ZERO-INFLATION P2P] 
+                // System MUST NOT create money. All wins come from the existing Pool.
+                let safetyMargin = 0.90; // Only 90% of pool is ever touchable by the engine
+                let availableToPay = activePoolIn * safetyMargin;
                 
-                if (isEmergencyRecovery && p.consecutiveLosses < 4) {
+                if (availableToPay <= 0) {
+                    // CRITICAL: Pool is empty. No one wins until more bets are placed or admin seeds.
                     winAmount = 0;
+                    isWin = false;
+                    label = 'Miss';
                 } else if (p.userId === mainWinner.userId) {
-                    // Winner gets the pot, but only up to what is actually available
-                    winAmount = Math.min(activePoolIn, maxAllowedWin);
+                    // Winner gets a share of the pool, capped at what's actually there.
+                    winAmount = Math.min(activePoolIn * 0.8, availableToPay); 
                     isWin = true;
                     label = 'Jackpot';
 
                     const bonus = await handleBonusDrops(p);
                     if (bonus) {
-                        // Bonus drops must come from MegaFund ONLY, never from System/Admin
+                        // Mega Drops only from MEGA_FUND (Redis), never from System Balance.
                         bonusAmount = bonus.amount;
                         winAmount += bonus.amount;
                         label = bonus.label;
-                        SocketService.emitToUser(p.userId, 'legendary_win', {
-                            message: `🔥 CONGRATULATIONS! You unlocked a ${label}!`,
-                            amount: bonus.amount
-                        });
                     }
-                } else if (p.consecutiveLosses >= 4) {
-                    // Refund small amount but ensure it's deducted from the pot safely
-                    winAmount = Math.min(p.betAmount * 0.5, activePoolIn * 0.05);
-                    label = 'Near Miss';
+                } else if (p.consecutiveLosses >= 5 && availableToPay > (p.betAmount * 0.5)) {
+                    // Minor refund ONLY if pool has significant surplus
+                    winAmount = p.betAmount * 0.3;
+                    label = 'Consolation';
                     isWin = false;
                 }
 
-                // Double Check: winAmount must never be negative or exceed logical limits
-                winAmount = Math.max(0, winAmount);
+                // Final Safeguard: Never let totalBasePayouts exceed the income of this batch
+                if ((totalBasePayouts + winAmount - bonusAmount) > activePoolIn) {
+                    winAmount = 0; // Forced stop to prevent inflation
+                }
 
-                // Track total payouts that come strictly from the activePool
+                winAmount = Math.max(0, winAmount);
                 totalBasePayouts += (winAmount - bonusAmount);
 
                 // [FIX] Calculate accurate Slice Index for Visual-Sync
