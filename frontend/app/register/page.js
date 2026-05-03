@@ -238,19 +238,35 @@ function RegisterForm() {
                                         <span>Enter 6-Digit Code</span>
                                         <span className="text-emerald-400 animate-pulse">Check your inbox...</span>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <input
-                                            id="register-otp"
-                                            type="text"
-                                            maxLength={6}
-                                            value={userOtp}
-                                            onChange={(e) => setUserOtp(e.target.value.replace(/\D/g, ''))}
-                                            placeholder="••••••"
-                                            className="w-full bg-[#0a1120] border border-white/10 rounded-xl px-4 py-3 text-center text-white font-mono text-2xl tracking-[1em] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
-                                            autoFocus
-                                            autoComplete="one-time-code"
-                                            inputMode="numeric"
-                                        />
+                                    <div className="flex justify-between gap-2 max-w-[320px] mx-auto">
+                                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                                            <input
+                                                key={index}
+                                                id={`otp-${index}`}
+                                                type="text"
+                                                maxLength={1}
+                                                inputMode="numeric"
+                                                autoComplete="one-time-code"
+                                                value={userOtp[index] || ''}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val) {
+                                                        const newOtp = userOtp.split('');
+                                                        newOtp[index] = val;
+                                                        const combined = newOtp.join('');
+                                                        setUserOtp(combined);
+                                                        // Move focus to next
+                                                        if (index < 5) document.getElementById(`otp-${index + 1}`)?.focus();
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Backspace' && !userOtp[index] && index > 0) {
+                                                        document.getElementById(`otp-${index - 1}`)?.focus();
+                                                    }
+                                                }}
+                                                className="w-12 h-14 bg-[#0a1120] border border-white/10 rounded-xl text-center text-white font-mono text-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner outline-none"
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             )}
