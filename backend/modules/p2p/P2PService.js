@@ -654,8 +654,7 @@ class P2PService {
         SocketService.emitToUser(senderId, 'p2p_message_sent', msg); // Optional: for sender's UI confirmation
 
         // Send Offline Push Notification (Web Push)
-        // Determine recipient
-        const recipientId = trade.sellerId.toString() === senderId.toString() ? trade.buyerId : trade.sellerId;
+        // Determine recipient (Already defined above)
         
         // Truncate message text to avoid huge push bodies
         const previewText = text && text.length > 50 ? text.substring(0, 50) + '...' : text;
