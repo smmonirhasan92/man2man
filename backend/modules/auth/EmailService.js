@@ -4,14 +4,12 @@ const redisConfig = require('../../config/redis');
 class EmailService {
     constructor() {
         this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'localhost',
-            port: process.env.SMTP_PORT || 1025, // Mailhog default
-            secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-            ignoreTLS: process.env.SMTP_SECURE === 'false', // Disable opportunistic STARTTLS for internal relay
-            auth: process.env.SMTP_USER ? {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            } : undefined,
+            host: process.env.SMTP_HOST || '172.17.0.1',
+            port: parseInt(process.env.SMTP_PORT) || 25,
+            secure: process.env.SMTP_SECURE === 'true',
+            tls: {
+                rejectUnauthorized: false // Necessary for many internal VPS relays
+            }
         });
     }
 
