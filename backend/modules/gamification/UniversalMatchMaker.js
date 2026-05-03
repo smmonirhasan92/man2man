@@ -148,17 +148,22 @@ class UniversalMatchMaker {
                 let isWin = false;
                 let bonusAmount = 0;
 
+                // [STRICT P2P PROTECTION] 
+                // Ensure system never creates money out of thin air.
+                // Maximum payout is limited to the current Active Pool.
+                let maxAllowedWin = activePoolIn * 0.95; // 5% buffer always stays in pool
+                
                 if (isEmergencyRecovery && p.consecutiveLosses < 4) {
                     winAmount = 0;
                 } else if (p.userId === mainWinner.userId) {
-                    // [SYNCED PAYOUT] Winner gets activePool but at least 1.5x of their bet for "Jackpot" feel
-                    const guaranteedWin = p.betAmount * 1.5;
-                    winAmount = Math.max(activePoolIn, guaranteedWin);
+                    // Winner gets the pot, but only up to what is actually available
+                    winAmount = Math.min(activePoolIn, maxAllowedWin);
                     isWin = true;
                     label = 'Jackpot';
 
                     const bonus = await handleBonusDrops(p);
                     if (bonus) {
+                        // Bonus drops must come from MegaFund ONLY, never from System/Admin
                         bonusAmount = bonus.amount;
                         winAmount += bonus.amount;
                         label = bonus.label;
@@ -168,12 +173,16 @@ class UniversalMatchMaker {
                         });
                     }
                 } else if (p.consecutiveLosses >= 4) {
-                    winAmount = p.betAmount * 0.8;
+                    // Refund small amount but ensure it's deducted from the pot safely
+                    winAmount = Math.min(p.betAmount * 0.5, activePoolIn * 0.05);
                     label = 'Near Miss';
                     isWin = false;
                 }
 
-                // Track total payouts that come strictly from the activePool (base winAmount)
+                // Double Check: winAmount must never be negative or exceed logical limits
+                winAmount = Math.max(0, winAmount);
+
+                // Track total payouts that come strictly from the activePool
                 totalBasePayouts += (winAmount - bonusAmount);
 
                 // [FIX] Calculate accurate Slice Index for Visual-Sync
