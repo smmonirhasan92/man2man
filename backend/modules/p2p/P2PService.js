@@ -72,12 +72,13 @@ class P2PService {
             rate,
             fiatCurrency,
             paymentMethod,
-            fiatCurrency,
-            paymentMethod,
             paymentDetails,
             transactionType: transactionType || 'SEND_MONEY', // [NEW v3.0] Receiver's preference
             status: 'OPEN'
         });
+
+        // [REAL-TIME] Notify Market of New Ad
+        SocketService.broadcast('p2p_market', 'new_order', order);
 
         return order;
     }
@@ -193,7 +194,7 @@ class P2PService {
                 : `New P2P Match! Seller accepted your BUY listing for ${trade.amount} NXS`;
 
             // Notify System & Users out of session
-            SocketService.broadcast(`user_${makerId}`, 'p2p_trade_start', trade);
+            SocketService.emitToUser(makerId, 'p2p_trade_start', trade);
             SocketService.broadcast('admin_dashboard', 'p2p_alert', { type: 'NEW_TRADE', message: `New P2P Trade: ${trade.amount} NXS`, tradeId: trade._id });
             await NotificationService.send(makerId, notifMsg, 'success', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
@@ -432,8 +433,8 @@ class P2PService {
             return trade;
         }).then(async (trade) => {
             // Notify System & Users out of session
-            SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade); // 'completed' acts as terminal state to update UI
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
+            SocketService.emitToUser(trade.buyerId, 'p2p_completed', trade); // 'completed' acts as terminal state to update UI
+            SocketService.emitToUser(trade.sellerId, 'p2p_completed', trade);
 
             const updatedSeller = await User.findById(trade.sellerId);
             SocketService.broadcast(`user_${trade.sellerId}`, `balance_update`, updatedSeller.wallet);
@@ -469,7 +470,8 @@ class P2PService {
         await trade.save();
 
         // Notify Seller
-        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_mark_paid', trade);
+        SocketService.emitToUser(trade.sellerId, 'p2p_mark_paid', trade);
+        SocketService.emitToUser(trade.buyerId, 'p2p_mark_paid', trade); // Update buyer UI state too
         await NotificationService.send(trade.sellerId, `Buyer marked trade as PAID. Verify TxID: ${txId || 'N/A'}`, 'info', { tradeId: trade._id, url: `/p2p?tradeId=${trade._id}` });
 
         await this.addSystemMessage(trade._id, `Buyer marked payment as sent. TxID: ${txId || 'N/A'}, Sender: ${senderNumber || 'N/A'}`);
