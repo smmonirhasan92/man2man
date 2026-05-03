@@ -210,9 +210,14 @@ export default function P2PChatRoom({ tradeId, onBack }) {
     const playDing = () => {
         if (notificationAudio.current) {
             notificationAudio.current.currentTime = 0;
-            notificationAudio.current.play().catch(e => console.log('Audio Blocked:', e));
+            // Force interaction context
+            const playPromise = notificationAudio.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("[AUDIO] Autoplay prevented. Waiting for interaction.");
+                });
+            }
         }
-        // Removed global notify() call to prevent Double Sound Echo.
     };
 
     const playSuccess = () => {
@@ -228,10 +233,14 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         const tempText = input;
         setInput(''); // Optimistic clear
         try {
-            await api.post(`/p2p/trade/${tradeId}/chat`, { text: tempText });
+            await api.post(`/p2p/trade/${tradeId}/chat`, { 
+                text: tempText,
+                type: 'TEXT' 
+            });
         } catch (e) {
             setInput(tempText); // Revert on fail
-            toast.error("Failed send");
+            console.error("Chat Send Error:", e.response?.data);
+            toast.error(e.response?.data?.message || "Failed send");
         }
     };
 
@@ -456,6 +465,38 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             {/* SECURITY WARNING MVP */}
             <div className="shrink-0 bg-red-400/10 border-b border-red-500/20 text-red-500 text-[10px] font-bold text-center py-1.5 px-3 uppercase tracking-wide">
                 ⚠️ WARNING: Never release funds before verifying payment in your own account. Admins will NEVER ask you to release funds.
+            </div>
+
+            {/* World-Class Progress Tracker */}
+            <div className="shrink-0 bg-[#0b1120] p-4 border-b border-white/5">
+                <div className="flex justify-between items-center mb-2 px-2">
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${['CREATED', 'PAID', 'COMPLETED'].includes(trade.status) ? 'text-blue-400' : 'text-slate-600'}`}>1. Created</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${['PAID', 'COMPLETED'].includes(trade.status) ? 'text-blue-400' : 'text-slate-600'}`}>2. Paid</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${['COMPLETED'].includes(trade.status) ? 'text-emerald-400' : 'text-slate-600'}`}>3. Released</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                    <div className={`h-full transition-all duration-500 ${trade.status === 'CREATED' ? 'w-1/3 bg-blue-500' : trade.status === 'PAID' ? 'w-2/3 bg-blue-500' : trade.status === 'COMPLETED' ? 'w-full bg-emerald-500' : 'w-0'}`}></div>
+                </div>
+            </div>
+
+            {/* Dynamic Instruction Banner */}
+            <div className={`shrink-0 p-4 flex items-center justify-between ${trade.status === 'CREATED' ? (isBuyer ? 'bg-blue-600' : 'bg-slate-800') : trade.status === 'PAID' ? (isBuyer ? 'bg-slate-800' : 'bg-blue-600') : 'bg-emerald-600'}`}>
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center animate-pulse">
+                        <Zap className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-tight">
+                            {trade.status === 'CREATED' ? (isBuyer ? 'Pay to Seller Now' : 'Waiting for Buyer') : 
+                             trade.status === 'PAID' ? (isBuyer ? 'Waiting for Release' : 'Release NXS Now') : 
+                             'Trade Completed!'}
+                        </h3>
+                        <p className="text-[10px] text-white/70 font-bold">Please follow the instructions below</p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <div className="text-lg font-black text-white">{timeLeft}</div>
+                </div>
             </div>
 
             {trade.status === 'DISPUTED' && (
