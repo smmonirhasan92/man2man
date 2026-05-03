@@ -118,6 +118,11 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             }
         };
 
+        socket.on('connect', () => {
+            console.log('[SOCKET] Reconnected - Joining Room');
+            socket.emit('join_user_room', user?._id || user?.id);
+        });
+
         socket.on('p2p_message', (data) => {
             handleP2PMessage(data);
             if (data.sound === 'message_in') playSound('notification');
@@ -129,7 +134,6 @@ export default function P2PChatRoom({ tradeId, onBack }) {
         socket.on('p2p_completed', (data) => {
             handleCompleted(data.trade || data);
             playSound('success');
-            toast.success(data.message || "Trade Finished!");
         });
         socket.on('p2p_status_update', (data) => {
             if (String(data.tradeId) === String(tradeId)) fetchTradeData();
