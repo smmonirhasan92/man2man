@@ -613,22 +613,19 @@ class P2PService {
 
             return trade;
         }).then(async (trade) => {
-            SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_completed', trade);
-            SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_completed', trade);
+            SocketService.emitToUser(trade.buyerId, 'p2p_completed', trade);
+            SocketService.emitToUser(trade.sellerId, 'p2p_completed', trade);
 
-            // [FIX] Force Wallet Refresh UI with fresh data
-            if (buyer) {
-                SocketService.broadcast(`user_${trade.buyerId}`, 'balance_update', buyer.wallet);
-                // [NEW] Email Notification to Buyer
-                if (buyer.email) {
-                    EmailService.sendP2PNotification(buyer.email, 'order_completed', {
-                        amount: trade.amount
-                    }).catch(() => {});
-                }
-            }
-            if (seller) SocketService.broadcast(`user_${trade.sellerId}`, 'balance_update', seller.wallet);
+            // [FIX] Fetch fresh user data for Real-Time Balance Sync
+            const [buyerDoc, sellerDoc] = await Promise.all([
+                User.findById(trade.buyerId).select('wallet'),
+                User.findById(trade.sellerId).select('wallet')
+            ]);
 
-            this.addSystemMessage(trade._id, `Trade Approved by Admin. Fee: ${trade.fee} NXS deducted.`);
+            if (buyerDoc) SocketService.emitToUser(trade.buyerId, 'balance_update', buyerDoc.wallet);
+            if (sellerDoc) SocketService.emitToUser(trade.sellerId, 'balance_update', sellerDoc.wallet);
+
+            this.addSystemMessage(trade._id, `Trade Approved. Funds Released.`);
             return trade;
         });
     }
@@ -646,8 +643,8 @@ class P2PService {
         const trade = await P2PTrade.findById(tradeId);
 
         // Broadcast to both users
-        SocketService.broadcast(`user_${trade.sellerId}`, 'p2p_message', msg);
-        SocketService.broadcast(`user_${trade.buyerId}`, 'p2p_message', msg);
+        SocketService.emitToUser(trade.sellerId, 'p2p_message', msg);
+        SocketService.emitToUser(trade.buyerId, 'p2p_message', msg);
 
         // Send Offline Push Notification (Web Push)
         // Determine recipient
