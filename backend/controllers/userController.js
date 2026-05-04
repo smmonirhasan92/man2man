@@ -153,7 +153,8 @@ exports.getAllUsers = async (req, res) => {
                 ...u.toObject(),
                 id: u._id,
                 email: u.email || 'N/A',
-                phone: u.primary_phone || u.synthetic_phone || 'N/A',
+                phone: u.email || 'N/A', // [FIX] Overriding the 'phone' key for the UI display to show email
+                actual_phone: u.primary_phone || u.synthetic_phone || 'N/A',
                 wallet: {
                     main: u.wallet?.main || 0,
                     purchase: u.wallet?.purchase || 0,
