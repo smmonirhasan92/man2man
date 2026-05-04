@@ -16,6 +16,7 @@ export default function ProfilePage() {
     const [preview, setPreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const [showLoanConfirm, setShowLoanConfirm] = useState(false);
 
     // Cropper State
     const [showCropper, setShowCropper] = useState(false);
@@ -262,22 +263,7 @@ export default function ProfilePage() {
                                     </p>
                                     <button
                                         type="button"
-                                        onClick={async () => {
-                                            if (confirm('Are you sure you want to take a 300 NXS loan? This will be added to your Main Balance.')) {
-                                                setLoading(true);
-                                                try {
-                                                    await api.post('/wallet/take-loan');
-                                                    toast.success('300 NXS Loan granted successfully! 💰');
-                                                    // Refresh User Data
-                                                    const res = await api.get('/auth/me');
-                                                    setUser(prev => ({ ...prev, ...res.data }));
-                                                } catch (err) {
-                                                    toast.error(err.response?.data?.message || 'Failed to take loan');
-                                                } finally {
-                                                    setLoading(false);
-                                                }
-                                            }
-                                        }}
+                                        onClick={() => setShowLoanConfirm(true)}
                                         disabled={loading}
                                         className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-[0_10px_20px_-10px_rgba(245,158,11,0.5)] active:scale-95 border border-amber-400/50"
                                     >
@@ -539,6 +525,56 @@ export default function ProfilePage() {
                     <LogOut className="w-4 h-4" /> Log Out
                 </button>
             </div>
+
+            {/* [NEW] PROFESSIONAL SMART LOAN MODAL */}
+            {showLoanConfirm && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-md bg-black/60 animate-in fade-in">
+                    <div className="bg-[#111111] w-full max-w-sm rounded-[2.5rem] border border-amber-500/30 p-8 shadow-2xl shadow-amber-900/20 relative overflow-hidden">
+                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
+                        
+                        <div className="text-center space-y-6 relative z-10">
+                            <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center mx-auto border border-amber-500/20">
+                                <Sparkles className="w-10 h-10 text-amber-500" />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h3 className="text-2xl font-black uppercase tracking-tighter text-amber-500">Confirm Loan</h3>
+                                <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                                    Are you sure you want to take a <span className="text-white font-bold">300 NXS</span> loan? This will be added to your Main Balance immediately.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-3">
+                                <button
+                                    onClick={async () => {
+                                        setShowLoanConfirm(false);
+                                        setLoading(true);
+                                        try {
+                                            await api.post('/wallet/take-loan');
+                                            toast.success('300 NXS Loan granted! 💰');
+                                            const res = await api.get('/auth/me');
+                                            setUser(prev => ({ ...prev, ...res.data }));
+                                        } catch (err) {
+                                            toast.error(err.response?.data?.message || 'Failed');
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                    className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-amber-900/40 active:scale-95 transition-all"
+                                >
+                                    Confirm & Take Loan
+                                </button>
+                                <button
+                                    onClick={() => setShowLoanConfirm(false)}
+                                    className="w-full py-4 bg-white/5 text-slate-500 rounded-2xl font-black uppercase tracking-widest hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

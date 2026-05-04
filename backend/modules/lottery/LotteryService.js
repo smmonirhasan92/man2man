@@ -117,58 +117,33 @@ class LotteryService {
     // --- AUTOMATION SCHEDULER ---
     async checkAutomation() {
         try {
-            // 0. [RECOVERY] Check for Stuck DRAWING slots (Active > 2 minutes in DRAWING state?? No, manual)
-            // If a slot is DRAWING for > 1 minute, something crashed.
+            // [DISABLED] Automation loop prevented to avoid ghost lotteries.
+            /*
             const stuckSlots = await LotterySlot.find({
                 status: 'DRAWING',
-                updatedAt: { $lt: new Date(Date.now() - 60000) } // No updates for 1 min
+                updatedAt: { $lt: new Date(Date.now() - 60000) }
             });
             for (const stuck of stuckSlots) {
-                console.warn(`[RECOVERY] Slot ${stuck._id} (${stuck.tier}) stuck in DRAWING. Forcing Finalize.`);
                 await this.finalizeDraw(stuck._id);
             }
 
-            // 1. Find Time-based slots that have expired (ALL Tiers)
             const expiredSlots = await LotterySlot.find({
                 status: 'ACTIVE',
                 endTime: { $lte: new Date() }
             });
 
             for (const slot of expiredSlots) {
-                console.log(`[LOTTERY_AUTO] Logic Timer Expired for ${slot.tier} (Slot ${slot._id}). Triggering Draw.`);
                 await this.startDrawSequence(slot._id);
             }
 
-            // [PHASE 4] SMART COUNTDOWN (60s Heartbeat)
-            const upcomingSlots = await LotterySlot.find({
-                status: 'ACTIVE',
-                endTime: { 
-                    $gt: new Date(), 
-                    $lte: new Date(Date.now() + 61000) // Next 60-61 seconds
-                }
-            });
-
-            for (const slot of upcomingSlots) {
-                const timeLeft = Math.floor((new Date(slot.endTime).getTime() - Date.now()) / 1000);
-                SocketService.broadcast(`LOTTERY_HEARTBEAT_${slot.tier}`, {
-                    slotId: slot._id,
-                    timeLeft,
-                    message: timeLeft <= 10 ? '🔥 FINAL MOMENTS!' : '⏳ DRAW APPROACHING!'
-                });
-            }
-
-            // 2. Auto-Create Next Slot from Active Templates
             const templates = await LotteryTemplate.find({ isActive: true });
-
             for (const template of templates) {
-                // Check if an active/drawing slot already exists for this tier
                 const active = await LotterySlot.exists({
                     status: { $in: ['ACTIVE', 'DRAWING'] },
                     tier: template.tier
                 });
 
                 if (!active) {
-                    console.log(`[LOTTERY_AUTO] Creating New ${template.tier} Slot from Template.`);
                     await this.createSlot(
                         template.prizes,
                         template.profitMultiplier,
@@ -177,6 +152,7 @@ class LotteryService {
                     );
                 }
             }
+            */
         } catch (e) {
             console.error("[LOTTERY_AUTO] Error:", e);
         }
@@ -184,25 +160,7 @@ class LotteryService {
 
     // --- WATCHDOG: Fail-Safe for Critical Tiers --- //
     async checkWatchdog() {
-        // Specifically ensure TIER_10M exists (Replacing 1M/3M)
-        try {
-            const tiers = ['TIER_10M'];
-            for (const tier of tiers) {
-                const exists = await LotterySlot.exists({ status: { $in: ['ACTIVE', 'DRAWING'] }, tier });
-                if (!exists) {
-                    console.log(`[WATCHDOG] Critical Alert! No Active Slot for ${tier}. Force Creating...`);
-                    // Fallback Defaults if Template Missing
-                    await this.createSlot(
-                        [{ name: 'Grand Prize', amount: 1250, winnersCount: 1 }, { name: 'Minor Prize', amount: 125, winnersCount: 5 }],
-                        5,
-                        tier,
-                        10 // 10 Minutes Duration Force
-                    );
-                }
-            }
-        } catch (e) {
-            console.error("[WATCHDOG] Failed:", e);
-        }
+        // [DISABLED] Watchdog prevented to avoid force-creating TIER_10M slots.
     }
 
     // --- USER: Buy Ticket ---
