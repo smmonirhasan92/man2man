@@ -262,7 +262,7 @@ export default function AdminDashboard() {
                     <DashboardCard href="/admin/transactions" title="Transactions" description="Ledger & Actions" icon={FileText} colorClass="blue" badge={stats.pendingActions > 0 ? `${stats.pendingActions}` : ''} />
                     <DashboardCard href="/admin/users" title="Manage Users" description="Identities & Access" icon={Users} colorClass="indigo" />
                     <DashboardCard href="/admin/agents" title="Node Network" description="Affiliate Chains" icon={Briefcase} colorClass="indigo" />
-                    <DashboardCard href="/admin/plans" title="Plan Config" description="Tiers & Yields" icon={Gem} colorClass="amber" />
+                    <DashboardCard href="/admin/plans" title="Membership & Nodes" description="Tiers & Yields" icon={Gem} colorClass="amber" />
                     <DashboardCard href="/admin/tasks" title="Task Manager" description="Content Protocol" icon={ClipboardList} colorClass="indigo" />
                     <DashboardCard href="/admin/audit" title="Security Audit" description="Integrity Check" icon={Shield} colorClass="rose" />
                     <DashboardCard href="/admin/lottery" title="Lottery Hub" description="Draw Protocols" icon={Ticket} colorClass="fuchsia" />

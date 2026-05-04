@@ -255,7 +255,7 @@ function DashboardContent() {
                                 <Crown size={24} />
                             </div>
                             <div>
-                                <h3 className="text-white font-black text-xs uppercase tracking-widest">Priority Membership</h3>
+                                <h3 className="text-white font-black text-xs uppercase tracking-widest">Premium Player Membership</h3>
                                 <p className="text-amber-400/80 text-[10px] font-bold mt-0.5">
                                     {user?.taskData?.accountTier === 'Gold' ? 'GOLD ELITE STATUS' : 
                                      user?.taskData?.accountTier === 'Silver' ? 'SILVER STATUS' : 

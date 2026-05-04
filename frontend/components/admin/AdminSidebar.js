@@ -10,6 +10,7 @@ export default function AdminSidebar() {
 
     const links = [
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+        { name: 'Memberships', href: '/admin/plans', icon: Gem }, // Reusing Gem for memberships
         { name: 'P2P Tribunal', href: '/admin/p2p-control', icon: Shield },
         { name: 'Transactions', href: '/admin/transactions', icon: Wallet },
         { name: 'Financial Control', href: '/admin/financial-control', icon: Activity },
