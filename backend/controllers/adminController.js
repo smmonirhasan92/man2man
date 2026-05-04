@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
 const User = require('../modules/user/UserModel');
+const UserPlan = require('../modules/plan/UserPlanModel');
+const Plan = require('../modules/admin/PlanModel');
 const TransactionLedger = require('../modules/wallet/TransactionLedgerModel');
 const Transaction = require('../modules/wallet/TransactionModel'); // Legacy/UI
 const P2PTrade = require('../modules/p2p/P2PTradeModel');
@@ -798,8 +799,30 @@ exports.updateUserStatus = async (req, res) => {
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        res.json({ message: `User status updated to ${status}`, user });
-    } catch (err) {
+// [ADMIN] One-time Tier Migration
+exports.runTierMigration = async (req, res) => {
+    try {
+        const highValuePlans = await Plan.find({ unlock_price: { $gte: 1500 } }).select('_id');
+        const planIds = highValuePlans.map(p => p._id);
+
+        const activeHighUsers = await UserPlan.distinct('userId', {
+            planId: { $in: planIds },
+            status: 'active'
+        });
+
+        const result = await User.updateMany(
+            { 
+                _id: { $in: activeHighUsers },
+                'taskData.accountTier': { $ne: 'Silver' } 
+            },
+            { $set: { 'taskData.accountTier': 'Silver' } }
+        );
+
+        res.json({ success: true, message: `${result.modifiedCount} users promoted to SILVER tier.` });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+};
         console.error("Update User Status Error:", err);
         res.status(500).json({ message: "Server Error" });
     }
