@@ -3,6 +3,7 @@ const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 const Transaction = require('../wallet/TransactionModel');
 const TransactionLedger = require('../wallet/TransactionLedgerModel');
+const SocketService = require('../common/SocketService'); // [FIX] Manual balance broadcast
 
 const GIFT_TIERS = {
     free: { cost: 0, mult: 1.0 }, // Free is special
@@ -66,6 +67,9 @@ exports.openGiftBox = async (req, res) => {
                 }], { session, ordered: true });
                 return { finalBalance: finalBal };
             });
+
+            // [FIX] Broadcast bet deduction so TopBar updates instantly
+            SocketService.broadcast(`user_${userId}`, 'balance_update', { main: betResult.finalBalance });
         } else {
             // Free box, just get current balance
             const user = await User.findById(userId).select('wallet.main').lean();
@@ -141,6 +145,9 @@ exports.openGiftBox = async (req, res) => {
                 return finalBal;
             });
             finalUserBalance = winResult;
+
+            // [FIX] Broadcast win so TopBar balance increases immediately
+            SocketService.broadcast(`user_${userId}`, 'balance_update', { main: finalUserBalance });
         } else if (cost > 0) {
              // Record loss stats
              await User.updateOne({ _id: userId }, {

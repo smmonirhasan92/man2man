@@ -3,6 +3,7 @@ const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 const Transaction = require('../wallet/TransactionModel');
 const TransactionLedger = require('../wallet/TransactionLedgerModel');
+const SocketService = require('../common/SocketService'); // [FIX] Manual balance broadcast
 
 const SPIN_TIERS = {
   bronze: { costNXS: 3,  labels: { win: 'Bronze Jackpot', loss: 'Miss' } },
@@ -72,6 +73,9 @@ async function processGameRequest(req, res, gameType, windowMs) {
             return { initialBalance, finalBalance };
         });
 
+        // [FIX] Broadcast bet deduction so TopBar updates instantly
+        SocketService.broadcast(`user_${userId}`, 'balance_update', { main: betResult.finalBalance });
+
         // [PHASE 2] STEP 2: PROCESS MATCH THROUGH ENGINE
         const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses, username);
         const winAmt = matchResult.winAmount;
@@ -124,6 +128,9 @@ async function processGameRequest(req, res, gameType, windowMs) {
                 return finalBal;
             });
             finalUserBalance = winResult;
+
+            // [FIX] Broadcast win credit so TopBar balance updates immediately
+            SocketService.broadcast(`user_${userId}`, 'balance_update', { main: finalUserBalance });
         } else {
             // Even if win is 0, we update stats for the loss
             await User.updateOne({ _id: userId }, {

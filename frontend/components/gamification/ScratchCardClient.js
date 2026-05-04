@@ -95,19 +95,12 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
     fetchVault();
   }, []);
 
-  // [NEW] Screen Lock & Anti-Jitter Logic
+  // [FIX] Anti-Jitter: Only prevent overscroll/pull-to-refresh, NOT page scroll
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-      
-      // Prevent pull-to-refresh on mobile Chrome/Safari
+      // Prevent pull-to-refresh on mobile Chrome/Safari ONLY
       document.documentElement.style.overscrollBehavior = 'none';
-
       return () => {
-        document.body.style.overflow = originalStyle;
-        document.body.style.touchAction = 'auto';
         document.documentElement.style.overscrollBehavior = 'auto';
       };
     }
@@ -255,7 +248,7 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-sm mx-auto relative py-4 font-sans px-3 min-h-[100dvh] flex flex-col justify-center touch-action-none select-none"
+            className="w-full max-w-sm mx-auto relative py-4 font-sans px-3 min-h-screen overflow-y-auto pb-24 flex flex-col justify-start select-none"
             style={{ touchAction: 'none', WebkitUserSelect: 'none' }}
         >
             {/* Main Frame Container as requested by user */}

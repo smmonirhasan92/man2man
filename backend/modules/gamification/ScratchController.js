@@ -3,6 +3,7 @@ const UniversalMatchMaker = require('./UniversalMatchMaker');
 const User = require('../user/UserModel');
 const Transaction = require('../wallet/TransactionModel');
 const TransactionLedger = require('../wallet/TransactionLedgerModel');
+const SocketService = require('../common/SocketService'); // [FIX] Manual balance broadcast
 
 const SCRATCH_TIERS = {
   bronze: { costNXS: 3,  labels: { win: 'Bronze Fortune', loss: 'Miss' } },
@@ -65,6 +66,9 @@ exports.scratchCard = async (req, res) => {
             return { finalBalance: finalBal };
         });
 
+        // [FIX] Broadcast bet deduction so TopBar updates instantly
+        SocketService.broadcast(`user_${userId}`, 'balance_update', { main: betResult.finalBalance });
+
         // [PHASE 2] STEP 2: PROCESS MATCH THROUGH ENGINE
         const matchResult = await UniversalMatchMaker.processMatch(userId, cost, gameType, tier, windowMs, consecutiveLosses);
         const winAmt = matchResult.winAmount;
@@ -117,6 +121,9 @@ exports.scratchCard = async (req, res) => {
                 return finalBal;
             });
             finalUserBalance = winResult;
+
+            // [FIX] Broadcast win so TopBar balance increases immediately upon reveal
+            SocketService.broadcast(`user_${userId}`, 'balance_update', { main: finalUserBalance });
         } else {
              // Record loss stats
              await User.updateOne({ _id: userId }, {
