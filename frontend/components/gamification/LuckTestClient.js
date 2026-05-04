@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { socket } from '../../services/socket';
 
-const SPIN_DURATION_MS = 1200;
+const SPIN_DURATION_MS = 800;
 const SLICE_DEG = 45; // 360 / 8 segments
 
 const TIERS = {
@@ -403,7 +403,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
                   
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Main Assets</p>
                   <div className="flex items-center gap-1.5">
-                    <h4 className="text-md font-mono font-black text-emerald-400">{displayBalance || '0.00'}</h4>
+                    <h4 className="text-md font-mono font-black text-emerald-400">{parseFloat(displayBalance || 0).toFixed(2)}</h4>
                   </div>
                 </div>
               </div>
