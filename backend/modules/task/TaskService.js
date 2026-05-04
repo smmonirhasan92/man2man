@@ -481,10 +481,31 @@ class TaskService {
                 max = 3.00;
             }
 
-            const rewardAmount = parseFloat((Math.random() * (max - min) + min).toFixed(2));
+            let rewardAmount = parseFloat((Math.random() * (max - min) + min).toFixed(2));
 
-            // 3. Update User Wallet and Spin Date
-            user.wallet.main += rewardAmount; // Assuming bonus goes to main wallet, like an airdrop
+            // 3. [FUND-BACKED SPIN] Deduct from GameVault.userInterest — NOT thin air
+            // userInterest is funded by 40% of every game fee. This is a closed-loop system.
+            const GameVault = require('../gamification/GameVaultModel');
+            const vault = await GameVault.findOne({ vaultId: 'MASTER_VAULT' }).session(session);
+
+            if (vault && vault.balances.userInterest >= rewardAmount) {
+                // Fund has enough — deduct and credit
+                vault.balances.userInterest = parseFloat((vault.balances.userInterest - rewardAmount).toFixed(4));
+                await vault.save({ session });
+            } else if (vault && vault.balances.userInterest > 0) {
+                // Partial payout — only what's available
+                rewardAmount = parseFloat(vault.balances.userInterest.toFixed(2));
+                vault.balances.userInterest = 0;
+                await vault.save({ session });
+                console.log(`[DailySpin] Partial payout: ${rewardAmount} NXS (fund low)`);
+            } else {
+                // Fund is empty — spin yields nothing today
+                console.log(`[DailySpin] BLOCKED: userInterest fund empty. No payout for ${userId}`);
+                throw new Error('Daily bonus fund is currently empty. Please try again later.');
+            }
+
+            // Credit user wallet
+            user.wallet.main += rewardAmount;
             if (!user.taskData) user.taskData = {};
             user.taskData.dailySpinDate = new Date();
 

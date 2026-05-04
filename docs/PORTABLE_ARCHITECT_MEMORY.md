@@ -40,5 +40,47 @@
 - **Financial Transparency:** Admin dashboard now explicitly displays login emails and rounded financial figures (2 decimals) for precise auditing.
 
 ---
+
+## 5. AI Agent Protocol: Direct-Live Production Engineering (V1.0 — MANDATORY)
+
+> [!CAUTION]
+> কোনো আলাদা টেস্ট এনভায়রনমেন্ট নেই। সরাসরি মেইন ডোমেইন ও লাইভ সার্ভারে কাজ চলছে।
+
+### Directive 1: Pre-Deployment Analysis
+- যেকোনো কোড পরিবর্তনের আগে পুরো Dependency Graph চেক।
+- ডাটাবেস, এডমিন প্যানেল, ইউজার প্রোফাইলে কোনো বিরূপ প্রভাব পড়বে কি না নিশ্চিত করো।
+
+### Directive 2: Atomic Updates
+- ছোট পরিবর্তন Hot-Reload এ করো।
+- বড় পরিবর্তনে আগের কোড Backup হিসেবে রাখো।
+- যেকোনো সময় এক সেকেন্ডে Rollback করা যাবে এমনভাবে কোড লিখতে হবে।
+
+### Directive 3: Live Monitoring
+- কোড পুশের সাথে সাথে Docker Logs মনিটর করো।
+- ৫০০ Error বা Critical Bug ইউজারের চোখে পড়ার আগেই ফিক্স করো।
+
+### Directive 4: Database Safety
+- লাইভ ডাটাবেসে পরিবর্তনের আগে Instant Backup/Snapshot নেওয়া বাধ্যতামূলক।
+- ইউজারের NXS ব্যালেন্সে এক পয়সাও এদিক-সেদিক হবে না।
+
+### Directive 5: Reliability
+- Push Notification ও Sound System সচল আছে কি না নিশ্চিত করে Service Worker আপডেট।
+- নিয়মিত অপ্রয়োজনীয় ফাইল ও Docker Cache পরিষ্কার করো।
+
+### Directive 6: GitHub Persistence (Primary Backup)
+- প্রতি ১০-১৫ মিনিট বা প্রতিটি সফল Feature-এর পর `git push` করো।
+- GitHub-ই একমাত্র ও চূড়ান্ত Backup।
+
+---
+
+## 6. Business Model Clarification (Task Reward System)
+- **Task Reward = Ad Mining System** (বিজ্ঞাপনদাতার রাজস্ব বিতরণ)
+- ইউজার বিজ্ঞাপন দেখলে `wallet.income` বাড়ে — এটি টাকা তৈরি নয়, বিজ্ঞাপন রাজস্বের অংশ
+- প্যাকেজ কেনা = Platform-এর সাথে চুক্তি, ROI আসে Ad Revenue থেকে
+- **Game System = Strictly Closed-Loop** (কোনো নতুন মানি তৈরি হয় না, শুধু Pool থেকে বিতরণ)
+
+---
+
 **Lead Architect:** AI Agent (Antigravity v3.0)
 **Strategy Phase:** Completed | **Implementation Status:** PHASE 1 DEPLOYED (ADMIN & SECURITY)
+**Protocol Version:** V1.0 — Direct-Live Production Engineering (Active)
