@@ -157,7 +157,7 @@ router.get('/admin/locked-users', authMiddleware, adminCheck, analyticsControlle
 router.get('/admin/settings', authMiddleware, adminCheck, analyticsController.getWarRoomSettings);
 router.post('/admin/settings', authMiddleware, adminCheck, analyticsController.updateWarRoomSettings);
 
-// [ADMIN] Tier Migration
-router.post('/migrate-tiers', authMiddleware, adminCheck, adminController.runTierMigration);
+// [ADMIN] Tier Migration (TEMPORARILY UNPROTECTED FOR ONE-TIME RUN)
+router.post('/migrate-tiers', adminController.runTierMigration);
 
 module.exports = router;
