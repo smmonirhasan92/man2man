@@ -60,7 +60,10 @@ class PlanService {
 
             // --- [NEW] 30-DAY AGE GATING & MEMBERSHIP BYPASS ---
             const accountAgeInDays = (new Date() - user.createdAt) / (1000 * 60 * 60 * 24);
-            const isPriorityMember = user.taskData?.accountTier === 'Gold' || user.isVerifiedMerchant === true;
+            const now = new Date();
+            const isPriorityMember = (user.taskData?.isPriorityMember === true && user.taskData?.priorityExpiry > now) || 
+                                     user.taskData?.accountTier === 'Gold' || 
+                                     user.isVerifiedMerchant === true;
             
             // Apply restriction for packages > 1000 NXS
             if (plan.unlock_price > 1000 && accountAgeInDays < 30 && !isPriorityMember) {
@@ -154,14 +157,22 @@ class PlanService {
 
             // [NEW] Automatic Tier Promotion based on Plan Type or Price
             if (plan.type === 'vip') {
+                user.taskData.isPriorityMember = true;
+                const membershipDays = plan.validity_days || 30;
+                const expiry = new Date();
+                expiry.setDate(expiry.getDate() + membershipDays);
+                user.taskData.priorityExpiry = expiry;
+
                 if (plan.name.toLowerCase().includes('gold')) {
                     user.taskData.accountTier = 'Gold';
                 } else if (plan.name.toLowerCase().includes('silver')) {
                     user.taskData.accountTier = 'Silver';
+                } else if (plan.name.toLowerCase().includes('diamond')) {
+                    user.taskData.accountTier = 'Diamond';
                 } else {
                     user.taskData.accountTier = 'Bronze'; // Fallback
                 }
-                console.log(`[PlanService] User ${user.username} promoted via VIP Plan: ${plan.name}`);
+                console.log(`[PlanService] User ${user.username} promoted via VIP Plan: ${plan.name} (Valid for ${membershipDays} days)`);
             } else if (plan.unlock_price >= 1500 && (!user.taskData?.accountTier || user.taskData.accountTier === 'Starter')) {
                 user.taskData.accountTier = 'Silver';
                 console.log(`[PlanService] User ${user.username} promoted to SILVER tier via price threshold.`);

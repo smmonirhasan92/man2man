@@ -178,8 +178,24 @@ export default function GlobalMarketplace() {
                     <BannerSlider />
                 </div>
 
+                {/* Tab Selector [NEW] */}
+                <div className="px-6 mb-4 flex gap-2">
+                    <button 
+                        onClick={() => setProvisioningType('server')}
+                        className={`flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${provisioningType === 'server' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 text-slate-500 border border-white/5'}`}
+                    >
+                        Server Nodes
+                    </button>
+                    <button 
+                        onClick={() => setProvisioningType('vip')}
+                        className={`flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${provisioningType === 'vip' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 text-slate-500 border border-white/5'}`}
+                    >
+                        Membership Plans
+                    </button>
+                </div>
+
                 {/* Main Content: PRICE TABLES */}
-                <main className="px-4 space-y-6 relative z-10 mt-6">
+                <main className="px-4 space-y-6 relative z-10 mt-2">
 
                     <div className="flex items-center justify-between px-2">
                         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Available Nodes</h2>
@@ -187,7 +203,7 @@ export default function GlobalMarketplace() {
                     </div>
 
                     <div className="space-y-6">
-                        {validPlans.map(plan => {
+                        {validPlans.filter(p => p.type === provisioningType || (provisioningType === 'server' && p.type === 'number')).map(plan => {
                             const isIreland = plan.name.includes("Ireland");
                             const isUSA = plan.name.includes("USA") || plan.name.includes("United");
                             const isUK = plan.name.includes("UK");

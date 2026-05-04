@@ -142,6 +142,8 @@ const UserSchema = new mongoose.Schema({
             enum: ['eligible', 'promoted', 'none'],
             default: 'none'
         },
+        isPriorityMember: { type: Boolean, default: false }, // [NEW] Bypass 30-day restriction
+        priorityExpiry: { type: Date }, // [NEW] Membership duration (7d/30d)
         dailySpinDate: { type: Date }, // [NEW] Track the last time they spun the bonus wheel
         dailyGiftDate: { type: Date } // [NEW] Track the last time they opened a Mystery Gift Box
     },
