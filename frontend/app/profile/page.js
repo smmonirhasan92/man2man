@@ -395,7 +395,7 @@ export default function ProfilePage() {
                                 return (
                                     <div key={trx._id} className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all">
                                         <div>
-                                            <p className="text-sm font-black text-white">${trx.amount.toFixed(2)}</p>
+                                            <p className="text-sm font-black text-white">${(trx.amount / 100).toFixed(2)}</p>
                                             <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">
                                                 {isMatured ? 'MATURED ✓' : `RELEASES: ${releaseDate.toLocaleDateString()}`}
                                             </p>
@@ -406,7 +406,7 @@ export default function ProfilePage() {
                                                 setLoading(true);
                                                 try {
                                                     await api.post('/referral/claim', { transactionId: trx._id });
-                                                    toast.success(`Claimed $${trx.amount}! 💰`);
+                                                    toast.success(`Claimed $${(trx.amount / 100).toFixed(2)}! 💰`);
                                                     // Refresh data
                                                     const res = await api.get('/referral/dashboard-data');
                                                     setUser(prev => ({ ...prev, lockedCommissions: res.data.lockedCommissions }));
