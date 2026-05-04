@@ -159,23 +159,16 @@ const countries = [
 
 export default function LoginPage() {
     const [phone, setPhone] = useState('');
-    const [countryCode, setCountryCode] = useState('+880');
-    const [showCountryList, setShowCountryList] = useState(false);
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    // Load saved phone and country code on mount
     useEffect(() => {
         const savedPhone = localStorage.getItem('remembered_phone');
-        const savedCountry = localStorage.getItem('remembered_country');
         if (savedPhone) {
             setPhone(savedPhone);
-        }
-        if (savedCountry) {
-            setCountryCode(savedCountry);
         }
     }, []);
 
@@ -184,21 +177,14 @@ export default function LoginPage() {
         setLoading(true);
         setError('');
         try {
-            let payloadValue = phone.trim();
-            
-            // Check if user entered an email address instead of a phone number
-            if (!payloadValue.includes('@')) {
-                // It's a phone number, format it with the country code
-                payloadValue = `${countryCode}${payloadValue.replace(/^0+/, '')}`;
-            }
+            const payloadValue = phone.trim();
 
             // Use 'identifier' to match the updated backend that supports both email and phone
             const res = await api.post('/auth/login', { identifier: payloadValue, password });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
-            // Save phone and country for automatic pre-fill next time
+            // Save phone for automatic pre-fill next time
             localStorage.setItem('remembered_phone', phone);
-            localStorage.setItem('remembered_country', countryCode);
             document.cookie = `token=${res.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
 
             const adminRoles = ['admin', 'super_admin', 'employee_admin'];
@@ -262,63 +248,16 @@ export default function LoginPage() {
                     )}
 
                     <form onSubmit={handleLogin} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-slate-300 ml-1">Email or Phone Number</label>
-                            <div className="flex gap-2">
-                                <div className="relative w-[35%]">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCountryList(!showCountryList)}
-                                        className="w-full h-[52px] bg-black/40 border border-white/20 rounded-xl px-4 text-white font-medium flex items-center justify-between gap-2 hover:bg-black/60 hover:border-white/40 focus:border-white/60 focus:ring-1 focus:ring-white/60 transition-all outline-none"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <img
-                                                src={`https://flagcdn.com/w40/${countries.find(c => c.code === countryCode)?.flagCode || 'bd'}.png`}
-                                                alt="flag"
-                                                className="w-6 h-4 rounded-sm object-cover shadow-sm"
-                                            />
-                                            <span className="text-sm font-bold tracking-wide">{countryCode}</span>
-                                        </div>
-                                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showCountryList ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {showCountryList && (
-                                        <div className="absolute z-[100] top-[calc(100%+8px)] left-0 w-64 bg-[#0A2540] border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 backdrop-blur-xl">
-                                            <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                                                {countries.map(c => (
-                                                    <div
-                                                        key={c.name}
-                                                        onClick={() => {
-                                                            setCountryCode(c.code);
-                                                            setShowCountryList(false);
-                                                        }}
-                                                        className="px-4 py-3 hover:bg-white/10 cursor-pointer flex items-center gap-3 border-b border-white/5 last:border-0 transition-colors"
-                                                    >
-                                                        <img src={`https://flagcdn.com/w40/${c.flagCode}.png`} alt={c.name} className="w-6 h-4 rounded-sm shadow-sm object-cover" />
-                                                        <div className="flex-1">
-                                                            <p className="text-sm font-bold text-white">{c.name}</p>
-                                                        </div>
-                                                        <p className="text-xs font-mono font-medium text-slate-400">{c.code}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 relative">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                        <Smartphone className="w-5 h-5" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        placeholder="Mobile or Email"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        required
-                                        className="w-full h-[52px] bg-black/40 border border-white/20 rounded-xl pl-11 pr-4 text-white placeholder-slate-500 font-medium hover:bg-black/60 hover:border-white/40 focus:bg-black/60 focus:border-white/60 focus:ring-1 focus:ring-white/60 transition-all outline-none"
-                                    />
-                                </div>
-                            </div>
+                        <div className="relative">
+                            <AuthInput
+                                icon={Smartphone}
+                                label="Email or Phone Number"
+                                type="text"
+                                placeholder="Enter your email or phone number"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                required
+                            />
                         </div>
 
                         {/* Password Field with Eye Toggle within the form */}
