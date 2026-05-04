@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Wallet, ScrollText, Ticket, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Shield, Activity, Gem } from 'lucide-react';
+import { LayoutDashboard, Users, Wallet, ScrollText, Ticket, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Shield, Activity, Gem, Server } from 'lucide-react';
 
 export default function AdminSidebar() {
     const pathname = usePathname();
