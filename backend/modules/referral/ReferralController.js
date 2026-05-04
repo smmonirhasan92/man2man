@@ -216,3 +216,38 @@ exports.getLeaderboard = async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 };
+
+/**
+ * [NEW] Get Detailed Referral Commission History
+ * Allows users to track exactly who gave them how much commission.
+ */
+exports.getReferralHistory = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        
+        // Fetch only referral commissions for this user
+        const history = await Transaction.find({
+            userId: userId,
+            type: 'referral_commission'
+        })
+        .sort({ createdAt: -1 })
+        .limit(100) // Keep it performant
+        .lean();
+
+        // Format the response for the frontend
+        const formattedHistory = history.map(tx => ({
+            id: tx._id,
+            amount: tx.amount,
+            status: tx.status, // e.g., 'locked', 'completed'
+            description: tx.description, // Contains the username (e.g., "L1 Commission from USER123")
+            date: tx.createdAt,
+            level: tx.metadata?.level || 'N/A',
+            sourceUser: tx.metadata?.sourceUser || null
+        }));
+
+        res.json({ success: true, history: formattedHistory });
+    } catch (err) {
+        console.error("[ReferralHistory Error]", err);
+        res.status(500).json({ success: false, message: "Failed to fetch referral history" });
+    }
+};

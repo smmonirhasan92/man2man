@@ -10,5 +10,6 @@ router.get('/logs', authMiddleware, referralController.getDashboardData); // Das
 router.get('/dashboard-data', authMiddleware, referralController.getDashboardData);
 router.get('/leaderboard', authMiddleware, referralController.getLeaderboard);
 router.post('/claim', authMiddleware, referralController.claimCommission);
+router.get('/history', authMiddleware, referralController.getReferralHistory);
 
 module.exports = router;

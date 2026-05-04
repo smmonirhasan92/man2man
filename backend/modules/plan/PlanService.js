@@ -172,8 +172,14 @@ class PlanService {
                 syntheticPhone: syntheticPhone
             }], { session, ordered: true });
 
-            // Emit Pure NXS Pricing to Referral System (1:1 ecosystem compatibility)
-            await this.ReferralService.distributePlanCommission(user._id, plan.unlock_price, plan.name, session);
+            // [LOAN HACK FIX] Do not distribute commission if user has an active loan. 
+            // This prevents generating real cash (commission) out of thin air via the smart loan.
+            if (!user.is_loan_active && (!user.wallet || !user.wallet.loan_due || user.wallet.loan_due <= 0)) {
+                // Emit Pure NXS Pricing to Referral System (1:1 ecosystem compatibility)
+                await this.ReferralService.distributePlanCommission(user._id, plan.unlock_price, plan.name, session);
+            } else {
+                console.log(`[PlanService] Skipped Referral Commission for ${user.username} - Active Loan Detected!`);
+            }
 
             return userPlan[0];
         });
