@@ -152,6 +152,12 @@ class PlanService {
             if (!user.taskData) user.taskData = {};
             user.taskData.isActive = true;
 
+            // [NEW] Automatic Tier Promotion
+            if (plan.unlock_price >= 1500 && user.taskData?.accountTier === 'Starter') {
+                user.taskData.accountTier = 'Silver';
+                console.log(`[PlanService] User ${user.username} promoted to SILVER tier.`);
+            }
+
             await user.save({ session });
 
             const userPlan = await UserPlan.create([{
