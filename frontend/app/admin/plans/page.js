@@ -145,7 +145,16 @@ export default function AdminPlansPage() {
                                         <Crown className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-lg text-slate-800">{plan.name}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-lg text-slate-800">{plan.name}</h3>
+                                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${
+                                                plan.type === 'vip' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                                plan.type === 'number' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                                                'bg-blue-100 text-blue-700 border border-blue-200'
+                                            }`}>
+                                                {plan.type || 'server'}
+                                            </span>
+                                        </div>
                                         <div className="flex flex-wrap gap-2 mt-2">
                                             <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-medium">
                                                 {plan.daily_limit} Limit
@@ -220,6 +229,18 @@ export default function AdminPlansPage() {
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g. VIP Gold"
                                 />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Plan Type</label>
+                                <select
+                                    className="w-full mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-purple-500 font-bold text-slate-900"
+                                    value={formData.type || 'server'}
+                                    onChange={e => setFormData({ ...formData, type: e.target.value })}
+                                >
+                                    <option value="server">Server Node</option>
+                                    <option value="vip">Membership (VIP)</option>
+                                    <option value="number">Virtual Number</option>
+                                </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

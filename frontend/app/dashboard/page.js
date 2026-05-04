@@ -246,6 +246,29 @@ function DashboardContent() {
                     </button>
                 </div>
 
+                {/* Membership Status [NEW] */}
+                <div className="w-full px-6 mb-4">
+                    <div className="bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/20 p-4 rounded-[2rem] flex items-center justify-between backdrop-blur-md relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="p-2.5 bg-amber-500 rounded-xl text-white shadow-lg shadow-amber-500/20 group-hover:rotate-12 transition-transform">
+                                <Crown size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-black text-xs uppercase tracking-widest">Priority Membership</h3>
+                                <p className="text-amber-400/80 text-[10px] font-bold mt-0.5">
+                                    {user?.taskData?.accountTier === 'Gold' ? 'GOLD ELITE STATUS' : 
+                                     user?.taskData?.accountTier === 'Silver' ? 'SILVER STATUS' : 
+                                     'FREE STARTER TIER'}
+                                </p>
+                            </div>
+                        </div>
+                        <Link href="/marketplace" className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-full text-[10px] font-black text-white transition-all active:scale-95 shadow-lg shadow-amber-500/20 relative z-10">
+                            UPGRADE
+                        </Link>
+                    </div>
+                </div>
+
                 {/* The Empire Tour Tracker */}
                 <GlobalTourProgress tourSales={user?.tourSales || 0} />
 
@@ -278,6 +301,12 @@ function DashboardContent() {
                 <div className="w-full px-6 mb-8 mt-4">
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 px-1">Discover Options</h3>
                     <div className="grid grid-cols-3 gap-3">
+                        {/* Featured: Lottery */}
+                        <div className="relative group">
+                            <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
+                        </div>
+
                         {/* Core Features */}
                         <FolderCard href="/dashboard/invest" icon={DollarSign} label="Invest" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
                         
@@ -286,6 +315,7 @@ function DashboardContent() {
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">HOT</div>
                         </div>
 
+                        {/* Game Row (Luck Test, Scratch Card, Gift Box) */}
                         <div className="relative group">
                             <FolderCard href="/dashboard/luck-test" icon={Gamepad2} label="Luck Test" color="text-orange-400" gradient="from-orange-600/20 to-orange-900/40" border="border-orange-500/30" />
                         </div>
@@ -294,12 +324,7 @@ function DashboardContent() {
                             <FolderCard href="/dashboard/scratch-card" icon={Ticket} label="Scratch Card" color="text-amber-400" gradient="from-amber-600/20 to-amber-900/40" border="border-amber-500/30" />
                         </div>
 
-                        <div className="relative group">
-                            <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
-                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
-                        </div>
-
-                        {/* Mystery Box (Replaced Floating Bubble) */}
+                        {/* Mystery Box (Gift Box) */}
                         <div className="relative group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('toggle-mystery-box'))}>
                             <FolderCard href="#" icon={Gift} label="Gift Box" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-pink-500/30" />
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-rose-500 to-red-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-bounce">FREE</div>

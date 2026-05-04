@@ -152,10 +152,19 @@ class PlanService {
             if (!user.taskData) user.taskData = {};
             user.taskData.isActive = true;
 
-            // [NEW] Automatic Tier Promotion
-            if (plan.unlock_price >= 1500 && user.taskData?.accountTier === 'Starter') {
+            // [NEW] Automatic Tier Promotion based on Plan Type or Price
+            if (plan.type === 'vip') {
+                if (plan.name.toLowerCase().includes('gold')) {
+                    user.taskData.accountTier = 'Gold';
+                } else if (plan.name.toLowerCase().includes('silver')) {
+                    user.taskData.accountTier = 'Silver';
+                } else {
+                    user.taskData.accountTier = 'Bronze'; // Fallback
+                }
+                console.log(`[PlanService] User ${user.username} promoted via VIP Plan: ${plan.name}`);
+            } else if (plan.unlock_price >= 1500 && (!user.taskData?.accountTier || user.taskData.accountTier === 'Starter')) {
                 user.taskData.accountTier = 'Silver';
-                console.log(`[PlanService] User ${user.username} promoted to SILVER tier.`);
+                console.log(`[PlanService] User ${user.username} promoted to SILVER tier via price threshold.`);
             }
 
             await user.save({ session });
