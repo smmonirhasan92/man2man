@@ -58,17 +58,30 @@ class PlanService {
             if (!plan) throw new Error('Plan not found.');
             if (!plan.is_active) throw new Error('Plan is deprecated.');
 
-            // --- [NEW] 30-DAY AGE GATING & MEMBERSHIP BYPASS ---
+            // --- [NEW] GRANULAR 30-DAY AGE GATING & MEMBERSHIP BYPASS ---
             const accountAgeInDays = (new Date() - user.createdAt) / (1000 * 60 * 60 * 24);
             const now = new Date();
-            const isPriorityMember = (user.taskData?.isPriorityMember === true && user.taskData?.priorityExpiry > now) || 
-                                     user.taskData?.accountTier === 'Gold' || 
-                                     user.isVerifiedMerchant === true;
+            const tier = user.taskData?.accountTier || 'Starter';
+            const isMembershipActive = user.taskData?.isPriorityMember === true && user.taskData?.priorityExpiry > now;
             
-            // Apply restriction for packages > 1000 NXS
-            if (plan.unlock_price > 1000 && accountAgeInDays < 30 && !isPriorityMember) {
+            // Bypass Logic based on Tier
+            let allowedMaxPrice = 1000; // Default limit for < 30 days users is $10 (1000 NXS)
+            if (isMembershipActive || user.isVerifiedMerchant) {
+                if (tier === 'Silver') allowedMaxPrice = 1500; // $15
+                else if (tier === 'Gold') allowedMaxPrice = 3000; // $30
+                else if (tier === 'Platinum') allowedMaxPrice = 6000; // $60
+                else if (tier === 'Diamond') allowedMaxPrice = 25000; // High limit
+            }
+
+            // Apply restriction if account < 30 days and price exceeds tier allowance
+            if (accountAgeInDays < 30 && plan.unlock_price > allowedMaxPrice) {
                 const daysRemaining = Math.ceil(30 - accountAgeInDays);
-                throw new Error(`Restricted Access: To purchase this premium package, your account must be at least 30 days old (Remaining: ${daysRemaining} days). You can bypass this restriction immediately by upgrading to a Priority Membership.`);
+                let tierMsg = "Starter Membership (Max $10)";
+                if (tier === 'Silver') tierMsg = "Silver Membership (Max $15)";
+                if (tier === 'Gold') tierMsg = "Gold Membership (Max $30)";
+                if (tier === 'Platinum') tierMsg = "Platinum Membership (Max $60)";
+
+                throw new Error(`Restricted Access: Your current ${tierMsg} only allows purchasing nodes up to ${allowedMaxPrice/100} USD while your account is under 30 days old. Upgrade your membership or wait ${daysRemaining} more days.`);
             }
 
             // [NEW] 12-Day Cooldown (Anti-Duplicate Purchase Guard)
@@ -167,6 +180,8 @@ class PlanService {
                     user.taskData.accountTier = 'Gold';
                 } else if (plan.name.toLowerCase().includes('silver')) {
                     user.taskData.accountTier = 'Silver';
+                } else if (plan.name.toLowerCase().includes('platinum')) {
+                    user.taskData.accountTier = 'Platinum';
                 } else if (plan.name.toLowerCase().includes('diamond')) {
                     user.taskData.accountTier = 'Diamond';
                 } else {

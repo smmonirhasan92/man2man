@@ -256,9 +256,10 @@ function DashboardContent() {
                             </div>
                             <div>
                                 <h3 className="text-white font-black text-xs uppercase tracking-widest">Premium Player Membership</h3>
-                                <p className="text-amber-400/80 text-[10px] font-bold mt-0.5">
-                                    {user?.taskData?.accountTier === 'Gold' ? 'GOLD ELITE STATUS' : 
-                                     user?.taskData?.accountTier === 'Silver' ? 'SILVER STATUS' : 
+                                <p className="text-amber-400/80 text-[10px] font-bold mt-0.5 uppercase tracking-tighter">
+                                    {user?.taskData?.accountTier === 'Platinum' ? 'PLATINUM BYPASS (Up to $60)' : 
+                                     user?.taskData?.accountTier === 'Gold' ? 'GOLD BYPASS (Up to $30)' : 
+                                     user?.taskData?.accountTier === 'Silver' ? 'SILVER BYPASS (Up to $15)' : 
                                      'FREE STARTER TIER'}
                                 </p>
                             </div>
