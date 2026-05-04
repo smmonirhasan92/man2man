@@ -174,7 +174,13 @@ export default function ReferralNetworkUI() {
                                             }`}>
                                                 {member.status}
                                             </span>
-                                            <p className="text-[10px] text-slate-400 mt-1">Ref: {member.referralCount || 0}</p>
+                                            {member.commission > 0 ? (
+                                                <p className="text-[11px] font-black text-emerald-400 mt-1">
+                                                    +{member.commission.toFixed(2)} NXS
+                                                </p>
+                                            ) : (
+                                                <p className="text-[10px] text-slate-600 mt-1">No commission yet</p>
+                                            )}
                                         </div>
                                     </div>
                                 ))

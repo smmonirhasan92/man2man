@@ -164,17 +164,43 @@ exports.getNetworkMembers = async (req, res) => {
 
         const members = await getReferralsAtLevel([user.referralCode], 1);
         
-        // Normalize for UI
+        // [FIX] Fetch actual commission earned FROM each member
+        const memberIds = members.map(m => m._id);
+        const commissions = await Transaction.aggregate([
+            {
+                $match: {
+                    userId: user._id,
+                    type: 'referral_commission',
+                    'metadata.sourceUser': { $in: memberIds }
+                }
+            },
+            {
+                $group: {
+                    _id: '$metadata.sourceUser',
+                    totalCommission: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        // Build a fast lookup map: sourceUser => totalCommission
+        const commissionMap = {};
+        commissions.forEach(c => {
+            commissionMap[c._id.toString()] = c.totalCommission;
+        });
+
+        // Normalize for UI — now with REAL commission per member
         const normalized = members.map(m => ({
             _id: m._id,
             username: m.username,
             fullName: m.fullName,
             status: m.status,
             joinedAt: m.createdAt,
-            commission: 0 
+            referralCount: m.referralCount || 0,
+            commission: commissionMap[m._id.toString()] || 0
         }));
 
         res.json(normalized);
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server Error" });
