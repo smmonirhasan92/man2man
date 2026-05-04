@@ -11,6 +11,37 @@ class EmailService {
                 rejectUnauthorized: false // Necessary for many internal VPS relays
             }
         });
+
+        // [PERFORMANCE] Background Email Queue
+        this.emailQueue = [];
+        this.isProcessingQueue = false;
+    }
+
+    // Start background processing loop
+    async processQueue() {
+        if (this.isProcessingQueue) return;
+        this.isProcessingQueue = true;
+
+        while (this.emailQueue.length > 0) {
+            const task = this.emailQueue.shift(); // Get oldest task
+            try {
+                await this.transporter.sendMail(task.mailOptions);
+                console.log(`[EmailQueue] Sent to ${task.to} | Queue remaining: ${this.emailQueue.length}`);
+            } catch (error) {
+                console.error(`[EmailQueue] Failed sending to ${task.to}:`, error.message);
+                if (task.retries < 2) {
+                    console.log(`[EmailQueue] Re-queuing email to ${task.to} (Retry ${task.retries + 1})`);
+                    task.retries += 1;
+                    this.emailQueue.push(task); // Push to end of line
+                } else {
+                    console.error(`[EmailQueue] Dropped email to ${task.to} after 3 failed attempts.`);
+                }
+            }
+            // Add a small 200ms delay to prevent rate-limiting the SMTP server
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        this.isProcessingQueue = false;
     }
 
     async sendEmail(to, subject, htmlContent) {
@@ -19,6 +50,7 @@ class EmailService {
             console.log(`[EmailService] DISABLED on this server. Skipped email to: ${to} | Subject: ${subject}`);
             return { skipped: true };
         }
+
         const mailOptions = {
             from: `"${process.env.APP_NAME || 'USA Affiliate'}" <${process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@usaaffiliatemarketing.com'}>`,
             to,
@@ -33,16 +65,14 @@ class EmailService {
             }
         };
 
-        try {
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log(`[EmailService] Email sent to ${to}: ${info.messageId}`);
-            return true;
-        } catch (error) {
-            console.error(`[EmailService] CRITICAL Error sending email to ${to}:`, error.message);
-            if (error.code === 'EAUTH') console.error("[SMTP] Authentication failed. Check .env SMTP settings.");
-            if (error.code === 'ECONNREFUSED') console.error("[SMTP] Connection refused. Is the mail server running?");
-            return false;
-        }
+        // Push to queue instead of sending synchronously
+        this.emailQueue.push({ to, mailOptions, retries: 0 });
+        console.log(`[EmailQueue] Queued email to ${to}. Current Queue Size: ${this.emailQueue.length}`);
+        
+        // Trigger processing but DO NOT AWAIT it
+        this.processQueue().catch(e => console.error('[EmailQueue] Processing Error:', e));
+
+        return true; // Unblock the API immediately
     }
 
     async generateAndSendOTP(email, context = 'verification') {
@@ -127,27 +157,13 @@ class EmailService {
 
         const subject = `${otp} is your USA Affiliate verification code`; // Code first for auto-fill detection
 
-        // [RESILIENT SEND] OTP is already saved. Attempt email, retry once on failure.
-        // If both attempts fail, OTP remains valid for 15 mins so user can trigger resend.
-        let emailSent = false;
+        // [RESILIENT QUEUE SEND] SendEmail now pushes to queue and handles its own retries natively.
+        // We just call it and it resolves immediately, unblocking the API.
         try {
             await this.sendEmail(email, subject, html);
-            emailSent = true;
-        } catch (firstErr) {
-            console.warn(`[EmailService] First attempt failed for ${email}. Retrying in 3s...`);
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            try {
-                await this.sendEmail(email, subject, html);
-                emailSent = true;
-            } catch (secondErr) {
-                // OTP is still saved in Redis. User can click "Resend" to trigger this again.
-                console.error(`[EmailService] Both attempts failed for ${email}. OTP queued in Redis for 15 mins.`);
-                // Store a pending flag so admin can monitor
-                const failKey = `otp_failed:${context}:${email}`;
-                if (redisConfig.client.isOpen) {
-                    await redisConfig.client.set(failKey, JSON.stringify({ email, context, otp, failedAt: new Date().toISOString() }), { EX: 900 });
-                }
-            }
+        } catch (error) {
+            console.error(`[EmailService] Failed to queue OTP email for ${email}:`, error);
+            // OTP is still saved in Redis. User can click "Resend" to trigger this again.
         }
 
         // Always return true — OTP is saved, user can resend if email missed
