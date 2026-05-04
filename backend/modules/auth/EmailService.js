@@ -24,9 +24,10 @@ class EmailService {
             to,
             subject,
             html: htmlContent,
-            text: htmlContent.replace(/<[^>]*>?/gm, ''), // Simple text fallback
+            text: htmlContent.replace(/<[^>]*>?/gm, ''), // Improved plain text conversion
             headers: {
-                'List-Unsubscribe': `<mailto:admin@usaaffiliatemarketing.com?subject=unsubscribe>`,
+                'List-Unsubscribe': `<https://usaaffiliatemarketing.com/unsubscribe>, <mailto:admin@usaaffiliatemarketing.com?subject=unsubscribe>`,
+                'X-Entity-Ref-ID': Date.now().toString(),
                 'X-Priority': '1 (Highest)',
                 'X-Mailer': 'USA-Affiliate-Security-Node'
             }
