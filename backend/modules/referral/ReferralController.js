@@ -94,6 +94,17 @@ exports.claimCommission = async (req, res) => {
                 throw new Error("বোনাস ক্লেইম করার জন্য আপনাকে অন্তত ৫০০ NXS ($5) মূল্যের একটি প্যাকেজ কিনতে হবে।");
             }
 
+            // --- [NEW] 5-DAY DEPOSIT LOCK-IN PERIOD ---
+            const latestPlan = userPlans.sort((a, b) => b.createdAt - a.createdAt)[0];
+            if (latestPlan) {
+                const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
+                const timeElapsed = new Date() - new Date(latestPlan.createdAt);
+                if (timeElapsed < fiveDaysInMs) {
+                    const daysRemaining = Math.ceil((fiveDaysInMs - timeElapsed) / (24 * 60 * 60 * 1000));
+                    throw new Error(`নিরাপত্তার খাতিরে ডিপোজিট করার ৫ দিন পর বোনাস ক্লেইম করা যাবে। আপনাকে আরও ${daysRemaining} দিন অপেক্ষা করতে হবে।`);
+                }
+            }
+
             if (!trx.metadata.releaseDate) {
                  throw new Error("Validation Guard: You must have an active package with >10 days validity to unlock this commission.");
             }
