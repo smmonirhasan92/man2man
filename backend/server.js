@@ -166,7 +166,9 @@ const io = new Server(server, {
         credentials: true
     },
     allowEIO3: true,
-    transports: ['polling', 'websocket']
+    transports: ['polling', 'websocket'],
+    pingInterval: 10000, // Detect dead mobile connections in 10s
+    pingTimeout: 5000    // Drop unresponsive sockets after 5s
 });
 
 // --- SOCKET ARCHITECTURE ---

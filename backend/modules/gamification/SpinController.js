@@ -36,12 +36,21 @@ async function processGameRequest(req, res, gameType, windowMs) {
 
         // [PHASE 2] STEP 1: DEDUCT BET FIRST (Atomic Protection)
         const betResult = await TransactionHelper.runTransaction(async (session) => {
-            const user = await User.findById(userId).session(session);
-            if (user.wallet.main < cost) throw new Error('Insufficient Balance');
+            // [ATOMIC UPGRADE] Zero Locking
+            const user = await User.findOneAndUpdate(
+                { _id: userId, 'wallet.main': { $gte: cost } },
+                { $inc: { 'wallet.main': -cost } },
+                { session, new: false }
+            );
+
+            if (!user) {
+                const exists = await User.findById(userId).session(session);
+                if (!exists) throw new Error('User not found');
+                throw new Error('Insufficient Balance');
+            }
 
             const initialBalance = user.wallet.main;
             const finalBalance = initialBalance - cost;
-            user.wallet.main = finalBalance;
 
             const betTxId = `SPIN_BET_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
             
@@ -60,8 +69,6 @@ async function processGameRequest(req, res, gameType, windowMs) {
                 transactionId: betTxId
             }], { session, ordered: true });
 
-            user.markModified('wallet.main');
-            await user.save({ session });
             return { initialBalance, finalBalance };
         });
 
@@ -73,11 +80,30 @@ async function processGameRequest(req, res, gameType, windowMs) {
         let finalUserBalance = betResult.finalBalance;
         if (winAmt > 0) {
             const winResult = await TransactionHelper.runTransaction(async (session) => {
-                const user = await User.findById(userId).session(session);
-                const initBal = user.wallet.main;
+                // [ATOMIC UPGRADE] Simultaneous balance and stats update
+                let updateQuery = {
+                    $inc: {
+                        'wallet.main': winAmt,
+                        'gameStats.totalGamesPlayed': 1,
+                        'gameStats.netProfitLoss': (winAmt - cost)
+                    }
+                };
+
+                if (matchResult.isWin) {
+                    updateQuery.$inc['gameStats.totalGamesWon'] = 1;
+                    updateQuery.$set = { 'gameStats.consecutiveLosses': 0 };
+                } else {
+                    updateQuery.$inc['gameStats.consecutiveLosses'] = 1;
+                }
+
+                const user = await User.findOneAndUpdate(
+                    { _id: userId },
+                    updateQuery,
+                    { session, new: false }
+                );
+
+                const initBal = parseFloat(user.wallet?.main || 0);
                 const finalBal = initBal + winAmt;
-                
-                user.wallet.main = finalBal;
 
                 const winTxId = `SPIN_WIN_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
                 await Transaction.create([{
@@ -95,19 +121,6 @@ async function processGameRequest(req, res, gameType, windowMs) {
                     transactionId: winTxId
                 }], { session, ordered: true });
 
-                // Stats Update
-                user.gameStats.totalGamesPlayed += 1;
-                user.gameStats.netProfitLoss += (winAmt - cost);
-                if (matchResult.isWin) {
-                    user.gameStats.totalGamesWon += 1;
-                    user.gameStats.consecutiveLosses = 0;
-                } else {
-                    user.gameStats.consecutiveLosses += 1;
-                }
-
-                user.markModified('wallet.main');
-                user.markModified('gameStats');
-                await user.save({ session });
                 return finalBal;
             });
             finalUserBalance = winResult;

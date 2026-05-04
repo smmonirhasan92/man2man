@@ -32,12 +32,21 @@ exports.openGiftBox = async (req, res) => {
         
         if (cost > 0) {
             betResult = await TransactionHelper.runTransaction(async (session) => {
-                const user = await User.findById(userId).session(session);
-                if (user.wallet.main < cost) throw new Error('Insufficient Balance');
+                // [ATOMIC UPGRADE] Zero Locking
+                const user = await User.findOneAndUpdate(
+                    { _id: userId, 'wallet.main': { $gte: cost } },
+                    { $inc: { 'wallet.main': -cost } },
+                    { session, new: false }
+                );
+
+                if (!user) {
+                    const exists = await User.findById(userId).session(session);
+                    if (!exists) throw new Error('User not found');
+                    throw new Error('Insufficient Balance');
+                }
 
                 const initBal = user.wallet.main;
                 const finalBal = initBal - cost;
-                user.wallet.main = finalBal;
 
                 const betTxId = `GIFT_BET_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
                 
@@ -55,9 +64,6 @@ exports.openGiftBox = async (req, res) => {
                     description: `Mystery Gift Bet (${tier})`,
                     transactionId: betTxId
                 }], { session, ordered: true });
-
-                user.markModified('wallet.main');
-                await user.save({ session });
                 return { finalBalance: finalBal };
             });
         } else {
@@ -77,11 +83,13 @@ exports.openGiftBox = async (req, res) => {
         if (cost === 0 && winAmt > 0) {
             const GameVault = require('./GameVaultModel');
             await TransactionHelper.runTransaction(async (session) => {
-                const vault = await GameVault.findOne({ vaultId: 'MASTER_VAULT' }).session(session);
-                if (vault && vault.balances.userInterest >= winAmt) {
-                    vault.balances.userInterest -= winAmt;
-                    await vault.save({ session });
-                } else {
+                // [ATOMIC UPGRADE] Avoid Vault Write Conflicts
+                const vault = await GameVault.findOneAndUpdate(
+                    { vaultId: 'MASTER_VAULT', 'balances.userInterest': { $gte: winAmt } },
+                    { $inc: { 'balances.userInterest': -winAmt } },
+                    { session }
+                );
+                if (!vault) {
                     winAmt = 0; // Empty fund
                 }
             });
@@ -89,11 +97,29 @@ exports.openGiftBox = async (req, res) => {
 
         if (winAmt > 0) {
             const winResult = await TransactionHelper.runTransaction(async (session) => {
-                const user = await User.findById(userId).session(session);
-                const initBal = user.wallet.main;
+                // [ATOMIC UPGRADE] Simultaneous balance and stats update
+                let updateQuery = {
+                    $inc: {
+                        'wallet.main': winAmt,
+                        'gameStats.totalGamesPlayed': 1,
+                        'gameStats.netProfitLoss': (winAmt - cost)
+                    }
+                };
+
+                if (matchResult.isWin) {
+                    updateQuery.$inc['gameStats.totalGamesWon'] = 1;
+                } else {
+                    updateQuery.$inc['gameStats.consecutiveLosses'] = 1;
+                }
+
+                const user = await User.findOneAndUpdate(
+                    { _id: userId },
+                    updateQuery,
+                    { session, new: false }
+                );
+
+                const initBal = parseFloat(user.wallet?.main || 0);
                 const finalBal = initBal + winAmt;
-                
-                user.wallet.main = finalBal;
 
                 const winTxId = `GIFT_WIN_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
                 const isFree = cost === 0;
@@ -112,15 +138,6 @@ exports.openGiftBox = async (req, res) => {
                     description: isFree ? `Free Mystery Gift Reward` : `Mystery Gift Prize (${tier})`,
                     transactionId: winTxId
                 }], { session, ordered: true });
-
-                // Stats Update
-                user.gameStats.totalGamesPlayed += 1;
-                user.gameStats.netProfitLoss += (winAmt - cost);
-                if (matchResult.isWin) user.gameStats.totalGamesWon += 1; else user.gameStats.consecutiveLosses += 1;
-
-                user.markModified('wallet.main');
-                user.markModified('gameStats');
-                await user.save({ session });
                 return finalBal;
             });
             finalUserBalance = winResult;

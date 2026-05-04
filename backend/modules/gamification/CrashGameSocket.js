@@ -187,15 +187,21 @@ class CrashGameManager {
 
         // Check and deduct immediately (Mongoose validation needed in strict model, but handled by ACID here)
         await TransactionHelper.runTransaction(async (session) => {
-            const user = await User.findById(userId).session(session);
-            if (!user) throw new Error('User not found');
-            const mainBal = parseFloat(user.wallet?.main || 0);
+            // [ATOMIC UPGRADE] Avoid Read-Modify-Write pattern to prevent WriteConflicts
+            const user = await User.findOneAndUpdate(
+                { _id: userId, 'wallet.main': { $gte: amount } },
+                { $inc: { 'wallet.main': -amount } },
+                { session, new: true } // Returns the updated document
+            );
 
-            if (mainBal < amount) throw new Error('Insufficient Main Wallet Balance');
+            if (!user) {
+                // Check if user exists but has insufficient balance
+                const exists = await User.findById(userId).session(session);
+                if (!exists) throw new Error('User not found');
+                throw new Error('Insufficient Main Wallet Balance');
+            }
 
-            user.wallet.main = parseFloat((mainBal - amount).toFixed(6));
-            user.markModified('wallet.main');
-            await user.save({ session });
+            const mainBal = parseFloat((user.wallet.main + amount).toFixed(6)); // Reconstruct initial balance for ledger
 
             const trxId = `CRASH_BET_${this.roundId}_${userId}`;
             await TransactionLedger.create([{
@@ -231,15 +237,17 @@ class CrashGameManager {
 
         // Use ACID Transaction strictly as user requested
         await TransactionHelper.runTransaction(async (session) => {
-            const user = await User.findById(userId).session(session);
+            // [ATOMIC UPGRADE] Avoid Read-Modify-Write pattern to prevent WriteConflicts
+            const user = await User.findOneAndUpdate(
+                { _id: userId },
+                { $inc: { 'wallet.main': winAmount } },
+                { session, new: false } // Returns the OLD document, so we can record initBal
+            );
+
             if (!user) throw new Error('User missing in cashout');
 
             const initBal = parseFloat(user.wallet?.main || 0);
             const finalBal = initBal + winAmount;
-
-            user.wallet.main = finalBal;
-            user.markModified('wallet.main');
-            await user.save({ session });
 
             const trxId = `CRASH_WIN_${this.roundId}_${userId}`;
 
