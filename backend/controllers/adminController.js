@@ -665,13 +665,13 @@ exports.getUserDetails = async (req, res) => {
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
 
-        const totalSelfDeposit = self_deposits[0]?.total || 0;
-        const totalAdminLoanNxs = admin_loans[0]?.total || 0;
-        const totalAdminLoanUsd = totalAdminLoanNxs / NXS_RATIO;
-        const totalUsdIn = totalSelfDeposit + totalAdminLoanUsd;
+        const totalSelfDeposit = parseFloat((self_deposits[0]?.total || 0).toFixed(2));
+        const totalAdminLoanNxs = parseFloat((admin_loans[0]?.total || 0).toFixed(2));
+        const totalAdminLoanUsd = parseFloat((totalAdminLoanNxs / NXS_RATIO).toFixed(2));
+        const totalUsdIn = parseFloat((totalSelfDeposit + totalAdminLoanUsd).toFixed(2));
 
-        const totalNxsOut = (nxs_withdrawals[0]?.total || 0) + (nxs_spent[0]?.total || 0) + (nxs_p2pOut[0]?.total || 0);
-        const totalNxsIn = (nxs_earnings[0]?.total || 0) + (nxs_p2pIn[0]?.total || 0);
+        const totalNxsOut = parseFloat(((nxs_withdrawals[0]?.total || 0) + (nxs_spent[0]?.total || 0) + (nxs_p2pOut[0]?.total || 0)).toFixed(2));
+        const totalNxsIn = parseFloat(((nxs_earnings[0]?.total || 0) + (nxs_p2pIn[0]?.total || 0)).toFixed(2));
 
         // Normalize everything to USD for "Platform Position"
         const normalizedNxsIn = totalNxsIn / NXS_RATIO;
@@ -706,7 +706,9 @@ exports.getUserDetails = async (req, res) => {
             .lean();
 
         // UI Mapping Fixes
+        user.email = user.email || 'N/A';
         user.phone = user.primary_phone || user.phone || 'N/A'; // UI expects user.phone
+        user.primary_phone = user.primary_phone || user.phone || 'N/A';
         user.referrals = { count: user.referralCount || 0 }; // UI expects profile.referrals.count
         // [FIX] Ensure wallet.game exists to prevent frontend crash
         if (user.wallet && user.wallet.game === undefined) {
