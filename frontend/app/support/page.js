@@ -198,16 +198,16 @@ export default function SupportPage() {
             </header>
 
             <main className="max-w-xl mx-auto px-4 py-8 space-y-8">
-                {/* Bangladesh Only Hub */}
+                {/* International Payment Hub */}
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 flex items-center gap-4 relative overflow-hidden group">
                     <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
                     <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20">
-                        🇧🇩
+                        🌐
                     </div>
                     <div className="relative z-10">
-                        <h4 className="text-xs font-black uppercase text-emerald-400 tracking-widest mb-1">Official Payment Hub</h4>
+                        <h4 className="text-xs font-black uppercase text-emerald-400 tracking-widest mb-1">International Payment Hub</h4>
                         <p className="text-[10px] text-slate-400 font-medium leading-relaxed uppercase tracking-tighter">
-                            Exclusive for <span className="text-emerald-300">Bangladesh Operators</span> (Bkash, Nagad).
+                            Global Network Support <span className="text-emerald-300">Active Operators</span> (Bkash, Nagad, Rocket).
                             <br />All transactions expire in 20 minutes.
                         </p>
                     </div>
@@ -274,8 +274,8 @@ export default function SupportPage() {
                                         <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 1.23 BDT</span>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['Bkash', 'Nagad'].map(m => (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['Bkash', 'Nagad', 'Rocket'].map(m => (
                                         <button key={m} onClick={()=>setP2pMethod(m)} className={`py-4 rounded-xl font-black text-[11px] uppercase border transition-all ${p2pMethod === m ? 'bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'bg-white/5 text-slate-400 border-white/5 opacity-60 hover:opacity-100'}`}>{m}</button>
                                     ))}
                                 </div>
@@ -357,8 +357,8 @@ export default function SupportPage() {
                                     <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 1.23 BDT</span>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                {['Bkash', 'Nagad'].map(m => (
+                            <div className="grid grid-cols-3 gap-2">
+                                {['Bkash', 'Nagad', 'Rocket'].map(m => (
                                     <button key={m} onClick={()=>setP2pMethod(m)} className={`py-4 rounded-xl font-black text-[11px] uppercase border transition-all ${p2pMethod === m ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.02]' : 'bg-white/5 text-slate-400 border-white/5 opacity-60 hover:opacity-100'}`}>{m}</button>
                                 ))}
                             </div>
