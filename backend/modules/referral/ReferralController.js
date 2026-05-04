@@ -182,16 +182,37 @@ exports.getNetworkMembers = async (req, res) => {
 };
 
 /**
- * Placeholder for leaderboard
+ * [LIVE RACE] Get referral leaderboard sorted by TOTAL EARNINGS (Income + Pending)
  */
 exports.getLeaderboard = async (req, res) => {
     try {
-        const topUsers = await User.find({ role: 'user' })
-            .sort({ referralCount: -1 })
-            .limit(10)
-            .select('username referralCount referralIncome');
+        const topUsers = await User.aggregate([
+            { $match: { role: 'user', status: 'active' } },
+            {
+                $addFields: {
+                    totalEarnings: { 
+                        $add: [
+                            { $ifNull: ["$referralIncome", 0] }, 
+                            { $ifNull: ["$wallet.pending_referral", 0] }
+                        ] 
+                    }
+                }
+            },
+            { $match: { totalEarnings: { $gt: 0 } } }, // Only show those who earned something
+            { $sort: { totalEarnings: -1, referralCount: -1 } },
+            { $limit: 20 },
+            {
+                $project: {
+                    username: 1,
+                    referralCount: 1,
+                    referralIncome: "$totalEarnings", // Map total potential to the UI field
+                    totalSales: "$referralCount" // For UI label consistency
+                }
+            }
+        ]);
         res.json(topUsers);
     } catch (err) {
+        console.error("Leaderboard Error:", err);
         res.status(500).json({ message: "Server Error" });
     }
 };
