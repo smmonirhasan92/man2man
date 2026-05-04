@@ -49,10 +49,19 @@ export default function ReferralDashboard() {
         try {
             const dashboardRes = await api.get('/referral/dashboard-data');
             const networkData = await api.get(`/referral/network?level=${level}`);
+            let historyLogs = [];
+            try {
+                const historyRes = await api.get('/referral/history');
+                if (historyRes.data && historyRes.data.success) {
+                    historyLogs = historyRes.data.history;
+                }
+            } catch (historyErr) {
+                console.error("Failed to fetch history", historyErr);
+            }
 
             setData({
                 stats: dashboardRes.data.stats,
-                logs: dashboardRes.data.logs,
+                logs: historyLogs,
                 referralCode: dashboardRes.data.referralCode,
                 network: networkData.data || []
             });
