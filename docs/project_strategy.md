@@ -1,6 +1,6 @@
-# Man2Man Project Strategy & Guidelines
+# USA Affiliate Network Project Strategy & Guidelines
 
-This document serves as the "Source of Truth" for development, deployment, and maintenance of the Man2Man project.
+This document serves as the "Source of Truth" for development, deployment, and maintenance of the USA Affiliate Network.
 
 ## 1. Docker Workflow (Local to VPS)
 To ensure a smooth transition from local development to production, follow these rules:
