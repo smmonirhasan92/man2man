@@ -95,6 +95,24 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
     fetchVault();
   }, []);
 
+  // [NEW] Screen Lock & Anti-Jitter Logic
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      
+      // Prevent pull-to-refresh on mobile Chrome/Safari
+      document.documentElement.style.overscrollBehavior = 'none';
+
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.body.style.touchAction = 'auto';
+        document.documentElement.style.overscrollBehavior = 'auto';
+      };
+    }
+  }, []);
+
   const handleExit = () => {
     if (gameState === 'BOUGHT' || gameState === 'READY_TO_SCRATCH') return;
     setIsExiting(true);
@@ -237,7 +255,8 @@ export default function ScratchCardClient({ onBalanceUpdate }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-sm mx-auto relative py-4 font-sans px-3 min-h-[100dvh] flex flex-col justify-center"
+            className="w-full max-w-sm mx-auto relative py-4 font-sans px-3 min-h-[100dvh] flex flex-col justify-center touch-action-none select-none"
+            style={{ touchAction: 'none', WebkitUserSelect: 'none' }}
         >
             {/* Main Frame Container as requested by user */}
             <div className="w-full bg-[#0F172A]/80 border border-slate-700/50 rounded-3xl p-3 sm:p-5 flex flex-col gap-3 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-visible">

@@ -168,6 +168,24 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     fetchVault();
   }, []);
 
+  // [NEW] Screen Lock & Anti-Jitter Logic
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      
+      // Prevent pull-to-refresh on mobile Chrome/Safari
+      document.documentElement.style.overscrollBehavior = 'none';
+
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.body.style.touchAction = 'auto';
+        document.documentElement.style.overscrollBehavior = 'auto';
+      };
+    }
+  }, []);
+
   // Sync initial balance
   useEffect(() => {
     if (user?.wallet?.main && !spinning && !popup) {
@@ -326,7 +344,10 @@ export default function LuckTestClient({ onBalanceUpdate }) {
         >
           <ResultOverlay result={popup} onClose={() => setPopup(null)} />
           
-          <div className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30 relative overflow-hidden">
+          <div 
+            className="w-full max-w-md mx-auto p-4 md:p-6 bg-[#0B0F1A] min-h-screen text-slate-200 font-sans selection:bg-orange-500/30 relative overflow-hidden touch-action-none select-none"
+            style={{ touchAction: 'none', WebkitUserSelect: 'none' }}
+          >
             
             {/* Session Cooldown Overlay */}
             {cooldownActive && (
