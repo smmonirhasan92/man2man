@@ -8,12 +8,12 @@ const LotterySlot = require('./modules/lottery/LotterySlotModel');
 
 async function cleanLottery() {
     try {
-        const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/universal_game_core';
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/universal_game_core_v1';
         await mongoose.connect(mongoUri);
         console.log("Connected to MongoDB: " + mongoUri);
 
-        const result = await LotterySlot.deleteMany({ status: { $in: ['ACTIVE', 'DRAWING'] } });
-        console.log(`Deleted ${result.deletedCount} active lottery slots.`);
+        const result = await LotterySlot.deleteMany({});
+        console.log(`Deleted ${result.deletedCount} lottery slots.`);
 
         process.exit(0);
     } catch (e) {
