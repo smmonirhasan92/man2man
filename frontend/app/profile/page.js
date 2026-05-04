@@ -252,7 +252,7 @@ export default function ProfilePage() {
                                         <span className="text-xl font-black text-amber-500">{user.loan_due?.toFixed(2) || '300.00'} NXS</span>
                                     </div>
                                     <p className="text-[10px] text-red-400/80 font-bold leading-tight">
-                                        * Withdrawals are blocked while a loan is active. When you request a withdrawal, the system will automatically recover the loan amount from your balance first.
+                                        * LOAN RECOVERY ACTIVE: Main balance over 100 NXS will be automatically applied to loan repayment. Withdrawals are disabled while loan is active.
                                     </p>
                                 </div>
                             ) : (

@@ -290,7 +290,7 @@ exports.takeLoan = async (req, res) => {
         const result = await WalletService.takeLoan(userId);
         res.json({
             success: true,
-            message: '৩০০ NXS লোন সফলভাবে আপনার মেইন ব্যালেন্সে যুক্ত হয়েছে।',
+            message: '300 NXS Smart Loan has been successfully added to your main balance.',
             transaction: result
         });
     } catch (err) {

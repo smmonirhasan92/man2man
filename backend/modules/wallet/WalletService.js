@@ -11,7 +11,8 @@ class WalletService {
     
     /**
      * [LOAN RECOVERY] 
-     * Auto-deduct excess from income wallet if > 100 NXS to pay off loan.
+     * Auto-deduct excess from MAIN wallet if > 100 NXS to pay off loan.
+     * This ensures any source (Tasks, Games, Deposit) helps repay the circular debt.
      */
     static async processLoanRecovery(userId, session) {
         try {
@@ -19,18 +20,18 @@ class WalletService {
             const loanDue = user?.wallet?.loan_due || 0;
             if (!user || !user.is_loan_active || loanDue <= 0) return;
 
-            const incomeBalance = user.wallet.income || 0;
-            const THRESHOLD = 100; // Keep at least 100 in wallet
+            const mainBalance = user.wallet.main || 0;
+            const THRESHOLD = 100; // Keep at least 100 in wallet for user interaction
 
-            if (incomeBalance > THRESHOLD) {
-                const availableForRecovery = incomeBalance - THRESHOLD;
+            if (mainBalance > THRESHOLD) {
+                const availableForRecovery = mainBalance - THRESHOLD;
                 const deduction = Math.min(availableForRecovery, loanDue);
 
                 if (deduction > 0) {
                     const remainingLoan = loanDue - deduction;
                     const updates = {
                         $inc: {
-                            'wallet.income': -deduction,
+                            'wallet.main': -deduction,
                             'wallet.loan_due': -deduction
                         }
                     };
@@ -40,19 +41,30 @@ class WalletService {
                     }
 
                     // Perform recovery
-                    await User.findByIdAndUpdate(userId, updates).session(session);
+                    const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true, session });
 
                     // Log Transaction
                     await Transaction.create([{
                         userId: userId,
                         type: 'loan_repayment',
-                        amount: deduction,
+                        amount: -deduction,
                         status: 'completed',
-                        description: `Automatic Loan Repayment (Wallet balance over 100 NXS)`,
-                        metadata: { remainingLoan: remainingLoan }
+                        description: `Automatic Loan Repayment (Main balance over 100 NXS)`,
+                        metadata: { remainingLoan: Math.max(0, remainingLoan), source: 'auto_recovery' }
                     }], { session });
 
-                    console.log(`[LoanRecovery] User ${userId}: Deducted ${deduction} NXS`);
+                    // [SOCKET] Notify of recovery
+                    try {
+                        const SocketService = require('../common/SocketService');
+                        SocketService.emitToUser(userId, 'wallet_update', updatedUser.wallet);
+                        SocketService.emitToUser(userId, 'loan_recovery_update', { 
+                            deducted: deduction, 
+                            remaining: Math.max(0, remainingLoan),
+                            message: `${deduction} NXS has been automatically recovered for loan repayment.`
+                        });
+                    } catch (e) {}
+
+                    console.log(`[LoanRecovery] User ${userId}: Deducted ${deduction} NXS from MAIN`);
                 }
             }
         } catch (err) {
@@ -222,6 +234,11 @@ class WalletService {
                     await redisConfig.client.del(`user_profile:${userId}`);
                 }
             } catch (e) { }
+
+            // [LOAN RECOVERY] Trigger check after transfer if target is MAIN
+            if (toWallet === 'main' || toWallet === 'wallet.main') {
+                await WalletService.processLoanRecovery(userId, session);
+            }
 
             return { success: true, newBalances: user.wallet, fee, creditAmount };
         });

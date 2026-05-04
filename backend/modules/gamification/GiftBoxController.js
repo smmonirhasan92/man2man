@@ -100,6 +100,7 @@ exports.openGiftBox = async (req, res) => {
         }
 
         if (winAmt > 0) {
+            const WalletService = require('../wallet/WalletService'); // [NEW] For Loan Recovery
             const winResult = await TransactionHelper.runTransaction(async (session) => {
                 // [ATOMIC UPGRADE] Simultaneous balance and stats update
                 let updateQuery = {
@@ -142,6 +143,10 @@ exports.openGiftBox = async (req, res) => {
                     description: isFree ? `Free Mystery Gift Reward` : `Mystery Gift Prize (${tier})`,
                     transactionId: winTxId
                 }], { session, ordered: true });
+
+                // [LOAN RECOVERY] Trigger check after game win
+                await WalletService.processLoanRecovery(userId, session);
+
                 return finalBal;
             });
             finalUserBalance = winResult;

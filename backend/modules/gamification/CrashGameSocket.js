@@ -237,6 +237,7 @@ class CrashGameManager {
 
         // Use ACID Transaction strictly as user requested
         await TransactionHelper.runTransaction(async (session) => {
+            const WalletService = require('../wallet/WalletService'); // [NEW] For Loan Recovery
             // [ATOMIC UPGRADE] Avoid Read-Modify-Write pattern to prevent WriteConflicts
             const user = await User.findOneAndUpdate(
                 { _id: userId },
@@ -266,9 +267,11 @@ class CrashGameManager {
                 status: 'completed',
                 description: `Crash Flight (${lockedMultiplier}x)`,
                 source: 'game',
-                recipientDetails: `Win: ${winAmount} NXS`,
                 transactionId: `${trxId}_UI`
             }], { session, ordered: true });
+
+            // [LOAN RECOVERY] Trigger check after crash cashout
+            await WalletService.processLoanRecovery(userId, session);
         });
 
         // Update local memory

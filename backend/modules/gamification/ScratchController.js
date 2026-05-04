@@ -76,6 +76,7 @@ exports.scratchCard = async (req, res) => {
         // [PHASE 2] STEP 3: CREDIT WIN (Separate Atomic Step)
         let finalUserBalance = betResult.finalBalance;
         if (winAmt > 0) {
+            const WalletService = require('../wallet/WalletService'); // [NEW] For Loan Recovery
             const winResult = await TransactionHelper.runTransaction(async (session) => {
                 // [ATOMIC UPGRADE] Simultaneous balance and stats update
                 let updateQuery = {
@@ -117,6 +118,9 @@ exports.scratchCard = async (req, res) => {
                     description: `Scratch Card Reward (${tier})`,
                     transactionId: winTxId
                 }], { session, ordered: true });
+
+                // [LOAN RECOVERY] Trigger check after game win
+                await WalletService.processLoanRecovery(userId, session);
 
                 return finalBal;
             });

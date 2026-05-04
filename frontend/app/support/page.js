@@ -269,7 +269,7 @@ export default function SupportPage() {
                                     </div>
                                     
                                     <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-2">
-                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">যাকে টাকা পাঠাবেন তাকে দিতে হবে</span>
+                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Amount to Pay (Local BDT)</span>
                                         <span className="text-3xl font-black text-white">{(p2pAmount * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
                                         <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 1.23 BDT</span>
                                     </div>
@@ -295,7 +295,7 @@ export default function SupportPage() {
                                         toast.error(e.response?.data?.message || 'Failed'); 
                                     }
                                     finally { setLoading(false); }
-                                }} className="w-full py-5 bg-emerald-500 text-black rounded-3xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">কনফার্ম রিকোয়েস্ট</button>
+                                }} className="w-full py-5 bg-emerald-500 text-black rounded-3xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">CONFIRM REQUEST</button>
                                 <button onClick={()=>setShowDeposit(false)} className="w-full text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">Cancel</button>
                             </div>
                         ) : activeTrx.status === 'awaiting_payment' ? (
@@ -352,7 +352,7 @@ export default function SupportPage() {
                                 </div>
 
                                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col items-center justify-center">
-                                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">আপনি পাবেন (আনুমানিক)</span>
+                                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Estimated Payout (Local BDT)</span>
                                     <span className="text-3xl font-black text-white">{(p2pAmount * 1.23).toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
                                     <span className="text-[9px] font-bold text-slate-600 mt-1 uppercase italic tracking-widest">Rate: 1 NXS = 1.23 BDT</span>
                                 </div>
@@ -363,7 +363,7 @@ export default function SupportPage() {
                                 ))}
                             </div>
                             <div className="relative">
-                                <input type="text" placeholder="যে নাম্বারে টাকা নিবেন" value={p2pUserNumber} onChange={(e)=>setP2pUserNumber(e.target.value)} className="w-full bg-white/5 rounded-2xl p-4 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                                <input type="text" placeholder="Recipient Wallet Number" value={p2pUserNumber} onChange={(e)=>setP2pUserNumber(e.target.value)} className="w-full bg-white/5 rounded-2xl p-4 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
                             </div>
                             
                             {/* [NEW] Personal / Agent Toggle */}
@@ -395,13 +395,13 @@ export default function SupportPage() {
                                         accountDetails: p2pUserNumber,
                                         walletType: 'main'
                                     });
-                                    toast.success('ক্যাশ-আউট রিকোয়েস্ট জমা হয়েছে!'); 
+                                    toast.success('Withdrawal Request Submitted!'); 
                                     setShowWithdraw(false);
                                 } catch(e){ 
                                     toast.error(e.response?.data?.message || 'Failed'); 
                                 }
                                 finally { setLoading(false); }
-                            }} className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all">ক্যাশ-আউট করুন</button>
+                            }} className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all">CONFIRM WITHDRAWAL</button>
                             <button onClick={()=>setShowWithdraw(false)} className="w-full text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">Cancel</button>
                         </div>
                     </div>
