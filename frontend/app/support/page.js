@@ -207,7 +207,7 @@ export default function SupportPage() {
                     <div className="relative z-10">
                         <h4 className="text-xs font-black uppercase text-emerald-400 tracking-widest mb-1">International Payment Hub</h4>
                         <p className="text-[10px] text-slate-400 font-medium leading-relaxed uppercase tracking-tighter">
-                            Global Network Support <span className="text-emerald-300">Active Operators</span> (Bkash, Nagad, Rocket).
+                            Global Network Support <span className="text-emerald-300">Active Operators</span> (Binance, PayPal, Pyypl).
                             <br />All transactions expire in 20 minutes.
                         </p>
                     </div>
@@ -275,7 +275,7 @@ export default function SupportPage() {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {['Bkash', 'Nagad', 'Rocket'].map(m => (
+                                    {['Binance', 'PayPal', 'Pyypl'].map(m => (
                                         <button key={m} onClick={()=>setP2pMethod(m)} className={`py-4 rounded-xl font-black text-[11px] uppercase border transition-all ${p2pMethod === m ? 'bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'bg-white/5 text-slate-400 border-white/5 opacity-60 hover:opacity-100'}`}>{m}</button>
                                     ))}
                                 </div>
@@ -358,9 +358,9 @@ export default function SupportPage() {
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                                {['Bkash', 'Nagad', 'Rocket'].map(m => (
+                                {['Binance', 'PayPal', 'Pyypl'].map(m => (
                                     <button key={m} onClick={()=>setP2pMethod(m)} className={`py-4 rounded-xl font-black text-[11px] uppercase border transition-all ${p2pMethod === m ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.02]' : 'bg-white/5 text-slate-400 border-white/5 opacity-60 hover:opacity-100'}`}>{m}</button>
-                                ))}
+                                ))}\
                             </div>
                             <div className="relative">
                                 <input type="text" placeholder="Recipient Wallet Number" value={p2pUserNumber} onChange={(e)=>setP2pUserNumber(e.target.value)} className="w-full bg-white/5 rounded-2xl p-4 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
