@@ -791,13 +791,12 @@ exports.updateUserStatus = async (req, res) => {
             return res.status(400).json({ message: "Invalid status value" });
         }
 
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { status },
-            { new: true }
-        );
-
-        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json({ message: `User status updated to ${status}`, user });
+    } catch (err) {
+        console.error("Update User Status Error:", err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
 
 // [ADMIN] One-time Tier Migration
 exports.runTierMigration = async (req, res) => {
@@ -821,10 +820,6 @@ exports.runTierMigration = async (req, res) => {
         res.json({ success: true, message: `${result.modifiedCount} users promoted to SILVER tier.` });
     } catch (e) {
         res.status(500).json({ message: e.message });
-    }
-};
-        console.error("Update User Status Error:", err);
-        res.status(500).json({ message: "Server Error" });
     }
 };
 // [ADMIN] Hard Delete User with Financial Reconciliation
