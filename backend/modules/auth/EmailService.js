@@ -37,7 +37,9 @@ class EmailService {
             console.log(`[EmailService] Email sent to ${to}: ${info.messageId}`);
             return true;
         } catch (error) {
-            console.error(`[EmailService] Error sending email to ${to}:`, error);
+            console.error(`[EmailService] CRITICAL Error sending email to ${to}:`, error.message);
+            if (error.code === 'EAUTH') console.error("[SMTP] Authentication failed. Check .env SMTP settings.");
+            if (error.code === 'ECONNREFUSED') console.error("[SMTP] Connection refused. Is the mail server running?");
             return false;
         }
     }

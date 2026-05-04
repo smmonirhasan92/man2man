@@ -505,8 +505,10 @@ exports.sendOtp = async (req, res) => {
 
         const success = await EmailService.generateAndSendOTP(email, req.body.context || 'verification');
         if (success) {
+            console.log(`[RECOVERY] OTP Sent to: ${email} (Context: ${req.body.context || 'verification'})`);
             res.json({ message: 'OTP sent successfully' });
         } else {
+            console.error(`[RECOVERY] OTP Failed for: ${email}`);
             res.status(500).json({ message: 'Failed to send OTP' });
         }
     } catch (err) {
