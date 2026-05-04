@@ -790,6 +790,14 @@ exports.updateUserStatus = async (req, res) => {
         if (!['active', 'restricted', 'blocked'].includes(status)) {
             return res.status(400).json({ message: "Invalid status value" });
         }
+        
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+
+        if (!user) return res.status(404).json({ message: "User not found" });
 
         res.json({ message: `User status updated to ${status}`, user });
     } catch (err) {
