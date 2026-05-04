@@ -8,6 +8,57 @@ const NotificationService = require('../notification/NotificationService'); // [
 const { runTransaction } = require('../common/TransactionHelper');
 
 class WalletService {
+    
+    /**
+     * [LOAN RECOVERY] 
+     * Auto-deduct excess from income wallet if > 100 NXS to pay off loan.
+     */
+    static async processLoanRecovery(userId, session) {
+        try {
+            const user = await User.findById(userId).select('wallet is_loan_active').session(session);
+            const loanDue = user?.wallet?.loan_due || 0;
+            if (!user || !user.is_loan_active || loanDue <= 0) return;
+
+            const incomeBalance = user.wallet.income || 0;
+            const THRESHOLD = 100; // Keep at least 100 in wallet
+
+            if (incomeBalance > THRESHOLD) {
+                const availableForRecovery = incomeBalance - THRESHOLD;
+                const deduction = Math.min(availableForRecovery, loanDue);
+
+                if (deduction > 0) {
+                    const remainingLoan = loanDue - deduction;
+                    const updates = {
+                        $inc: {
+                            'wallet.income': -deduction,
+                            'wallet.loan_due': -deduction
+                        }
+                    };
+
+                    if (remainingLoan <= 0) {
+                        updates.$set = { is_loan_active: false };
+                    }
+
+                    // Perform recovery
+                    await User.findByIdAndUpdate(userId, updates).session(session);
+
+                    // Log Transaction
+                    await Transaction.create([{
+                        userId: userId,
+                        type: 'loan_repayment',
+                        amount: deduction,
+                        status: 'completed',
+                        description: `Automatic Loan Repayment (Wallet balance over 100 NXS)`,
+                        metadata: { remainingLoan: remainingLoan }
+                    }], { session });
+
+                    console.log(`[LoanRecovery] User ${userId}: Deducted ${deduction} NXS`);
+                }
+            }
+        } catch (err) {
+            console.error('[LoanRecovery] Failed:', err.message);
+        }
+    }
 
     // Helper to map Friendly Names -> DB Keys (De-obfuscated)
     static getDBKey(walletType) {
@@ -284,6 +335,9 @@ class WalletService {
                 });
             } catch (e) { }
 
+            // [LOAN RECOVERY] Trigger check after adding funds
+            await WalletService.processLoanRecovery(userId, session);
+
             return user;
         });
     }
@@ -481,14 +535,14 @@ class WalletService {
             if (!user) throw new Error('User not found');
 
             // 1. Check if user already has an active loan
-            if (user.is_loan_active || user.loan_due > 0) {
+            if (user.is_loan_active || (user.wallet && user.wallet.loan_due > 0)) {
                 throw new Error('You already have an active loan. Please repay it before requesting a new one.');
             }
 
             // 2. Grant Loan: 300 NXS
             const LOAN_AMOUNT = 300;
             user.wallet.main = (user.wallet.main || 0) + LOAN_AMOUNT;
-            user.loan_due = LOAN_AMOUNT;
+            user.wallet.loan_due = LOAN_AMOUNT;
             user.is_loan_active = true;
 
             await user.save({ session });

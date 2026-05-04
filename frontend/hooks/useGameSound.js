@@ -36,8 +36,17 @@ export const useGameSound = (enabled = true) => {
         };
     }, []);
 
+    const lastPlayed = useRef({});
+
     const play = useCallback((name, volume = 0.5) => {
         if (!enabled) return;
+
+        // [ANTI-DOUBLE] Debounce sounds to prevent echo/double-play
+        const now = Date.now();
+        if (lastPlayed.current[name] && (now - lastPlayed.current[name] < 150)) {
+            return; // Skip if played too recently
+        }
+        lastPlayed.current[name] = now;
 
         const audio = audioRefs.current[name];
         if (audio) {
@@ -46,21 +55,16 @@ export const useGameSound = (enabled = true) => {
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(e => {
-                    // Silently ignore 'play() interrupted' or 'user didn't interact' errors
+                    // Silently ignore
                 });
             }
         } else {
-            // Fallback for lazy loading or missing preload
+            // Fallback
             try {
                 const tempAudio = new Audio(`/sounds/${name}-v2.mp3`);
                 tempAudio.volume = volume;
-                const tempPromise = tempAudio.play();
-                if (tempPromise !== undefined) {
-                    tempPromise.catch(() => {});
-                }
-            } catch (e) {
-                // Ignore silent missing audio
-            }
+                tempAudio.play().catch(() => {});
+            } catch (e) {}
         }
     }, [enabled]);
 
