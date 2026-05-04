@@ -275,7 +275,7 @@ export default function SupportPage() {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {['Binance', 'PayPal', 'Pyypl'].map(m => (
+                                    {['Bkash', 'Nagad', 'Rocket'].map(m => (
                                         <button key={m} onClick={()=>setP2pMethod(m)} className={`py-4 rounded-xl font-black text-[11px] uppercase border transition-all ${p2pMethod === m ? 'bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'bg-white/5 text-slate-400 border-white/5 opacity-60 hover:opacity-100'}`}>{m}</button>
                                     ))}
                                 </div>
@@ -358,9 +358,9 @@ export default function SupportPage() {
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                                {['Binance', 'PayPal', 'Pyypl'].map(m => (
+                                {['Bkash', 'Nagad', 'Rocket'].map(m => (
                                     <button key={m} onClick={()=>setP2pMethod(m)} className={`py-4 rounded-xl font-black text-[11px] uppercase border transition-all ${p2pMethod === m ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.02]' : 'bg-white/5 text-slate-400 border-white/5 opacity-60 hover:opacity-100'}`}>{m}</button>
-                                ))}\
+                                ))}
                             </div>
                             <div className="relative">
                                 <input type="text" placeholder="Recipient Wallet Number" value={p2pUserNumber} onChange={(e)=>setP2pUserNumber(e.target.value)} className="w-full bg-white/5 rounded-2xl p-4 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
