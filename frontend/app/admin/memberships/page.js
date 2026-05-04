@@ -102,17 +102,28 @@ export default function AdminMembershipsPage() {
                         </div>
                         <div className="p-8 space-y-6">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Level Name (Must include Silver, Gold, or Platinum)</label>
-                                <input type="text" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Gold Membership" />
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Membership Level</label>
+                                <select 
+                                    required 
+                                    className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500 text-slate-900" 
+                                    value={formData.name} 
+                                    onChange={e => setFormData({...formData, name: e.target.value})}
+                                >
+                                    <option value="">Select Level</option>
+                                    <option value="Silver Membership">Silver Membership (Unlocks $15)</option>
+                                    <option value="Gold Membership">Gold Membership (Unlocks $30)</option>
+                                    <option value="Platinum Membership">Platinum Membership (Unlocks $60)</option>
+                                    <option value="Diamond Membership">Diamond Membership (Unlocks $250)</option>
+                                </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Price (NXS)</label>
-                                    <input type="number" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500" value={formData.unlock_price} onChange={e => setFormData({...formData, unlock_price: e.target.value})} />
+                                    <input type="number" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500 text-slate-900" value={formData.unlock_price} onChange={e => setFormData({...formData, unlock_price: e.target.value})} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Validity (Days)</label>
-                                    <input type="number" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500" value={formData.validity_days} onChange={e => setFormData({...formData, validity_days: e.target.value})} />
+                                    <input type="number" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500 text-slate-900" value={formData.validity_days} onChange={e => setFormData({...formData, validity_days: e.target.value})} />
                                 </div>
                             </div>
                             <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">

@@ -98,26 +98,26 @@ export default function AdminNodesPage() {
                         <div className="p-8 space-y-4">
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Node Name (e.g. USA Lite Node)</label>
-                                <input type="text" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                                <input type="text" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-blue-500 text-slate-900" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Nano Node" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Daily Limit</label>
-                                    <input type="number" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" value={formData.daily_limit} onChange={e => setFormData({...formData, daily_limit: e.target.value})} />
+                                    <input type="number" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-blue-500 text-slate-900" value={formData.daily_limit} onChange={e => setFormData({...formData, daily_limit: e.target.value})} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Reward/Task</label>
-                                    <input type="number" step="0.01" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" value={formData.task_reward} onChange={e => setFormData({...formData, task_reward: e.target.value})} />
+                                    <input type="number" step="0.1" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-blue-500 text-slate-900" value={formData.task_reward} onChange={e => setFormData({...formData, task_reward: e.target.value})} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Price (NXS)</label>
-                                    <input type="number" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" value={formData.unlock_price} onChange={e => setFormData({...formData, unlock_price: e.target.value})} />
+                                    <input type="number" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-blue-500 text-slate-900" value={formData.unlock_price} onChange={e => setFormData({...formData, unlock_price: e.target.value})} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Validity (Days)</label>
-                                    <input type="number" required className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold outline-none" value={formData.validity_days} onChange={e => setFormData({...formData, validity_days: e.target.value})} />
+                                    <input type="number" required className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-blue-500 text-slate-900" value={formData.validity_days} onChange={e => setFormData({...formData, validity_days: e.target.value})} />
                                 </div>
                             </div>
                         </div>
