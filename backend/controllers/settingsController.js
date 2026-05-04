@@ -57,8 +57,8 @@ exports.updatePaymentSettings = async (req, res) => {
 exports.getGlobalSettings = async (req, res) => {
     try {
         const keys = [
-            'referral_bonus_percent', 'referral_bonus_amount',
-            'silver_requirement', 'gold_requirement',
+            'referral_bonus_percent', 'referral_bonus_amount', 'referral_bonus_destination',
+            'min_withdraw_amount', 'silver_requirement', 'gold_requirement',
             'task_base_reward', 'daily_task_limit',
             'cash_out_commission_percent',
             'usd_to_bdt_rate', 'usd_to_inr_rate',
@@ -73,6 +73,10 @@ exports.getGlobalSettings = async (req, res) => {
         for (const key of keys) {
             settings[key] = await getVal(key);
         }
+
+        // Defaults if missing (to match legacy behavior)
+        if (!settings.min_withdraw_amount) settings.min_withdraw_amount = 100;
+        if (!settings.referral_bonus_destination) settings.referral_bonus_destination = 'income';
 
         // Defaults if missing (to match legacy behavior)
         if (!settings.task_base_reward) settings.task_base_reward = 5.00;
@@ -100,8 +104,8 @@ exports.getGlobalSettings = async (req, res) => {
 exports.updateGlobalSettings = async (req, res) => {
     try {
         const fields = [
-            'referral_bonus_percent', 'referral_bonus_amount',
-            'silver_requirement', 'gold_requirement',
+            'referral_bonus_percent', 'referral_bonus_amount', 'referral_bonus_destination',
+            'min_withdraw_amount', 'silver_requirement', 'gold_requirement',
             'task_base_reward', 'daily_task_limit',
             'cash_out_commission_percent',
             'usd_to_bdt_rate', 'usd_to_inr_rate',
