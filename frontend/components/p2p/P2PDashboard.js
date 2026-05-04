@@ -708,5 +708,6 @@ export default function P2PDashboard({ initialMode, onClose }) {
             {ratingTradeId && <RatingModal tradeId={ratingTradeId} onClose={() => setRatingTradeId(null)} onSuccess={() => setRatingTradeId(null)} />}
             <ConfirmationModal isOpen={modal.isOpen} onClose={() => setModal({ ...modal, isOpen: false })} onConfirm={modal.onConfirm} title={modal.title} message={modal.message} confirmText={modal.confirmText || 'Confirm'} />
         </div>
+        </PermissionGuard>
     );
 }
