@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { RefreshCw, Plus, Search, Filter, DollarSign, ArrowRight, ArrowLeft, User, ShieldCheck, Clock, Globe2, ArrowDownCircle, ArrowUpCircle, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import PermissionGuard from '../common/PermissionGuard';
-import { playSoundEffect } from '../../utils/soundEngine';
 import OrderCreationModal from './OrderCreationModal';
 import BuyOrderModal from './BuyOrderModal';
 import P2PChatRoom from './P2PChatRoom';
