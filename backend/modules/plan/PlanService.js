@@ -58,6 +58,16 @@ class PlanService {
             if (!plan) throw new Error('Plan not found.');
             if (!plan.is_active) throw new Error('Plan is deprecated.');
 
+            // --- [NEW] 30-DAY AGE GATING & MEMBERSHIP BYPASS ---
+            const accountAgeInDays = (new Date() - user.createdAt) / (1000 * 60 * 60 * 24);
+            const isPriorityMember = user.taskData?.accountTier === 'Gold' || user.isVerifiedMerchant === true;
+            
+            // Apply restriction for packages > 1000 NXS
+            if (plan.unlock_price > 1000 && accountAgeInDays < 30 && !isPriorityMember) {
+                const daysRemaining = Math.ceil(30 - accountAgeInDays);
+                throw new Error(`Restricted Access: To purchase this premium package, your account must be at least 30 days old (Remaining: ${daysRemaining} days). You can bypass this restriction immediately by upgrading to a Priority Membership.`);
+            }
+
             // [NEW] 12-Day Cooldown (Anti-Duplicate Purchase Guard)
             const lastPurchase = await UserPlan.findOne({
                 userId,
