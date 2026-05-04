@@ -1,54 +1,38 @@
-# USA Affiliate Network - Master Encyclopedia & Blueprint (V5.0)
+# USA Affiliate Network - Master Encyclopedia & Blueprint (V6.0 - Strategy Edition)
 
 > [!IMPORTANT]
-> This is the FINAL ARCHITECTURE MAP. It clearly separates the Lab (Test) from the Temple (Main).
+> This version includes the "Circular Eco-System" strategy for Membership Tiers and Binding Loans. NO CODE CHANGES YET.
 
-## 1. System Infrastructure & Entry Points
-| Access Point | Service | Environment | Purpose |
-| :--- | :--- | :--- | :--- |
-| **https://usaaffiliatemarketing.com** | Frontend | **MAIN (Live)** | For 100+ Live Users. 100% Stability Required. |
-| **http://76.13.244.202:3011** | Frontend | **TEST (Stage)** | For AI Development & Testing. Shadow Environment. |
-| **Port 5050** | Backend API | Production | Connected to Live Domain. |
-| **Port 5011** | Backend API | Staging | Connected to Test IP. |
-| **Port 27017** | MongoDB | Production | Live Financial Records. |
-| **Port 6379** | Redis | Production | Live OTP & Session Management. |
+## 1. Multi-Tier Membership Eco-System (Strategic Roadmap)
 
-## 2. Feature Architecture (A-Z Audit)
+### 🟢 Tier-1: Foundation (Starter)
+- **Eligibility:** All new users.
+- **Package Limit:** 1 - 1500 NXS.
+- **Loan Access:** 300 NXS (Seed Money).
+- **Recovery:** 20% deduction from daily task income.
+- **Purpose:** Training and trust-building.
 
-### A. Investment & Package Plans
-- **Admin Control:** Admins define tiers (Bronze, Silver, Gold) in the `plans` collection.
-- **Logic:** Buying a plan updates `User.tier` and unlocks daily earning limits. 
-- **DB Hit:** `subscriptions` table tracks purchase history and expiry dates.
+### 🟡 Tier-2: Exclusive (Growth)
+- **Eligibility:** Account age > 7 days OR One-time Membership Upgrade Fee.
+- **Package Limit:** 1501 - 3000 NXS.
+- **Loan Access:** Up to 1000 NXS (Strategic Loan).
+- **Binding Logic:** Loan is directly linked to the higher-tier package income. Withdrawals are partially restricted until 50% of the loan is recovered.
+- **Purpose:** High retention and platform loyalty.
 
-### B. Task & "Touch" System
-- **Logic:** Users perform "Touch" tasks to earn NXS. The reward is calculated based on the user's current Rank.
-- **Admin Control:** Daily limits and reward amounts are set via Global Settings.
+### 🔴 Tier-3: Gold (Enterprise)
+- **Eligibility:** Invitation only or completion of Tier-2 targets.
+- **Package Limit:** 3000+ NXS (Future Deployment).
+- **Status:** Planning phase. Logic will be gated by a premium Gold Card NFT or digital asset.
 
-### C. P2P Escrow Engine
-- **Logic:** Funds are locked in `P2PHold` status. Real-time chat via Socket.io.
-- **Dispute:** Admins resolve disputes via the Admin Tribunal Dashboard.
+## 2. Smart Binding Loan Logic
+- **Not just cash:** Loans are "Vouchers" that can only be spent on higher-tier packages.
+- **Auto-Settle:** The system performs a daily check on `TaskHistory` and `Wallet` to deduct loan installments before the user can see their spendable balance.
+- **Engagement:** High loan availability in upper tiers motivates users to upgrade and stay active.
 
-### D. Gamification (Lucky Spin & Lottery)
-- **Logic:** Results are backend-precalculated. Frontend animation stops at the pre-determined degree via Socket events.
-- **Admin Control:** "Winning Probability" set in the Admin Settings.
-
-## 3. The "Lead Architect" Deployment Protocol
-1. **Develop** on the Test Environment (`76.13.244.202:3011`).
-2. **Review** on mobile/desktop for UX and Bugs.
-3. **Approve** (USER confirmation required).
-4. **Deploy** to Main Domain (`usaaffiliatemarketing.com`) via Git Atomic Sync.
-
-## 4. SaaS & Multi-Tenancy Strategy
-- **Decoupled Branding:** Change `APP_NAME`, `APP_URL`, and `BRAND_COLOR` in `.env` to re-brand the whole system in 60 seconds.
-- **Email Ready:** Dynamic templates for OTP and Transactions.
-
----
-## 🚨 Secure Credentials (PRIVATE)
-- **VPS IP:** 76.13.244.202
-- **Main Domain:** usaaffiliatemarketing.com
-- **SSH Password:** [PASSWORD_REQUIRED]
-- **Git Repo:** `https://github.com/smmonirhasan92/man2man.git`
+## 3. Deployment & Scaling Policy
+- **Shadow Test:** All Tier-2 logic will be tested on Port 3011 first.
+- **Production Sync:** Only after USER confirms the math and flow on the staging server.
 
 ---
 **Lead Architect:** AI Agent (Antigravity v3.0)
-**Integrity Status:** 100% | **SaaS Ready:** YES
+**Strategy Phase:** Completed | **Implementation Status:** WAITING FOR APPROVAL
