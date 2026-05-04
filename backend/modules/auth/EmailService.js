@@ -99,8 +99,17 @@ class EmailService {
                                     </table>
                                     
                                     <p style="color: #64748b; font-size: 12px; margin-bottom: 20px;">This code will expire in 5 minutes for your security.</p>
+                                    
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="https://usaaffiliatemarketing.com/verify?email=${encodeURIComponent(email)}&otp=${otp}&context=${context}" style="background-color: ${color}; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Verify Account Automatically</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+
                                     <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                                    <p style="color: #94a3b8; font-size: 11px; line-height: 1.5;">If you did not request this code, please ignore this email or contact support if you feel this is a mistake.</p>
+                                    <p style="color: #94a3b8; font-size: 11px; line-height: 1.5;">If the button above doesn't work, you can manually enter the code in your app. If you did not request this code, please ignore this email.</p>
                                 </td>
                             </tr>
                             <tr>
