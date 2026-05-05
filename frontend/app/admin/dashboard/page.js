@@ -22,7 +22,8 @@ export default function AdminDashboard() {
         totalDeposits: 0,
         totalWithdraws: 0,
         communityDropFund: { total: 0 },
-        pendingActions: 0
+        pendingActions: 0,
+        adminReserveFund: 0
     });
     const [loading, setLoading] = useState(true);
     const [maintenance, setMaintenance] = useState(false);
@@ -44,7 +45,8 @@ export default function AdminDashboard() {
                 totalDeposits: overview.total_deposits || 0,
                 totalWithdraws: overview.total_withdraws || 0,
                 pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0),
-                communityDropFund: partnerAudit.communityDropFund || { total: 0 }
+                communityDropFund: partnerAudit.communityDropFund || { total: 0 },
+                adminReserveFund: eco.adminReserveFund || 0
             });
 
             const sysRes = await api.get('/admin/settings/public');
@@ -182,6 +184,26 @@ export default function AdminDashboard() {
                             </div>
                             <div className="h-1 bg-white/5 rounded-full mt-4 overflow-hidden">
                                 <div className="h-full bg-indigo-500 w-[65%]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Residual Revenue Fund (NEW) */}
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-emerald-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+                        <h3 className="text-emerald-500/60 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <Shield className="w-3 h-3" /> Residual Revenue Fund
+                        </h3>
+                        <div className="text-3xl font-black text-white tracking-tighter mb-2">
+                            {Number(stats.adminReserveFund || 0).toLocaleString()} <span className="text-sm text-emerald-400 opacity-80 uppercase">NXS</span>
+                        </div>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                            Unpaid Commissions from incomplete uplines (Task/Loan/Plan)
+                        </p>
+                        <div className="mt-6 pt-6 border-t border-white/5">
+                            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                <span>Status:</span>
+                                <span className="text-emerald-400 animate-pulse">● ACCUMULATING</span>
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ const Transaction = require('../modules/wallet/TransactionModel'); // Legacy/UI
 const P2PTrade = require('../modules/p2p/P2PTradeModel');
 const SocketService = require('../modules/common/SocketService');
 const GameVault = require('../modules/gamification/GameVaultModel');
+const SystemSetting = require('../modules/settings/SystemSettingModel');
 
 exports.mintUSC = async (req, res) => {
     // 1. Auth Check (Middleware should handle role, but check PIN here)
@@ -410,7 +411,8 @@ exports.getFinancialStats = async (req, res) => {
                 totalGameWins,
                 totalSystemRecovery,
                 totalIncomeGiven,
-                netSystemProfit
+                netSystemProfit,
+                adminReserveFund: (await SystemSetting.findOne({ key: 'admin_reserve_fund' }))?.value || 0
             }
         });
     } catch (e) {
@@ -606,6 +608,7 @@ exports.getEconomyBalanceSheet = async (req, res) => {
             today_generation: todayGen,
             today_recovery: todayBurn,
             today_net: todayGen - todayBurn,
+            admin_reserve_fund: (await SystemSetting.findOne({ key: 'admin_reserve_fund' }))?.value || 0,
             chart_data: formattedStats
         });
 

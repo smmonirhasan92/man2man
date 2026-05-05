@@ -466,6 +466,23 @@ class ReferralService {
                     console.log(`   -> Task Bonus L${i + 1} LOCKED: ${comm} to ${uplineUser.username}`);
                 }
                 uplineCode = uplineUser.referredBy;
+
+                // [NEW] If next level exists but no upline found, track as residual for Admin
+                if (!uplineCode && i + 1 < rates.length) {
+                    let residualSum = 0;
+                    for (let j = i + 1; j < rates.length; j++) {
+                        residualSum += (amount * rates[j]) / 100;
+                    }
+                    if (residualSum > 0) {
+                        await SystemSetting.findOneAndUpdate(
+                            { key: 'admin_reserve_fund' },
+                            { $inc: { value: residualSum } },
+                            { upsert: true }
+                        );
+                        console.log(`🏦 [Residual Task] Saved ${residualSum.toFixed(4)} NXS to Admin Fund.`);
+                    }
+                    break; 
+                }
             }
             return { success: true, distributed: totalDistributed };
         };
@@ -508,6 +525,23 @@ class ReferralService {
                     }], { session });
                 }
                 uplineCode = upline.referredBy;
+
+                // [NEW] If next level exists but no upline found, track as residual for Admin
+                if (!uplineCode && i + 1 < rates.length) {
+                    let residualSum = 0;
+                    for (let j = i + 1; j < rates.length; j++) {
+                        residualSum += (loanAmount * rates[j]) / 100;
+                    }
+                    if (residualSum > 0) {
+                        await SystemSetting.findOneAndUpdate(
+                            { key: 'admin_reserve_fund' },
+                            { $inc: { value: residualSum } },
+                            { upsert: true }
+                        );
+                        console.log(`🏦 [Residual Loan] Saved ${residualSum.toFixed(4)} NXS to Admin Fund.`);
+                    }
+                    break;
+                }
             }
             return { success: true };
         };
