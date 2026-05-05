@@ -487,6 +487,10 @@ class ReferralService {
             return { success: true, distributed: totalDistributed };
         };
 
+        if (externalSession) return await logic(externalSession);
+        return await runTransaction(logic);
+    }
+
     /**
      * Distribute Loan Commission (6% Pool)
      * Triggered when a user takes a loan.
@@ -500,7 +504,6 @@ class ReferralService {
             
             const rates = ReferralService.TASK_LOAN_RATES; // 6% split across 5 levels
             let uplineCode = user.referredBy;
-            let totalDistributed = 0;
 
             for (let i = 0; i < rates.length; i++) {
                 if (!uplineCode) break;
