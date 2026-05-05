@@ -159,7 +159,7 @@ function DashboardContent() {
     const tier = user?.taskData?.accountTier || 'Silver';
 
     return (
-        <div className="min-h-screen font-sans text-slate-200 pb-32 relative overflow-y-auto overflow-x-hidden bg-[#0A2540]">
+        <div className="min-h-screen font-sans text-slate-200 pb-40 relative overflow-x-hidden bg-[#0A2540]">
             
             {/* [NEW] Legacy User Email Verification Interceptor */}
             {user?.requireEmailVerification && (

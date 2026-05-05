@@ -140,10 +140,10 @@ export default function ProfilePage() {
             </div>
 
             {/* MAIN SCROLLABLE CONTENT */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 pb-48">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-10 pb-48">
 
                 {/* 1. HERO PROFILE SECTION (USA THEME) */}
-                <div className="relative flex flex-col items-center">
+                <div className="relative flex flex-col items-center pt-6">
                     {/* Patriotic Glow */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-blue-600/30 blur-[60px] rounded-full pointer-events-none"></div>
                     <div className="absolute top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-red-600/20 blur-[40px] rounded-full pointer-events-none mix-blend-screen"></div>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
                                 )}
                             </div>
                         </div>
-                        <label className="absolute bottom-1 right-1 bg-red-600 text-white p-2.5 rounded-full shadow-lg cursor-pointer hover:bg-red-500 active:scale-95 transition-all border-2 border-[#0d1b2a]">
+                        <label className="absolute bottom-2 -right-1 bg-red-600 text-white p-3 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)] cursor-pointer hover:bg-red-500 active:scale-95 transition-all border-2 border-[#0d1b2a] z-20">
                             <Camera className="w-4 h-4" />
                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                         </label>
