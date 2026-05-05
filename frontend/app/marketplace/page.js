@@ -55,10 +55,11 @@ export default function GlobalMarketplace() {
 
         // 1. Determine Logic
         const isNumber = plan.type === 'number' || plan.name.toLowerCase().includes('number') || plan.name.toLowerCase().includes('sim');
+        const isVip = plan.type === 'vip';
         const country = plan.name.includes("Canada") ? "Canada" : plan.name.includes("Ireland") ? "Ireland" : "USA";
 
         setTargetCountry(country);
-        setProvisioningType(isNumber ? 'number' : 'server');
+        setProvisioningType(isVip ? 'vip' : (isNumber ? 'number' : 'server'));
 
         // Pricing & Validation based on Country
         const nxsCost = plan.unlock_price || 1000;
@@ -70,6 +71,28 @@ export default function GlobalMarketplace() {
             toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${nxsCost.toLocaleString()} NXS`);
             router.push('/p2p');
             return;
+        }
+
+        // [FRONTEND AGE GATE CHECK]
+        if (plan.type === 'server' || plan.type === 'number') {
+            const createdAtDate = user?.createdAt ? new Date(user.createdAt) : new Date();
+            const accountAgeInDays = (new Date() - createdAtDate) / (1000 * 60 * 60 * 24);
+            const tier = user?.taskData?.accountTier || 'Starter';
+            const isMembershipActive = user?.taskData?.isPriorityMember === true && new Date(user?.taskData?.priorityExpiry || new Date()) > new Date();
+            
+            let allowedMaxPrice = 1000; // 10 USD = 1000 NXS
+            if (isMembershipActive || user?.isVerifiedMerchant) {
+                if (tier === 'Silver') allowedMaxPrice = 1500;
+                else if (tier === 'Gold') allowedMaxPrice = 3000;
+                else if (tier === 'Platinum') allowedMaxPrice = 6000;
+                else if (tier === 'Diamond') allowedMaxPrice = 25000;
+            }
+
+            if (accountAgeInDays < 30 && plan.unlock_price > allowedMaxPrice) {
+                toast.error(`Access Denied: Your ${tier} Tier allows up to $${allowedMaxPrice/100} nodes. Buy a Membership Card first!`, { duration: 4500 });
+                setProvisioningType('vip'); // Auto switch to VIP Tab
+                return;
+            }
         }
 
         // [SAFETY CHECK] Check for Existing Active Plan
@@ -97,7 +120,8 @@ export default function GlobalMarketplace() {
         setProcessing(plan._id || plan.id);
         setProvisioning(true);
         const isNumber = plan.type === 'number' || plan.name.toLowerCase().includes('number');
-        setProvisioningType(isNumber ? 'number' : 'server');
+        const isVip = plan.type === 'vip';
+        setProvisioningType(isVip ? 'vip' : (isNumber ? 'number' : 'server'));
 
         try {
             // 2. Wait for Animation (4 Seconds Strict)
@@ -190,7 +214,7 @@ export default function GlobalMarketplace() {
                         onClick={() => setProvisioningType('vip')}
                         className={`flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${provisioningType === 'vip' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 text-slate-500 border border-white/5'}`}
                     >
-                        Membership Plans
+                        Membership Cards
                     </button>
                 </div>
 
@@ -204,6 +228,89 @@ export default function GlobalMarketplace() {
 
                     <div className="space-y-6">
                         {validPlans.filter(p => p.type === provisioningType || (provisioningType === 'server' && p.type === 'number')).map(plan => {
+                            // ==========================================
+                            // VIP MEMBERSHIP CARD DESIGN (NEW)
+                            // ==========================================
+                            if (plan.type === 'vip') {
+                                const nxsCost = plan.unlock_price || 1000;
+                                const usdPrice = (nxsCost / 100).toFixed(2);
+                                const validity = plan.validity_days || 30;
+                                
+                                let cardColor = "from-amber-400 to-amber-600";
+                                let iconColor = "text-amber-100";
+                                
+                                if (plan.name.toLowerCase().includes('silver')) {
+                                    cardColor = "from-slate-300 to-slate-500";
+                                    iconColor = "text-slate-100";
+                                } else if (plan.name.toLowerCase().includes('platinum')) {
+                                    cardColor = "from-teal-300 to-teal-500";
+                                    iconColor = "text-teal-100";
+                                }
+
+                                return (
+                                    <div key={plan.id} className={`relative bg-gradient-to-br ${cardColor} rounded-2xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02] p-1`}>
+                                        <div className="absolute top-0 right-0 p-4 opacity-20">
+                                            <Shield className="w-32 h-32 text-white transform rotate-12" />
+                                        </div>
+                                        <div className="bg-[#0a192f]/40 backdrop-blur-sm w-full h-full rounded-xl p-6 relative z-10 border border-white/20">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="text-xl font-black text-white uppercase tracking-wider shadow-sm">{plan.name.replace('Membership', 'Card')}</h3>
+                                                    <p className="text-[10px] text-white/90 font-bold uppercase tracking-widest mt-1">Priority Member Badge</p>
+                                                </div>
+                                                <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-black text-white backdrop-blur-md border border-white/10">
+                                                    {validity} DAYS
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="my-6 flex items-end justify-between">
+                                                <div>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-4xl font-black text-white drop-shadow-md">${usdPrice}</span>
+                                                    </div>
+                                                    <div className="text-xs text-white/90 font-bold mt-1 bg-black/20 px-2 py-0.5 rounded-full inline-block">
+                                                        {nxsCost.toLocaleString()} NXS
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3 mb-6 bg-black/20 p-4 rounded-xl border border-white/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                                                        <CheckCircle className={`w-3.5 h-3.5 ${iconColor}`} />
+                                                    </div>
+                                                    <span className="text-xs text-white font-bold">Remove 30-Day Age Limit</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                                                        <CheckCircle className={`w-3.5 h-3.5 ${iconColor}`} />
+                                                    </div>
+                                                    <span className="text-xs text-white font-bold">Unlock High-Value Server Nodes</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                                                        <CheckCircle className={`w-3.5 h-3.5 ${iconColor}`} />
+                                                    </div>
+                                                    <span className="text-xs text-white font-bold">VIP Tier Status Access</span>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => initiatePurchase(plan)}
+                                                disabled={!!processing}
+                                                className="w-full py-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest border border-white/30 shadow-xl"
+                                            >
+                                                {processing === (plan._id || plan.id) ? 'PROCESSING...' : 'ACTIVATE CARD'}
+                                                <ArrowLeft className="w-3 h-3 rotate-180" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            // ==========================================
+                            // EXISTING SERVER NODE DESIGN (UNTouched)
+                            // ==========================================
                             const isIreland = plan.name.includes("Ireland");
                             const isUSA = plan.name.includes("USA") || plan.name.includes("United");
                             const isUK = plan.name.includes("UK");
@@ -371,6 +478,18 @@ export default function GlobalMarketplace() {
                                 <h2 className="text-lg font-bold text-white tracking-widest animate-pulse mb-2">ACTIVATING SIM</h2>
                                 <p className="text-emerald-400 font-mono text-[10px]">Assigning Virtual Number...</p>
                                 <p className="text-slate-500 text-[9px] mt-2 font-mono">Verifying SMS Gateway...</p>
+                            </div>
+                        )}
+                        {/* TYPE 3: VIP CARD ANIMATION */}
+                        {provisioningType === 'vip' && (
+                            <div className="text-center w-full px-8">
+                                <div className="relative w-24 h-24 mx-auto mb-8 flex items-center justify-center">
+                                    <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-spin"></div>
+                                    <Shield className="w-8 h-8 text-amber-400 animate-pulse" />
+                                </div>
+                                <h2 className="text-lg font-bold text-white tracking-widest animate-pulse mb-2">ACTIVATING CARD</h2>
+                                <p className="text-amber-400 font-mono text-[10px]">Applying Priority Access...</p>
+                                <p className="text-slate-500 text-[9px] mt-2 font-mono">Bypassing Node Restrictions...</p>
                             </div>
                         )}
                     </div>

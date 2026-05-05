@@ -54,12 +54,12 @@ export default function AdminMembershipsPage() {
                         <Link href="/admin/dashboard" className="p-3 bg-white/20 backdrop-blur-md rounded-2xl hover:bg-white/30 transition">
                             <ArrowLeft className="w-5 h-5 text-white" />
                         </Link>
-                        <button onClick={() => { setFormData({ id: null, name: '', unlock_price: 0, validity_days: 30, type: 'vip' }); setShowForm(true); }} className="bg-white text-amber-600 px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest shadow-xl">
-                            + NEW MEMBERSHIP
+                        <button onClick={() => { setFormData({ id: null, name: '', unlock_price: 0, validity_days: 30, type: 'vip' }); setShowForm(true); }} className="px-4 py-2 bg-white text-amber-600 font-bold text-xs rounded-full shadow-lg hover:bg-amber-50 transition-colors uppercase flex items-center gap-2">
+                            + NEW CARD
                         </button>
                     </div>
-                    <h1 className="text-4xl font-black mb-2 tracking-tight">PREMIUM PLAYER LEVELS</h1>
-                    <p className="text-amber-100/80 text-sm font-medium uppercase tracking-widest">Bypass Age Restrictions (Silver/Gold/Platinum)</p>
+                    <h1 className="text-xl font-black text-white uppercase tracking-wider">MEMBERSHIP CARDS</h1>
+                    <p className="text-[10px] text-amber-500/80 font-bold uppercase tracking-widest mt-1">BYPASS AGE RESTRICTIONS (SILVER/GOLD/PLATINUM)</p>
                 </div>
             </div>
 
@@ -97,19 +97,19 @@ export default function AdminMembershipsPage() {
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
                     <form onSubmit={handleSubmit} className="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl">
                         <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Manage Membership</h2>
+                            <h2 className="text-sm font-black text-[#0a192f] uppercase tracking-wider">MANAGE CARD</h2>
                             <button type="button" onClick={() => setShowForm(false)} className="p-2 bg-slate-100 rounded-full"><X size={20}/></button>
                         </div>
                         <div className="p-8 space-y-6">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Membership Level</label>
+                                <label className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1 block">CARD TIER</label>
                                 <select 
                                     required 
                                     className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-amber-500 text-slate-900" 
                                     value={formData.name} 
                                     onChange={e => setFormData({...formData, name: e.target.value})}
                                 >
-                                    <option value="">Select Level</option>
+                                    <option value="">Select Tier</option>
                                     <option value="Silver Membership">Silver Membership (Unlocks $15)</option>
                                     <option value="Gold Membership">Gold Membership (Unlocks $30)</option>
                                     <option value="Platinum Membership">Platinum Membership (Unlocks $60)</option>
@@ -132,7 +132,7 @@ export default function AdminMembershipsPage() {
                             </div>
                         </div>
                         <div className="p-8 bg-slate-50">
-                            <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-amber-600 transition shadow-xl">SAVE MEMBERSHIP</button>
+                            <button type="submit" className="w-full py-3 bg-[#0a192f] hover:bg-[#112240] text-white font-black text-xs rounded-xl transition-all shadow-lg uppercase tracking-widest">SAVE CARD</button>
                         </div>
                     </form>
                 </div>
