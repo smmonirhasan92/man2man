@@ -217,7 +217,7 @@ exports.updateProfile = async (req, res) => {
         
         const update = {};
         if (fullName) update.fullName = fullName;
-        if (req.file) update.photoUrl = `/uploads/${req.file.filename}`;
+        if (req.file) update.photoUrl = `uploads/${req.file.filename}`;
 
         const user = await User.findByIdAndUpdate(userId, update, { new: true });
         if (!user) return res.status(404).json({ message: 'User not found' });

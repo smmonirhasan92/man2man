@@ -5,7 +5,15 @@ const path = require('path');
 const storage = multer.diskStorage({
     destination: './uploads/',
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+        let ext = path.extname(file.originalname).toLowerCase();
+        if (!ext) {
+            // Fallback for blobs without extensions
+            if (file.mimetype === 'image/jpeg') ext = '.jpg';
+            else if (file.mimetype === 'image/png') ext = '.png';
+            else if (file.mimetype === 'image/gif') ext = '.gif';
+            else ext = '.jpg'; // default
+        }
+        cb(null, file.fieldname + '-' + Date.now() + ext);
     }
 });
 
