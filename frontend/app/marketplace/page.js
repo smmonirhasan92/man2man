@@ -241,76 +241,87 @@ export default function GlobalMarketplace() {
                             // VIP MEMBERSHIP CARD DESIGN (NEW)
                             // ==========================================
                             if (plan.type === 'vip') {
-                                const nxsCost = plan.unlock_price || 1000;
-                                const usdPrice = (nxsCost / 100).toFixed(2);
+                                const nxsCost = plan.unlock_price || 0;
                                 const validity = plan.validity_days || 30;
                                 
                                 let cardColor = "from-amber-400 to-amber-600";
                                 let iconColor = "text-amber-100";
+                                let badgeTitle = "GOLD STATUS";
                                 
                                 if (plan.name.toLowerCase().includes('silver')) {
                                     cardColor = "from-slate-300 to-slate-500";
                                     iconColor = "text-slate-100";
+                                    badgeTitle = "STARTER BADGE";
                                 } else if (plan.name.toLowerCase().includes('platinum')) {
                                     cardColor = "from-teal-300 to-teal-500";
                                     iconColor = "text-teal-100";
+                                    badgeTitle = "ELITE STATUS";
                                 }
 
                                 return (
-                                    <div key={plan.id} className={`relative bg-gradient-to-br ${cardColor} rounded-2xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02] p-1`}>
-                                        <div className="absolute top-0 right-0 p-4 opacity-20">
-                                            <Shield className="w-32 h-32 text-white transform rotate-12" />
+                                    <div key={plan.id} className={`relative bg-gradient-to-br ${cardColor} rounded-3xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02] p-1`}>
+                                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                                            <Shield className="w-48 h-48 text-white transform rotate-12" />
                                         </div>
-                                        <div className="bg-[#0a192f]/40 backdrop-blur-sm w-full h-full rounded-xl p-6 relative z-10 border border-white/20">
+                                        <div className="bg-[#0a192f]/60 backdrop-blur-md w-full h-full rounded-2xl p-6 relative z-10 border border-white/20">
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
-                                                    <h3 className="text-xl font-black text-white uppercase tracking-wider shadow-sm">{plan.name.replace('Membership', 'Card')}</h3>
-                                                    <p className="text-[10px] text-white/90 font-bold uppercase tracking-widest mt-1">Priority Member Badge</p>
+                                                    <h3 className="text-2xl font-black text-white uppercase tracking-wider shadow-sm drop-shadow-lg">{plan.name.replace('Membership', 'Card')}</h3>
+                                                    <p className="text-[10px] text-white/90 font-black uppercase tracking-widest mt-1 bg-white/10 px-2 py-0.5 rounded inline-block">{badgeTitle}</p>
                                                 </div>
-                                                <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-black text-white backdrop-blur-md border border-white/10">
+                                                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black text-white backdrop-blur-md border border-white/20 shadow-inner">
                                                     {validity} DAYS
                                                 </div>
                                             </div>
                                             
-                                            <div className="my-6 flex items-end justify-between">
-                                                <div>
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className="text-4xl font-black text-white drop-shadow-md">${usdPrice}</span>
-                                                    </div>
-                                                    <div className="text-xs text-white/90 font-bold mt-1 bg-black/20 px-2 py-0.5 rounded-full inline-block">
-                                                        {nxsCost.toLocaleString()} NXS
-                                                    </div>
+                                            <div className="my-6">
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-5xl font-black text-white drop-shadow-xl">{nxsCost === 0 ? 'FREE' : nxsCost}</span>
+                                                    {nxsCost > 0 && <span className="text-sm text-white/80 font-black uppercase tracking-widest">NXS</span>}
+                                                </div>
+                                                <div className="text-[10px] text-white/70 font-bold mt-1">
+                                                    One-Time Activation Fee
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-3 mb-6 bg-black/20 p-4 rounded-xl border border-white/10">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                                        <CheckCircle className={`w-3.5 h-3.5 ${iconColor}`} />
+                                            <div className="space-y-3 mb-6 bg-black/30 p-4 rounded-2xl border border-white/10 shadow-inner">
+                                                <p className="text-[9px] text-white/50 font-black uppercase tracking-widest border-b border-white/10 pb-2 mb-3">Card Benefits & Access</p>
+                                                
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-5 h-5 mt-0.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                        <CheckCircle className={`w-3 h-3 ${iconColor}`} />
                                                     </div>
-                                                    <span className="text-xs text-white font-bold">Remove 30-Day Age Limit</span>
+                                                    <span className="text-xs text-white/90 font-medium leading-relaxed">
+                                                        {plan.name.includes('Silver') ? 'Access to starter Nodes up to 1500 NXS' : 
+                                                         plan.name.includes('Gold') ? 'Instantly bypass limits for Nodes up to 3000 NXS' : 
+                                                         'Unlimited Access to ALL High-Value Nodes'}
+                                                    </span>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                                        <CheckCircle className={`w-3.5 h-3.5 ${iconColor}`} />
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-5 h-5 mt-0.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                        <CheckCircle className={`w-3 h-3 ${iconColor}`} />
                                                     </div>
-                                                    <span className="text-xs text-white font-bold">Unlock High-Value Server Nodes</span>
+                                                    <span className="text-xs text-white/90 font-medium leading-relaxed">
+                                                        {nxsCost === 0 ? 'Default 30-Day Age Restriction Applies' : 'Completely Removes 30-Day Account Age Limitation'}
+                                                    </span>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                                                        <CheckCircle className={`w-3.5 h-3.5 ${iconColor}`} />
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-5 h-5 mt-0.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                        <Star className={`w-3 h-3 ${iconColor} fill-current`} />
                                                     </div>
-                                                    <span className="text-xs text-white font-bold">VIP Tier Status Access</span>
+                                                    <span className="text-xs text-white/90 font-medium leading-relaxed">
+                                                        Exclusive {plan.name.replace('Membership', '').trim()} Tier Profile Badge
+                                                    </span>
                                                 </div>
                                             </div>
 
                                             <button
                                                 onClick={() => initiatePurchase(plan)}
-                                                disabled={!!processing}
-                                                className="w-full py-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest border border-white/30 shadow-xl"
+                                                disabled={!!processing || nxsCost === 0}
+                                                className={`w-full py-4 backdrop-blur-md font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest border shadow-2xl ${nxsCost === 0 ? 'bg-white/10 text-white/50 border-white/10 cursor-not-allowed' : 'bg-white text-[#0a192f] hover:bg-white/90 hover:scale-[1.02] active:scale-95 border-white'}`}
                                             >
-                                                {processing === (plan._id || plan.id) ? 'PROCESSING...' : 'ACTIVATE CARD'}
-                                                <ArrowLeft className="w-3 h-3 rotate-180" />
+                                                {processing === (plan._id || plan.id) ? 'ACTIVATING...' : nxsCost === 0 ? 'ALREADY ACTIVE' : 'ACTIVATE VIP CARD'}
+                                                {nxsCost > 0 && <ArrowLeft className="w-3 h-3 rotate-180" />}
                                             </button>
                                         </div>
                                     </div>
