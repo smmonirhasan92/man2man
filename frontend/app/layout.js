@@ -85,8 +85,8 @@ export default function RootLayout({ children }) {
                                     {/* GLOBAL DRAWER TRIGGER + DRAWER */}
                                     <GlobalProfileDrawer />
 
-                                    {/* Main Content Area */}
-                                    <main className="flex-1 pb-32 relative z-10">
+                                    {/* Main Content Area - Scrollable Container */}
+                                    <main className="flex-1 overflow-y-auto scrollbar-hide relative">
                                         <RouteChecker />
                                         <AuthGuard>
                                             <PageTransition>

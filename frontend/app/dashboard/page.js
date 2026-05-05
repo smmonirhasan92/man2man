@@ -179,8 +179,8 @@ function DashboardContent() {
 
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">
 
-                {/* Header */}
-                <div className="w-full px-6 pt-8 pb-4 flex items-center justify-between gap-4">
+                {/* Header - Sticky for better navigation */}
+                <div className="w-full px-6 pt-8 pb-4 flex items-center justify-between gap-4 sticky top-0 bg-[#0A2540]/95 backdrop-blur-md z-50 border-b border-white/5 shadow-xl">
                     <div className="flex items-center gap-3">
                         {/* Dynamic Tier Icon/Logo */}
                         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border transition-all duration-500 shadow-2xl relative overflow-hidden group ${

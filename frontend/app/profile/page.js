@@ -161,8 +161,8 @@ export default function ProfilePage() {
                                 )}
                             </div>
                         </div>
-                        <label className="absolute -bottom-1 -right-2 bg-red-600 text-white p-4 rounded-full shadow-[0_5px_20px_rgba(220,38,38,0.6)] cursor-pointer hover:bg-red-500 active:scale-90 transition-all border-4 border-[#020617] z-50">
-                            <Camera className="w-6 h-6" />
+                        <label className="absolute -bottom-1 -right-2 bg-gradient-to-tr from-red-600 to-rose-500 text-white p-4 rounded-full shadow-[0_8px_30px_rgba(225,29,72,0.6)] cursor-pointer hover:scale-110 active:scale-95 transition-all border-4 border-[#020617] z-[60]">
+                            <Camera className="w-7 h-7" />
                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                         </label>
                     </div>

@@ -50,7 +50,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   min-height: 100dvh;
-  overscroll-behavior-y: none;
+  /* overscroll-behavior-y: none; - Restoring natural scrolling */
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
