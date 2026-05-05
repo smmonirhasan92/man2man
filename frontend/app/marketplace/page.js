@@ -19,7 +19,16 @@ export default function GlobalMarketplace() {
 
     // Animation States
     const [provisioning, setProvisioning] = useState(false);
-    const [provisioningType, setProvisioningType] = useState('server'); // 'server' or 'number'
+    const [provisioningType, setProvisioningType] = useState('server'); // 'server' or 'number' or 'vip'
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('tab') === 'vip') {
+                setProvisioningType('vip');
+            }
+        }
+    }, []);
     const [targetCountry, setTargetCountry] = useState("USA");
 
     // Modal State

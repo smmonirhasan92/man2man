@@ -246,29 +246,7 @@ function DashboardContent() {
                     </button>
                 </div>
 
-                {/* Membership Status [NEW] */}
-                <div className="w-full px-6 mb-4">
-                    <div className="bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/20 p-4 rounded-[2rem] flex items-center justify-between backdrop-blur-md relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                        <div className="flex items-center gap-4 relative z-10">
-                            <div className="p-2.5 bg-amber-500 rounded-xl text-white shadow-lg shadow-amber-500/20 group-hover:rotate-12 transition-transform">
-                                <Crown size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-white font-black text-xs uppercase tracking-widest">Premium Player Membership</h3>
-                                <p className="text-amber-400/80 text-[10px] font-bold mt-0.5 uppercase tracking-tighter">
-                                    {user?.taskData?.accountTier === 'Platinum' ? 'PLATINUM BYPASS (Up to $60)' : 
-                                     user?.taskData?.accountTier === 'Gold' ? 'GOLD BYPASS (Up to $30)' : 
-                                     user?.taskData?.accountTier === 'Silver' ? 'SILVER BYPASS (Up to $15)' : 
-                                     'FREE STARTER TIER'}
-                                </p>
-                            </div>
-                        </div>
-                        <Link href="/marketplace" className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-full text-[10px] font-black text-white transition-all active:scale-95 shadow-lg shadow-amber-500/20 relative z-10">
-                            UPGRADE
-                        </Link>
-                    </div>
-                </div>
+
 
                 {/* The Empire Tour Tracker */}
                 <GlobalTourProgress tourSales={user?.tourSales || 0} />
@@ -335,6 +313,12 @@ function DashboardContent() {
 
                         {/* Support */}
                         <FolderCard href="/support" icon={LifeBuoy} label="Support" color="text-teal-400" gradient="from-teal-600/20 to-teal-900/40" border="border-teal-500/30" />
+
+                        {/* Membership Cards (9th Item) */}
+                        <div className="relative group">
+                            <FolderCard href="/marketplace?tab=vip" icon={Shield} label="VIP Cards" color="text-cyan-400" gradient="from-cyan-600/20 to-cyan-900/40" border="border-cyan-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">VIP</div>
+                        </div>
                     </div>
                 </div>
 
