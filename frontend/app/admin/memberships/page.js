@@ -110,9 +110,9 @@ export default function AdminMembershipsPage() {
                                     onChange={e => setFormData({...formData, name: e.target.value})}
                                 >
                                     <option value="">Select Tier</option>
-                                    <option value="Silver Membership">Silver Membership (Unlocks $15)</option>
-                                    <option value="Gold Membership">Gold Membership (Unlocks $30)</option>
-                                    <option value="Platinum Membership">Platinum Membership (Unlocks $60)</option>
+                                    <option value="Silver Card">Silver Card (Bypasses Age Restriction up to $15 Node)</option>
+                                    <option value="Gold Card">Gold Card (Bypasses Age Restriction up to $30 Node)</option>
+                                    <option value="Platinum Card">Platinum Card (Bypasses Age Restriction up to $60 Node)</option>
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -127,7 +127,7 @@ export default function AdminMembershipsPage() {
                             </div>
                             <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
                                 <p className="text-[10px] text-amber-700 font-bold uppercase leading-relaxed">
-                                    Note: Silver unlocks up to $15 nodes, Gold up to $30, and Platinum up to $60 for new accounts under 30 days.
+                                    Note: Silver Card unlocks up to $15 nodes, Gold Card up to $30, and Platinum Card up to $60 for new accounts under 30 days.
                                 </p>
                             </div>
                         </div>
