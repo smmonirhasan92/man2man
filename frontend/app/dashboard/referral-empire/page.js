@@ -1,3 +1,4 @@
+'use client';
 import ReferralDashboard from '../../../components/referral/ReferralDashboard';
 import ReferralNetworkUI from '../../../components/profile/ReferralNetworkUI';
 import { ArrowLeft, Lock } from 'lucide-react';
