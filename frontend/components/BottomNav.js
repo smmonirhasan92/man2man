@@ -31,13 +31,7 @@ function BottomNav() {
         { name: 'Home', href: '/dashboard', icon: Home },
         { name: 'Tasks', href: '/tasks', icon: ClipboardList }, // Direct access to earnings
         { name: 'Market', href: '/p2p', icon: Globe, isFab: true },
-        { name: 'Invite', href: '/profile', icon: Users }, // Referral/Team access
-        { name: 'Profile', 
-          action: () => {
-             window.dispatchEvent(new CustomEvent('toggle-profile-drawer'));
-          }, 
-          icon: User 
-        },
+        { name: 'Account', href: '/profile', icon: User }, // Simplified Profile/Invite access
     ];
 
     return (

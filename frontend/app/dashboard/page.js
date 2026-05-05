@@ -178,27 +178,35 @@ function DashboardContent() {
             <main className="flex flex-col items-center w-full max-w-md mx-auto relative z-10 space-y-2">
 
                 {/* Header */}
-                <div className="w-full px-6 pt-8 pb-2 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <Shield size={16} className="text-emerald-500" />
+                <div className="w-full px-6 pt-8 pb-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        {/* Dynamic Tier Icon/Logo */}
+                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border transition-all duration-500 shadow-2xl relative overflow-hidden group ${
+                            tier === 'Gold' ? 'bg-gradient-to-br from-amber-400 to-yellow-600 border-yellow-400/50 rotate-3' :
+                            tier === 'Platinum' ? 'bg-gradient-to-br from-teal-400 to-cyan-600 border-teal-400/50 rotate-6' :
+                            'bg-[#0b1221] border-white/10'
+                        }`}>
+                            {/* Glass overlay */}
+                            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10 rounded-t-2xl pointer-events-none"></div>
+                            
+                            {tier === 'Gold' ? (
+                                <Trophy size={20} className="text-white drop-shadow-md" />
+                            ) : tier === 'Platinum' ? (
+                                <Gem size={20} className="text-white drop-shadow-md" />
+                            ) : (
+                                <div className="relative">
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping absolute -top-0.5 -right-0.5"></div>
+                                    <Shield size={20} className="text-emerald-500" />
+                                </div>
+                            )}
                         </div>
                         <div>
-                            <h2 className="text-xs font-black text-white tracking-wide leading-none uppercase">
-                                SECURE 🇺🇸
+                            <h2 className="text-sm font-black text-white tracking-tight leading-none uppercase">
+                                SECURE <span className="text-slate-400">US</span>
                             </h2>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-400 font-mono flex items-center gap-1 border border-emerald-500/20">
-                                    <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" /> SYSTEM LIVE
-                                </span>
-                                {/* Compact Tier Badge */}
-                                {(() => {
-                                    const tier = user?.taskData?.accountTier;
-                                    if (!tier || tier === 'Starter') return <span className="text-[9px] bg-slate-700/50 px-1.5 py-0.5 rounded text-slate-400 font-mono border border-slate-600/30">🥈 SILVER</span>;
-                                    if (tier === 'Gold') return <span className="text-[9px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-400 font-mono border border-amber-500/30">🥇 GOLD</span>;
-                                    if (tier === 'Platinum') return <span className="text-[9px] bg-teal-500/20 px-1.5 py-0.5 rounded text-teal-400 font-mono border border-teal-500/30">💎 PLATINUM</span>;
-                                    return null;
-                                })()}
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">SYSTEM LIVE</span>
                             </div>
                         </div>
                     </div>

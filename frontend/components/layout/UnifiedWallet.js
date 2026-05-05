@@ -10,60 +10,43 @@ import { useCurrency } from '../../context/CurrencyContext';
  */
 export default function UnifiedWallet({ balance, income }) {
     const { formatMoney } = useCurrency();
-    const [viewMode, setViewMode] = useState(0); 
+    const [viewMode, setViewMode] = useState(0); // 0: USD, 1: NXS
     
     const rawBalance = parseFloat(balance || 0);
     const rawIncome = parseFloat(income || 0);
     
-    const toggleMode = () => setViewMode((prev) => (prev + 1) % 3);
+    const toggleMode = (e) => {
+        e.stopPropagation();
+        setViewMode((prev) => (prev === 0 ? 1 : 0));
+    };
 
     return (
         <div 
             onClick={toggleMode}
-            className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-md shadow-2xl relative overflow-hidden group transition-all hover:bg-white/10 cursor-pointer select-none gap-3"
+            className="flex items-center gap-4 bg-[#0b1221]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 px-4 shadow-[0_8px_30px_rgb(0,0,0,0.4)] cursor-pointer hover:border-white/20 transition-all active:scale-95 select-none relative overflow-hidden group"
         >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
-            
-            <div className="flex flex-col items-start min-w-0">
-                <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.05em] truncate">
-                        {viewMode === 0 ? 'Main Assets' : viewMode === 1 ? 'NXS Balance' : 'Balance'}
-                    </span>
-                </div>
-                <div className="flex flex-col items-start leading-none">
-                    <div className="flex items-center gap-1">
-                        {viewMode === 0 ? (
-                            <span className="text-emerald-400 font-black text-lg font-mono">
-                                {formatMoney(rawBalance)}
-                            </span>
-                        ) : viewMode === 1 ? (
-                            <div className="flex items-center gap-1">
-                                <USCIcon className="w-4 h-4" />
-                                <span className="text-lg font-black text-white font-mono">{rawBalance.toFixed(0)}</span>
-                            </div>
-                        ) : (
-                            <span className="text-lg font-black text-white font-mono">••••••</span>
-                        )}
-                        {viewMode === 2 && <EyeOff size={10} className="text-slate-500 ml-1" />}
-                    </div>
+            {/* Gloss Reflection */}
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/5 rounded-t-2xl pointer-events-none"></div>
+
+            <div className="text-right">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">MAIN ASSETS</p>
+                <div className="flex items-center justify-end gap-1.5">
+                    {viewMode === 1 && <USCIcon className="w-3 h-3" />}
+                    <p className="text-[15px] font-black text-white leading-none font-mono">
+                        {viewMode === 0 ? formatMoney(rawBalance) : rawBalance.toFixed(0)}
+                    </p>
                 </div>
             </div>
 
-            <div className="flex flex-col items-end text-right min-w-0">
-                <div className="flex items-center justify-end gap-1 mb-1">
-                    <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-[0.05em] truncate">
-                        Income
-                    </span>
-                    {viewMode !== 2 && <TrendingUp size={10} className="text-emerald-500" />}
-                </div>
-                <div className="flex flex-col items-end leading-none">
-                    <span className="text-[14px] font-black text-emerald-400 font-mono">
-                        {viewMode === 2 ? '••••' : formatMoney(rawIncome)}
-                    </span>
-                </div>
-                <div className="absolute top-1 right-2 text-[6px] text-white/20 font-mono uppercase tracking-tighter">
-                    v7.5 PRO
-                </div>
+            <div className="w-px h-8 bg-white/10"></div>
+
+            <div className="text-right">
+                <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest mb-1 flex items-center justify-end gap-1">
+                    INCOME <TrendingUp size={8} />
+                </p>
+                <p className="text-[15px] font-black text-emerald-400 leading-none font-mono">
+                    {viewMode === 0 ? formatMoney(rawIncome) : rawIncome.toFixed(0)}
+                </p>
             </div>
         </div>
     );
