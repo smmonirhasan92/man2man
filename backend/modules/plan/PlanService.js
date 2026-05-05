@@ -157,16 +157,22 @@ class PlanService {
             const expiry = new Date();
             expiry.setDate(expiry.getDate() + validDays);
 
-            // Mock US Server IP & Phone (IMMEDIATE)
-            const serverIp = `104.28.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-            const areaCode = Math.floor(Math.random() * (999 - 200) + 200);
-            const prefix = Math.floor(Math.random() * (999 - 200) + 200);
-            const line = Math.floor(Math.random() * 9000 + 1000);
-            const syntheticPhone = `+1 (${areaCode}) ${prefix}-${line}`;
-
-            user.synthetic_phone = syntheticPhone;
             if (!user.taskData) user.taskData = {};
             user.taskData.isActive = true;
+
+            let serverIp = null;
+            let syntheticPhone = null;
+
+            if (plan.type === 'server' || plan.type === 'number') {
+                // Mock US Server IP & Phone (IMMEDIATE) ONLY FOR NODE PLANS
+                serverIp = `104.28.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+                const areaCode = Math.floor(Math.random() * (999 - 200) + 200);
+                const prefix = Math.floor(Math.random() * (999 - 200) + 200);
+                const line = Math.floor(Math.random() * 9000 + 1000);
+                syntheticPhone = `+1 (${areaCode}) ${prefix}-${line}`;
+
+                user.synthetic_phone = syntheticPhone;
+            }
 
             // [NEW] Automatic Tier Promotion based on Plan Type or Price
             if (plan.type === 'vip') {
@@ -203,7 +209,7 @@ class PlanService {
                 expiryDate: expiry,
                 status: 'active', // IMMEDIATE ACTIVATION
                 serverIp: serverIp,
-                serverLocation: 'Virginia, USA',
+                serverLocation: serverIp ? 'Virginia, USA' : null,
                 syntheticPhone: syntheticPhone
             }], { session, ordered: true });
 

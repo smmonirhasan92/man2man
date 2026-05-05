@@ -113,7 +113,6 @@ export default function AdminMembershipsPage() {
                                     <option value="Silver Membership">Silver Membership (Unlocks $15)</option>
                                     <option value="Gold Membership">Gold Membership (Unlocks $30)</option>
                                     <option value="Platinum Membership">Platinum Membership (Unlocks $60)</option>
-                                    <option value="Diamond Membership">Diamond Membership (Unlocks $250)</option>
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
