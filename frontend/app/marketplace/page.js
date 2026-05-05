@@ -55,10 +55,11 @@ export default function GlobalMarketplace() {
 
         // 1. Determine Logic
         const isNumber = plan.type === 'number' || plan.name.toLowerCase().includes('number') || plan.name.toLowerCase().includes('sim');
+        const isVip = plan.type === 'vip';
         const country = plan.name.includes("Canada") ? "Canada" : plan.name.includes("Ireland") ? "Ireland" : "USA";
 
         setTargetCountry(country);
-        setProvisioningType(isNumber ? 'number' : 'server');
+        setProvisioningType(isVip ? 'vip' : (isNumber ? 'number' : 'server'));
 
         // Pricing & Validation based on Country
         const nxsCost = plan.unlock_price || 1000;
@@ -67,9 +68,31 @@ export default function GlobalMarketplace() {
         const totalBalance = parseFloat(user?.wallet_balance || 0) + parseFloat(user?.purchase_balance || 0);
 
         if (totalBalance < nxsCost) {
-            toast.error(`Insufficient Funds. Required: $${usdPrice.toFixed(2)} / ${nxsCost.toLocaleString()} NXS`);
+            toast.error(`Insufficient Funds. Required: ${nxsCost.toLocaleString()} NXS ($${usdPrice.toFixed(2)})`);
             router.push('/p2p');
             return;
+        }
+
+        // Age Gate Verification (Frontend Predict)
+        if (plan.type === 'server' || plan.type === 'number') {
+            const createdAtDate = user?.createdAt ? new Date(user.createdAt) : new Date();
+            const accountAgeInDays = (new Date() - createdAtDate) / (1000 * 60 * 60 * 24);
+            const tier = user?.taskData?.accountTier || 'Starter';
+            const isMembershipActive = user?.taskData?.isPriorityMember === true && new Date(user?.taskData?.priorityExpiry || new Date()) > new Date();
+            
+            let allowedMaxPrice = 1000; // 10 USD = 1000 NXS
+            if (isMembershipActive || user?.isVerifiedMerchant) {
+                if (tier === 'Silver') allowedMaxPrice = 1500;
+                else if (tier === 'Gold') allowedMaxPrice = 3000;
+                else if (tier === 'Platinum') allowedMaxPrice = 6000;
+                else if (tier === 'Diamond') allowedMaxPrice = 25000;
+            }
+
+            if (accountAgeInDays < 30 && plan.unlock_price > allowedMaxPrice) {
+                toast.error(`Restricted: Your ${tier} Tier allows up to ${allowedMaxPrice} NXS nodes. Buy a Membership first!`, { duration: 4000 });
+                setProvisioningType('vip'); // Auto switch to VIP tab
+                return;
+            }
         }
 
         // [SAFETY CHECK] Check for Existing Active Plan
@@ -97,7 +120,8 @@ export default function GlobalMarketplace() {
         setProcessing(plan._id || plan.id);
         setProvisioning(true);
         const isNumber = plan.type === 'number' || plan.name.toLowerCase().includes('number');
-        setProvisioningType(isNumber ? 'number' : 'server');
+        const isVip = plan.type === 'vip';
+        setProvisioningType(isVip ? 'vip' : (isNumber ? 'number' : 'server'));
 
         try {
             // 2. Wait for Animation (4 Seconds Strict)
@@ -222,13 +246,13 @@ export default function GlobalMarketplace() {
                             const roiLow = 1.5;
                             const roiHigh = 1.8;
 
-                            // Convert Revenue to USD
-                            const estRevenueLowUSD = (parseFloat(usdPrice) * roiLow).toFixed(2);
-                            const estRevenueHighUSD = (parseFloat(usdPrice) * roiHigh).toFixed(2);
+                            // Convert Revenue to NXS instead of USD
+                            const estRevenueLowNXS = Math.floor(nxsCost * roiLow).toLocaleString();
+                            const estRevenueHighNXS = Math.floor(nxsCost * roiHigh).toLocaleString();
 
                             // Tier Logic for Tasks
                             const taskCount = plan.daily_limit || (nxsCost >= 10000 ? 7 : nxsCost >= 5000 ? 10 : 15);
-                            const planTypeLabel = plan.type === 'vip' ? 'VIP NODE' : (isIreland ? 'PREMIUM' : isUK ? 'ENTERPRISE' : 'STANDARD');
+                            const planTypeLabel = plan.type === 'vip' ? 'MEMBERSHIP' : (isIreland ? 'PREMIUM' : isUK ? 'ENTERPRISE' : 'STANDARD');
 
                             return (
                                 <div key={plan.id} className={`relative bg-[#112240] rounded-xl overflow-hidden shadow-2xl transition-all hover:scale-[1.02] border ${borderColor}`}>
@@ -248,39 +272,43 @@ export default function GlobalMarketplace() {
 
                                         {/* Icon */}
                                         <div className={`w-16 h-16 rounded-full bg-[#0a192f] border-2 border-${accentColor}-500/20 flex items-center justify-center mb-4 relative shadow-lg shadow-${accentColor}-900/20`}>
-                                            {plan.type === 'number' ? (
+                                            {plan.type === 'vip' ? (
+                                                <Shield className={`w-8 h-8 text-${accentColor}-400`} />
+                                            ) : plan.type === 'number' ? (
                                                 <Smartphone className={`w-8 h-8 text-${accentColor}-400`} />
                                             ) : (
                                                 <Server className={`w-8 h-8 text-${accentColor}-400`} />
                                             )}
-                                            <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#0a192f] flex items-center justify-center border border-white/10">
-                                                <img
-                                                    src={isIreland ? "https://flagcdn.com/w80/ie.png" : isUK ? "https://flagcdn.com/w80/gb.png" : "https://flagcdn.com/w80/us.png"}
-                                                    className="w-3.5 h-3.5 rounded-full"
-                                                />
-                                            </div>
+                                            {plan.type !== 'vip' && (
+                                                <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#0a192f] flex items-center justify-center border border-white/10">
+                                                    <img
+                                                        src={isIreland ? "https://flagcdn.com/w80/ie.png" : isUK ? "https://flagcdn.com/w80/gb.png" : "https://flagcdn.com/w80/us.png"}
+                                                        className="w-3.5 h-3.5 rounded-full"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Name */}
                                         <h3 className="text-base font-bold text-white mb-1 uppercase tracking-wide">{plan.name}</h3>
 
-                                        {/* USD Main Price & Local Equivalent */}
+                                        {/* NXS Main Price & Local Equivalent */}
                                         <div className="flex flex-col items-center mb-4">
                                             <div className="flex items-baseline gap-1">
-                                                <span className="text-3xl font-black text-white">${usdPrice}</span>
-                                                <span className="text-sm text-slate-500 font-medium">USD</span>
+                                                <span className="text-3xl font-black text-white">{nxsCost.toLocaleString()}</span>
+                                                <span className="text-sm text-slate-500 font-medium">NXS</span>
                                             </div>
                                             <div className="text-xs text-emerald-400 font-bold mt-1 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                                                {nxsCost.toLocaleString()} NXS
+                                                ~ ${usdPrice} USD
                                             </div>
-                                            <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full mt-2">{cycleDays} Day Cycle</span>
+                                            <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full mt-2">{cycleDays} Day Validity</span>
                                         </div>
 
-                                        {/* KEY METRICS GRID (USD) */}
+                                        {/* KEY METRICS GRID (NXS) */}
                                         <div className="grid grid-cols-2 gap-2 w-full mb-6">
                                             <div className="bg-[#0a192f] p-2 rounded border border-white/5">
-                                                <p className="text-[9px] text-slate-500 uppercase">Est. Node Rewards</p>
-                                                <p className={`font-bold text-${accentColor}-400 text-sm`}>${estRevenueLowUSD} - ${estRevenueHighUSD}</p>
+                                                <p className="text-[9px] text-slate-500 uppercase">Est. Rewards</p>
+                                                <p className={`font-bold text-${accentColor}-400 text-sm`}>{estRevenueLowNXS} - {estRevenueHighNXS} NXS</p>
                                             </div>
                                             <div className="bg-[#0a192f] p-2 rounded border border-white/5">
                                                 <p className="text-[9px] text-slate-500 uppercase">Network Yield</p>
@@ -292,26 +320,49 @@ export default function GlobalMarketplace() {
                                         <div className="w-full text-left bg-[#0a192f]/50 rounded-lg p-4 border border-white/5 mb-6 space-y-2">
                                             <p className="text-[10px] text-slate-500 font-bold uppercase mb-2 border-b border-white/5 pb-2">Included Features:</p>
 
-                                            <div className="flex items-start gap-2 text-xs text-slate-300">
-                                                <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
-                                                <span>Dedicated Server Node ({cycleDays} Days)</span>
-                                            </div>
-                                            <div className="flex items-start gap-2 text-xs text-slate-300">
-                                                <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
-                                                <span>Virtual USA Number (+1)</span>
-                                            </div>
-                                            <div className="flex items-start gap-2 text-xs text-slate-300">
-                                                <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
-                                                <span>Daily Performance Bonus</span>
-                                            </div>
-                                            <div className="flex items-start gap-2 text-xs text-slate-300">
-                                                <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
-                                                <span>Multi-Level Referral Commission</span>
-                                            </div>
-                                            <div className="flex items-start gap-2 text-xs text-slate-300">
-                                                <Star className="w-3.5 h-3.5 text-yellow-500 mt-0.5 fill-current" />
-                                                <span className="font-bold text-white">{taskCount} Premium Tasks / Day</span>
-                                            </div>
+                                            {plan.type === 'vip' ? (
+                                                <>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Account Tier Upgrade</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Bypass 30-Day Age Restriction</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Priority Member Status</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Unlock Higher Value Nodes</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Dedicated Server Node ({cycleDays} Days)</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Virtual USA Number (+1)</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Daily Performance Bonus</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <CheckCircle className={`w-3.5 h-3.5 text-${accentColor}-500 mt-0.5`} />
+                                                        <span>Multi-Level Referral Commission</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2 text-xs text-slate-300">
+                                                        <Star className="w-3.5 h-3.5 text-yellow-500 mt-0.5 fill-current" />
+                                                        <span className="font-bold text-white">{taskCount} Premium Tasks / Day</span>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {/* Action Button */}
@@ -320,7 +371,7 @@ export default function GlobalMarketplace() {
                                             disabled={!!processing}
                                             className={`w-full py-4 bg-${accentColor}-600 hover:bg-${accentColor}-500 active:scale-95 text-white font-black text-xs rounded-xl transition-all shadow-lg shadow-${accentColor}-900/20 flex items-center justify-center gap-2 uppercase tracking-widest`}
                                         >
-                                            {processing === (plan._id || plan.id) ? 'INITIATING...' : 'DEPLOY NOW'}
+                                            {processing === (plan._id || plan.id) ? 'INITIATING...' : (plan.type === 'vip' ? 'UPGRADE NOW' : 'DEPLOY NOW')}
                                             <ArrowLeft className="w-3 h-3 rotate-180" />
                                         </button>
 
@@ -371,6 +422,18 @@ export default function GlobalMarketplace() {
                                 <h2 className="text-lg font-bold text-white tracking-widest animate-pulse mb-2">ACTIVATING SIM</h2>
                                 <p className="text-emerald-400 font-mono text-[10px]">Assigning Virtual Number...</p>
                                 <p className="text-slate-500 text-[9px] mt-2 font-mono">Verifying SMS Gateway...</p>
+                            </div>
+                        )}
+                        {/* TYPE 3: VIP ANIMATION */}
+                        {provisioningType === 'vip' && (
+                            <div className="text-center w-full px-8">
+                                <div className="relative w-24 h-24 mx-auto mb-8 flex items-center justify-center">
+                                    <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-spin"></div>
+                                    <Shield className="w-8 h-8 text-amber-400 animate-pulse" />
+                                </div>
+                                <h2 className="text-lg font-bold text-white tracking-widest animate-pulse mb-2">UPGRADING ACCOUNT</h2>
+                                <p className="text-amber-400 font-mono text-[10px]">Applying Priority Access...</p>
+                                <p className="text-slate-500 text-[9px] mt-2 font-mono">Bypassing Node Restrictions...</p>
                             </div>
                         )}
                     </div>
