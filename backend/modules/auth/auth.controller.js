@@ -315,7 +315,37 @@ exports.getMe = async (req, res) => {
             p_v: wallet.purchase || 0  // Purchase/Pro Value
         };
 
-        userData.account_tier = user.taskData?.accountTier || 'Starter';
+        // [AUTO-SYNC] Upgrade Tier based on active plans (User Request: 1500+ NXS = Silver)
+        let highestTier = user.taskData?.accountTier || 'Starter';
+        const tierHierarchy = { 'Starter': 0, 'Silver': 1, 'Gold': 2, 'Platinum': 3, 'Diamond': 4 };
+        
+        if (activePlans && activePlans.length > 0) {
+            const Plan = require('../admin/PlanModel');
+            for (const ap of activePlans) {
+                const planDetails = await Plan.findById(ap.planId);
+                if (planDetails) {
+                    const price = planDetails.unlock_price || 0;
+                    let suggestedTier = 'Starter';
+                    if (price >= 21000) suggestedTier = 'Diamond';
+                    else if (price >= 12500) suggestedTier = 'Platinum';
+                    else if (price >= 8500) suggestedTier = 'Gold';
+                    else if (price >= 2100) suggestedTier = 'Silver';
+                    
+                    if (tierHierarchy[suggestedTier] > tierHierarchy[highestTier]) {
+                        highestTier = suggestedTier;
+                    }
+                }
+            }
+        }
+
+        // Persistent Update if tier upgraded
+        if (highestTier !== (user.taskData?.accountTier || 'Starter')) {
+            await User.findByIdAndUpdate(userId, { 'taskData.accountTier': highestTier });
+            userData.account_tier = highestTier;
+        } else {
+            userData.account_tier = highestTier;
+        }
+        
         userData.referral_code = user.referralCode;
         userData.kycStatus = user.kycStatus;
         userData.requireEmailVerification = !user.emailVerified;

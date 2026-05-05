@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown, Trophy, Gem
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -156,6 +156,8 @@ function DashboardContent() {
         </div>
     );
 
+    const tier = user?.taskData?.accountTier || 'Silver';
+
     return (
         <div className="min-h-screen font-sans text-slate-200 pb-32 relative overflow-y-auto overflow-x-hidden bg-[#0A2540]">
             
@@ -184,6 +186,7 @@ function DashboardContent() {
                         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border transition-all duration-500 shadow-2xl relative overflow-hidden group ${
                             tier === 'Gold' ? 'bg-gradient-to-br from-amber-400 to-yellow-600 border-yellow-400/50 rotate-3' :
                             tier === 'Platinum' ? 'bg-gradient-to-br from-teal-400 to-cyan-600 border-teal-400/50 rotate-6' :
+                            tier === 'Diamond' ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 border-indigo-400/50 -rotate-3' :
                             'bg-[#0b1221] border-white/10'
                         }`}>
                             {/* Glass overlay */}
@@ -193,6 +196,8 @@ function DashboardContent() {
                                 <Trophy size={20} className="text-white drop-shadow-md" />
                             ) : tier === 'Platinum' ? (
                                 <Gem size={20} className="text-white drop-shadow-md" />
+                            ) : tier === 'Diamond' ? (
+                                <Crown size={20} className="text-white drop-shadow-md" />
                             ) : (
                                 <div className="relative">
                                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping absolute -top-0.5 -right-0.5"></div>
