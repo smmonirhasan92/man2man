@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, MessageSquare, LogOut, Settings, Copy, Download, Headset } from 'lucide-react';
+import { X, MessageSquare, LogOut, Settings, Copy, Download, Headset, Home, ClipboardList, Globe, Crown } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -99,6 +99,28 @@ export default function ProfileDrawer({ isOpen, onClose, user, logout }) {
                                 </div>
                             ))
                         )}
+                    </div>
+
+                    {/* App Navigation Hub */}
+                    <div className="mt-8 mb-4">
+                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-1">App Navigation</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { name: 'Dashboard', icon: Home, href: '/dashboard', color: 'text-blue-400' },
+                                { name: 'Tasks', icon: ClipboardList, href: '/tasks', color: 'text-emerald-400' },
+                                { name: 'P2P Market', icon: Globe, href: '/p2p', color: 'text-indigo-400' },
+                                { name: 'Empire Tour', icon: Crown, href: '/dashboard/referral-empire', color: 'text-amber-400' },
+                            ].map((nav) => (
+                                <button
+                                    key={nav.name}
+                                    onClick={() => { router.push(nav.href); onClose(); }}
+                                    className="flex flex-col items-center gap-2 p-4 bg-slate-800/30 border border-white/5 rounded-2xl hover:bg-slate-800 transition group"
+                                >
+                                    <nav.icon size={18} className={`${nav.color} group-hover:scale-110 transition-transform`} />
+                                    <span className="text-[10px] font-bold text-slate-300">{nav.name}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

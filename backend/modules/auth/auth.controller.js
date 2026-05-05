@@ -315,6 +315,9 @@ exports.getMe = async (req, res) => {
             p_v: wallet.purchase || 0  // Purchase/Pro Value
         };
 
+        // --- NEW: Expose Detailed Active Plans & Progress ---
+        const activePlans = await PlanService.getActivePlans(userId);
+
         // [AUTO-SYNC] Upgrade Tier based on active plans (User Request: 1500+ NXS = Silver)
         let highestTier = user.taskData?.accountTier || 'Starter';
         const tierHierarchy = { 'Starter': 0, 'Silver': 1, 'Gold': 2, 'Platinum': 3, 'Diamond': 4 };
@@ -352,9 +355,6 @@ exports.getMe = async (req, res) => {
         userData.tourSales = user.tourSales || 0;
         userData.purchaseCount = user.purchaseCount || 0;
 
-        // --- NEW: Expose Detailed Active Plans & Progress (Appended AFTER Cache) ---
-        const activePlans = await PlanService.getActivePlans(userId);
-        
         userData.active_plans = activePlans.map(p => {
             // [SYNC] Handle daily reset logic for display consistency
             const now = new Date();

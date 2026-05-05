@@ -47,13 +47,13 @@ function BottomNav() {
 
                     if (item.isFab) {
                         return (
-                            <Link key={item.name} href={item.href} className="relative -top-6 group">
+                            <Link key={item.name} href={item.href} className="relative -top-1.5 group">
                                 <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                                 <div className={`
-                                    w-16 h-16 bg-gradient-to-br from-[#0a192f] to-blue-900 rounded-full flex flex-col items-center justify-center 
-                                    shadow-[0_4px_20px_rgba(30,58,138,0.5)] border-4 border-[#050505] transform transition-all duration-300 group-hover:-translate-y-1 group-active:scale-95
+                                    w-14 h-14 bg-gradient-to-br from-[#0a192f] to-blue-900 rounded-full flex flex-col items-center justify-center 
+                                    shadow-[0_4px_15px_rgba(0,0,0,0.5)] border-2 border-white/10 transform transition-all duration-300 group-hover:-translate-y-0.5 group-active:scale-95
                                 `}>
-                                    <Globe className="w-8 h-8 text-blue-400 fill-blue-900/50 animate-pulse" strokeWidth={1.5} />
+                                    <Globe className="w-7 h-7 text-blue-400 fill-blue-900/50 animate-pulse" strokeWidth={1.5} />
                                 </div>
                             </Link>
                         )
