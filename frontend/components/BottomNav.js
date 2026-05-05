@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Home, ClipboardList, User, Globe, Users } from 'lucide-react';
+import { Home, ClipboardList, User, Globe, History } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { memo, useEffect, useState, useMemo } from 'react';
 
@@ -29,9 +29,10 @@ function BottomNav() {
 
     const navItems = [
         { name: 'Home', href: '/dashboard', icon: Home },
-        { name: 'Tasks', href: '/tasks', icon: ClipboardList }, // Direct access to earnings
+        { name: 'Tasks', href: '/tasks', icon: ClipboardList },
         { name: 'Market', href: '/p2p', icon: Globe, isFab: true },
-        { name: 'Account', href: '/profile', icon: User }, // Simplified Profile/Invite access
+        { name: 'History', href: '/wallet/history', icon: History },
+        { name: 'Account', href: '/profile', icon: User },
     ];
 
     return (
