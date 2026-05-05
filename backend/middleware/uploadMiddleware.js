@@ -11,6 +11,7 @@ const storage = multer.diskStorage({
 
 // Check file type
 function checkFileType(file, cb) {
+    console.log(`[MULTER DEBUG] Filtering file: ${file.originalname} (${file.mimetype})`);
     const filetypes = /jpeg|jpg|png|gif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
@@ -18,14 +19,15 @@ function checkFileType(file, cb) {
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb('Error: Images Only!');
+        console.error(`[MULTER ERROR] Invalid file type: ${file.mimetype}`);
+        cb(new Error('Images Only! Only JPEG, JPG, PNG, and GIF are allowed.'));
     }
 }
 
 // Init upload
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5000000 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }

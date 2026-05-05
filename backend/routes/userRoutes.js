@@ -5,7 +5,15 @@ const authMiddleware = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 router.post('/upload-photo', authMiddleware, upload.single('photo'), userController.uploadProfilePhoto);
-router.put('/profile', authMiddleware, upload.single('photo'), userController.updateProfile);
+router.put('/profile', authMiddleware, (req, res, next) => {
+    upload.single('photo')(req, res, (err) => {
+        if (err) {
+            console.error('[MULTER RUNTIME ERROR]:', err);
+            return next(err);
+        }
+        next();
+    });
+}, userController.updateProfile);
 router.put('/change-password', authMiddleware, userController.changePassword);
 
 // Plan & Upgrade Routes
