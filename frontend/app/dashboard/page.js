@@ -191,6 +191,14 @@ function DashboardContent() {
                                 <span className="text-[9px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-400 font-mono flex items-center gap-1 border border-emerald-500/20">
                                     <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" /> SYSTEM LIVE
                                 </span>
+                                {/* Compact Tier Badge */}
+                                {(() => {
+                                    const tier = user?.taskData?.accountTier;
+                                    if (!tier || tier === 'Starter') return <span className="text-[9px] bg-slate-700/50 px-1.5 py-0.5 rounded text-slate-400 font-mono border border-slate-600/30">🥈 SILVER</span>;
+                                    if (tier === 'Gold') return <span className="text-[9px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-400 font-mono border border-amber-500/30">🥇 GOLD</span>;
+                                    if (tier === 'Platinum') return <span className="text-[9px] bg-teal-500/20 px-1.5 py-0.5 rounded text-teal-400 font-mono border border-teal-500/30">💎 PLATINUM</span>;
+                                    return null;
+                                })()}
                             </div>
                         </div>
                     </div>
@@ -209,7 +217,7 @@ function DashboardContent() {
                     }}
                 />
 
-                <div className="w-full px-6 relative z-0 mb-4">
+                <div className="w-full px-6 relative z-0 mb-2">
                     <div className="p-1 rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative bg-white/5 backdrop-blur-sm">
                         <ImageSlider />
                     </div>

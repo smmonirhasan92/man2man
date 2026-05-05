@@ -179,6 +179,28 @@ export default function ProfilePage() {
                                 {user.account_tier === 'Agent' ? 'Verified Member' : (user.account_tier || 'Standard Member')} <span className="text-red-500">★</span>
                             </span>
                         </div>
+
+                        {/* VIP Membership Card Badge */}
+                        {(() => {
+                            const tier = user?.taskData?.accountTier;
+                            if (!tier || tier === 'Starter') return (
+                                <div className="flex items-center gap-2 bg-slate-800/50 border border-white/10 px-4 py-1.5 rounded-full">
+                                    <Shield className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Silver Card (Free)</span>
+                                </div>
+                            );
+                            const config = {
+                                Gold: { bg: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/40', text: 'text-amber-300', icon: '🥇' },
+                                Platinum: { bg: 'from-teal-500/20 to-cyan-500/10', border: 'border-teal-500/40', text: 'text-teal-300', icon: '💎' },
+                            }[tier] || { bg: 'from-slate-500/20 to-slate-400/10', border: 'border-slate-500/40', text: 'text-slate-300', icon: '🥈' };
+                            return (
+                                <div className={`flex items-center gap-2 bg-gradient-to-r ${config.bg} border ${config.border} px-4 py-1.5 rounded-full shadow-lg`}>
+                                    <span className="text-sm">{config.icon}</span>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${config.text}`}>{tier} Card Member</span>
+                                </div>
+                            );
+                        })()}
+
                         {user.min_withdrawal_usd && (
                             <div className="text-[10px] font-bold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-full border border-white/10 shadow-sm backdrop-blur-sm">
                                 Minimum Transaction Limit: <span className="text-emerald-400">${user.min_withdrawal_usd}</span> ({(user.min_withdrawal_usd * 100).toFixed(0)} NXS)
