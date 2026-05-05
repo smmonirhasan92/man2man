@@ -329,10 +329,10 @@ exports.getMe = async (req, res) => {
                 if (planDetails) {
                     const price = planDetails.unlock_price || 0;
                     let suggestedTier = 'Starter';
-                    if (price >= 21000) suggestedTier = 'Diamond';
-                    else if (price >= 12500) suggestedTier = 'Platinum';
-                    else if (price >= 8500) suggestedTier = 'Gold';
-                    else if (price >= 2100) suggestedTier = 'Silver';
+                    if (price >= 20000) suggestedTier = 'Diamond';
+                    else if (price >= 8500) suggestedTier = 'Platinum';
+                    else if (price >= 2500) suggestedTier = 'Gold';
+                    else if (price >= 1200) suggestedTier = 'Silver';
                     
                     if (tierHierarchy[suggestedTier] > tierHierarchy[highestTier]) {
                         highestTier = suggestedTier;
