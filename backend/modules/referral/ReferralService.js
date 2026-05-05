@@ -9,9 +9,14 @@ const { runTransaction } = require('../common/TransactionHelper');
 class ReferralService {
 
     static get PLAN_COMMISSION_RATES() {
-        // [MODIFIED] Empire Race 3-Level Split
-        // Level 1: 12%, Level 2: 6%, Level 3: 2.5%
+        // [MODIFIED] Standard Node Plans: 3 Levels (12%, 6%, 2.5%)
         return [12.0, 6.0, 2.5];
+    }
+
+    static get TASK_LOAN_RATES() {
+        // [NEW] Task & Loan: 5 Levels (Total 6%)
+        // Split: 2%, 1%, 1%, 1%, 1%
+        return [2.0, 1.0, 1.0, 1.0, 1.0];
     }
 
     /**
@@ -383,8 +388,8 @@ class ReferralService {
 
             if (!referrerCode || amount <= 0) return { success: true, distributed: 0 };
 
-            // [MODIFIED] Use same 5-Level Rates for Tasks
-            const rates = ReferralService.PLAN_COMMISSION_RATES;
+            // [MODIFIED] Use NEW 5-Level Rates (6% Total)
+            const rates = ReferralService.TASK_LOAN_RATES;
             let uplineCode = referrerCode;
             let totalDistributed = 0;
 
@@ -463,6 +468,48 @@ class ReferralService {
                 uplineCode = uplineUser.referredBy;
             }
             return { success: true, distributed: totalDistributed };
+        };
+
+    /**
+     * Distribute Loan Commission (6% Pool)
+     * Triggered when a user takes a loan.
+     */
+    static async distributeLoanCommission(userId, loanAmount, externalSession = null) {
+        const logic = async (session) => {
+            const user = await User.findById(userId).session(session);
+            if (!user || !user.referredBy) return { success: true };
+
+            console.log(`[Referral] Distributing Loan Commission for ${user.username}: ${loanAmount}`);
+            
+            const rates = ReferralService.TASK_LOAN_RATES; // 6% split across 5 levels
+            let uplineCode = user.referredBy;
+            let totalDistributed = 0;
+
+            for (let i = 0; i < rates.length; i++) {
+                if (!uplineCode) break;
+                const upline = await User.findOne({ referralCode: uplineCode }).session(session);
+                if (!upline) break;
+
+                let comm = (loanAmount * rates[i]) / 100;
+                comm = Math.round(comm * 10000) / 10000;
+
+                if (comm > 0) {
+                    upline.wallet.income += comm; // Loan commission is instant
+                    upline.referralIncome += comm;
+                    await upline.save({ session });
+
+                    await Transaction.create([{
+                        userId: upline._id,
+                        type: 'referral_commission',
+                        amount: comm,
+                        status: 'completed',
+                        description: `L${i + 1} Loan Commission from ${user.username}`,
+                        metadata: { sourceUser: userId, level: i + 1 }
+                    }], { session });
+                }
+                uplineCode = upline.referredBy;
+            }
+            return { success: true };
         };
 
         if (externalSession) return await logic(externalSession);

@@ -143,13 +143,12 @@ class PlanService {
             }
 
             // [FIX] Create Transaction History for Purchase
-            const Transaction = require('../wallet/TransactionModel');
             await Transaction.create([{
                 userId: user._id,
-                type: 'plan_purchase',
+                type: plan.type === 'vip' ? 'membership_purchase' : 'plan_purchase',
                 amount: -plan.unlock_price,
                 status: 'completed',
-                description: `Purchased Server Node: ${plan.name}`,
+                description: plan.type === 'vip' ? `Purchased VIP Membership: ${plan.name}` : `Purchased Server Node: ${plan.name}`,
                 adminComment: 'Auto-Debit'
             }], { session, ordered: true });
 
@@ -201,21 +200,24 @@ class PlanService {
 
             await user.save({ session });
 
-            const userPlan = await UserPlan.create([{
-                userId,
-                planId: plan._id,
-                planName: plan.name,
-                dailyLimit: plan.daily_limit,
-                expiryDate: expiry,
-                status: 'active', // IMMEDIATE ACTIVATION
-                serverIp: serverIp,
-                serverLocation: serverIp ? 'Virginia, USA' : null,
-                syntheticPhone: syntheticPhone
-            }], { session, ordered: true });
+            // [MODIFIED] Create UserPlan ONLY for Server Nodes, NOT for VIP Cards
+            if (plan.type !== 'vip') {
+                const userPlan = await UserPlan.create([{
+                    userId,
+                    planId: plan._id,
+                    planName: plan.name,
+                    dailyLimit: plan.daily_limit,
+                    expiryDate: expiry,
+                    status: 'active', // IMMEDIATE ACTIVATION
+                    serverIp: serverIp,
+                    serverLocation: serverIp ? 'Virginia, USA' : null,
+                    syntheticPhone: syntheticPhone
+                }], { session, ordered: true });
+            }
 
             // [LOAN HACK FIX] Do not distribute commission if user has an active loan. 
-            // This prevents generating real cash (commission) out of thin air via the smart loan.
-            if (!user.is_loan_active && (!user.wallet || !user.wallet.loan_due || user.wallet.loan_due <= 0)) {
+            // [MODIFIED] Do NOT distribute commission for VIP Membership Cards
+            if (plan.type !== 'vip' && !user.is_loan_active && (!user.wallet || !user.wallet.loan_due || user.wallet.loan_due <= 0)) {
                 // Emit Pure NXS Pricing to Referral System (1:1 ecosystem compatibility)
                 await this.ReferralService.distributePlanCommission(user._id, plan.unlock_price, plan.name, session);
             } else {

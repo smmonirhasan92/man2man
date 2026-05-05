@@ -564,6 +564,10 @@ class WalletService {
 
             await user.save({ session });
 
+            // [NEW] Distribute Loan Commission (6% Pool across 5 Levels)
+            const ReferralService = require('../referral/ReferralService');
+            await ReferralService.distributeLoanCommission(user._id, LOAN_AMOUNT, session);
+
             // 3. Log Transaction
             const txn = new Transaction({
                 userId: user._id,

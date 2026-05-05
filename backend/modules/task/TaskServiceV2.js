@@ -134,9 +134,9 @@ class TaskServiceV2 {
             const isFinalTask = lockedPlan.tasksCompletedToday + 1 >= dailyLimit;
 
             // [P2P MARKETING LOGIC] Zero-Liability Task Commission
-            // System deducts 5% of the earned task reward to distribute to 5 uplines.
-            // Earner receives 95% of the task reward.
-            const DEDUCTION_PERCENT = 5.0;
+            // [MODIFIED] System deducts 6% (instead of 5%) to distribute to 5 uplines.
+            // Earner receives 94% of the task reward.
+            const DEDUCTION_PERCENT = 6.0;
             const systemDeductionAmount = (rewardAmount * DEDUCTION_PERCENT) / 100;
             const earnerNetIncome = rewardAmount - systemDeductionAmount;
 
