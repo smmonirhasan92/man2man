@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, ArrowUpRight, ArrowDownLeft, Wallet, Smartphone, Game
 
 // Helper to group by date
 const groupTransactionsByDate = (transactions) => {
+    if (!Array.isArray(transactions)) return {};
     const groups = {};
     transactions.forEach(tx => {
         const date = new Date(tx.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });

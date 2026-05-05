@@ -182,16 +182,18 @@ export default function ProfilePage() {
 
                         {/* VIP Membership Card Badge */}
                         {(() => {
-                            const tier = user?.taskData?.accountTier;
-                            if (!tier || tier === 'Starter') return (
+                            const tier = user?.account_tier || 'Starter';
+                            if (tier === 'Starter' || tier === 'Standard Member') return (
                                 <div className="flex items-center gap-2 bg-slate-800/50 border border-white/10 px-4 py-1.5 rounded-full">
                                     <Shield className="w-3.5 h-3.5 text-slate-400" />
                                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Silver Card (Free)</span>
                                 </div>
                             );
                             const config = {
+                                Silver: { bg: 'from-slate-500/20 to-slate-400/10', border: 'border-slate-500/40', text: 'text-slate-300', icon: '🥈' },
                                 Gold: { bg: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/40', text: 'text-amber-300', icon: '🥇' },
                                 Platinum: { bg: 'from-teal-500/20 to-cyan-500/10', border: 'border-teal-500/40', text: 'text-teal-300', icon: '💎' },
+                                Diamond: { bg: 'from-indigo-500/20 to-purple-500/10', border: 'border-indigo-400/40', text: 'text-indigo-300', icon: '👑' },
                             }[tier] || { bg: 'from-slate-500/20 to-slate-400/10', border: 'border-slate-500/40', text: 'text-slate-300', icon: '🥈' };
                             return (
                                 <div className={`flex items-center gap-2 bg-gradient-to-r ${config.bg} border ${config.border} px-4 py-1.5 rounded-full shadow-lg`}>
