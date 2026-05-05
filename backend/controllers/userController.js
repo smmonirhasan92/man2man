@@ -212,14 +212,20 @@ exports.updateProfile = async (req, res) => {
     try {
         const userId = req.user.user.id;
         const { fullName } = req.body;
+        
+        console.log(`[DEBUG] Updating profile for user: ${userId}`, { fullName, file: req.file?.filename });
+        
         const update = {};
         if (fullName) update.fullName = fullName;
-        if (req.file) update.photoUrl = req.file.path;
+        if (req.file) update.photoUrl = `/uploads/${req.file.filename}`;
 
         const user = await User.findByIdAndUpdate(userId, update, { new: true });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        
         res.json({ message: 'Profile updated', user });
     } catch (err) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error("[UpdateProfile Error]:", err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
     }
 };
 
