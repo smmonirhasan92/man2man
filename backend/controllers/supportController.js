@@ -13,7 +13,8 @@ exports.sendMessage = async (req, res) => {
             messages: [{
                 senderId: userId,
                 senderRole: 'user',
-                text: message
+                text: message || (req.file ? "Sent an image attachment" : ""),
+                image: req.file ? `/uploads/${req.file.filename}` : null
             }],
             status: 'open'
         });
@@ -80,7 +81,8 @@ exports.replyToMessage = async (req, res) => {
         ticket.messages.push({
             senderId,
             senderRole: isUser ? 'user' : 'admin',
-            text: reply
+            text: reply,
+            image: req.file ? `/uploads/${req.file.filename}` : null
         });
 
         // Toggle Status mapping

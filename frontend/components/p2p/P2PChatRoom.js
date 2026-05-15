@@ -370,9 +370,9 @@ export default function P2PChatRoom({ tradeId, onBack }) {
             ];
         } else if (c === 'BD') {
             return [
-                { targetId: 'step-1-copy', title: '১. নম্বর কপি করুন', content: 'সেলারকে টাকা পাঠানোর জন্য এই নম্বরে ক্লিক করে নম্বরটি কপি করুন।' },
-                { targetId: 'step-2-proof', title: '২. ট্রানজেকশন প্রুফ দিন', content: 'টাকা পাঠানোর পর আপনার যে নাম্বার থেকে টাকা পাঠিয়েছেন তার শেষের ৪ ডিজিট এবং মেসেজের TxID এখানে বসান।' },
-                { targetId: 'step-3-submit', title: '৩. কনফার্ম করুন', content: 'সবকিছু ঠিক থাকলে এই বাটনে ক্লিক করে সেলারকে পেমেন্ট রিসিভ করার রিকোয়েস্ট পাঠান।' }
+                { targetId: 'step-1-copy', title: '1. Copy Number', content: 'Click the number below to copy it so you can send money to the seller.' },
+                { targetId: 'step-2-proof', title: '2. Submit Proof', content: 'After sending money, enter the last 4 digits of your number and the TrxID here.' },
+                { targetId: 'step-3-submit', title: '3. Confirm Payment', content: 'If everything is correct, click this button to notify the seller that you have paid.' }
             ];
         } else {
             return [
@@ -441,13 +441,13 @@ export default function P2PChatRoom({ tradeId, onBack }) {
                             <div className="text-right">
                                 <div className="text-[10px] text-[#848e9c] font-black tracking-wide">$1 USD = {trade.orderId.rate || 123} {trade.orderId.fiatCurrency || 'BDT'}</div>
                                 {trade.transactionType === 'CASH_OUT' && (
-                                    <div className="text-[9px] text-[#f6465d] uppercase font-black tracking-widest animate-pulse mt-1">+1.85% Cash Out Fee</div>
+                                    <div className="text-[9px] text-[#f6465d] uppercase font-black tracking-widest animate-pulse mt-1">+1.2% P2P Trade Fee</div>
                                 )}
                                 <div className="text-[22px] font-black text-[#0ecb81] leading-none drop-shadow-md">
                                     {(() => {
                                         let baseFiat = (trade.amount / 100) * (trade.orderId.rate || 123);
                                         if (trade.transactionType === 'CASH_OUT') {
-                                            baseFiat += baseFiat * 0.0185;
+                                            baseFiat += baseFiat * 0.012;
                                         }
                                         return baseFiat.toLocaleString('en-IN', { maximumFractionDigits: 2 });
                                     })()} <span className="text-[11px] text-[#848e9c]">{trade.orderId.fiatCurrency || 'BDT'}</span>

@@ -128,6 +128,7 @@ app.use('/api/debug', require('./routes/debugRoutes')); // [NEW] Critical Debug 
 app.use('/api/chat', require('./routes/chatRoutes')); // [NEW] AI Chat Support
 app.use('/api/game', require('./routes/gameRoutes')); // [NEW] Gamification/Luck Test
 app.use('/api/referral', require('./routes/referralRoutes')); // [NEW] Referral Management
+app.use('/api/banners', require('./modules/banner/bannerRoutes')); // [NEW] Dynamic Banner Slider
 
 // [FIX] Support system registered safely to prevent crashes if files are missing
 try {

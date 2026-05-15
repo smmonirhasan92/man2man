@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '../../../services/api';
-import { ArrowLeft, Users, FileText, Settings, Shield, ShieldCheck, Wallet, Briefcase, MessageSquare, Ticket, Lock, Zap, Activity, Gem, ClipboardList, TrendingUp, AlertTriangle, RefreshCw, BarChart3, Radio, Server } from 'lucide-react';
+import { ArrowLeft, Users, FileText, Settings, Shield, ShieldCheck, Wallet, Briefcase, MessageSquare, Ticket, Lock, Zap, Activity, Gem, ClipboardList, TrendingUp, AlertTriangle, RefreshCw, BarChart3, Radio, Server, Camera, ExternalLink } from 'lucide-react';
 import DashboardCard from '../../../components/admin/DashboardCard';
 import ConfirmationModal from '../../../components/ui/ConfirmationModal';
 import toast from 'react-hot-toast';
+import { formatNXS, formatUSD } from '../../../utils/currency';
 
 export default function AdminDashboard() {
     const router = useRouter();
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
         pendingActions: 0,
         adminReserveFund: 0
     });
+    const [recentSupport, setRecentSupport] = useState([]);
     const [loading, setLoading] = useState(true);
     const [maintenance, setMaintenance] = useState(false);
     const [updatingMaint, setUpdatingMaint] = useState(false);
@@ -37,17 +39,25 @@ export default function AdminDashboard() {
             const actual = finRes.data.actual || {};
             const eco = finRes.data.economics || {};
             const partnerAudit = finRes.data.partnerAudit || {};
+            const agentLive = finRes.data.agent_live_stats || {};
 
             setStats({
                 ...eco,
                 totalMinted: overview.total_minted || 0,
                 currentLiabilities: actual.total_liability || 0,
-                totalDeposits: overview.total_deposits || 0,
-                totalWithdraws: overview.total_withdraws || 0,
+                totalDeposits: eco.totalDeposits || overview.today_deposits || 0,
+                totalWithdraws: eco.totalWithdraws || overview.today_withdraws || 0,
                 pendingActions: (overview.pending_deposits || 0) + (overview.pending_withdraws || 0),
                 communityDropFund: partnerAudit.communityDropFund || { total: 0 },
-                adminReserveFund: eco.adminReserveFund || 0
+                adminReserveFund: eco.adminReserveFund || 0,
+                agentLive: agentLive
             });
+
+            // [NEW] Fetch Recent Support for Feedback Feed
+            try {
+                const supportRes = await api.get('/support/all');
+                setRecentSupport(supportRes.data.slice(0, 5));
+            } catch (e) { console.error("Support fetch failed", e); }
 
             const sysRes = await api.get('/admin/settings/public');
             if (sysRes.data.maintenance?.isActive) {
@@ -153,93 +163,161 @@ export default function AdminDashboard() {
             {/* MAIN CONTENT */}
             <main className="max-w-[1600px] mx-auto px-6 py-10 relative z-10 space-y-12">
                 
-                {/* FINANCIAL STATUS GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                    {/* Primary Profit Card */}
-                    <div className={`col-span-1 md:col-span-2 xl:col-span-1 bg-[#0b1221]/80 backdrop-blur-xl border p-8 rounded-[2.5rem] relative overflow-hidden group shadow-2xl ${stats.netSystemProfit >= 0 ? 'border-emerald-500/20' : 'border-rose-500/20'}`}>
-                        <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 blur-3xl opacity-20 ${stats.netSystemProfit >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className={`p-3 rounded-2xl ${stats.netSystemProfit >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                                <TrendingUp className="w-6 h-6" />
-                            </div>
-                            <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Net Ecosystem Balance</h3>
-                        </div>
-                        <div className={`text-4xl font-black tracking-tighter ${stats.netSystemProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {stats.netSystemProfit >= 0 ? '+' : ''}{Number(stats.netSystemProfit || 0).toLocaleString()} <span className="text-lg opacity-60">NXS</span>
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-4 opacity-50">Combined Asset Velocity</p>
-                    </div>
-
-                    {/* Secondary Metrics */}
-                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-indigo-500/30 transition-all">
-                        <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Revenue Sources</h3>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">Node Sales</span>
-                                <span className="font-black text-white">${Number(stats.totalServerRevenue || 0).toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">System Fees</span>
-                                <span className="font-black text-white">${Number((stats.totalP2PFee || 0) + (stats.total_commission || 0)).toLocaleString()}</span>
-                            </div>
-                            <div className="h-1 bg-white/5 rounded-full mt-4 overflow-hidden">
-                                <div className="h-full bg-indigo-500 w-[65%]"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Residual Revenue Fund (NEW) */}
-                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-emerald-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-                        <h3 className="text-emerald-500/60 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                            <Shield className="w-3 h-3" /> Residual Revenue Fund
+                {/* FINANCIAL STATUS GRID (ACCOUNTING MASTER VIEW) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
+                    {/* 1. ADMIN MASTER FUND */}
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-indigo-500/20 p-8 rounded-[2rem] relative overflow-hidden group hover:border-indigo-500/40 transition-all shadow-2xl">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                        <h3 className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4" /> Admin Created Money
                         </h3>
-                        <div className="text-3xl font-black text-white tracking-tighter mb-2">
-                            {Number(stats.adminReserveFund || 0).toLocaleString()} <span className="text-sm text-emerald-400 opacity-80 uppercase">NXS</span>
-                        </div>
-                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
-                            Unpaid Commissions from incomplete uplines (Task/Loan/Plan)
-                        </p>
-                        <div className="mt-6 pt-6 border-t border-white/5">
-                            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                <span>Status:</span>
-                                <span className="text-emerald-400 animate-pulse">● ACCUMULATING</span>
+                        <div className="space-y-4 relative z-10">
+                            <div>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Minted by Admin</p>
+                                <p className="text-2xl font-black text-white">{formatNXS(stats.totalMinted || 0)}</p>
+                            </div>
+                            <div className="pt-3 border-t border-white/5">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Users Balance (Liability)</p>
+                                <p className="text-xl font-black text-rose-400">{formatNXS(stats.currentLiabilities || 0)}</p>
+                            </div>
+                            <div className="pt-3 border-t border-white/5">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Net System Balance</p>
+                                <p className={`text-lg font-black ${(stats.totalMinted - stats.currentLiabilities) >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                                    {formatNXS((stats.totalMinted || 0) - (stats.currentLiabilities || 0))}
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-rose-500/30 transition-all">
-                        <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Liability & Payouts</h3>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">User Wallet Debt</span>
-                                <span className="font-black text-white text-rose-400">${Number(stats.currentLiabilities || 0).toLocaleString()}</span>
+                    {/* 2. SYSTEM CASH FLOW */}
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-emerald-500/20 p-8 rounded-[2rem] relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-2xl">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                        <h3 className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4" /> User Cash Flow
+                        </h3>
+                        <div className="space-y-4 relative z-10">
+                            <div>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Deposited by Users</p>
+                                <p className="text-2xl font-black text-emerald-400">{formatNXS(stats.totalDeposits || 0)}</p>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">Task Mining</span>
-                                <span className="font-black text-white">${Number(stats.totalTaskIncome || 0).toLocaleString()}</span>
+                            <div className="pt-3 border-t border-white/5">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Withdrawn by Users</p>
+                                <p className="text-xl font-black text-slate-300">{formatNXS(stats.totalWithdraws || 0)}</p>
                             </div>
-                            <div className="h-1 bg-white/5 rounded-full mt-4 overflow-hidden">
-                                <div className="h-full bg-rose-500 w-[80%]"></div>
+                            <div className="pt-3 border-t border-white/5 flex justify-between items-center bg-emerald-500/5 p-2 rounded-lg">
+                                <p className="text-emerald-500/70 text-[10px] font-bold uppercase tracking-widest">Today's Total Volume</p>
+                                <p className="text-sm font-black text-emerald-400">
+                                    {formatNXS(
+                                        (stats.agentLive?.cash_in_today || 0) + 
+                                        (stats.agentLive?.p2p_volume_today || 0) + 
+                                        (stats.agentLive?.package_sales_today || 0)
+                                    )}
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-                        <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Total Liquidity</h3>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">Total Inflow</span>
-                                <span className="font-black text-emerald-400">${Number(stats.totalDeposits || 0).toLocaleString()}</span>
+                    {/* 3. LIABILITY GENERATION */}
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-rose-500/20 p-8 rounded-[2rem] relative overflow-hidden group hover:border-rose-500/40 transition-all shadow-2xl">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                        <h3 className="text-rose-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 rotate-180" /> System Expenses
+                        </h3>
+                        <div className="space-y-4 relative z-10">
+                            <div>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Task & Ad Income Paid</p>
+                                <p className="text-2xl font-black text-rose-400">{formatNXS(stats.totalTaskIncome || 0)}</p>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">Total Outflow</span>
-                                <span className="font-black text-white">${Number(stats.totalWithdraws || 0).toLocaleString()}</span>
+                            <div className="pt-3 border-t border-white/5 flex justify-between">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Referral Bonus Paid</p>
+                                <p className="text-sm font-black text-slate-300">{formatNXS(stats.totalReferralBonus || 0)}</p>
                             </div>
-                            <div className="h-1 bg-white/5 rounded-full mt-4 overflow-hidden">
-                                <div className="h-full bg-emerald-500 w-[45%]"></div>
+                            <div className="pt-3 border-t border-white/5 flex justify-between">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Game & Lottery Paid</p>
+                                <p className="text-sm font-black text-slate-300">{formatNXS((stats.totalGameWins || 0) + (stats.totalLotteryPrizes || 0))}</p>
                             </div>
                         </div>
+                    </div>
+
+                    {/* 4. SYSTEM REVENUE */}
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-amber-500/20 p-8 rounded-[2rem] relative overflow-hidden group hover:border-amber-500/40 transition-all shadow-2xl">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                        <h3 className="text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <Briefcase className="w-4 h-4" /> System Income
+                        </h3>
+                        <div className="space-y-4 relative z-10">
+                            <div>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Packages Sold</p>
+                                <p className="text-2xl font-black text-amber-400">{formatNXS(stats.totalServerRevenue || 0)}</p>
+                            </div>
+                            <div className="pt-3 border-t border-white/5 flex justify-between">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">P2P Transfer Fees</p>
+                                <p className="text-sm font-black text-slate-300">{formatNXS(stats.totalP2PFee || 0)}</p>
+                            </div>
+                            <div className="pt-3 border-t border-white/5 flex justify-between">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Game & Lottery Earnings</p>
+                                <p className="text-sm font-black text-slate-300">{formatNXS((stats.totalGameBets || 0) + (stats.totalLotteryRevenue || 0))}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* [NEW] LIVE FEEDBACK & SCREENSHOT FEED */}
+                <div className="bg-[#0b1221]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 className="text-white text-lg font-black uppercase tracking-tight flex items-center gap-3">
+                                <MessageSquare className="w-5 h-5 text-indigo-400" /> Live Feedback Feed
+                            </h3>
+                            <p className="text-slate-500 text-xs mt-1">Real-time user support requests and screenshots</p>
+                        </div>
+                        <Link href="/admin/support" className="px-4 py-2 bg-indigo-500/10 text-indigo-400 rounded-xl text-[10px] font-black uppercase border border-indigo-500/20 hover:bg-indigo-500/20 transition-all flex items-center gap-2">
+                            View All Support <ExternalLink className="w-3 h-3" />
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {recentSupport.length === 0 ? (
+                            <div className="col-span-full py-12 text-center text-slate-500 text-xs uppercase tracking-widest font-black opacity-30">
+                                No recent feedback detected
+                            </div>
+                        ) : (
+                            recentSupport.map((ticket, idx) => {
+                                const lastMsg = ticket.messages?.[ticket.messages.length - 1];
+                                const hasImage = ticket.messages?.some(m => m.image);
+                                return (
+                                    <Link key={idx} href="/admin/support" className="group bg-white/5 border border-white/5 p-4 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all flex flex-col gap-3 relative">
+                                        <div className="flex justify-between items-start">
+                                            <span className={`w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></span>
+                                            <span className="text-[8px] text-slate-500 font-bold uppercase">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        
+                                        {/* Image Preview if exists */}
+                                        {hasImage ? (
+                                            <div className="w-full aspect-video bg-slate-800 rounded-lg overflow-hidden relative">
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-transparent transition-colors">
+                                                    <Camera className="w-5 h-5 text-white/50" />
+                                                </div>
+                                                <img 
+                                                    src={`${api.defaults.baseURL.replace('/api', '')}${ticket.messages.find(m => m.image).image}`} 
+                                                    alt="Feedback"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="w-full aspect-video bg-indigo-500/5 rounded-lg flex items-center justify-center border border-white/5">
+                                                <FileText className="w-5 h-5 text-slate-700" />
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-white line-clamp-1 uppercase">{ticket.subject}</p>
+                                            <p className="text-[9px] text-slate-500 line-clamp-2">{lastMsg?.text || ticket.message || "View details..."}</p>
+                                        </div>
+                                    </Link>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
 
@@ -263,8 +341,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-center md:text-right">
                             <div className="text-5xl font-black text-white tracking-tighter drop-shadow-2xl flex items-baseline gap-2">
-                                {Number(stats.communityDropFund?.total ?? stats.communityDropFund ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                                <span className="text-fuchsia-500 text-2xl font-black">NXS</span>
+                                {formatNXS(stats.communityDropFund?.total ?? stats.communityDropFund ?? 0)}
                             </div>
                             <div className={`mt-4 inline-flex items-center gap-2 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border shadow-lg ${
                                 (stats.communityDropFund?.total ?? stats.communityDropFund ?? 0) >= 100 

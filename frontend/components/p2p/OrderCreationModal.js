@@ -352,7 +352,7 @@ export default function OrderCreationModal({ isOpen, onClose, onSuccess }) {
                         <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 flex gap-3 items-center">
                             <span className="text-xl">🔥</span>
                             <div className="text-[10px] text-red-200 leading-relaxed font-bold tracking-wide">
-                                A <strong className="text-red-400">2% System Burn Fee</strong> is deducted from the Seller when the trade is successfully completed.
+                                A <strong className="text-red-400">1.2% P2P Trade Fee</strong> is deducted from the trade amount when the trade is successfully completed.
                             </div>
                         </div>
 

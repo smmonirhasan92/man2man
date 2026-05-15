@@ -24,348 +24,197 @@ class ReferralService {
      * Triggered when a user calls PlanService.purchasePlan()
      * Supports externalSession for Atomic Transactions.
      */
+    static getTierRates(tier, isFirstPurchase) {
+        // Returns percentages for [L1, L2, L3]
+        if (tier === 'Platinum' || tier === 'Diamond') {
+            return isFirstPurchase ? [12.0, 6.0, 2.5] : [5.0, 2.0, 1.0];
+        } else if (tier === 'Gold') {
+            return isFirstPurchase ? [8.0, 3.0, 0.0] : [3.0, 1.0, 0.0];
+        } else {
+            // Silver or Starter
+            return isFirstPurchase ? [5.0, 0.0, 0.0] : [1.0, 0.0, 0.0];
+        }
+    }
+
+    /**
+     * Distribute Plan Purchase Commission (3 Levels max for Plans)
+     * Card-based Matrix & 2-Level Firewall for Empire Tracking
+     */
     static async distributePlanCommission(userId, planAmount, planName, externalSession = null) {
         const commissionLogic = async (session) => {
             console.log(`[Referral] Distributing Plan Commission for User: ${userId}, Amount: ${planAmount}`);
 
             const currentUser = await User.findById(userId).session(session);
+            const UserPlan = require('../plan/UserPlanModel');
+            
+            // Determine if this is the BUYER's first purchase
+            const userPlanCount = await UserPlan.countDocuments({ userId: currentUser._id }).session(session);
+            const isFirstPurchase = userPlanCount <= 1; // newly created plan is counted, so <= 1 means first.
+
             let uplineCode = currentUser.referredBy;
-
-            // --- [NEW] ONE-TIME FIXED REFERRAL BONUS & PROMOTIONAL TIER UPGRADES ---
-            if (uplineCode && uplineCode !== currentUser.referralCode && !currentUser.isReferralBonusPaid) {
-                const directUpline = await User.findOne({ referralCode: uplineCode }).session(session);
-                if (directUpline) {
-                    // 1. Activate referral count (User officially bought a plan)
-                    directUpline.referralCount = (directUpline.referralCount || 0) + 1;
-
-                    // 2. Fetch Global Settings for Bonuses & Tiers
-                    const sysSettings = await SystemSetting.find({
-                        key: { $in: ['referral_bonus_amount', 'referral_tiers', 'referral_reward_currency'] }
-                    }).session(session);
-
-                    const getSet = (key, def) => {
-                        const s = sysSettings.find(s => s.key === key);
-                        return s ? s.value : def;
-                    };
-
-                    const bonusAmount = parseFloat(getSet('referral_bonus_amount', '0'));
-                    const rewardCurrency = getSet('referral_reward_currency', 'income') || 'income';
-
-                    // 3. Payout Fixed Per-Invite Bonus
-                    if (bonusAmount > 0) {
-                        directUpline.wallet[rewardCurrency] = (directUpline.wallet[rewardCurrency] || 0) + bonusAmount;
-                        if (rewardCurrency === 'income') directUpline.referralIncome = (directUpline.referralIncome || 0) + bonusAmount;
-
-                        await Transaction.create([{
-                            userId: directUpline._id,
-                            type: 'referral_commission',
-                            amount: bonusAmount,
-                            status: 'completed',
-                            description: `Fixed Referral Bonus from ${currentUser.username}`,
-                            metadata: { sourceUser: userId }
-                        }], { session, ordered: true });
-                    }
-
-                    // 4. [NEW] Hand Completion Logic (Power of 5)
-                    // ... (keep existing 5-ref hand logic)
-                    const HAND_SIZE = 5;
-                    const currentCount = directUpline.referralCount || 0;
-                    
-                    if (currentCount > 0 && currentCount % HAND_SIZE === 0) {
-                        const milestoneValue = currentCount;
-                        if (!directUpline.handMilestonesClaimed?.includes(milestoneValue)) {
-                            const HAND_BONUS = 50; 
-                            directUpline.referralHands = (directUpline.referralHands || 0) + 1;
-                            directUpline.wallet.income += HAND_BONUS;
-                            directUpline.referralIncome += HAND_BONUS;
-                            if (!directUpline.handMilestonesClaimed) directUpline.handMilestonesClaimed = [];
-                            directUpline.handMilestonesClaimed.push(milestoneValue);
-                            await Transaction.create([{
-                                userId: directUpline._id,
-                                type: 'referral_commission',
-                                amount: HAND_BONUS,
-                                status: 'completed',
-                                description: `🤚 Hand #${directUpline.referralHands} Completed! (${milestoneValue} Referrals)`,
-                                metadata: { milestone: milestoneValue, handCount: directUpline.referralHands }
-                            }], { session, ordered: true });
-                            NotificationService.send(
-                                directUpline._id, 
-                                `You've completed Hand #${directUpline.referralHands}. ${HAND_BONUS} NXS bonus added!`, 
-                                'success',
-                                { title: "Hand Completed! 🤚" }
-                            ).catch(() => {});
-
-                            // [SOCKET] Real-time Milestone Alert
-                            try {
-                                const SocketService = require('../common/SocketService');
-                                SocketService.emitToUser(directUpline._id, 'milestone_alert', {
-                                    message: `🤚 Hand #${directUpline.referralHands} Completed!`,
-                                    bonus: HAND_BONUS
-                                });
-                            } catch (e) { }
-                        }
-                    }
-
-                    // --- [NEW] EMPIRE HAND (5x5) TRACKING ENGINE ---
-                    // This logic tracks the "Fingers" of the Empire Hand.
-                    // We check if the BUYER is a direct of the UPLINE.
-                    let activeHand = directUpline.empireHands.find(h => h.status === 'active');
-                    if (!activeHand) {
-                        directUpline.empireHands.push({ handIndex: (directUpline.empireHands.length || 0) + 1, directs: [], status: 'active' });
-                        activeHand = directUpline.empireHands[directUpline.empireHands.length - 1];
-                    }
-
-                    // If buyer is a direct, add them as a "Finger" if there's room
-                    if (activeHand.directs.length < 5 && !activeHand.directs.find(d => d.userId.toString() === userId.toString())) {
-                        activeHand.directs.push({ userId: userId, downlineCount: 0, isQualified: false });
-                    }
-                    // --- END EMPIRE TRACKING ---
-
-                    await directUpline.save({ session });
-                    currentUser.isReferralBonusPaid = true;
-                    await currentUser.save({ session });
-                }
-            }
-
-            // --- [NEW] EMPIRE RACE: PACKAGE TRACKING ---
-            // Independent of one-time bonuses, we track EVERY plan purchase for the direct upline
-            if (uplineCode && uplineCode !== currentUser.referralCode) {
-                const directUpline = await User.findOne({ referralCode: uplineCode }).session(session);
-                if (directUpline) {
-                    directUpline.purchaseCount = (directUpline.purchaseCount || 0) + 1;
-                    directUpline.monthlyPurchases = (directUpline.monthlyPurchases || 0) + 1;
-                    directUpline.lastPurchaseDate = new Date();
-
-                    // If Plan is considered a "Big Package" (e.g. >= 5000 NXS or 50 USD)
-                    // They get 1 Tour Point
-                    if (planAmount >= 5000) {
-                        directUpline.tourSales = (directUpline.tourSales || 0) + 1;
-                        
-                        // Notify Upline about Tour Progress
-                        NotificationService.send(
-                            directUpline._id,
-                            `A direct downline purchased a premium package! Tour Sales: ${directUpline.tourSales}/20`,
-                            'success',
-                            { title: "Empire Tour Progress! ✈️" }
-                        ).catch(() => {});
-                    }
-
-                    await directUpline.save({ session });
-                }
-            }
-            const rates = ReferralService.PLAN_COMMISSION_RATES;
-            // [MODIFIED] Randomize L1 fast referral bonus between 9% and 12%
-            const buyerDirectPercent = 9.0 + (Math.random() * 3.0); // 9% to 12%
-            const buyerPlanObj = await Plan.findOne({ name: planName }).session(session);
             let totalDistributed = 0;
 
-            // Loop 5 Levels
-            for (let i = 0; i < rates.length; i++) {
-                if (!uplineCode) break; // No more upline
+            // Track Empire conditions
+            const isGoldStandard = planAmount >= 1500; // $15+
+            const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
+            for (let i = 0; i < 3; i++) {
+                if (!uplineCode) break;
 
                 const uplineUser = await User.findOne({ referralCode: uplineCode }).session(session);
-                if (!uplineUser) break; // Broken link
+                if (!uplineUser) break;
 
+                // 1. Calculate Card-Based Commission
+                const uplineTier = uplineUser.taskData?.accountTier || 'Starter';
+                const currentRates = ReferralService.getTierRates(uplineTier, isFirstPurchase);
+                const commissionPercent = currentRates[i];
                 let commission = 0;
-                let commissionDesc = '';
-                let liabilitySaved = 0;
 
-                // --- [NEW] Level 1 Dynamic Commission (Upsell / Downsell Engine) ---
-                if (i === 0 && buyerPlanObj) {
-                    // Find Upline's Highest Active Plan
-                    const UserPlan = require('../plan/UserPlanModel');
-                    const uplinePlans = await UserPlan.find({
-                        userId: uplineUser._id,
-                        status: 'active',
-                        expiryDate: { $gt: new Date() }
-                    }).session(session);
+                if (commissionPercent > 0) {
+                    commission = (planAmount * commissionPercent) / 100;
+                    commission = Math.round(commission * 10000) / 10000;
 
-                    let uplineHighestPlanValue = 0;
-                    let uplineDirectPercent = 7.2;
-                    let uplineUpsellPercent = 0.66;
+                    uplineUser.wallet.income = (uplineUser.wallet.income || 0) + commission;
+                    uplineUser.referralIncome = (uplineUser.referralIncome || 0) + commission;
 
-                    if (uplinePlans.length > 0) {
-                        // Fetch plan details to find the most expensive one they own
-                        const planIds = uplinePlans.map(p => p.planId);
-                        const allUplinePlans = await Plan.find({ _id: { $in: planIds } }).session(session);
-
-                        for (const p of allUplinePlans) {
-                            if (p.unlock_price > uplineHighestPlanValue) {
-                                uplineHighestPlanValue = p.unlock_price;
-                                uplineDirectPercent = p.direct_commission_percent;
-                                uplineUpsellPercent = p.upsell_bonus_percent;
-                            }
-                        }
-                    }
-
-                    // The Core Engine: Check if Seller is smaller than Buyer (Upsell Scenario)
-                    if (uplineHighestPlanValue > 0 && uplineHighestPlanValue < planAmount) {
-                        // Seller gets capped at their own plan's default commission
-                        const referrerCap = (uplineHighestPlanValue * uplineDirectPercent) / 100;
-                        // Plus a tiny bonus on the excess amount
-                        const excessAmount = planAmount - uplineHighestPlanValue;
-                        const upsellBonus = (excessAmount * uplineUpsellPercent) / 100;
-
-                        commission = referrerCap + upsellBonus;
-
-                        // Calculate standard payout to find how much the platform saved
-                        const theoreticalPayout = (planAmount * buyerDirectPercent) / 100;
-                        liabilitySaved = Math.max(0, theoreticalPayout - commission);
-
-                        commissionDesc = `L1 Commission (Smart Capped) from ${currentUser.username} (${planName})`;
-                        console.log(`🤑 [Smart Cap] Saved Platform ${liabilitySaved.toFixed(4)} NXS on ${uplineUser.username}'s sale.`);
-                    } else {
-                        // Downsell or Equal Level: Full Buyer Percent
-                        commission = (planAmount * buyerDirectPercent) / 100;
-                        commissionDesc = `L1 Commission from ${currentUser.username} (${planName})`;
-                    }
-                } else {
-                    // Level 2 to Level 5: Standard Percentages (1%, 1%, 0.5%, 0.5%)
-                    commission = (planAmount * rates[i]) / 100;
-                    commissionDesc = `L${i + 1} Commission from ${currentUser.username} (${planName})`;
-                }
-
-                // Fix precision to 4 decimals to avoid 0.00500000001
-                commission = Math.round(commission * 10000) / 10000;
-
-                if (commission > 0) {
-                    // --- [NEW] VALIDATOR LOGIC ---
-                    const UserPlanForValidation = require('../plan/UserPlanModel');
-                    const uplineActivePlans = await UserPlanForValidation.find({
-                        userId: uplineUser._id,
-                        status: 'active',
-                        expiryDate: { $gt: new Date() }
-                    }).session(session);
-
-                    let hasValidLongTermPlan = false;
-                    const tenDaysFromNow = new Date();
-                    tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
-                    
-                    for (const p of uplineActivePlans) {
-                        if (p.expiryDate > tenDaysFromNow) {
-                            hasValidLongTermPlan = true;
-                            break;
-                        }
-                    }
-
-                    // [MODIFIED] Lock Commission based on Validity Logic
-                    let releaseDate = new Date();
-                    if (hasValidLongTermPlan) {
-                        releaseDate.setDate(releaseDate.getDate() + 5); // Standard 5 days
-                    } else {
-                        // "Pending Status" - effectively locked indefinitely until validation met
-                        releaseDate = null; 
-                    }
-
-                    uplineUser.wallet.pending_referral = (uplineUser.wallet.pending_referral || 0) + commission;
-                    
-                    // [NEW] Track residual to Admin Reserve Fund
-                    if (liabilitySaved > 0) {
-                        await SystemSetting.findOneAndUpdate(
-                            { key: 'admin_reserve_fund' },
-                            { $inc: { value: liabilitySaved } },
-                            { upsert: true }
-                        );
-                    }
-
-                    // [NEW] Update level-wise stats (Keep tracking for progress)
-                    if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0];
+                    if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0, 0, 0];
                     uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + commission;
-                    uplineUser.markModified('referralEarningsByLevel');
 
-                    await uplineUser.save({ session });
+                    const desc = isFirstPurchase 
+                        ? `L${i + 1} Acquisition Bonus from ${currentUser.username} (${uplineTier} Tier)`
+                        : `L${i + 1} Renewal Bonus from ${currentUser.username} (${uplineTier} Tier)`;
 
-                    // Log Transaction as LOCKED
                     await Transaction.create([{
                         userId: uplineUser._id,
                         type: 'referral_commission',
                         source: 'referral',
                         amount: commission,
-                        status: 'locked', // [UX PHASE]
-                        description: commissionDesc,
-                        metadata: {
-                            sourceUser: userId,
-                            level: i + 1,
-                            planAmount: planAmount,
-                            releaseDate: releaseDate, // For claim logic
-                            liabilitySaved: liabilitySaved > 0 ? liabilitySaved : undefined
-                        }
+                        status: 'completed',
+                        description: desc,
+                        metadata: { sourceUser: userId, level: i + 1, planAmount, isFirstPurchase }
                     }], { session, ordered: true });
-
-                    // [SOCKET] Real-time Commission Alert
+                    
+                    totalDistributed += commission;
+                    
                     try {
                         const SocketService = require('../common/SocketService');
                         SocketService.emitToUser(uplineUser._id, 'commission_alert', {
-                            message: commissionDesc,
-                            amount: commission,
-                            source: currentUser.username,
-                            status: 'locked'
+                            message: desc, amount: commission, source: currentUser.username, status: 'completed'
                         });
-                        // Also update wallet UI
-                        SocketService.emitToUser(uplineUser._id, 'wallet_update', {
-                            pending_referral: uplineUser.wallet.pending_referral
-                        });
+                        SocketService.emitToUser(uplineUser._id, 'wallet_update', { income: uplineUser.wallet.income });
                     } catch (e) { }
-
-                    totalDistributed += commission;
-                    console.log(`   -> Locked L${i + 1} (${uplineUser.username}): ${commission} (Release: ${releaseDate.toLocaleDateString()})`);
                 }
 
-                // Move Up
-                const oldUplineCode = uplineCode;
-                uplineCode = uplineUser.referredBy;
-
-                // [NEW] If next level exists in rates but no upline found, track as residual (Incomplete Lines)
-                if (!uplineCode && i + 1 < rates.length) {
-                    let residualSum = 0;
-                    for (let j = i + 1; j < rates.length; j++) {
-                        residualSum += (planAmount * rates[j]) / 100;
-                    }
-                    if (residualSum > 0) {
-                        await SystemSetting.findOneAndUpdate(
-                            { key: 'admin_reserve_fund' },
-                            { $inc: { value: residualSum } },
-                            { upsert: true }
-                        );
-                        console.log(`🏦 [Residual] Saved ${residualSum.toFixed(4)} NXS from Incomplete Line to Admin Fund.`);
-                    }
+                // 2. Admin Reserve Fund (Residual liability saved)
+                const maxPossiblePercent = isFirstPurchase ? [12.0, 6.0, 2.5][i] : [5.0, 2.0, 1.0][i];
+                const liabilitySavedPercent = maxPossiblePercent - commissionPercent;
+                if (liabilitySavedPercent > 0) {
+                    const savedAmt = (planAmount * liabilitySavedPercent) / 100;
+                    await SystemSetting.findOneAndUpdate(
+                        { key: 'admin_reserve_fund' },
+                        { $inc: { value: savedAmt } },
+                        { upsert: true, session }
+                    );
                 }
 
-                // --- [NEW] EMPIRE HAND DOWNLINE PROGRESSION ---
-                // If we are at Level 2-5, we check if the upline has an active Empire Hand
-                // and if the "Parent" of the buyer is one of the "Fingers" of the Empire Hand.
-                if (i >= 1) { // L2 to L5
-                    const grandUpline = uplineUser; // The one receiving the L2+ commission
-                    const activeEmpireHand = grandUpline.empireHands?.find(h => h.status === 'active');
-                    if (activeEmpireHand) {
-                        // We need to find which "Finger" (Direct) this buyer belongs to.
-                        // For L2, the referredBy is the direct.
-                        // For L3+, we'd need to trace back. For simplicity, we check if any direct of grandUpline is in the path.
-                        // Let's find the direct who started this chain.
-                        const buyerPath = currentUser.referredBy; 
-                        // Find the direct of grandUpline who is the parent/grandparent of the buyer.
-                        // This is computationally expensive to do recursively here, 
-                        // so we check if the user who referred the buyer is a direct of grandUpline.
-                        const finger = activeEmpireHand.directs.find(d => d.userId.toString() === currentUser.referredBy.toString());
-                        if (finger && !finger.isQualified) {
-                            finger.downlineCount = (finger.downlineCount || 0) + 1;
-                            if (finger.downlineCount >= 5) {
-                                finger.isQualified = true;
-                                console.log(`🚀 Finger Qualified for ${grandUpline.username}!`);
-                            }
+                // --- 3. 2-LEVEL FIREWALL EMPIRE TRACKING ---
+                if (isGoldStandard) {
+                    // Initialize objects if missing
+                    if (!uplineUser.monthlySprint) uplineUser.monthlySprint = { currentMonth: '', directsCount: 0, volume: 0, bonusClaimed: false };
+                    if (!uplineUser.directEmpire) uplineUser.directEmpire = { goldMembers: [], totalCount: 0, isMatured: false };
+                    if (!uplineUser.teamEmpire) uplineUser.teamEmpire = { completedTeams: 0, currentTeamMembers: [] };
+
+                    // Level 1: Directs (Monthly Sprint + Lifetime Direct + Team Empire)
+                    if (i === 0) {
+                        // A. Monthly Sprint
+                        if (uplineUser.monthlySprint.currentMonth !== currentMonth) {
+                            uplineUser.monthlySprint.currentMonth = currentMonth;
+                            uplineUser.monthlySprint.directsCount = 0;
+                            uplineUser.monthlySprint.volume = 0;
+                            uplineUser.monthlySprint.bonusClaimed = false;
+                        }
+                        
+                        // Prevent duplicate counting for the same user in the same month sprint
+                        // We track volume, but counting "directsCount" should only happen once per user per sprint.
+                        // For simplicity and since we track purchases, each $15+ purchase increments volume.
+                        uplineUser.monthlySprint.directsCount += 1; 
+                        uplineUser.monthlySprint.volume += planAmount;
+
+                        if (uplineUser.monthlySprint.directsCount >= 5 && !uplineUser.monthlySprint.bonusClaimed) {
+                            const sprintBonus = (uplineUser.monthlySprint.volume * 5) / 100; // 5% Volume Bonus
+                            uplineUser.wallet.income += sprintBonus;
+                            uplineUser.monthlySprint.bonusClaimed = true;
                             
-                            // Check if Hand is Matured (All 5 fingers qualified)
-                            if (activeEmpireHand.directs.length === 5 && activeEmpireHand.directs.every(d => d.isQualified)) {
-                                activeEmpireHand.status = 'matured';
-                                activeEmpireHand.maturityDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 Days Buffer
-                                activeEmpireHand.bonusAmount = 1500; // Base $15
-                                console.log(`🏆 EMPIRE HAND MATURED for ${grandUpline.username}! Matures on ${activeEmpireHand.maturityDate}`);
+                            await Transaction.create([{
+                                userId: uplineUser._id,
+                                type: 'referral_commission',
+                                amount: sprintBonus,
+                                status: 'completed',
+                                description: `🏆 Monthly Sprint Bonus (5 Directs!)`
+                            }], { session, ordered: true });
+                        }
+
+                        // B. Lifetime Direct Empire
+                        if (!uplineUser.directEmpire.isMatured) {
+                            if (!uplineUser.directEmpire.goldMembers.includes(currentUser._id)) {
+                                uplineUser.directEmpire.goldMembers.push(currentUser._id);
+                                uplineUser.directEmpire.totalCount += 1;
+                                
+                                if (uplineUser.directEmpire.totalCount >= 20) {
+                                    uplineUser.directEmpire.isMatured = true;
+                                }
                             }
-                            grandUpline.markModified('empireHands');
-                            await grandUpline.save({ session });
+                        }
+                        
+                        // C. Team Empire Point
+                        if (!uplineUser.teamEmpire.currentTeamMembers.includes(currentUser._id)) {
+                            uplineUser.teamEmpire.currentTeamMembers.push(currentUser._id);
+                            
+                            if (uplineUser.teamEmpire.currentTeamMembers.length >= 25) {
+                                uplineUser.teamEmpire.completedTeams += 1;
+                                uplineUser.teamEmpire.currentTeamMembers = []; 
+                                uplineUser.wallet.income += 3000; 
+                                
+                                await Transaction.create([{
+                                    userId: uplineUser._id,
+                                    type: 'referral_commission',
+                                    amount: 3000,
+                                    status: 'completed',
+                                    description: `👑 Team Empire Completed! (25 Members)`
+                                }], { session, ordered: true });
+                            }
+                        }
+                    } 
+                    // Level 2: Team Empire Point for Grand Upline (2-Level Firewall)
+                    else if (i === 1) {
+                        if (!uplineUser.teamEmpire.currentTeamMembers.includes(currentUser._id)) {
+                            uplineUser.teamEmpire.currentTeamMembers.push(currentUser._id);
+                            
+                            if (uplineUser.teamEmpire.currentTeamMembers.length >= 25) {
+                                uplineUser.teamEmpire.completedTeams += 1;
+                                uplineUser.teamEmpire.currentTeamMembers = []; 
+                                uplineUser.wallet.income += 3000; 
+                                
+                                await Transaction.create([{
+                                    userId: uplineUser._id,
+                                    type: 'referral_commission',
+                                    amount: 3000,
+                                    status: 'completed',
+                                    description: `👑 Team Empire Completed! (25 Members)`
+                                }], { session, ordered: true });
+                            }
                         }
                     }
+                    // Level 3+ does NOT get Empire tracking (Firewall block)
                 }
+
+                uplineUser.markModified('monthlySprint');
+                uplineUser.markModified('directEmpire');
+                uplineUser.markModified('teamEmpire');
+                await uplineUser.save({ session });
+                
+                // Move Up
+                uplineCode = uplineUser.referredBy;
             }
 
             return { success: true, distributed: totalDistributed };
@@ -412,11 +261,9 @@ class ReferralService {
                     const empireProgress = Math.min(uplineUser.tourSales || 0, empireGoal);
                     const empirePercentage = (empireProgress / empireGoal) * 100;
 
-                    // [MODIFIED] Lock Task Referral Commission too
-                    const releaseDate = new Date();
-                    releaseDate.setDate(releaseDate.getDate() + 5);
-
-                    uplineUser.wallet.pending_referral = (uplineUser.wallet.pending_referral || 0) + comm;
+                    // Task Referral Commissions are NO LONGER LOCKED.
+                    // They are instantly credited because they are only triggered when ALL daily tasks are complete.
+                    uplineUser.wallet.income = (uplineUser.wallet.income || 0) + comm;
                     
                     if (!uplineUser.referralEarningsByLevel) uplineUser.referralEarningsByLevel = [0, 0, 0, 0, 0];
                     uplineUser.referralEarningsByLevel[i] = (uplineUser.referralEarningsByLevel[i] || 0) + comm;
@@ -429,15 +276,14 @@ class ReferralService {
                         type: 'referral_commission',
                         source: 'referral',
                         amount: comm,
-                        status: 'locked',
+                        status: 'completed', // Instantly available
                         description: type === 'batched_daily_task_reward'
                             ? `L${i + 1} Batched Daily Task Rewards from ${sourceUserId}`
                             : `L${i + 1} Task Bonus from ${sourceUserId}`,
                         metadata: {
                             level: i + 1,
                             sourceUser: sourceUserId,
-                            type: type,
-                            releaseDate: releaseDate
+                            type: type
                         }
                     }], { session, ordered: true });
 
@@ -448,11 +294,11 @@ class ReferralService {
                             message: `L${i + 1} Task Bonus from ${sourceUserId}`,
                             amount: comm,
                             source: sourceUserId,
-                            status: 'locked'
+                            status: 'completed'
                         });
                         // Also update wallet UI
                         SocketService.emitToUser(uplineUser._id, 'wallet_update', {
-                            pending_referral: uplineUser.wallet.pending_referral
+                            income: uplineUser.wallet.income
                         });
                     } catch (e) { }
 
@@ -463,7 +309,7 @@ class ReferralService {
                     } catch (e) { }
 
                     totalDistributed += comm;
-                    console.log(`   -> Task Bonus L${i + 1} LOCKED: ${comm} to ${uplineUser.username}`);
+                    console.log(`   -> Task Bonus L${i + 1} COMPLETED: ${comm} to ${uplineUser.username}`);
                 }
                 uplineCode = uplineUser.referredBy;
 

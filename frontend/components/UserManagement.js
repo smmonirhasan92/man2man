@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../services/api';
-import { KeyRound, LineChart, Search, Wallet, Shield, RefreshCw, MapPin, Monitor, Plus, Minus, Download } from 'lucide-react';
+import { KeyRound, LineChart, Search, Wallet, Shield, RefreshCw, MapPin, Monitor, Plus, Minus, Download, Users, Activity, Ban, TrendingUp, Award, Crown, History, Clock } from 'lucide-react';
 import USCIcon from './ui/USCIcon';
 import RoleDropdown from './admin/RoleDropdown';
 import UserProfileModal from './admin/UserProfileModal';
@@ -13,9 +13,26 @@ export default function UserManagement() {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [filterCategory, setFilterCategory] = useState('all');
+    const [summary, setSummary] = useState(null);
 
     // Modals
     const [balanceModal, setBalanceModal] = useState({ show: false, userId: null, type: 'credit', username: '' });
+
+    const formatTimeAgo = (dateString) => {
+        if (!dateString) return 'Never';
+        const now = new Date();
+        const past = new Date(dateString);
+        const diffMs = now - past;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 1) return 'Just Now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${diffDays}d ago`;
+    };
     const [amount, setAmount] = useState('');
     const [note, setNote] = useState('');
     const [secKeys, setSecKeys] = useState(['', '', '']); // [SECURITY] 3-Layer Keys
@@ -32,15 +49,18 @@ export default function UserManagement() {
             fetchUsers();
         }, 500);
         return () => clearTimeout(delayDebounce);
-    }, [searchTerm]);
+    }, [searchTerm, filterCategory]);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/admin/users?search=${searchTerm}`);
-            // [FIX] Backend returns { users: [], totalPages: ... } now
+            const res = await api.get(`/admin/users?search=${searchTerm}&filterCategory=${filterCategory}`);
+            // [FIX] Backend returns { users: [], summary: {}, totalPages: ... } now
             if (res.data.users && Array.isArray(res.data.users)) {
                 setUsers(res.data.users);
+                if (res.data.summary) {
+                    setSummary(res.data.summary);
+                }
             } else if (Array.isArray(res.data)) {
                 setUsers(res.data);
             } else {
@@ -58,6 +78,14 @@ export default function UserManagement() {
         setIsRefreshing(true);
         await fetchUsers();
         setIsRefreshing(false);
+    };
+
+    const copyToClipboard = (text, label) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast.success(`${label} copied!`, {
+            style: { background: '#1e293b', color: '#fff', fontSize: '12px' }
+        });
     };
 
     const handleExportCSV = () => {
@@ -101,6 +129,15 @@ export default function UserManagement() {
 
     const handleBalanceUpdate = async (e) => {
         e.preventDefault();
+        const numAmount = parseFloat(amount);
+        if (numAmount > 1000000) {
+            toast.error('Safety Limit: Maximum 1,000,000 NXS allowed per manual adjustment to prevent typos.');
+            return;
+        }
+        if (numAmount <= 0) {
+            toast.error('Amount must be greater than zero.');
+            return;
+        }
         try {
             await api.post(`/admin/user/${balanceModal.userId}/balance`, {
                 amount,
@@ -175,8 +212,81 @@ export default function UserManagement() {
         return styles[role] || styles.user;
     };
 
+    // Report Card Component for filtering
+    const ReportCard = ({ title, value, icon, active, onClick, colorClass }) => (
+        <div 
+            onClick={onClick}
+            className={`cursor-pointer p-4 rounded-2xl border backdrop-blur-xl transition-all duration-300 ${
+                active 
+                ? `bg-[#1a1f33] border-indigo-500 shadow-lg shadow-indigo-500/20 scale-105 z-10` 
+                : `bg-[#0b1221]/80 border-white/10 hover:border-white/30 hover:bg-[#111827]`
+            }`}
+        >
+            <div className={`flex justify-between items-start mb-2 ${colorClass}`}>
+                <div className="p-2 rounded-lg bg-white/5">{icon}</div>
+                <div className="text-2xl font-black">{value || 0}</div>
+            </div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{title}</div>
+        </div>
+    );
+
     return (
         <div className="max-w-7xl mx-auto pb-20 px-4">
+            {/* Clean User Report / Filters */}
+            {summary && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                    <ReportCard title="Total Users" value={summary.totalUsers} icon={<Users className="w-5 h-5" />} active={filterCategory === 'all'} onClick={() => setFilterCategory('all')} colorClass="text-blue-400" />
+                    <ReportCard title="Active Users" value={summary.activeUsers} icon={<Activity className="w-5 h-5" />} active={filterCategory === 'active'} onClick={() => setFilterCategory('active')} colorClass="text-emerald-400" />
+                    <ReportCard title="Inactive Users" value={summary.inactiveUsers} icon={<Ban className="w-5 h-5" />} active={filterCategory === 'inactive'} onClick={() => setFilterCategory('inactive')} colorClass="text-rose-400" />
+                    <ReportCard title="Top 5+ Ref" value={summary.ref5Count} icon={<TrendingUp className="w-5 h-5" />} active={filterCategory === 'top5'} onClick={() => setFilterCategory('top5')} colorClass="text-amber-400" />
+                    <ReportCard title="Top 10+ Ref" value={summary.ref10Count} icon={<Award className="w-5 h-5" />} active={filterCategory === 'top10'} onClick={() => setFilterCategory('top10')} colorClass="text-fuchsia-400" />
+                    <ReportCard title="Top 20+ Ref" value={summary.ref20Count} icon={<Crown className="w-5 h-5" />} active={filterCategory === 'top20'} onClick={() => setFilterCategory('top20')} colorClass="text-yellow-400" />
+                </div>
+            )}
+
+            {/* Retention & Live Activity Summary */}
+            {summary && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-indigo-500/30 p-4 rounded-2xl flex items-center justify-between shadow-[0_0_20px_rgba(79,70,229,0.1)] hover:border-emerald-500/50 transition-all group">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors">
+                                <Activity className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Today</p>
+                                <p className="text-xl font-black text-white">{summary.activeToday || 0} <span className="text-[10px] text-emerald-400 font-bold ml-1 uppercase">(24h Retention)</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-indigo-500/30 p-4 rounded-2xl flex items-center justify-between shadow-[0_0_20px_rgba(79,70,229,0.1)] hover:border-indigo-500/50 transition-all group">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-indigo-500/10 rounded-xl group-hover:bg-indigo-500/20 transition-colors">
+                                <History className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active This Week</p>
+                                <p className="text-xl font-black text-white">{summary.activeThisWeek || 0} <span className="text-[10px] text-indigo-400 font-bold ml-1 uppercase">(7d Retention)</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-[#0b1221]/80 backdrop-blur-xl border border-indigo-500/30 p-4 rounded-2xl flex items-center justify-between shadow-[0_0_20px_rgba(79,70,229,0.1)] hover:border-rose-500/50 transition-all group">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-rose-500/10 rounded-xl group-hover:bg-rose-500/20 transition-colors">
+                                <Clock className="w-5 h-5 text-rose-400" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Last User Entry</p>
+                                <p className="text-lg font-black text-white">
+                                    {summary.lastUserActiveAt ? formatTimeAgo(summary.lastUserActiveAt) : 'No Recent Activity'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Search Bar & Refresh */}
             <div className="sticky top-4 z-20 mb-6 flex gap-3">
                 <div className="relative flex-1 shadow-2xl rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50">
@@ -236,8 +346,12 @@ export default function UserManagement() {
                                             {user.fullName ? user.fullName.charAt(0) : '?'}
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold text-white leading-tight truncate">{user.fullName || 'Unknown User'}</h3>
-                                            <p className="text-sm font-mono text-slate-400 mt-0.5">{user.phone || user.u_ph || 'No Phone'}</p>
+                                            <h3 onClick={() => copyToClipboard(user.fullName, 'Name')} title="Click to copy Name" className="text-lg font-bold text-white leading-tight truncate cursor-pointer hover:text-indigo-400 transition-colors">
+                                                {user.fullName || 'Unknown User'}
+                                            </h3>
+                                            <p onClick={() => copyToClipboard(user.phone || user.u_ph, 'Phone/Email')} title="Click to copy Phone/Email" className="text-sm font-mono text-slate-400 mt-0.5 cursor-pointer hover:text-indigo-300 transition-colors">
+                                                {user.phone || user.u_ph || 'No Phone'}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -252,7 +366,11 @@ export default function UserManagement() {
                                             {user.taskData?.accountTier || 'Starter'}
                                         </span>
                                         {user.referralCode && (
-                                            <span className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg font-mono border border-white/5" title="Referral Code">
+                                            <span 
+                                                onClick={() => copyToClipboard(user.referralCode, 'Referral Code')} 
+                                                className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg font-mono border border-white/5 cursor-pointer hover:bg-slate-700 hover:text-white transition-colors" 
+                                                title="Click to copy Referral Code"
+                                            >
                                                 REF: {user.referralCode}
                                             </span>
                                         )}
@@ -352,11 +470,17 @@ export default function UserManagement() {
                                 <input
                                     type="number"
                                     required
+                                    min="1"
+                                    max="1000000"
+                                    step="0.01"
                                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xl text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-300"
                                     placeholder="0.00"
                                     value={amount}
                                     onChange={e => setAmount(e.target.value)}
                                 />
+                                <p className="text-[10px] text-red-500 font-bold mt-2 ml-1 flex items-center gap-1">
+                                    <Shield className="w-3 h-3" /> System Limit: Max 1,000,000 NXS per transaction
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Admin Note</label>

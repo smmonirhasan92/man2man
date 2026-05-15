@@ -8,9 +8,16 @@ const PlanService = require('../plan/PlanService');
 const EmailService = require('./EmailService');
 const TransactionHelper = require('../common/TransactionHelper');
 
+// [SECURITY] Centralized JWT generator — Never uses a fallback key
+function generateToken(userId, role) {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error('[CRITICAL] JWT_SECRET is not set in environment variables.');
+    return jwt.sign({ user: { id: userId, role } }, secret, { expiresIn: '7d' });
+}
+
 exports.register = async (req, res) => {
     try {
-        console.log('Register Request Body:', req.body);
+        console.log('[AUTH] Registration attempt for email:', req.body.email);
         let { fullName, email, password, referralCode } = req.body;
 
         // [FIX] Sanitize Inputs
@@ -84,14 +91,8 @@ exports.register = async (req, res) => {
 
             const userDoc = newUser[0];
 
-            // Generate JWT
-            const payload = { user: { id: userDoc._id, role: userDoc.role } };
-            const token = await new Promise((resolve, reject) => {
-                jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '7d' }, (err, t) => {
-                    if (err) reject(err);
-                    resolve(t);
-                });
-            });
+            // [SECURE] Generate JWT via centralized helper
+            const token = generateToken(userDoc._id, userDoc.role);
 
             return { user: userDoc, token };
         });
@@ -133,7 +134,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        console.log('Login Request Body:', req.body);
+        console.log('[AUTH] Login attempt for identifier:', req.body.identifier || req.body.email || req.body.phone);
         let { identifier, email, phone, primary_phone, password } = req.body;
         identifier = identifier || email || phone || primary_phone; // Support all frontends
 
@@ -183,15 +184,8 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Generate JWT
-        const payload = { user: { id: user._id, role: user.role } };
-        
-        const token = await new Promise((resolve, reject) => {
-            jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key_12345', { expiresIn: '7d' }, (err, t) => {
-                if (err) reject(err);
-                resolve(t);
-            });
-        });
+        // [SECURE] Generate JWT via centralized helper
+        const token = generateToken(user._id, user.role);
 
         res.json({
             token,
@@ -445,27 +439,26 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+// [FIXED] setTransactionPin — Fully rewritten. Removed broken variables & test_admin bypass.
 exports.setTransactionPin = async (req, res) => {
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
-        const isEmail = identifier.includes('@');
+        const { password, pin } = req.body;
 
-        if (isEmail) {
-            user = await User.findOne({ email: identifier });
-        } else {
-            user = await User.findOne({ username: identifier });
+        if (!pin || pin.toString().length !== 6 || isNaN(pin)) {
+            return res.status(400).json({ message: 'PIN must be exactly 6 digits.' });
+        }
+        if (!password) {
+            return res.status(400).json({ message: 'Account password is required to set PIN.' });
         }
 
-        if (!user) {
-            return res.status(400).json({ message: 'User does not exist.' });
-        }
+        const user = await User.findById(userId).select('+transactionPin');
+        if (!user) return res.status(404).json({ message: 'User not found.' });
 
-        // [TEMPORARY TEST BYPASS] 
-        if (identifier !== 'test_admin') {
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(400).json({ message: 'Invalid credentials.' });
-            }
+        // Verify account password before allowing PIN set
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect account password.' });
         }
 
         const salt = await bcrypt.genSalt(10);

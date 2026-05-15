@@ -60,8 +60,8 @@ export default function GlobalTourProgress({ tourSales = 0 }) {
                     )}
                 </div>
 
-                <Link href="/referrals" className="mt-4 w-full bg-white/5 hover:bg-white/10 border border-white/5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-slate-300 text-xs font-bold uppercase transition-colors">
-                    View Network Details <ChevronRight size={14} className="text-slate-500" />
+                <Link href="/dashboard/referral-empire" className="mt-4 w-full bg-white/5 hover:bg-white/10 border border-white/5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-slate-300 text-xs font-bold uppercase transition-colors">
+                    View Empire Details <ChevronRight size={14} className="text-slate-500" />
                 </Link>
             </div>
         </div>

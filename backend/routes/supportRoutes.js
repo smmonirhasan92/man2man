@@ -3,11 +3,12 @@ const router = express.router ? express.Router() : express.Router; // Safe route
 const supportController = require('../controllers/supportController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 const r = express.Router();
 
 // User Routes
-r.post('/send', authMiddleware, supportController.sendMessage);
+r.post('/send', authMiddleware, upload.single('image'), supportController.sendMessage);
 r.get('/my-messages', authMiddleware, supportController.getUserMessages);
 
 // Admin Routes
@@ -15,6 +16,6 @@ r.get('/all', authMiddleware, roleMiddleware(['super_admin', 'admin', 'employee_
 r.post('/admin/initiate', authMiddleware, roleMiddleware(['super_admin', 'admin', 'employee_admin']), supportController.adminInitiateTicket);
 
 // Thread Routes (Dual-Use)
-r.post('/reply', authMiddleware, supportController.replyToMessage);
+r.post('/reply', authMiddleware, upload.single('image'), supportController.replyToMessage);
 
 module.exports = r;

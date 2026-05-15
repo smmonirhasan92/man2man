@@ -142,6 +142,12 @@ export default function RechargeForm({ settings, onSubmit, loading, activeTab })
                         />
                         <span className="absolute left-3 top-3 text-slate-500 font-bold">$</span>
                     </div>
+                    {amount && parseFloat(amount) > 0 && (
+                        <div className="mt-2 flex justify-between items-center text-[10px] font-mono tracking-wide px-1">
+                            <span className="text-red-400/80">Admin Fee (3.5%): -$ {(parseFloat(amount) * 0.035).toFixed(2)}</span>
+                            <span className="text-emerald-400/90 font-bold text-xs">Net Receive: $ {(parseFloat(amount) - parseFloat(amount) * 0.035).toFixed(2)}</span>
+                        </div>
+                    )}
                 </div>
 
             </div>

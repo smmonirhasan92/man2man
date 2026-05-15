@@ -101,18 +101,27 @@ const UserSchema = new mongoose.Schema({
     monthlyPurchases: { type: Number, default: 0 },
     lastPurchaseDate: { type: Date },
     
-    // [EMPIRE HAND - 5x5]
-    empireHands: [{
-        handIndex: { type: Number, default: 1 },
-        directs: [{ 
-            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-            downlineCount: { type: Number, default: 0 }, // Must hit 5
-            isQualified: { type: Boolean, default: false }
-        }],
-        status: { type: String, enum: ['active', 'matured', 'claimed'], default: 'active' },
-        maturityDate: { type: Date },
-        bonusAmount: { type: Number, default: 0 }
-    }],
+    // --- [NEW] 3-TIER REFERRAL EMPIRE ---
+    // 1. Monthly Sprint (5 Directs in a month)
+    monthlySprint: {
+        currentMonth: { type: String, default: '' }, // format: "YYYY-MM"
+        directsCount: { type: Number, default: 0 },
+        volume: { type: Number, default: 0.00 }, // Total sales volume from these directs
+        bonusClaimed: { type: Boolean, default: false }
+    },
+    
+    // 2. Direct Empire (Lifetime 20 Direct Gold Members)
+    directEmpire: {
+        goldMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // IDs of directs who bought >= $15
+        totalCount: { type: Number, default: 0 },
+        isMatured: { type: Boolean, default: false } // Reached 20
+    },
+    
+    // 3. Team Empire (25-person network from L1 & L2)
+    teamEmpire: {
+        completedTeams: { type: Number, default: 0 },
+        currentTeamMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] // Max 25
+    },
     
     isReferralBonusPaid: { type: Boolean, default: false },
     commissionRate: { type: Number, default: 0.00 },

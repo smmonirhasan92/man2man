@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Plan = require('../../modules/admin/PlanModel');
 const UserPlan = require('./UserPlanModel');
 const User = require('../../modules/user/UserModel');
+const Transaction = require('../wallet/TransactionModel');
 const { runTransaction } = require('../common/TransactionHelper');
 
 class PlanService {
@@ -66,15 +67,19 @@ class PlanService {
             
             // Bypass Logic based on Tier
             let allowedMaxPrice = 1000; // Default limit for < 30 days users is $10 (1000 NXS)
+            
             if (isMembershipActive || user.isVerifiedMerchant) {
-                if (tier === 'Silver') allowedMaxPrice = 1500; // $15
-                else if (tier === 'Gold') allowedMaxPrice = 3000; // $30
+                // If they have any active priority membership, they get at least the Silver bump ($15)
+                allowedMaxPrice = 1500; 
+
+                if (tier === 'Gold') allowedMaxPrice = 3000; // $30
                 else if (tier === 'Platinum') allowedMaxPrice = 6000; // $60
                 else if (tier === 'Diamond') allowedMaxPrice = 25000; // High limit
             }
 
             // Apply restriction if account < 30 days and price exceeds tier allowance
-            if (accountAgeInDays < 30 && plan.unlock_price > allowedMaxPrice) {
+            // [FIX] EXEMPT VIP CARDS FROM THIS CHECK - They are the bypass mechanism
+            if (plan.type !== 'vip' && accountAgeInDays < 30 && plan.unlock_price > allowedMaxPrice) {
                 const daysRemaining = Math.ceil(30 - accountAgeInDays);
                 let tierMsg = "Starter Membership (Max $10)";
                 if (tier === 'Silver') tierMsg = "Silver Membership (Max $15)";
@@ -181,18 +186,26 @@ class PlanService {
                 expiry.setDate(expiry.getDate() + membershipDays);
                 user.taskData.priorityExpiry = expiry;
 
-                if (plan.name.toLowerCase().includes('gold')) {
-                    user.taskData.accountTier = 'Gold';
-                } else if (plan.name.toLowerCase().includes('silver')) {
-                    user.taskData.accountTier = 'Silver';
-                } else if (plan.name.toLowerCase().includes('platinum')) {
-                    user.taskData.accountTier = 'Platinum';
-                } else if (plan.name.toLowerCase().includes('diamond')) {
-                    user.taskData.accountTier = 'Diamond';
+                // Tier Ranking to prevent downgrades
+                const tierWeights = { 'Starter': 0, 'Silver': 1, 'Gold': 2, 'Platinum': 3, 'Diamond': 4 };
+                const currentTier = user.taskData.accountTier || 'Starter';
+                const currentWeight = tierWeights[currentTier] || 0;
+
+                let newTier = currentTier;
+                if (plan.name.toLowerCase().includes('gold')) newTier = 'Gold';
+                else if (plan.name.toLowerCase().includes('silver')) newTier = 'Silver';
+                else if (plan.name.toLowerCase().includes('platinum')) newTier = 'Platinum';
+                else if (plan.name.toLowerCase().includes('diamond')) newTier = 'Diamond';
+
+                const newWeight = tierWeights[newTier] || 0;
+
+                // Only update if it's an upgrade or the current membership is expired
+                if (newWeight > currentWeight || !isMembershipActive) {
+                    user.taskData.accountTier = newTier;
+                    console.log(`[PlanService] User ${user.username} promoted to ${newTier} via VIP Plan: ${plan.name}`);
                 } else {
-                    user.taskData.accountTier = 'Bronze'; // Fallback
+                    console.log(`[PlanService] User ${user.username} purchase kept current ${currentTier} tier (New: ${newTier} ignored as downgrade)`);
                 }
-                console.log(`[PlanService] User ${user.username} promoted via VIP Plan: ${plan.name} (Valid for ${membershipDays} days)`);
             } else if (plan.unlock_price >= 1500 && (!user.taskData?.accountTier || user.taskData.accountTier === 'Starter')) {
                 user.taskData.accountTier = 'Silver';
                 console.log(`[PlanService] User ${user.username} promoted to SILVER tier via price threshold.`);
@@ -200,9 +213,10 @@ class PlanService {
 
             await user.save({ session });
 
+            let userPlan = [];
             // [MODIFIED] Create UserPlan ONLY for Server Nodes, NOT for VIP Cards
             if (plan.type !== 'vip') {
-                const userPlan = await UserPlan.create([{
+                userPlan = await UserPlan.create([{
                     userId,
                     planId: plan._id,
                     planName: plan.name,
@@ -213,6 +227,9 @@ class PlanService {
                     serverLocation: serverIp ? 'Virginia, USA' : null,
                     syntheticPhone: syntheticPhone
                 }], { session, ordered: true });
+            } else {
+                // Return a mock object for VIP cards so return userPlan[0] doesn't crash
+                userPlan = [{ ...plan.toObject(), id: plan._id, status: 'active' }];
             }
 
             // [LOAN HACK FIX] Do not distribute commission if user has an active loan. 

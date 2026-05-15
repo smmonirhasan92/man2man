@@ -30,6 +30,8 @@ export default function SupportPage() {
     const [activeTicket, setActiveTicket] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [replying, setReplying] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [replyImage, setReplyImage] = useState(null);
 
     const messagesEndRef = useRef(null);
 
@@ -105,9 +107,16 @@ export default function SupportPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await api.post('/support/send', { subject, message });
+            const formData = new FormData();
+            formData.append('subject', subject);
+            formData.append('message', message);
+            if (selectedImage) formData.append('image', selectedImage);
+
+            const res = await api.post('/support/send', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             toast.success('Ticket created!');
-            setSubject(''); setMessage('');
+            setSubject(''); setMessage(''); setSelectedImage(null);
             fetchTickets();
             if (res.data.support) setActiveTicket(res.data.support);
         } catch (err) { toast.error('Failed to create ticket'); }
@@ -116,14 +125,18 @@ export default function SupportPage() {
 
     const handleSendReply = async (e) => {
         e.preventDefault();
-        if (!replyText.trim() || !activeTicket) return;
+        if (!replyText.trim() && !replyImage) return;
         setReplying(true);
         try {
-            const res = await api.post('/support/reply', {
-                messageId: activeTicket._id,
-                reply: replyText
+            const formData = new FormData();
+            formData.append('messageId', activeTicket._id);
+            formData.append('reply', replyText);
+            if (replyImage) formData.append('image', replyImage);
+
+            const res = await api.post('/support/reply', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setReplyText('');
+            setReplyText(''); setReplyImage(null);
             setActiveTicket(res.data.support);
             fetchTickets();
         } catch (err) { toast.error('Failed to send message'); }
@@ -157,6 +170,16 @@ export default function SupportPage() {
                                     </div>
                                 )}
                                 <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isMe ? 'bg-slate-800 text-white rounded-br-none shadow-md' : 'bg-white text-slate-800 rounded-bl-none border border-slate-100 shadow-sm'}`}>
+                                    {msg.image && (
+                                        <div className="mb-2 rounded-lg overflow-hidden border border-white/10">
+                                            <img 
+                                                src={msg.image.startsWith('http') ? msg.image : `${api.defaults.baseURL.replace('/api', '')}${msg.image}`} 
+                                                alt="Attachment" 
+                                                className="w-full h-auto max-h-60 object-contain"
+                                                onClick={() => window.open(msg.image.startsWith('http') ? msg.image : `${api.defaults.baseURL.replace('/api', '')}${msg.image}`, '_blank')}
+                                            />
+                                        </div>
+                                    )}
                                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                                     <div className="text-[9px] mt-1.5 font-medium flex items-center justify-end gap-1 text-slate-400">
                                         {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -169,7 +192,17 @@ export default function SupportPage() {
                     <div ref={messagesEndRef} />
                 </div>
                 <div className="bg-white p-3 border-t border-slate-100">
-                    <form onSubmit={handleSendReply} className="flex gap-2">
+                    {replyImage && (
+                        <div className="px-4 py-2 flex items-center justify-between bg-slate-50 border-b border-slate-100 mb-2 rounded-t-xl">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase">Screenshot Attached</span>
+                            <button onClick={() => setReplyImage(null)} className="text-red-500 text-xs font-bold">Remove</button>
+                        </div>
+                    )}
+                    <form onSubmit={handleSendReply} className="flex gap-2 items-center">
+                        <label className="cursor-pointer p-3 hover:bg-slate-100 rounded-full transition flex-shrink-0">
+                            <ImageIcon className={`w-5 h-5 ${replyImage ? 'text-indigo-600' : 'text-slate-400'}`} />
+                            <input type="file" className="hidden" accept="image/*" onChange={(e) => setReplyImage(e.target.files[0])} />
+                        </label>
                         <input
                             type="text"
                             placeholder="Type a message..."
@@ -177,7 +210,7 @@ export default function SupportPage() {
                             onChange={(e) => setReplyText(e.target.value)}
                             className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none"
                         />
-                        <button type="submit" disabled={!replyText.trim() || replying} className="w-12 h-12 bg-slate-800 text-white rounded-full flex items-center justify-center">
+                        <button type="submit" disabled={(!replyText.trim() && !replyImage) || replying} className="w-12 h-12 bg-slate-800 text-white rounded-full flex items-center justify-center flex-shrink-0">
                             {replying ? "..." : <Send className="w-5 h-5 ml-1" />}
                         </button>
                     </form>
@@ -233,7 +266,19 @@ export default function SupportPage() {
                     <form onSubmit={handleCreateTicket} className="space-y-4 pt-4">
                         <input type="text" placeholder="Subject" value={subject} onChange={(e)=>setSubject(e.target.value)} className="w-full p-4 bg-slate-50 rounded-xl border-none font-bold text-sm text-slate-800" />
                         <textarea placeholder="Message..." value={message} onChange={(e)=>setMessage(e.target.value)} className="w-full p-4 h-32 bg-slate-50 rounded-xl border-none font-medium text-sm text-slate-700 resize-none"></textarea>
-                        <button type="submit" className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg">Submit Ticket</button>
+                        
+                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                            <label className="cursor-pointer flex items-center gap-2 text-slate-500 hover:text-slate-800 transition">
+                                <ImageIcon className="w-5 h-5" />
+                                <span className="text-xs font-bold uppercase">{selectedImage ? selectedImage.name : 'Attach Screenshot'}</span>
+                                <input type="file" className="hidden" accept="image/*" onChange={(e) => setSelectedImage(e.target.files[0])} />
+                            </label>
+                            {selectedImage && <button type="button" onClick={() => setSelectedImage(null)} className="text-red-500 text-[10px] font-bold ml-auto">REMOVE</button>}
+                        </div>
+
+                        <button type="submit" disabled={loading} className={`w-full text-white font-bold py-4 rounded-xl shadow-lg ${loading ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'}`}>
+                            {loading ? 'Submitting...' : 'Submit Ticket'}
+                        </button>
                     </form>
                 </div>
 
@@ -295,7 +340,9 @@ export default function SupportPage() {
                                         toast.error(e.response?.data?.message || 'Failed'); 
                                     }
                                     finally { setLoading(false); }
-                                }} className="w-full py-5 bg-emerald-500 text-black rounded-3xl font-black text-lg shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">CONFIRM REQUEST</button>
+                                }} disabled={loading} className={`w-full py-5 rounded-3xl font-black text-lg shadow-xl transition-all ${loading ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-emerald-500 text-black shadow-emerald-500/20 active:scale-95'}`}>
+                                    {loading ? 'PROCESSING...' : 'CONFIRM REQUEST'}
+                                </button>
                                 <button onClick={()=>setShowDeposit(false)} className="w-full text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">Cancel</button>
                             </div>
                         ) : activeTrx.status === 'awaiting_payment' ? (
@@ -326,7 +373,9 @@ export default function SupportPage() {
                                         await api.post('/transactions/submit-proof', { transactionId: activeTrx._id, proofTxID: p2pTxID });
                                         toast.success('Done!'); fetchActiveTransaction();
                                     } catch(e){ toast.error('Error'); } finally { setLoading(false); }
-                                }} className="w-full py-4 bg-emerald-500 text-black rounded-2xl font-black">SUBMIT TXID</button>
+                                }} disabled={loading} className={`w-full py-4 rounded-2xl font-black ${loading ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-emerald-500 text-black'}`}>
+                                    {loading ? 'SUBMITTING...' : 'SUBMIT TXID'}
+                                </button>
                             </div>
                         ) : (
                             <div className="text-center py-6">
@@ -401,7 +450,9 @@ export default function SupportPage() {
                                     toast.error(e.response?.data?.message || 'Failed'); 
                                 }
                                 finally { setLoading(false); }
-                            }} className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all">CONFIRM WITHDRAWAL</button>
+                            }} disabled={loading} className={`w-full py-5 rounded-3xl font-black text-lg shadow-xl transition-all ${loading ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white shadow-blue-900/40 active:scale-95'}`}>
+                                {loading ? 'PROCESSING...' : 'CONFIRM WITHDRAWAL'}
+                            </button>
                             <button onClick={()=>setShowWithdraw(false)} className="w-full text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">Cancel</button>
                         </div>
                     </div>

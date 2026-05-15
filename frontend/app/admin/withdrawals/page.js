@@ -20,7 +20,7 @@ export default function AdminWithdrawals() {
 
     const fetchRequests = async () => {
         try {
-            const res = await api.get('/withdrawal/list?status=pending');
+            const res = await api.get('/withdrawal/list?status=pending,expired');
             setRequests(res.data);
             setLoading(false);
         } catch (err) {
@@ -61,7 +61,7 @@ export default function AdminWithdrawals() {
                         adminComment: status === 'completed' ? 'Approved by Admin' : 'Rejected by Admin',
                         agentId: status === 'completed' ? agentId : null
                     });
-                    setRequests(requests.filter(r => r._id !== id));
+                    setRequests(requests.filter(r => (r._id || r.id) !== id));
                     toast.success(`Request ${status} successfully`);
                     setConfirmModal({ isOpen: false });
                 } catch (err) {
@@ -88,14 +88,14 @@ export default function AdminWithdrawals() {
 
             {requests.length === 0 ? (
                 <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-                    <p>No pending requests.</p>
+                    <p>No pending or expired requests.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
                     {requests.map((req) => (
-                        <div key={req.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 relative overflow-hidden">
+                        <div key={req.id || req._id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 relative overflow-hidden">
                             {/* Status Indicator */}
-                            <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
+                            <div className={`absolute top-0 left-0 w-1.5 h-full ${req.status === 'expired' ? 'bg-rose-500' : 'bg-orange-400'}`}></div>
 
                             <div className="flex justify-between items-start">
                                 <div>
@@ -113,7 +113,9 @@ export default function AdminWithdrawals() {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg">PENDING</span>
+                                    <span className={`text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${req.status === 'expired' ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/20' : 'bg-orange-50 text-orange-500'}`}>
+                                        {req.status}
+                                    </span>
                                     <p className="text-[10px] text-gray-400 mt-1">
                                         {new Date(req.createdAt).toLocaleDateString()}
                                     </p>

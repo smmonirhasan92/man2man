@@ -44,7 +44,7 @@ class TurnoverService {
         if (remaining > 0) {
             return {
                 allowed: false,
-                message: `🔒 উইথড্রয়াল লক! টাকা তোলার আগে আপনাকে আরও ${remaining.toFixed(2)} NXS সমপরিমাণের গেম খেলতে হবে।`,
+                message: `🔒 Withdrawal Locked! You must play games worth ${remaining.toFixed(2)} NXS before you can withdraw.`,
                 stats: { required, completed, remaining }
             };
         }

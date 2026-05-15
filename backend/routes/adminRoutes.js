@@ -127,18 +127,40 @@ router.delete('/task-ad/:id', authMiddleware, adminCheck, taskAdController.delet
 // Mint and Stats routes
 router.post('/mint', authMiddleware, adminCheck, adminController.mintUSC);
 router.get('/stats/financial', authMiddleware, adminCheck, adminController.getFinancialStats);
+router.get('/stats/daily-report', authMiddleware, adminCheck, adminController.getDailyReport);
 
-// Debug Notification Trigger
-router.post('/test-notify', authMiddleware, adminCheck, async (req, res) => {
+// Send Notification (Global or Targeted)
+router.post('/send-notification', authMiddleware, adminCheck, async (req, res) => {
     try {
-        const { userId, message, type } = req.body;
+        const { userId, message, type, title } = req.body;
         const NotificationService = require('../modules/notification/NotificationService');
-        // If 'ALL' or undefined, send to self
-        const targetId = (userId === 'ALL' || !userId) ? req.user.user.id : userId;
-        await NotificationService.send(targetId, message, type || 'info');
-        res.json({ success: true, message: `Notification sent to ${targetId}` });
+        const User = require('../modules/user/UserModel');
+        
+        if (userId === 'ALL') {
+            // Global Broadcast
+            const users = await User.find({ status: 'active' }).select('_id pushSubscriptions');
+            let successCount = 0;
+            
+            // Background processing for global broadcast
+            setTimeout(async () => {
+                for (const user of users) {
+                    try {
+                        await NotificationService.send(user._id, message, type || 'info', { title: title || 'System Update' });
+                        successCount++;
+                    } catch (err) {}
+                }
+                console.log(`[BROADCAST] Notification sent to ${successCount} users.`);
+            }, 0);
+
+            res.json({ success: true, message: `Broadcasting notification to active users...` });
+        } else {
+            // Targeted Notification
+            if (!userId) return res.status(400).json({ message: "User ID is required" });
+            await NotificationService.send(userId, message, type || 'info', { title: title || 'Admin Message' });
+            res.json({ success: true, message: `Notification sent to user ${userId}` });
+        }
     } catch (e) {
-        console.error(e);
+        console.error("Send Notification Error:", e);
         res.status(500).json({ error: e.message });
     }
 });

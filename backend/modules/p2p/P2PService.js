@@ -38,6 +38,28 @@ class P2PService {
         const user = await User.findById(userId);
         if (!user) throw new Error("User not found");
 
+        // [SMART AD CONTROL] Check if user already has an OPEN ad for the same payment method and type
+        const existingAd = await P2POrder.findOne({
+            userId,
+            type,
+            paymentMethod,
+            status: 'OPEN'
+        });
+
+        if (existingAd) {
+            throw new Error(`Marketplace Policy: You already have an active ${type} ad for ${paymentMethod}. Cancel the previous ad to post at a new rate.`);
+        }
+
+        // [FRESH TRANSACTION CHECK] Prevent creating ads if there are unresolved disputes
+        const activeTrades = await P2PTrade.countDocuments({
+            $or: [{ buyerId: userId }, { sellerId: userId }],
+            status: { $in: ['DISPUTE', 'AWAITING_ADMIN'] }
+        });
+
+        if (activeTrades > 0) {
+            throw new Error("You cannot post a new ad while having pending or disputed trades in your account.");
+        }
+
         // If they are selling NXS, they must have NXS balance
         if (type === 'SELL') {
             if (user.wallet.main <= 0) throw new Error("Your Main Balance is zero. Cannot list a SELL Ad.");
@@ -539,11 +561,11 @@ class P2PService {
             const buyerObj = await User.findById(trade.buyerId).session(session);
             const tradesDone = buyerObj.completedTrades || 0;
 
-            let PLATFORM_FEE_PERCENT = 0.01; // Base: 1%
-            if (tradesDone >= 500) PLATFORM_FEE_PERCENT = 0.0007; // Whale: 0.07%
-            else if (tradesDone >= 250) PLATFORM_FEE_PERCENT = 0.0025; // Expert: 0.25%
-            else if (tradesDone >= 100) PLATFORM_FEE_PERCENT = 0.005;  // Pro: 0.50%
-            else if (tradesDone >= 20) PLATFORM_FEE_PERCENT = 0.008;   // Trader: 0.80%
+            let PLATFORM_FEE_PERCENT = 0.012; // Base: 1.2%
+            if (tradesDone >= 500) PLATFORM_FEE_PERCENT = 0.007; // Whale: 0.7%
+            else if (tradesDone >= 250) PLATFORM_FEE_PERCENT = 0.009; // Expert: 0.9%
+            else if (tradesDone >= 100) PLATFORM_FEE_PERCENT = 0.01;  // Pro: 1.0%
+            else if (tradesDone >= 20) PLATFORM_FEE_PERCENT = 0.011;   // Trader: 1.1%
 
             const feeAmount = trade.amount * PLATFORM_FEE_PERCENT;
             const finalAmount = trade.amount - feeAmount;
@@ -1088,6 +1110,63 @@ class P2PService {
 
         await user.save();
         return trade;
+    }
+
+    // --- [SYSTEM] Auto-Cancel Expired Trades ---
+    async autoCancelExpiredTrades() {
+        const now = new Date();
+        const expiredTrades = await P2PTrade.find({
+            status: 'CREATED',
+            expiresAt: { $lte: now }
+        });
+
+        if (expiredTrades.length === 0) return 0;
+
+        let cancelledCount = 0;
+        for (const trade of expiredTrades) {
+            try {
+                await TransactionHelper.runTransaction(async (session) => {
+                    // Re-fetch to ensure it hasn't changed status concurrently
+                    const currentTrade = await P2PTrade.findById(trade._id).session(session);
+                    if (!currentTrade || currentTrade.status !== 'CREATED') return;
+
+                    currentTrade.status = 'CANCELLED';
+                    currentTrade.cancellationReason = 'Auto-cancelled due to payment timeout.';
+                    await currentTrade.save({ session });
+
+                    // Release Escrow back to Seller
+                    await User.findByIdAndUpdate(currentTrade.sellerId, {
+                        $inc: {
+                            'wallet.escrow_locked': -currentTrade.amount,
+                            'wallet.main': currentTrade.amount
+                        }
+                    }, { session });
+
+                    // Log the refund
+                    await Transaction.create([{
+                        userId: currentTrade.sellerId,
+                        amount: currentTrade.amount,
+                        type: 'admin_credit',
+                        description: `P2P Escrow Released (Timeout Cancel) - Trade #${currentTrade._id}`,
+                        source: 'system',
+                        status: 'completed',
+                        currency: 'NXS'
+                    }], { session, ordered: true });
+
+                    // Notify parties
+                    SocketService.broadcast(`user_${currentTrade.buyerId}`, 'p2p_update', { tradeId: currentTrade._id, status: 'CANCELLED' });
+                    SocketService.broadcast(`user_${currentTrade.sellerId}`, 'p2p_update', { tradeId: currentTrade._id, status: 'CANCELLED' });
+                });
+                cancelledCount++;
+            } catch (err) {
+                console.error(`[P2P Auto-Cancel Error] Trade #${trade._id}:`, err.message);
+            }
+        }
+        
+        if (cancelledCount > 0) {
+            console.log(`[P2P SYSTEM] Auto-cancelled ${cancelledCount} expired trades.`);
+        }
+        return cancelledCount;
     }
 }
 

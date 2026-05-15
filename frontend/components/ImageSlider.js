@@ -1,42 +1,40 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 export default function ImageSlider() {
     // Default Fallback Banners (Before Admin setup)
     const [banners, setBanners] = useState([
         {
-            _id: '1',
+            _id: 'default_1',
             bgType: 'image',
-            bgValue: '/slider_1.png',
-            title: 'POWER OF TEAMWORK',
-            subtitle: 'Going fast alone is good, but teamwork makes you a champion.',
-            btnText: 'Invite Team',
-            btnLink: '/profile',
-            btnColor: '#10B981',
-            textAnimation: 'fade-up'
-        },
-        {
-            _id: '2',
-            bgType: 'image',
-            bgValue: '/slider_2.png',
-            title: 'ACHIEVE MORE TOGETHER',
-            subtitle: 'Join forces with your team and reach new heights of success.',
-            btnText: 'Start Working',
+            bgValue: '/banner_1.png',
+            title: 'MAXIMIZE YOUR REVENUE',
+            subtitle: 'Join the next generation of affiliate marketing with secure node-based earning.',
+            btnText: 'Start Now',
             btnLink: '/tasks',
-            btnColor: '#3B82F6',
-            textAnimation: 'zoom'
+            btnColor: '#10B981'
         },
         {
-            _id: '3',
+            _id: 'default_2',
             bgType: 'image',
-            bgValue: '/slider_3.png',
-            title: 'LUCKY LOTTERY',
-            subtitle: 'Participate now and stand a chance to win massive rewards!',
-            btnText: 'Play Now',
-            btnLink: '/lottery',
-            btnColor: '#F59E0B',
-            textAnimation: 'slide-left'
+            bgValue: '/banner_2.png',
+            title: 'BUILD YOUR EMPIRE',
+            subtitle: 'Invite your team and earn multi-level referral commissions automatically.',
+            btnText: 'Invite Team',
+            btnLink: '/referrals',
+            btnColor: '#3B82F6'
+        },
+        {
+            _id: 'default_3',
+            bgType: 'image',
+            bgValue: '/banner_3.png',
+            title: 'SECURE P2P TRADING',
+            subtitle: 'Exchange NXS with verified merchants globally through our escrow system.',
+            btnText: 'Open P2P',
+            btnLink: '/p2p',
+            btnColor: '#F59E0B'
         }
     ]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -45,16 +43,16 @@ export default function ImageSlider() {
     useEffect(() => {
         const fetchBanners = async () => {
             try {
-                const res = await fetch('https://usaaffiliatemarketing.com/api/banners');
+                const res = await fetch('/api/banners');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.length > 0) setBanners(data);
+                    if (data && data.length > 0) setBanners(data);
                 }
             } catch (err) {
-                console.error("Failed to load banners", err);
+                console.error("Failed to load banners, using defaults", err);
             }
         };
-        // fetchBanners(); // Uncomment when API is live and populated
+        fetchBanners(); // [LIVE] Dynamic banners from admin panel
     }, []);
 
     useEffect(() => {
@@ -124,13 +122,13 @@ export default function ImageSlider() {
                                     transition={{ delay: 0.6, duration: 0.4 }}
                                     className="mt-4"
                                 >
-                                    <a
+                                    <Link
                                         href={currentBanner.btnLink || '#'}
                                         className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform"
                                         style={{ backgroundColor: currentBanner.btnColor }}
                                     >
                                         {currentBanner.btnText}
-                                    </a>
+                                    </Link>
                                 </motion.div>
                             )}
                         </div>

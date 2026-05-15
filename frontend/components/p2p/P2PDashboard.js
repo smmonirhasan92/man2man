@@ -21,6 +21,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
     const { user } = useAuth();
     const userCountry = user?.country?.toUpperCase() || 'BD';
     const [mode, setMode] = useState(initialMode || 'buy'); // 'buy', 'sell', 'history', 'my_ads', 'deposit'
+    const [myAdsTab, setMyAdsTab] = useState('open'); // [NEW] 'open', 'past'
     const [agents, setAgents] = useState([]); // [NEW] Official Agents for Deposit
 
     // [NEW] Global Advanced Filters
@@ -276,23 +277,29 @@ export default function P2PDashboard({ initialMode, onClose }) {
         return 'bg-[#1a2c3d] text-cyan-400 border-cyan-500/20';
     };
 
-    const displayOrders = orders.filter(o =>
-        !searchQuery ||
-        (o.userId?.username || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const displayOrders = orders.filter(o => {
+        const matchesSearch = !searchQuery || (o.userId?.username || '').toLowerCase().includes(searchQuery.toLowerCase());
+        if (!matchesSearch) return false;
+        
+        if (mode === 'my_ads') {
+            if (myAdsTab === 'open') return o.status === 'OPEN';
+            return o.status !== 'OPEN';
+        }
+        return true;
+    });
 
     // If active trade, show Chat Room
     if (activeTradeId) {
         return <P2PChatRoom tradeId={activeTradeId} onBack={exitTrade} />;
     }
 
-    // [NEW/PSYCHOLOGICAL] Calculate VIP Fee Tier
+    // [PSYCHOLOGICAL] Calculate VIP Fee Tier — matches P2PService.js backend
     const getFeeTier = (count) => {
-        if (count >= 500) return { name: 'WHALE', fee: '0.07%', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]' };
-        if (count >= 250) return { name: 'EXPERT', fee: '0.25%', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]' };
-        if (count >= 100) return { name: 'PRO', fee: '0.50%', color: 'text-[#fcd535] bg-[#fcd535]/10 border-[#fcd535]/30' };
-        if (count >= 20) return { name: 'TRADER', fee: '0.80%', color: 'text-[#0ecb81] bg-[#0ecb81]/10 border-[#0ecb81]/30' };
-        return { name: 'NEWBIE', fee: '1.00%', color: 'text-[#848e9c] bg-[#2b3139]' };
+        if (count >= 500) return { name: 'WHALE', fee: '0.70%', color: 'text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]' };
+        if (count >= 250) return { name: 'EXPERT', fee: '0.90%', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]' };
+        if (count >= 100) return { name: 'PRO', fee: '1.00%', color: 'text-[#fcd535] bg-[#fcd535]/10 border-[#fcd535]/30' };
+        if (count >= 20) return { name: 'TRADER', fee: '1.10%', color: 'text-[#0ecb81] bg-[#0ecb81]/10 border-[#0ecb81]/30' };
+        return { name: 'NEWBIE', fee: '1.20%', color: 'text-[#848e9c] bg-[#2b3139]' };
     };
     const userTier = getFeeTier(user?.completedTrades || 0);
 
@@ -303,8 +310,21 @@ export default function P2PDashboard({ initialMode, onClose }) {
             {/* Notification Permission Banner */}
             {permission === 'default' && (
                 <div className="bg-[#fcd535] text-black px-4 py-2 flex justify-between items-center text-xs font-bold w-full top-0 left-0 z-50">
-                    <span>Enable Push Notifications for Trade Alerts!</span>
-                    <button onClick={requestPermission} className="bg-black text-white px-3 py-1 rounded">Enable</button>
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Enable Push Notifications for Trade Alerts!</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => {
+                                alert("If the browser popup appeared but notifications didn't enable:\n1. Click the 'Padlock' 🔒 icon in your browser address bar.\n2. Reset or allow 'Notifications'.\n3. Refresh the page.");
+                            }}
+                            className="text-[10px] underline"
+                        >
+                            Help?
+                        </button>
+                        <button onClick={requestPermission} className="bg-black text-white px-3 py-1 rounded">Enable</button>
+                    </div>
                 </div>
             )}
 
@@ -355,7 +375,7 @@ export default function P2PDashboard({ initialMode, onClose }) {
                             <span className="text-[10px] bg-[#2b3139] text-[#848e9c] px-2 py-0.5 rounded font-bold">MARKET RATE</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-lg font-bold text-[#0ecb81] tracking-tighter">৳{marketStats.price ? marketStats.price.toFixed(2) : '---'}</span>
+                            <span className="text-lg font-bold text-[#0ecb81] tracking-tighter">BDT {marketStats.price ? marketStats.price.toFixed(2) : '---'}</span>
                             <div className={`text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 border ${userTier.color}`}>
                                 <Zap className="w-3 h-3" /> {userTier.name} FEE: {userTier.fee}
                             </div>
@@ -497,6 +517,26 @@ export default function P2PDashboard({ initialMode, onClose }) {
                 </div>
             )}
 
+            {/* My Ads Sub-Tabs */}
+            {mode === 'my_ads' && (
+                <div className="flex bg-[#181a20] border-b border-[#2b3139] px-4">
+                    <button 
+                        onClick={() => setMyAdsTab('open')}
+                        className={`flex-1 py-3 text-xs font-black uppercase transition-all relative ${myAdsTab === 'open' ? 'text-[#fcd535]' : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
+                    >
+                        Active Posts
+                        {myAdsTab === 'open' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#fcd535] rounded-t" />}
+                    </button>
+                    <button 
+                        onClick={() => setMyAdsTab('past')}
+                        className={`flex-1 py-3 text-xs font-black uppercase transition-all relative ${myAdsTab === 'past' ? 'text-[#fcd535]' : 'text-[#848e9c] hover:text-[#eaeaec]'}`}
+                    >
+                        Cancelled & Past
+                        {myAdsTab === 'past' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#fcd535] rounded-t" />}
+                    </button>
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto">
                 {mode === 'deposit' ? (
                     <div className="flex flex-col gap-3 p-3">
@@ -506,6 +546,9 @@ export default function P2PDashboard({ initialMode, onClose }) {
                             </p>
                             <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
                                 Select a verified merchant to purchase NXS directly. Funds are locked in Escrow for your safety.
+                            </p>
+                            <p className="text-[11px] text-blue-400 font-bold mt-2 bg-blue-500/10 p-2 rounded border border-blue-500/10">
+                                ⏳ Estimated Arrival: 1 to 2 Hours (১ থেকে ২ ঘণ্টা)
                             </p>
                         </div>
                         {agents.map(agent => (

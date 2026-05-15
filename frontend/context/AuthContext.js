@@ -71,6 +71,7 @@ export function AuthProvider({ children }) {
         socket.on('connect', onConnect);
         socket.on('balance_update', handleBalanceUpdate);
         socket.on(`balance_update_${user.id}`, handleBalanceUpdate);
+        socket.on('wallet_sync', handleBalanceUpdate); // [SPEED FIX] Direct wallet sync from backend transactions
 
         // Local Sync Listener for immediate UI events from games
         const handleLocalUpdate = (e) => handleBalanceUpdate(e.detail);
@@ -80,6 +81,7 @@ export function AuthProvider({ children }) {
             socket.off('connect', onConnect);
             socket.off('balance_update', handleBalanceUpdate);
             socket.off(`balance_update_${user.id}`, handleBalanceUpdate);
+            socket.off('wallet_sync', handleBalanceUpdate);
             window.removeEventListener('balance_update', handleLocalUpdate);
         };
     }, [socket, user?.id, handleBalanceUpdate]);

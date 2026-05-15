@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpdate }) {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [drillDown, setDrillDown] = useState({ isOpen: false, title: '', types: [], data: [], loading: false });
 
     useEffect(() => {
         if (isOpen && userId) {
@@ -58,6 +59,25 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
         }
     };
 
+    const handleDrillDown = async (title, types) => {
+        setDrillDown({ isOpen: true, title, types, data: [], loading: true });
+        try {
+            const res = await api.get(`/transactions/all?userId=${userId}&types=${types.join(',')}`);
+            setDrillDown({ isOpen: true, title, types, data: res.data, loading: false });
+        } catch (err) {
+            toast.error("Failed to fetch breakdown");
+            setDrillDown({ isOpen: false, title: '', types: [], data: [], loading: false });
+        }
+    };
+
+    const copyToClipboard = (text, label) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast.success(`${label} copied!`, {
+            style: { background: '#1e293b', color: '#fff', fontSize: '12px' }
+        });
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -88,8 +108,8 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : '?'}
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-2xl font-bold text-white mb-1">{profile.fullName || 'No Name'}</h3>
-                                <div className="text-slate-400 font-mono text-sm mb-3">{profile.phone || profile.u_ph || 'No Phone'}</div>
+                                <h3 onClick={() => copyToClipboard(profile.fullName, 'Name')} title="Click to copy Name" className="text-2xl font-bold text-white mb-1 cursor-pointer hover:text-indigo-400 transition-colors inline-block">{profile.fullName || 'No Name'}</h3>
+                                <div onClick={() => copyToClipboard(profile.phone || profile.u_ph, 'Phone/Email')} title="Click to copy Phone/Email" className="text-slate-400 font-mono text-sm mb-3 cursor-pointer hover:text-indigo-300 transition-colors inline-block w-full">{profile.phone || profile.u_ph || 'No Phone'}</div>
                                 <div className="flex flex-wrap gap-2">
                                     <span className={`px-3 py-1 text-[11px] font-bold uppercase rounded-lg border ${profile.status === 'blocked' ? 'bg-red-500/20 text-red-500 border-red-500/30' :
                                         profile.status === 'restricted' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' :
@@ -106,7 +126,10 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
 
                         {/* 2. Key Metrics Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
-                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                            <div 
+                                onClick={() => handleDrillDown('Referral History', ['referral_bonus', 'referral_commission'])}
+                                className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/10 transition-all"
+                            >
                                 <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Referrals</p>
                                 <p className="text-lg font-black text-white">{profile.referrals?.count || 0}</p>
                             </div>
@@ -114,15 +137,24 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Loyalty</p>
                                 <p className="text-lg font-black text-yellow-500">{profile.loyaltyScore || 0}</p>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-3 border border-indigo-500/20 bg-indigo-500/5">
+                            <div 
+                                onClick={() => handleDrillDown('Self Deposits', ['deposit', 'add_money', 'recharge'])}
+                                className="bg-white/5 rounded-xl p-3 border border-emerald-500/20 bg-emerald-500/5 cursor-pointer hover:bg-emerald-500/10 transition-all"
+                            >
                                 <p className="text-[9px] uppercase font-bold text-indigo-400 mb-1">Self Deposit</p>
                                 <p className="text-lg font-black text-emerald-400">${profile.financials?.selfDeposits || 0}</p>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-3 border border-purple-500/20 bg-purple-500/5">
+                            <div 
+                                onClick={() => handleDrillDown('Admin Loans / Adjustments', ['admin_credit', 'admin_adjustment', 'mint'])}
+                                className="bg-white/5 rounded-xl p-3 border border-purple-500/20 bg-purple-500/5 cursor-pointer hover:bg-purple-500/10 transition-all"
+                            >
                                 <p className="text-[9px] uppercase font-bold text-purple-400 mb-1">Admin Loan</p>
                                 <p className="text-lg font-black text-purple-400">${profile.financials?.adminLoans || 0}</p>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                            <div 
+                                onClick={() => handleDrillDown('Withdrawal History', ['withdraw', 'cash_out', 'admin_debit'])}
+                                className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/10 transition-all"
+                            >
                                 <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Withdrawn</p>
                                 <p className="text-lg font-black text-rose-400">{profile.financials?.totalWithdrawn || 0} NXS</p>
                             </div>
@@ -197,7 +229,10 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                         <div className="mb-8">
                             <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Financial Ledger Summary</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div 
+                                    onClick={() => handleDrillDown('Earnings History', ['task_reward', 'referral_commission', 'referral_bonus', 'lottery_win', 'game_win'])}
+                                    className="bg-white/5 p-4 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all"
+                                >
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-[10px] uppercase font-bold text-slate-500">Total Earned</p>
                                         <Wallet className="w-4 h-4 text-indigo-400" />
@@ -205,7 +240,10 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                     <p className="text-xl font-black text-indigo-400">{profile.financials?.totalEarned?.toFixed(2) || 0} NXS</p>
                                     <p className="text-[9px] text-slate-500 mt-1">Rewards ~${((profile.financials?.totalEarned || 0) / (profile.financials?.currencyRatio || 50)).toFixed(2)}</p>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div 
+                                    onClick={() => handleDrillDown('Spending History', ['plan_purchase', 'lottery_buy', 'game_bet', 'fee'])}
+                                    className="bg-white/5 p-4 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all"
+                                >
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-[10px] uppercase font-bold text-slate-500">Total Spent/Purchased</p>
                                         <ShoppingCart className="w-4 h-4 text-amber-500" />
@@ -346,7 +384,10 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 <MapPin className="w-5 h-5 text-indigo-400 shrink-0" />
                                 <div className="flex-1">
                                     <p className="text-[10px] uppercase font-bold text-slate-500">Last Known IP / Device</p>
-                                    <p className="text-sm font-medium text-white font-mono mt-0.5">{profile.lastIp || profile.ipAddress || 'Unknown'} <span className="text-slate-500 ml-2">{profile.deviceId ? `[${profile.deviceId.substring(0, 8)}...]` : ''}</span></p>
+                                    <p className="text-sm font-medium text-white font-mono mt-0.5">
+                                        <span onClick={() => copyToClipboard(profile.lastIp || profile.ipAddress, 'IP Address')} className="cursor-pointer hover:text-indigo-400 transition-colors" title="Click to copy IP">{profile.lastIp || profile.ipAddress || 'Unknown'}</span> 
+                                        <span onClick={() => copyToClipboard(profile.deviceId, 'Device ID')} className="text-slate-500 ml-2 cursor-pointer hover:text-indigo-400 transition-colors" title="Click to copy Device ID">{profile.deviceId ? `[${profile.deviceId.substring(0, 8)}...]` : ''}</span>
+                                    </p>
                                 </div>
                             </div>
 
@@ -358,12 +399,16 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                                 </div>
                             </div>
 
-                            {profile.referredBy && (
-                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-indigo-500/20">
+                            {profile.referredByInfo && (
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
                                     <Activity className="w-5 h-5 text-indigo-400 shrink-0" />
                                     <div className="flex-1">
-                                        <p className="text-[10px] uppercase font-bold text-indigo-400">Referred By</p>
-                                        <p className="text-sm font-medium text-white mt-0.5">{profile.referredBy.fullName} ({profile.referredBy.phone})</p>
+                                        <p className="text-[10px] uppercase font-black text-indigo-400 tracking-widest">Referred By (Upline)</p>
+                                        <p className="text-sm font-black text-white mt-0.5">
+                                            <span onClick={() => copyToClipboard(profile.referredByInfo.fullName, 'Upline Name')} className="cursor-pointer hover:text-indigo-300" title="Click to copy Upline Name">{profile.referredByInfo.fullName}</span>
+                                            <span onClick={() => copyToClipboard(profile.referredByInfo.phone, 'Upline Phone')} className="text-[11px] text-slate-500 font-mono ml-2 cursor-pointer hover:text-indigo-300" title="Click to copy Upline Phone">({profile.referredByInfo.phone})</span>
+                                        </p>
+                                        <p onClick={() => copyToClipboard(profile.referredByInfo.referralCode, 'Upline Referral Code')} className="text-[9px] text-slate-500 font-mono mt-0.5 uppercase cursor-pointer hover:text-indigo-300" title="Click to copy Upline Code">Code: {profile.referredByInfo.referralCode}</p>
                                     </div>
                                 </div>
                             )}
@@ -426,6 +471,69 @@ export default function UserProfileModal({ isOpen, onClose, userId, onStatusUpda
                     </div>
                 )}
             </div>
+
+            {/* Drill Down Modal */}
+            {drillDown.isOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 animate-in zoom-in duration-300">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 w-full max-w-lg shadow-[0_0_50px_rgba(79,70,229,0.2)] flex flex-col max-h-[85vh]">
+                        <div className="flex justify-between items-center mb-6 shrink-0">
+                            <div>
+                                <h3 className="text-xl font-black text-white uppercase tracking-wider">{drillDown.title}</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Audit Trail Breakdown</p>
+                            </div>
+                            <button 
+                                onClick={() => setDrillDown({ ...drillDown, isOpen: false })}
+                                className="p-3 bg-white/5 hover:bg-white/10 text-white rounded-full transition"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
+                            {drillDown.loading ? (
+                                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                                    <p className="text-xs font-bold text-slate-500 animate-pulse">RECONCILING LEDGER...</p>
+                                </div>
+                            ) : drillDown.data.length === 0 ? (
+                                <div className="py-20 text-center">
+                                    <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">No matching records found.</p>
+                                </div>
+                            ) : (
+                                drillDown.data.map((tx, idx) => (
+                                    <div key={idx} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center group hover:bg-white/10 transition-colors">
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`w-2 h-2 rounded-full ${tx.amount >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                                                <p className="text-[11px] font-black text-slate-300 uppercase tracking-tight truncate">{tx.description || tx.type}</p>
+                                            </div>
+                                            <p className="text-[9px] text-slate-500 font-mono">{new Date(tx.createdAt).toLocaleString()}</p>
+                                            {tx.relatedUserId && (
+                                                <p className="text-[8px] text-indigo-400 mt-1 font-bold">BY: {tx.relatedUserId.fullName || tx.relatedUserId.username}</p>
+                                            )}
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`text-sm font-black font-mono ${tx.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                {tx.amount >= 0 ? '+' : ''}{tx.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-[8px] text-slate-600 font-bold uppercase">{tx.currency || 'NXS'}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-white/5 shrink-0">
+                            <button 
+                                onClick={() => setDrillDown({ ...drillDown, isOpen: false })}
+                                className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition"
+                            >
+                                Close Audit View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

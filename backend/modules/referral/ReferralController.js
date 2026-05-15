@@ -42,8 +42,10 @@ exports.getDashboardData = async (req, res) => {
                 empireProgress,
                 empireGoal,
                 empirePercentage,
-                // [NEW] Empire Stats
-                empireHands: user.empireHands || []
+                // [NEW] 3-Tier Empire Stats
+                monthlySprint: user.monthlySprint || { currentMonth: '', directsCount: 0, volume: 0, bonusClaimed: false },
+                directEmpire: user.directEmpire || { goldMembers: [], totalCount: 0, isMatured: false },
+                teamEmpire: user.teamEmpire || { completedTeams: 0, currentTeamMembers: [] }
             },
             lockedCommissions,
             logs: [],
@@ -56,78 +58,126 @@ exports.getDashboardData = async (req, res) => {
 };
 
 /**
- * Claim matured commissions (after 5 days)
+ * Claim a single referral commission — No locks, no conditions.
+ * User can claim any time they want → goes to wallet.income
  */
 exports.claimCommission = async (req, res) => {
     const { runTransaction } = require('../common/TransactionHelper');
-    const WalletService = require('../wallet/WalletService');
-    
+
     try {
         const userId = req.user.id || (req.user.user && req.user.user.id);
         const { transactionId } = req.body;
 
         const result = await runTransaction(async (session) => {
+            // Only check: does this locked tx belong to this user?
             const trx = await Transaction.findOne({
                 _id: transactionId,
                 userId: userId,
                 status: 'locked'
             }).session(session);
 
-            if (!trx) throw new Error("Commission not found or already claimed");
+            if (!trx) throw new Error("Commission not found or already claimed.");
 
-            // --- [NEW] MINIMUM PACKAGE CHECK ---
-            const UserPlanForClaim = require('../plan/UserPlanModel');
-            const PlanForClaim = require('../admin/PlanModel');
-            
-            const userPlans = await UserPlanForClaim.find({ userId }).session(session);
-            let hasMinPackage = false;
-            
-            if (userPlans.length > 0) {
-                const planIds = userPlans.map(p => p.planId);
-                const plans = await PlanForClaim.find({ _id: { $in: planIds }, unlock_price: { $gte: 500 } }).session(session);
-                if (plans.length > 0) {
-                    hasMinPackage = true;
-                }
-            }
-
-            if (!hasMinPackage) {
-                throw new Error("বোনাস ক্লেইম করার জন্য আপনাকে অন্তত ৫০০ NXS ($5) মূল্যের একটি প্যাকেজ কিনতে হবে।");
-            }
-
-            // --- [NEW] 5-DAY DEPOSIT LOCK-IN PERIOD ---
-            const latestPlan = userPlans.sort((a, b) => b.createdAt - a.createdAt)[0];
-            if (latestPlan) {
-                const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
-                const timeElapsed = new Date() - new Date(latestPlan.createdAt);
-                if (timeElapsed < fiveDaysInMs) {
-                    const daysRemaining = Math.ceil((fiveDaysInMs - timeElapsed) / (24 * 60 * 60 * 1000));
-                    throw new Error(`নিরাপত্তার খাতিরে ডিপোজিট করার ৫ দিন পর বোনাস ক্লেইম করা যাবে। আপনাকে আরও ${daysRemaining} দিন অপেক্ষা করতে হবে।`);
-                }
-            }
-
-            if (!trx.metadata.releaseDate) {
-                 throw new Error("Validation Guard: You must have an active package with >10 days validity to unlock this commission.");
-            }
-
-            const releaseDate = new Date(trx.metadata.releaseDate);
-            if (releaseDate > new Date()) {
-                throw new Error(`Commission is locked until ${releaseDate.toLocaleDateString()}`);
-            }
-
-            const user = await User.findById(userId).session(session);
-            
-            // Move funds
             const amount = trx.amount;
-            user.wallet.pending_referral = Math.max(0, (user.wallet.pending_referral || 0) - amount);
-            user.wallet.income = (user.wallet.income || 0) + amount;
-            user.referralIncome = (user.referralIncome || 0) + amount;
+            if (!amount || amount <= 0) throw new Error("Invalid commission amount.");
+
+            // Atomic: deduct pending_referral, credit income
+            const user = await User.findOneAndUpdate(
+                { _id: userId, 'wallet.pending_referral': { $gte: amount } },
+                {
+                    $inc: {
+                        'wallet.pending_referral': -amount,
+                        'wallet.income': amount,
+                        referralIncome: amount
+                    }
+                },
+                { new: true, session }
+            );
+
+            if (!user) throw new Error("Insufficient pending balance. Please refresh and try again.");
 
             trx.status = 'completed';
-            
-            await user.save({ session });
             await trx.save({ session });
 
-            return { success: true, amount };
+            // [SOCKET] Real-time wallet update
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.emitToUser(userId, 'wallet_update', {
+                    income: user.wallet.income,
+                    pending_referral: user.wallet.pending_referral,
+                    main: user.wallet.main
+                });
+            } catch (e) {}
+
+            return { success: true, amount, newIncomeBalance: user.wallet.income };
+        });
+
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+/**
+ * Claim ALL pending referral commissions at once
+ */
+exports.claimAllCommissions = async (req, res) => {
+    const { runTransaction } = require('../common/TransactionHelper');
+
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+
+        const result = await runTransaction(async (session) => {
+            // Find all locked commissions for this user
+            const lockedTrxs = await Transaction.find({
+                userId: userId,
+                type: 'referral_commission',
+                status: 'locked'
+            }).session(session);
+
+            if (!lockedTrxs.length) throw new Error("No pending commissions to claim.");
+
+            const totalAmount = lockedTrxs.reduce((sum, t) => sum + (t.amount || 0), 0);
+            if (totalAmount <= 0) throw new Error("Total claim amount is zero.");
+
+            // Atomic: move all from pending_referral → income
+            const user = await User.findOneAndUpdate(
+                { _id: userId, 'wallet.pending_referral': { $gte: totalAmount } },
+                {
+                    $inc: {
+                        'wallet.pending_referral': -totalAmount,
+                        'wallet.income': totalAmount,
+                        referralIncome: totalAmount
+                    }
+                },
+                { new: true, session }
+            );
+
+            if (!user) throw new Error("Balance mismatch. Please refresh and try again.");
+
+            // Mark all as completed
+            await Transaction.updateMany(
+                { _id: { $in: lockedTrxs.map(t => t._id) } },
+                { $set: { status: 'completed' } },
+                { session }
+            );
+
+            // [SOCKET]
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.emitToUser(userId, 'wallet_update', {
+                    income: user.wallet.income,
+                    pending_referral: user.wallet.pending_referral,
+                    main: user.wallet.main
+                });
+            } catch (e) {}
+
+            return {
+                success: true,
+                totalClaimed: totalAmount,
+                count: lockedTrxs.length,
+                newIncomeBalance: user.wallet.income
+            };
         });
 
         res.json(result);
@@ -146,7 +196,7 @@ exports.getNetworkMembers = async (req, res) => {
         const targetLevel = parseInt(level);
         const user = await User.findById(userId);
 
-        if (!user || !user.referralCode) return res.json([]);
+        if (!user || !user.referralCode || user.referralCode.trim() === '') return res.json([]);
 
         // recursive fetch based on level
         const getReferralsAtLevel = async (codes, currentDepth) => {

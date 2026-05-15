@@ -85,7 +85,7 @@ class LeaderboardService {
                 }], { session, ordered: true });
 
                 // Notification
-                NotificationService.send(winner._id, `👑 Royal Dividend! You received ৳${prize} for Rank #${i + 1}!`, 'success');
+                NotificationService.send(winner._id, `👑 Royal Dividend! You received $${prize} for Rank #${i + 1}!`, 'success');
             }
 
             // Global Notification (Simulated broadcast)

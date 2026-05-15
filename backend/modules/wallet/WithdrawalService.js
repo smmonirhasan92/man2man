@@ -28,10 +28,14 @@ class WithdrawalService {
                 }
             }
 
-            // 2. Minimum Withdrawal Threshold (default 250 NXS = $5)
-            const minWithdrawalNxs = 250;
+            // 2. Minimum Withdrawal Threshold
+            const minWithdrawalNxs = 1000;
             if (amount < minWithdrawalNxs) {
-                throw new Error(`⚠️ সর্বনিম্ন উইথড্রয়াল সীমা ${minWithdrawalNxs} NXS। অনুগ্রহ করে আরও ব্যালেন্স জমা করুন।`);
+                throw new Error(`⚠️ Minimum admin withdrawal limit is ${minWithdrawalNxs} NXS ($10). For smaller amounts (min $9), please use P2P Send Money.`);
+            }
+
+            if (amount % 100 !== 0) {
+                throw new Error(`Withdrawal amount must be a multiple of 100 NXS (e.g. 1000, 1100, 1200).`);
             }
 
             // 3. Turnover Guard
@@ -52,12 +56,12 @@ class WithdrawalService {
                 if (plans.length > 0) hasMinPackage = true;
             }
             if (!hasMinPackage) {
-                throw new Error("উইথড্র করার জন্য আপনাকে অন্তত ৫০০ NXS ($5) মূল্যের একটি প্যাকেজ কিনে অ্যাকাউন্ট ভেরিফাই করতে হবে।");
+                throw new Error("You must verify your account by purchasing a package worth at least 500 NXS ($5) to withdraw.");
             }
 
             // 5. Balance Check & Deduct
             const user = await User.findById(userId).session(session);
-            if (!user) throw new Error('ইউজার পাওয়া যায়নি!');
+            if (!user) throw new Error('User not found!');
             
             // --- [NEW] SMART LOAN AUTO-RECOVERY ---
             if (user.is_loan_active && (user.wallet.loan_due || 0) > 0) {
@@ -79,16 +83,28 @@ class WithdrawalService {
                     user.wallet.loan_due = 0;
                     user.is_loan_active = false;
                 } else {
-                    throw new Error(`আপনার ${user.wallet.loan_due} NXS লোন বকেয়া আছে। উইথড্র করার জন্য পর্যাপ্ত ব্যালেন্স নেই।`);
+                    throw new Error(`You have an outstanding loan of ${user.wallet.loan_due} NXS. Insufficient balance for withdrawal.`);
                 }
             }
 
-            if ((user.wallet.main || 0) < amount) {
-                throw new Error(`❌ অপর্যাপ্ত মেইন ওয়ালেট ব্যালেন্স! আপনার ব্যালেন্স: ${(user.wallet.main || 0).toFixed(2)} NXS`);
+            // --- FEE CALCULATION (4% Admin Fee) ---
+            const withdrawalFee = amount * 0.04;
+            const totalDeduction = amount + withdrawalFee;
+
+            if ((user.wallet.main || 0) < totalDeduction) {
+                throw new Error(`❌ Insufficient Main Wallet balance! You need ${totalDeduction} NXS (including 4% fee). Your balance: ${(user.wallet.main || 0).toFixed(2)} NXS`);
             }
 
-            user.wallet.main -= amount;
+            user.wallet.main -= totalDeduction;
             await user.save(opts);
+
+            // Add fee to admin reserve
+            const SystemSetting = require('../settings/SystemSettingModel');
+            await SystemSetting.findOneAndUpdate(
+                { key: 'admin_reserve_fund' },
+                { $inc: { value: withdrawalFee } },
+                { upsert: true, session }
+            );
 
             // 5. Invalidate Redis Cache
             try {
@@ -108,7 +124,7 @@ class WithdrawalService {
                 adminComment: null,
                 recipientDetails: `[${deliveryTime}] ${method} - ${details}`,
                 description: `Withdrawal Request (Main Wallet)`,
-                fee: 0,
+                fee: withdrawalFee,
                 metadata: {
                     idempotencyKey,
                     agentId,

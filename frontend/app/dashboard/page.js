@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown, Trophy, Gem
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown, Trophy, Gem, Share2
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -269,8 +269,8 @@ function DashboardContent() {
 
 
 
-                {/* The Empire Tour Tracker */}
-                <GlobalTourProgress tourSales={user?.tourSales || 0} />
+                {/* The Empire Tour Tracker (Now syncing with Total Referrals) */}
+                <GlobalTourProgress tourSales={user?.referralCount || 0} />
 
                 <div className="w-full px-6 mb-4 grid grid-cols-2 gap-3">
                     <button 
@@ -301,44 +301,35 @@ function DashboardContent() {
                 <div className="w-full px-6 mb-8 mt-4">
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 px-1">Discover Options</h3>
                     <div className="grid grid-cols-3 gap-3">
-                        {/* Featured: Lottery */}
+                        {/* Row 1: Lottery, Invest, VIP Card */}
                         <div className="relative group">
                             <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
                         </div>
-
-                        {/* Core Features */}
                         <FolderCard href="/dashboard/invest" icon={DollarSign} label="Invest" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
-                        
                         <div className="relative group">
-                            <FolderCard href="/dashboard/referral-empire" icon={Crown} label="Empire" color="text-yellow-400" gradient="from-yellow-600/20 to-yellow-900/40" border="border-yellow-500/30" />
-                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">HOT</div>
+                            <FolderCard href="/marketplace?tab=vip" icon={Shield} label="VIP Cards" color="text-cyan-400" gradient="from-cyan-600/20 to-cyan-900/40" border="border-cyan-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">VIP</div>
                         </div>
 
-                        {/* Game Row (Luck Test, Scratch Card, Gift Box) */}
+                        {/* Row 2: Luck Test, Scratch Card, Gift Box */}
                         <div className="relative group">
                             <FolderCard href="/dashboard/luck-test" icon={Gamepad2} label="Luck Test" color="text-orange-400" gradient="from-orange-600/20 to-orange-900/40" border="border-orange-500/30" />
                         </div>
-
                         <div className="relative group">
                             <FolderCard href="/dashboard/scratch-card" icon={Ticket} label="Scratch Card" color="text-amber-400" gradient="from-amber-600/20 to-amber-900/40" border="border-amber-500/30" />
                         </div>
-
-                        {/* Mystery Box (Gift Box) */}
                         <div className="relative group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('toggle-mystery-box'))}>
                             <FolderCard href="#" icon={Gift} label="Gift Box" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-pink-500/30" />
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-rose-500 to-red-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-bounce">FREE</div>
                         </div>
 
+                        {/* Row 3: History, Support, Share */}
                         <FolderCard href="/history" icon={Briefcase} label="History" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-white/20" />
-
-                        {/* Support */}
                         <FolderCard href="/support" icon={LifeBuoy} label="Support" color="text-teal-400" gradient="from-teal-600/20 to-teal-900/40" border="border-teal-500/30" />
-
-                        {/* Membership Cards (9th Item) */}
                         <div className="relative group">
-                            <FolderCard href="/marketplace?tab=vip" icon={Shield} label="VIP Cards" color="text-cyan-400" gradient="from-cyan-600/20 to-cyan-900/40" border="border-cyan-500/30" />
-                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">VIP</div>
+                            <FolderCard href="/dashboard/share" icon={Share2} label="Share" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-indigo-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">HOT</div>
                         </div>
                     </div>
                 </div>

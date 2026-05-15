@@ -1,16 +1,39 @@
 const nodemailer = require('nodemailer');
 const redisConfig = require('../../config/redis');
+const fs = require('fs');
+const path = require('path');
 
 class EmailService {
     constructor() {
-        this.transporter = nodemailer.createTransport({
+        let dkimConfig = null;
+        try {
+            const privateKeyPath = path.join(__dirname, '../../config/dkim-private.pem');
+            if (fs.existsSync(privateKeyPath)) {
+                dkimConfig = {
+                    domainName: 'usaaffiliatemarketing.com',
+                    keySelector: 'mail',
+                    privateKey: fs.readFileSync(privateKeyPath, 'utf8')
+                };
+                console.log('[EmailService] DKIM Private Key Loaded Successfully!');
+            }
+        } catch (e) {
+            console.error('[EmailService] Failed to load DKIM Key:', e.message);
+        }
+
+        const transportConfig = {
             host: process.env.SMTP_HOST || '172.17.0.1',
             port: parseInt(process.env.SMTP_PORT) || 25,
             secure: process.env.SMTP_SECURE === 'true',
             tls: {
-                rejectUnauthorized: false // Necessary for many internal VPS relays
+                rejectUnauthorized: false
             }
-        });
+        };
+
+        if (dkimConfig) {
+            transportConfig.dkim = dkimConfig;
+        }
+
+        this.transporter = nodemailer.createTransport(transportConfig);
 
         // [PERFORMANCE] Background Email Queue
         this.emailQueue = [];
@@ -75,7 +98,8 @@ class EmailService {
         return true; // Unblock the API immediately
     }
 
-    async generateAndSendOTP(email, context = 'verification') {
+    async generateAndSendOTP(emailRaw, context = 'verification') {
+        const email = String(emailRaw).trim().toLowerCase();
         // Generate 6 digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
@@ -155,7 +179,8 @@ class EmailService {
         </html>
         `;
 
-        const subject = `${otp} is your USA Affiliate verification code`; // Code first for auto-fill detection
+        const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const subject = `Your USA Affiliate Access Code: ${otp} [${dateStr}]`; // Unique subject to prevent spam filter grouping
 
         // [RESILIENT QUEUE SEND] SendEmail now pushes to queue and handles its own retries natively.
         // We just call it and it resolves immediately, unblocking the API.
@@ -170,17 +195,18 @@ class EmailService {
         return true;
     }
 
-    async verifyOTP(email, otp, context = 'verification') {
+    async verifyOTP(emailRaw, otp, context = 'verification') {
+        const email = String(emailRaw).trim().toLowerCase();
         const key = `otp:${context}:${email}`;
         if (redisConfig.client.isOpen) {
              const storedOtp = await redisConfig.client.get(key);
-             if (storedOtp === otp) {
+             if (String(storedOtp).trim() === String(otp).trim()) {
                  await redisConfig.client.del(key); // clear after use
                  return true;
              }
         } else {
              const stored = this.memoryOtp && this.memoryOtp[key];
-             if (stored && stored.otp === otp && stored.exp > Date.now()) {
+             if (stored && String(stored.otp).trim() === String(otp).trim() && stored.exp > Date.now()) {
                  delete this.memoryOtp[key];
                  return true;
              }

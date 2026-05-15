@@ -32,12 +32,16 @@ export default function PermissionGuard({ children }) {
             // 3. Save State & Unlock UI
             if (permission === 'granted') {
                 sessionStorage.setItem('m2m_setup_done', 'true');
-                setIsBlocked(false);
+                toast.success("Real-time engine activated!");
             } else {
-                alert("Please allow notifications to receive trade alerts!");
+                toast.error("Alerts disabled. You won't hear trade sounds.");
             }
+            
+            // ALWAYS unlock UI so they don't get stuck
+            setIsBlocked(false);
         } catch (e) {
             console.error("Setup failed", e);
+            setIsBlocked(false); // Unlock even on error
         }
     };
 
@@ -92,6 +96,13 @@ export default function PermissionGuard({ children }) {
                     >
                         <Zap className="w-4 h-4 fill-white animate-bounce" />
                         Activate Real-time Engine
+                    </button>
+
+                    <button 
+                        onClick={() => setIsBlocked(false)}
+                        className="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest hover:text-white transition"
+                    >
+                        Continue without alerts
                     </button>
 
                     <p className="mt-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">

@@ -119,13 +119,13 @@ class WalletService {
 
             // [TURNOVER TRAP CHECK] - Removed for Game Purge
 
-            // Fee Logic: Apply 3% Fee ONLY for Income -> Main
+            // Fee Logic: Apply 2% Fee ONLY for Income -> Main
             let fee = 0;
             let creditAmount = amt;
             let feeDescription = '';
 
             if (fromWallet === 'income' && (toWallet === 'main' || toWallet === 'wallet.main')) {
-                fee = amt * 0.03; // 3%
+                fee = amt * 0.02; // 2%
                 creditAmount = amt - fee;
                 feeDescription = ` (Fee: ${fee})`;
             }
@@ -211,7 +211,7 @@ class WalletService {
                     type: 'fee',
                     amount: -fee,
                     status: 'completed',
-                    description: `Exchange Fee (3%) - ${fromWallet} to ${toWallet}`,
+                    description: `Exchange Fee (2%) - ${fromWallet} to ${toWallet}`,
                     recipientDetails: 'System'
                 }], { session, ordered: true });
             }
@@ -359,12 +359,13 @@ class WalletService {
         });
     }
 
-    // Send Money (P2P)
+    // Send Money (P2P) - VIP Card Restricted
     static async sendMoney(senderId, amount, recipientPhone, ip = 'unknown') {
         return await runTransaction(async (session) => {
             const parsedAmount = parseFloat(amount);
+            if (parsedAmount < 900) throw new Error('Minimum send amount is $9.00 (900 NXS).');
+            if (parsedAmount % 100 !== 0) throw new Error('Send amount must be a multiple of 100 NXS (e.g. 900, 1000, 1100).');
 
-            // Logic: Deduct from Income (w_dat.i) first, then Main (w_dat.m)
             const sender = await User.findById(senderId).session(session);
             const recipient = await User.findOne({ primary_phone: recipientPhone }).session(session);
 
@@ -372,90 +373,94 @@ class WalletService {
             if (!recipient) throw new Error('Recipient not found');
             if (sender.id === recipient.id) throw new Error('Cannot send to self');
 
-            // Virtuals or Direct Access
-            const income = sender.wallet.income || 0;
-            const main = sender.wallet.main || 0;
-            const totalBal = income + main;
-
-            if (totalBal < parsedAmount) throw new Error('Insufficient Balance');
-
-            // Calculate Deductions
-            let deductIncome = 0;
-            let deductMain = 0;
-            let remaining = parsedAmount;
-
-            if (income >= remaining) {
-                deductIncome = remaining;
-                remaining = 0;
+            // --- VIP CARD LIMIT CHECK ---
+            const tier = sender.taskData?.accountTier || 'Starter';
+            let monthlyLimit = 0;
+            let txnLimit = 0;
+            
+            if (tier === 'Platinum' || tier === 'Diamond') {
+                monthlyLimit = 10000; // $100
+                txnLimit = 5000; // $50
+            } else if (tier === 'Gold') {
+                monthlyLimit = 3000; // $30
+                txnLimit = 3000;
+            } else if (tier === 'Silver') {
+                monthlyLimit = 1500; // $15
+                txnLimit = 1500;
             } else {
-                deductIncome = income;
-                remaining -= income;
+                throw new Error('You need at least a Silver VIP Membership to use P2P Send Money.');
             }
-            if (remaining > 0) {
-                deductMain = remaining;
+
+            if (parsedAmount > txnLimit) throw new Error(`Your ${tier} card limits sending to max ${txnLimit/100} USD per transaction.`);
+
+            // Check current month usage
+            const currentMonthStart = new Date();
+            currentMonthStart.setDate(1);
+            currentMonthStart.setHours(0,0,0,0);
+
+            const monthlySends = await Transaction.aggregate([
+                { $match: { userId: sender._id, type: 'send_money', createdAt: { $gte: currentMonthStart } } },
+                { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
+            ]).session(session);
+
+            const sentThisMonth = monthlySends.length ? monthlySends[0].total : 0;
+            if (sentThisMonth + parsedAmount > monthlyLimit) {
+                throw new Error(`Monthly send limit exceeded. Your ${tier} card allows ${monthlyLimit/100} USD/mo.`);
+            }
+
+            // --- CALCULATION (5% Sender Fee) ---
+            const fee = parsedAmount * 0.05;
+            const totalDeduction = parsedAmount + fee;
+            const RESERVE_LIMIT = 50; // Ensure they don't zero out completely
+
+            const mainBalance = sender.wallet.main || 0;
+            if (mainBalance - totalDeduction < RESERVE_LIMIT) {
+                throw new Error(`Insufficient Main Balance. You need ${totalDeduction} NXS + ${RESERVE_LIMIT} NXS reserve.`);
             }
 
             // Perform Atomic Updates
-            const updateFields = {};
-            if (deductIncome > 0) updateFields['wallet.income'] = -deductIncome;
-            if (deductMain > 0) updateFields['wallet.main'] = -deductMain;
-
             const updatedSender = await User.findOneAndUpdate(
-                {
-                    _id: senderId,
-                    'wallet.income': { $gte: deductIncome },
-                    'wallet.main': { $gte: deductMain }
-                },
-                { $inc: updateFields },
+                { _id: senderId, 'wallet.main': { $gte: totalDeduction } },
+                { $inc: { 'wallet.main': -totalDeduction } },
                 { new: true, session }
             );
 
             if (!updatedSender) throw new Error('Balance mismatch during processing');
 
-            // [LEDGER] Log Debits
+            // --- BURN THE FEE ---
+            await SystemSetting.findOneAndUpdate(
+                { key: 'admin_reserve_fund' },
+                { $inc: { value: fee } },
+                { upsert: true, session }
+            );
+
+            // [LEDGER] Log Sender Debit
             const trxId = `P2P_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-            if (deductIncome > 0) {
-                await TransactionLedger.create([{
-                    userId: senderId,
-                    type: 'send_money',
-                    amount: -deductIncome,
-                    fee: 0,
-                    balanceBefore: income,
-                    balanceAfter: (updatedSender.wallet.income || 0),
-                    description: `P2P Send to ${recipientPhone} (Income)`,
-                    transactionId: `${trxId}_INC`,
-                    metadata: { recipient: recipient.id }
-                }], { session, ordered: true });
-            }
+            await TransactionLedger.create([{
+                userId: senderId,
+                type: 'send_money',
+                amount: -parsedAmount, // Visual gross
+                fee: fee,
+                balanceBefore: mainBalance,
+                balanceAfter: updatedSender.wallet.main,
+                description: `P2P Send to ${recipientPhone} (Main)`,
+                transactionId: `${trxId}_OUT`,
+                metadata: { recipient: recipient.id }
+            }], { session, ordered: true });
 
-            if (deductMain > 0) {
-                await TransactionLedger.create([{
-                    userId: senderId,
-                    type: 'send_money',
-                    amount: -deductMain,
-                    fee: 0,
-                    balanceBefore: main,
-                    balanceAfter: (updatedSender.wallet.main || 0),
-                    description: `P2P Send to ${recipientPhone} (Main)`,
-                    transactionId: `${trxId}_MAIN`,
-                    metadata: { recipient: recipient.id }
-                }], { session, ordered: true });
-            }
-
-            // Create UI Transaction
             await Transaction.create([{
                 userId: sender.id,
                 type: 'send_money',
-                amount: -parsedAmount,
-                status: 'pending',
+                amount: -parsedAmount, // Actual sent
+                fee: fee,
+                status: 'pending', // Pending Admin/System Approval
                 recipientDetails: `Sent to: ${recipientPhone}`,
                 relatedUserId: recipient.id,
-                assignedAgentId: null,
                 metadata: { ip }
             }], { session, ordered: true });
 
-            return { message: 'Send Money Request Pending Approval' };
+            return { message: 'Send Money Request Pending Approval. 5% fee charged.' };
         });
     }
 

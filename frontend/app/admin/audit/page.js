@@ -4,6 +4,7 @@ import api from '../../../services/api';
 import getSocket from '../../../services/socket';
 import { Shield, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Activity, FileText, ArrowLeft, RefreshCw, Layers, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { formatNXS } from '../../../utils/currency';
 
 export default function AuditPage() {
     const [auditData, setAuditData] = useState(null);
@@ -141,7 +142,7 @@ export default function AuditPage() {
                                 <div className="mt-6 flex items-center gap-3">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-rose-500">Anomaly Detected</span>
                                     <div className="px-4 py-2 bg-rose-500/20 border border-rose-500/30 rounded-xl text-rose-400 font-mono text-sm font-black">
-                                        Discrepancy: ${health?.discrepancy?.toLocaleString()}
+                                        Discrepancy: {formatNXS(health?.discrepancy || 0)}
                                     </div>
                                 </div>
                             )}
@@ -161,17 +162,17 @@ export default function AuditPage() {
                         <div className="space-y-6">
                             <div className="flex justify-between items-center p-6 bg-black/40 border border-white/5 rounded-3xl shadow-inner">
                                 <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Node Deposits</span>
-                                <span className="text-xl font-black text-white">${authorized.total_deposits?.toLocaleString() || '0'}</span>
+                                <span className="text-xl font-black text-white">{formatNXS(authorized.total_deposits || 0)}</span>
                             </div>
                             <div className="flex justify-between items-center p-6 bg-black/40 border border-white/5 rounded-3xl shadow-inner">
                                 <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Net Game Credit Flow</span>
                                 <span className={`text-xl font-black ${(authorized.net_game_creation || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {(authorized.net_game_creation || 0) >= 0 ? '+' : ''}${authorized.net_game_creation?.toLocaleString() || '0'}
+                                    {(authorized.net_game_creation || 0) >= 0 ? '+' : ''}{formatNXS(authorized.net_game_creation || 0)}
                                 </span>
                             </div>
                             <div className="pt-8 border-t border-white/5 mt-8 flex justify-between items-center px-2">
                                 <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Total Authorized Supply</span>
-                                <span className="text-3xl font-black text-white tracking-tighter">${authorized.total_supply?.toLocaleString() || '0'}</span>
+                                <span className="text-3xl font-black text-white tracking-tighter">{formatNXS(authorized.total_supply || 0)}</span>
                             </div>
                         </div>
                     </div>
@@ -186,15 +187,15 @@ export default function AuditPage() {
                         <div className="space-y-6">
                             <div className="flex justify-between items-center p-6 bg-black/40 border border-white/5 rounded-3xl shadow-inner">
                                 <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Main Wallet Balances</span>
-                                <span className="text-xl font-black text-white">${actual.user_main_balances?.toLocaleString() || '0'}</span>
+                                <span className="text-xl font-black text-white">{formatNXS(actual.user_main_balances || 0)}</span>
                             </div>
                             <div className="flex justify-between items-center p-6 bg-black/40 border border-white/5 rounded-3xl shadow-inner">
                                 <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Game Wallet Balances</span>
-                                <span className="text-xl font-black text-white">${actual.user_game_balances?.toLocaleString() || '0'}</span>
+                                <span className="text-xl font-black text-white">{formatNXS(actual.user_game_balances || 0)}</span>
                             </div>
                             <div className="pt-8 border-t border-white/5 mt-8 flex justify-between items-center px-2">
                                 <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Current Liability (User Credit)</span>
-                                <span className="text-3xl font-black text-rose-500 tracking-tighter">${actual.total_liability?.toLocaleString() || '0'}</span>
+                                <span className="text-3xl font-black text-rose-500 tracking-tighter">{formatNXS(actual.total_liability || 0)}</span>
                             </div>
                         </div>
                     </div>
@@ -216,7 +217,7 @@ export default function AuditPage() {
                             (economics?.netSystemProfit || 0) >= 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
                         } shadow-2xl`}>
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">Net Economic Balance</span>
-                            <span className="text-3xl font-black tracking-tighter">${economics?.netSystemProfit?.toLocaleString() || '0'}</span>
+                            <span className="text-3xl font-black tracking-tighter">{formatNXS(economics?.netSystemProfit || 0)}</span>
                         </div>
                     </div>
 
@@ -234,13 +235,13 @@ export default function AuditPage() {
                                 ].map((item, idx) => (
                                     <div key={idx} className="flex justify-between items-center p-5 bg-black/30 border border-white/5 rounded-2xl group hover:border-rose-500/20 transition-all">
                                         <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">{item.label}</span>
-                                        <span className="font-black text-white font-mono">${item.val?.toLocaleString() || '0'}</span>
+                                        <span className="font-black text-white font-mono">{formatNXS(item.val || 0)}</span>
                                     </div>
                                 ))}
                             </div>
                             <div className="p-6 bg-rose-500/80 text-white rounded-3xl flex justify-between items-center shadow-2xl shadow-rose-500/10">
                                 <span className="text-[10px] font-black uppercase tracking-widest">Total Outflow Risk</span>
-                                <span className="text-2xl font-black tracking-tighter">${economics?.totalIncomeGiven?.toLocaleString() || '0'}</span>
+                                <span className="text-2xl font-black tracking-tighter">{formatNXS(economics?.totalIncomeGiven || 0)}</span>
                             </div>
                         </div>
 
@@ -257,13 +258,13 @@ export default function AuditPage() {
                                 ].map((item, idx) => (
                                     <div key={idx} className="flex justify-between items-center p-5 bg-black/30 border border-white/5 rounded-2xl group hover:border-emerald-500/20 transition-all">
                                         <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">{item.label}</span>
-                                        <span className="font-black text-white font-mono">${item.val?.toLocaleString() || '0'}</span>
+                                        <span className="font-black text-white font-mono">{formatNXS(item.val || 0)}</span>
                                     </div>
                                 ))}
                             </div>
                             <div className="p-6 bg-emerald-500/80 text-white rounded-3xl flex justify-between items-center shadow-2xl shadow-emerald-500/10">
                                 <span className="text-[10px] font-black uppercase tracking-widest">Total Recovery Value</span>
-                                <span className="text-2xl font-black tracking-tighter">${economics?.totalSystemRecovery?.toLocaleString() || '0'}</span>
+                                <span className="text-2xl font-black tracking-tighter">{formatNXS(economics?.totalSystemRecovery || 0)}</span>
                             </div>
                         </div>
                     </div>
@@ -284,7 +285,7 @@ export default function AuditPage() {
                             <div key={idx} className="bg-[#0b1221]/80 backdrop-blur-xl border border-white/5 p-8 rounded-[3rem] relative overflow-hidden group">
                                 <div className={`absolute top-0 right-0 w-32 h-32 bg-${fund.color}-500/5 rounded-full -mr-12 -mt-12 blur-3xl group-hover:scale-125 transition-transform duration-700`}></div>
                                 <p className={`text-[10px] font-black text-${fund.color}-500 uppercase tracking-[0.2em] mb-2`}>{fund.label}</p>
-                                <h4 className="text-4xl font-black text-white tracking-tighter font-mono">${fund.val?.toLocaleString() || '0'}</h4>
+                                <h4 className="text-4xl font-black text-white tracking-tighter font-mono">{formatNXS(fund.val || 0)}</h4>
                                 <p className="text-[10px] text-slate-500 mt-4 font-bold uppercase tracking-widest leading-relaxed opacity-60">{fund.desc}</p>
                             </div>
                         ))}
@@ -303,7 +304,7 @@ export default function AuditPage() {
                             <p className="text-slate-500 text-xs font-bold tracking-widest uppercase max-w-sm">Cumulative Volume of Peer-to-Peer Node Transfers.</p>
                         </div>
                         <div className="text-center md:text-right">
-                            <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-400 tracking-tighter">${volume.p2p_transfers?.toLocaleString() || '0'}</p>
+                            <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-400 tracking-tighter">{formatNXS(volume.p2p_transfers || 0)}</p>
                             <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] mt-3">Verified P2P Liquidity</p>
                         </div>
                     </div>

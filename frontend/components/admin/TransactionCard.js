@@ -90,14 +90,32 @@ export default function TransactionCard({
 
                 {/* Amount */}
                 <div className="text-center">
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Amount</p>
-                    <p className="text-xl font-black text-slate-800 tabular-nums">
-                        {Math.abs(trx.amount)?.toLocaleString()}
-                        <span className="text-xs font-bold text-slate-400 ml-1">NXS</span>
-                    </p>
-                    <p className="text-[9px] text-slate-400">
-                        ≈ {(Math.abs(trx.amount) * 1.23).toFixed(2)} BDT
-                    </p>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">{isCashOut ? 'Payable (BDT)' : 'Amount (NXS)'}</p>
+                    {isCashOut ? (
+                        <>
+                            <p className="text-2xl font-black text-emerald-600 tabular-nums bg-emerald-50 py-1 px-2 rounded-lg border border-emerald-200 inline-block shadow-sm">
+                                BDT {(Math.abs(trx.amount) * 1.23).toFixed(2)}
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-400 mt-1">
+                                {Math.abs(trx.amount)?.toLocaleString()} NXS
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-xl font-black text-slate-800 tabular-nums">
+                                {Math.abs(trx.amount)?.toLocaleString()}
+                                <span className="text-xs font-bold text-slate-400 ml-1">NXS</span>
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-500 mt-0.5">
+                                ≈ BDT {(Math.abs(trx.amount) * 1.23).toFixed(2)}
+                            </p>
+                        </>
+                    )}
+                    {isCashOut && trx.metadata?.feeCharged && (
+                        <p className="text-[9px] text-rose-500 font-bold leading-tight mt-1">
+                            Req: {trx.metadata.requestedAmount || (Math.abs(trx.amount) + trx.metadata.feeCharged)} | Fee: -{trx.metadata.feeCharged}
+                        </p>
+                    )}
                 </div>
 
                 {/* Payment Number */}

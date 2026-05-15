@@ -92,6 +92,10 @@ export default function PWAInstallPrompt() {
         // This is the direct link to the app file
         setTimeout(() => {
             window.location.href = "/app.apk";
+            toast.success('App downloaded! Check your "Downloads" folder to install.', { 
+                duration: 6000,
+                icon: '📂'
+            });
             // Hide banner after a few seconds so it doesn't stay stuck
             setTimeout(() => setShow(false), 5000);
         }, 500);

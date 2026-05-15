@@ -28,11 +28,18 @@ exports.requestWithdrawal = async (req, res) => {
 
             // [MANDATORY SECURITY] Email must be verified before any withdrawal
             if (!user.emailVerified) {
-                throw new Error('উইথড্র করার আগে আপনাকে অবশ্যই ইমেইল ভেরিফিকেশন সম্পন্ন করতে হবে। আপনার প্রোফাইলে গিয়ে ইমেইল যোগ করুন।');
+                throw new Error('You must complete email verification before withdrawing. Please add an email in your profile.');
             }
 
+            // --- 3.5% ADMIN WITHDRAWAL FEE ---
+            // Fee is deducted FROM the requested amount.
+            // If user requests 100 NXS, 100 NXS is deducted from wallet, 3.5 NXS is fee, 96.5 NXS is payable.
+            const ADMIN_FEE_PERCENT = 0.035;
+            const feeAmount = parsedAmount * ADMIN_FEE_PERCENT;
+            const payableAmount = parsedAmount - feeAmount;
+
             if (currentBalance < parsedAmount) {
-                throw new Error(`Insufficient ${targetWallet} Balance`);
+                throw new Error(`Insufficient ${targetWallet} Balance. You need at least ${parsedAmount.toFixed(2)} NXS.`);
             }
 
             // --- TURNOVER FLAG CHECK (WITH SESSION) ---
@@ -41,7 +48,7 @@ exports.requestWithdrawal = async (req, res) => {
                 throw new Error(eligibility.message);
             }
 
-            // Deduct
+            // Deduct total amount (Requested Amount)
             user.wallet[targetWallet] = (currentBalance - parsedAmount);
             await user.save({ session });
 
@@ -52,12 +59,20 @@ exports.requestWithdrawal = async (req, res) => {
             const [transaction] = await Transaction.create([{
                 userId,
                 type: 'cash_out',
-                amount: -parsedAmount,
+                amount: -payableAmount, // This is the amount the Admin has to pay in real life
                 status: newStatus,
                 recipientDetails: `${method} - ${accountDetails} (${targetWallet} wallet)`,
                 description: `Withdrawal Request from ${targetWallet} wallet`,
                 adminComment: adminComment,
-                gatewayTransactionId: gatewayTrxId
+                gatewayTransactionId: gatewayTrxId,
+                metadata: { feeCharged: feeAmount, requestedAmount: parsedAmount }
+            }, {
+                userId,
+                type: 'fee',
+                amount: -feeAmount,
+                status: 'pending', // Will complete or reject with main transaction
+                description: `Admin Withdrawal Platform Fee (3.5%)`,
+                metadata: { relatedTrxType: 'cash_out' }
             }], { session, ordered: true });
 
             return transaction;
@@ -78,7 +93,7 @@ exports.requestWithdrawal = async (req, res) => {
         console.error('Withdrawal Error:', err);
         const isTurnoverError = err.message.includes('Turnover Requirement Not Met');
         const status = isTurnoverError ? 403 : 500;
-        const msg = isTurnoverError ? `টার্নওভার পূর্ণ হয়নি! গেম খেলে আপনাকে আরও ৳${err.message.split('৳')[1] || 'কিছু টাকা'} এর লিমিট পূর্ণ করতে হবে।` : (err.message || 'Server Error');
+        const msg = isTurnoverError ? `Turnover requirement not met! You need to play games worth ${err.message.split('NXS')[0]?.split('more ')[1] || 'some amount'} NXS more to unlock withdrawals.` : (err.message || 'Server Error');
         res.status(status).json({ message: msg, retentionLock: isTurnoverError });
     }
 };
@@ -88,7 +103,9 @@ exports.getWithdrawals = async (req, res) => {
     try {
         const { status } = req.query;
         const query = { type: 'cash_out' };
-        if (status) query.status = status;
+        if (status) {
+            query.status = status.includes(',') ? { $in: status.split(',') } : status;
+        }
 
         const withdrawals = await Transaction.find(query)
             .populate('userId', 'fullName phone username')
@@ -110,11 +127,11 @@ exports.processWithdrawal = async (req, res) => {
         const result = await TransactionHelper.runTransaction(async (session) => {
             const transaction = await Transaction.findById(transactionId).session(session);
             if (!transaction || transaction.type !== 'cash_out') {
-                throw new Error('উইথড্রয়াল রিকোয়েস্ট পাওয়া যায়নি!');
+                throw new Error('Withdrawal request not found!');
             }
 
-            if (transaction.status !== 'pending') {
-                throw new Error('এই রিকোয়েস্টটি ইতিমধ্যে প্রসেস করা হয়েছে!');
+            if (transaction.status !== 'pending' && transaction.status !== 'expired') {
+                throw new Error('This request has already been processed or finalized!');
             }
 
             transaction.status = status;
@@ -128,20 +145,45 @@ exports.processWithdrawal = async (req, res) => {
                 const user = await User.findById(transaction.userId).session(session);
                 if (user) {
                     const refundAmount = Math.abs(transaction.amount);
+                    const feeRefund = transaction.metadata?.feeCharged || (refundAmount * 0.035);
+                    const totalRefund = refundAmount + feeRefund;
+
                     const isIncome = transaction.description && transaction.description.includes('income wallet');
                     const targetWallet = isIncome ? 'income' : 'main';
 
-                    user.wallet[targetWallet] += refundAmount;
+                    user.wallet[targetWallet] += totalRefund;
                     await user.save({ session });
+
+                    // Also reject the associated fee transaction
+                    await Transaction.findOneAndUpdate(
+                        { userId: transaction.userId, type: 'fee', status: 'pending', amount: -feeRefund },
+                        { $set: { status: 'rejected' } },
+                        { session }
+                    );
                 }
             }
 
             // CASE 2: COMPLETED -> Reimburse the Agent + Commission
             else if (status === 'completed') {
+                // Mark the fee transaction as completed
+                const feeAmount = transaction.metadata?.feeCharged || (Math.abs(transaction.amount) * 0.035);
+                await Transaction.findOneAndUpdate(
+                    { userId: transaction.userId, type: 'fee', status: 'pending', amount: -feeAmount },
+                    { $set: { status: 'completed' } },
+                    { session }
+                );
+
+                // Add the collected fee to Admin Reserve
+                await SystemSetting.findOneAndUpdate(
+                    { key: 'admin_reserve_fund' },
+                    { $inc: { value: feeAmount } },
+                    { upsert: true, session }
+                );
+
                 const processingAgentId = agentId || transaction.assignedAgentId;
                 if (processingAgentId) {
                     const agent = await User.findById(processingAgentId).session(session);
-                    if (!agent) throw new Error('এসাইন্ড এজেন্ট পাওয়া যায়নি!');
+                    if (!agent) throw new Error('Assigned agent not found!');
 
                     const reimbursementAmount = Math.abs(transaction.amount);
                     const settingsDoc = await SystemSetting.findOne({ key: 'cash_out_commission_percent' }).session(session);
@@ -181,19 +223,36 @@ exports.processWithdrawal = async (req, res) => {
             return transaction;
         });
 
-        // --- Post-Processing Socket Notifications ---
+        // --- Post-Processing Notifications ---
         try {
             const SocketService = require('../common/SocketService');
-            const eventMsg = status === 'completed' ? 'আপনার উইথড্রয়াল এপ্রুভ হয়েছে!' : 'আপনার উইথড্রয়াল রিজেক্ট হয়েছে। বিস্তারিত চেক করুন।';
-            SocketService.broadcast(`user_${result.userId}`, 'notification', { type: status === 'completed' ? 'success' : 'error', message: eventMsg });
+            const NotificationService = require('../notification/NotificationService');
+            
+            let eventMsg = status === 'completed' 
+                ? '✅ Your withdrawal has been approved! Funds will arrive within 10-15 minutes.' 
+                : '❌ Your withdrawal has been rejected.';
+            
+            if (status === 'rejected' && adminComment) {
+                eventMsg += ` Reason: ${adminComment}`;
+            }
+
+            // Save to DB & Send Push Notification
+            await NotificationService.send(
+                result.userId, 
+                eventMsg, 
+                status === 'completed' ? 'success' : 'error', 
+                { title: 'Withdrawal Update' }
+            );
+
+            // Also update the specific transaction view
             SocketService.broadcast(`user_${result.userId}`, 'transaction_update', { transactionId: result._id, status });
             SocketService.broadcast('admin_dashboard', 'transaction_update', { transactionId: result._id, status });
         } catch (syncErr) { console.error('Withdrawal Sync Error:', syncErr); }
 
-        res.json({ message: `উইথড্রয়াল স্ট্যাটাস আপডেট হয়েছে: ${status}`, transaction: result });
+        res.json({ message: `Withdrawal status updated: ${status}`, transaction: result });
 
     } catch (err) {
         console.error('processWithdrawal Error:', err);
-        res.status(500).json({ message: err.message || 'সার্ভার এরর! দয়া করে আবার চেষ্টা করুন।' });
+        res.status(500).json({ message: err.message || 'Server Error! Please try again.' });
     }
 };

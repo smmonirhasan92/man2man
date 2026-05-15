@@ -176,6 +176,35 @@ export default function P2PTribunalPage() {
                                     </div>
                                 </div>
 
+                                {/* Transaction & Proof Details */}
+                                <div className="bg-[#0b1221]/50 border border-white/5 rounded-[2rem] p-6 md:p-8 mb-10">
+                                    <h3 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/10 pb-4 mb-4">Transaction Evidence</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-3">
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Trade Info</p>
+                                            <div className="bg-black/30 p-3 rounded-xl border border-white/5">
+                                                <span className="text-[9px] text-slate-500 uppercase font-black block mb-1">Method</span>
+                                                <span className="text-sm font-bold text-white">{trade.paymentMethod || 'Unknown'}</span>
+                                            </div>
+                                            <div className="bg-black/30 p-3 rounded-xl border border-white/5">
+                                                <span className="text-[9px] text-slate-500 uppercase font-black block mb-1">Seller Receiving Number</span>
+                                                <span className="text-sm font-bold text-white font-mono">{trade.sellerDetails || 'Not Provided'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Buyer Submitted Proof</p>
+                                            <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                                                <span className="text-[9px] text-blue-400 uppercase font-black block mb-1">Buyer Sending Number</span>
+                                                <span className="text-sm font-bold text-white font-mono">{trade.proof?.userNumber || 'N/A'}</span>
+                                            </div>
+                                            <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                                                <span className="text-[9px] text-emerald-400 uppercase font-black block mb-1">Transaction ID (TxID)</span>
+                                                <span className="text-sm font-bold text-white font-mono select-all">{trade.proof?.txID || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Judicial Actions */}
                                 {trade.status === 'DISPUTED' && (
                                     <div className="space-y-6 pt-10 border-t border-white/5">

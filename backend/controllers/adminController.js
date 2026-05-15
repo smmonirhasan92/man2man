@@ -91,6 +91,7 @@ exports.updateUserBalance = async (req, res) => {
     const adminId = req.user?.user?.id || req.user?._id;
 
     if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid Amount" });
+    if (amount > 1000000) return res.status(400).json({ message: "Safety Limit: Maximum 1,000,000 NXS allowed per transaction to prevent typos." });
 
     // --- 3-LAYER SECURITY CHECK FOR SUPER ADMIN BALANCE CREATION ---
     if (role === 'super_admin' && type === 'credit') {
@@ -234,9 +235,14 @@ exports.getFinancialStats = async (req, res) => {
         ]);
         const depositsToday = depositsTodayAgg[0]?.total || 0;
 
-        // F. Total System Withdrawals
+        // F. Total System Withdrawals (Exclude Admin Adjustments to show actual user withdrawals)
         const withdrawAgg = await Transaction.aggregate([
-            { $match: { type: { $in: ['withdraw', 'cash_out'] }, status: 'completed' } },
+            { 
+                $match: { 
+                    type: { $in: ['withdraw', 'cash_out'] },
+                    status: 'completed' 
+                } 
+            },
             { $group: { _id: null, total: { $sum: { $abs: "$amount" } } } }
         ]);
         const totalWithdraws = withdrawAgg[0]?.total || 0;
@@ -623,8 +629,22 @@ exports.getUserDetails = async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
             .select('+ipAddress +lastLogin +deviceId +lastIp +status +loyaltyScore +promotionalStatus')
-            .populate('referredBy', 'fullName primary_phone')
             .lean();
+
+        // [FIX] referredBy is stored as a referral CODE (string), not ObjectId — manual lookup required
+        if (user && user.referredBy) {
+            const referrer = await User.findOne({ referralCode: user.referredBy })
+                .select('fullName username primary_phone phone')
+                .lean();
+            user.referredByInfo = referrer
+                ? {
+                    fullName: referrer.fullName || referrer.username || 'Unknown',
+                    phone: referrer.primary_phone || referrer.phone || 'N/A',
+                    username: referrer.username || 'N/A',
+                    referralCode: user.referredBy
+                  }
+                : { fullName: 'Unknown', phone: 'N/A', username: user.referredBy, referralCode: user.referredBy };
+        }
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -953,6 +973,88 @@ exports.updateGameVaultConfig = async (req, res) => {
     } catch (e) {
         console.error("Update Vault Config Error:", e);
         res.status(500).json({ message: "Failed to update Game Vault configuration." });
+    }
+};
+
+exports.getDailyReport = async (req, res) => {
+    try {
+        // Time Ranges
+        const now = new Date();
+
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - 7);
+        weekStart.setHours(0, 0, 0, 0);
+
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const buildStats = async (from) => {
+            // Deposits
+            const depAgg = await Transaction.aggregate([
+                { $match: { type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed', createdAt: { $gte: from } } },
+                { $group: { _id: null, total: { $sum: { $abs: '$amount' } }, count: { $sum: 1 } } }
+            ]);
+
+            // Withdrawals — only genuine user cash-out requests (excludes admin_adjustment to prevent corrupt data skewing)
+            const wdAgg = await Transaction.aggregate([
+                {
+                    $match: {
+                        type: { $in: ['withdraw', 'cash_out'] },
+                        status: 'completed',
+                        amount: { $gt: -100000 }, // Safety cap: ignore any amount beyond 100k NXS (data corruption guard)
+                        createdAt: { $gte: from }
+                    }
+                },
+                { $group: { _id: null, total: { $sum: { $abs: '$amount' } }, count: { $sum: 1 } } }
+            ]);
+
+            // Package Sales
+            const pkgAgg = await Transaction.aggregate([
+                { $match: { type: 'plan_purchase', status: 'completed', createdAt: { $gte: from } } },
+                { $group: { _id: null, total: { $sum: { $abs: '$amount' } }, count: { $sum: 1 } } }
+            ]);
+
+            // New Users
+            const newUsers = await User.countDocuments({ createdAt: { $gte: from } });
+
+            // Referral Bonuses Paid
+            const refAgg = await Transaction.aggregate([
+                { $match: { type: 'referral_bonus', status: 'completed', createdAt: { $gte: from } } },
+                { $group: { _id: null, total: { $sum: { $abs: '$amount' } }, count: { $sum: 1 } } }
+            ]);
+
+            return {
+                deposits: { total: depAgg[0]?.total || 0, count: depAgg[0]?.count || 0 },
+                withdrawals: { total: wdAgg[0]?.total || 0, count: wdAgg[0]?.count || 0 },
+                packages: { total: pkgAgg[0]?.total || 0, count: pkgAgg[0]?.count || 0 },
+                referralPaid: { total: refAgg[0]?.total || 0, count: refAgg[0]?.count || 0 },
+                newUsers,
+                netFlow: (depAgg[0]?.total || 0) - (wdAgg[0]?.total || 0)
+            };
+        };
+
+        const [today, week, month] = await Promise.all([
+            buildStats(todayStart),
+            buildStats(weekStart),
+            buildStats(monthStart)
+        ]);
+
+        // Last 10 withdrawal transactions with user info
+        const recentWithdrawals = await Transaction.find({
+            type: 'cash_out', status: 'completed'
+        }).populate('userId', 'fullName username phone').sort({ createdAt: -1 }).limit(10);
+
+        // Last 10 deposits
+        const recentDeposits = await Transaction.find({
+            type: { $in: ['deposit', 'add_money', 'recharge'] }, status: 'completed'
+        }).populate('userId', 'fullName username phone').sort({ createdAt: -1 }).limit(10);
+
+        res.json({ today, week, month, recentWithdrawals, recentDeposits });
+    } catch (e) {
+        console.error('getDailyReport Error:', e);
+        res.status(500).json({ message: 'Failed to generate report: ' + e.message });
     }
 };
 

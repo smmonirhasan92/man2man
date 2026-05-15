@@ -208,21 +208,21 @@ export default function FinancialControlCenter() {
                         </div>
                     </div>
 
-                    {/* 2. বাজেটিং ও লিমিট (Budget & Limits) */}
+                    {/* 2. Budgeting & Limits */}
                     <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl mt-8">
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400">
-                            ২. বাজেটিং ও লিমিট (Budget & Limits)
+                            2. Budgeting & Limits
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div className="bg-black/50 p-4 rounded-xl border border-slate-800 border-b-cyan-500">
                                 <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Base Hourly Limit</p>
                                 <p className="text-2xl font-mono text-white">33.00 <span className="text-xs text-slate-500">NXS</span></p>
-                                <p className="text-[9px] text-slate-500 mt-1">এটি আপনার সেট করা প্রাথমিক বাজেট</p>
+                                <p className="text-[9px] text-slate-500 mt-1">This is your initially set budget</p>
                             </div>
                             <div className="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/30">
                                 <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1">Total Playable Pot</p>
                                 <p className="text-2xl font-mono text-emerald-400">{(vault.balances?.activePool || 0).toFixed(2)} <span className="text-xs text-emerald-500/50">NXS</span></p>
-                                <p className="text-[9px] text-emerald-500/70 mt-1">বর্তমানে এই পরিমাণ টাকা জেতানো সম্ভব</p>
+                                <p className="text-[9px] text-emerald-500/70 mt-1">Currently this amount can be distributed as winnings</p>
                             </div>
                         </div>
 
@@ -250,14 +250,14 @@ export default function FinancialControlCenter() {
                         <div className="bg-black/40 p-4 rounded-xl border border-purple-500/20 mt-6">
                              <p className="text-[10px] text-purple-400 font-bold uppercase mb-1">Backup Pad (Legacy PAD)</p>
                              <p className="text-2xl font-mono text-purple-300">{(vault.pad || 0).toFixed(2)} <span className="text-xs text-purple-500/50">NXS</span></p>
-                             <p className="text-[9px] text-slate-500 mt-1">ফি থেকে জমানো টাকা যা অটোমেটিক বাড়ছে (P2P Injection)</p>
+                             <p className="text-[9px] text-slate-500 mt-1">Funds accumulated from fees, increasing automatically (P2P Injection)</p>
                         </div>
                     </div>
 
-                    {/* 3. ফি এবং প্রফিট কন্ট্রোল (Fees & Profit) */}
+                    {/* 3. Fees & Profit Control */}
                     <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl mt-6">
                         <h2 className="text-lg font-bold mb-4 flex items-center justify-between text-pink-400">
-                            <span>৩. ফি এবং প্রফিট কন্ট্রোল (Fees & Profit)</span>
+                            <span>3. Fees & Profit Control</span>
                             <button onClick={handleSaveConfig} className="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2">
                                 <Save className="w-4 h-4" /> Save Fee Rule
                             </button>
@@ -273,7 +273,7 @@ export default function FinancialControlCenter() {
                                             <span className="text-pink-400 font-mono text-lg">{configEdits.houseEdge}%</span>
                                         </label>
                                         <input type="range" min="5" max="15" value={configEdits.houseEdge} onChange={e => setConfigEdits({...configEdits, houseEdge: Number(e.target.value)})} className="w-full accent-pink-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer" />
-                                        <p className="text-[9px] text-slate-500 mt-1">আপনি এখান থেকে চেঞ্জ করতে পারবেন</p>
+                                        <p className="text-[9px] text-slate-500 mt-1">You can change this from here</p>
                                     </div>
                                 </div>
                                 <div className="w-1/2 pl-4 border-l border-white/10">
@@ -281,7 +281,7 @@ export default function FinancialControlCenter() {
                                     <div className="text-2xl font-black text-rose-500 flex items-center gap-2">
                                         15% <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-1 rounded">LOCKED</span>
                                     </div>
-                                    <p className="text-[9px] text-slate-500 mt-1 leading-relaxed">এটি পরিবর্তন করা যাবে না কারণ এটি জিরো-বার্ণ নিশ্চিত করে।</p>
+                                    <p className="text-[9px] text-slate-500 mt-1 leading-relaxed">This cannot be changed because it ensures zero-burn.</p>
                                 </div>
                             </div>
 
@@ -289,12 +289,12 @@ export default function FinancialControlCenter() {
                                 <div className="bg-[#0B1221] p-4 rounded-xl border border-indigo-500/20 text-center">
                                     <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Admin + Drop Share</h4>
                                     <p className="text-xl font-black text-white">66.6% <span className="text-xs text-slate-500 font-normal">of Total Fee</span></p>
-                                    <p className="text-[9px] text-indigo-500/70 mt-1">প্রফিট ও মেগা ড্রপ ফান্ডে জমা হবে</p>
+                                    <p className="text-[9px] text-indigo-500/70 mt-1">Will be deposited into Profit and Mega Drop funds</p>
                                 </div>
                                 <div className="bg-[#0B1221] p-4 rounded-xl border border-purple-500/20 text-center">
                                     <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Safety Pad Share</h4>
                                     <p className="text-xl font-black text-white">33.3% <span className="text-xs text-slate-500 font-normal">of Total Fee</span></p>
-                                    <p className="text-[9px] text-purple-500/70 mt-1">সিস্টেম ব্যাকআপ হিসেবে প্যাডে জমা হবে</p>
+                                    <p className="text-[9px] text-purple-500/70 mt-1">Will be deposited to the reserve pad as system backup</p>
                                 </div>
                             </div>
                         </div>
@@ -324,12 +324,12 @@ export default function FinancialControlCenter() {
                         </div>
                     </div>
 
-                    {/* 1. গেমের মেইন সুইচ (The Kill Switch) */}
+                    {/* 1. Game Main Switch (The Kill Switch) */}
                     <div className="bg-red-950/20 border border-red-500/30 p-5 rounded-2xl">
-                        <h3 className="text-sm text-red-500 font-bold tracking-widest mb-4 flex items-center gap-2"><PowerOff className="w-4 h-4" /> ১. গেমের মেইন সুইচ (The Kill Switch)</h3>
+                        <h3 className="text-sm text-red-500 font-bold tracking-widest mb-4 flex items-center gap-2"><PowerOff className="w-4 h-4" /> 1. Game Main Switch (The Kill Switch)</h3>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-red-500/20">
-                                <span className="text-xs text-red-400 font-bold uppercase">Game Status / খেলার অবস্থা</span>
+                                <span className="text-xs text-red-400 font-bold uppercase">Game Status</span>
                                 <span className={`text-xs font-black px-2 py-1 rounded ${configEdits.isEnabled ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-white'}`}>
                                     [{configEdits.isEnabled ? 'ON' : 'OFF'}]
                                 </span>
@@ -341,7 +341,7 @@ export default function FinancialControlCenter() {
                                 <RefreshCw className="w-4 h-4" /> Flush Memory Cache
                             </button>
                         </div>
-                        <p className="text-[10px] text-red-400/70 mt-3 text-center leading-relaxed">Description: এই বাটনটি অফ করলে পুরো গেম ইঞ্জিন সাথে সাথে বন্ধ হয়ে যাবে (Emergency Stop)।</p>
+                        <p className="text-[10px] text-red-400/70 mt-3 text-center leading-relaxed">Description: Turning off this button will immediately shut down the entire game engine (Emergency Stop).</p>
                     </div>
 
                     {/* LIVE ACTIVITY FEED */}

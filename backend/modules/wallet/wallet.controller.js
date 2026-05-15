@@ -159,10 +159,10 @@ exports.provideInstructions = async (req, res) => {
             });
         }
         
-        res.json({ message: 'আপনার পেমেন্ট ইনস্ট্রাকশন ইউজারের কাছে পাঠানো হয়েছে।', transaction: result });
+        res.json({ message: 'Payment instructions have been sent to the user.', transaction: result });
     } catch (err) {
         console.error('ProvideInstructions CRASH:', err);
-        res.status(500).json({ message: 'সার্ভার এরর! ইনস্ট্রাকশন পাঠানো সম্ভব হচ্ছে না।', stack: err.stack });
+        res.status(500).json({ message: 'Server Error! Unable to send instructions.', stack: err.stack });
     }
 };
 
@@ -210,7 +210,7 @@ exports.transferToMain = async (req, res) => {
         if (amountFloat < CURRENCY.TRANSFER_MINIMUM_NXS) {
             return res.status(400).json({ 
                 success: false, 
-                message: `⚠️ সর্বনিম্ন ট্রান্সফার সীমা ${CURRENCY.TRANSFER_MINIMUM_NXS} NXS ($৫.০০ USD)। অনুগ্রহ করে আরও ইনকাম জমা করুন।` 
+                message: `⚠️ Minimum transfer limit is ${CURRENCY.TRANSFER_MINIMUM_NXS} NXS ($5.00 USD). Please add more income.` 
             });
         }
 
@@ -220,7 +220,7 @@ exports.transferToMain = async (req, res) => {
             const lockKey = `lock:swap:${userId}`;
             const isLocked = await client.get(lockKey);
             if (isLocked) {
-                return res.status(429).json({ message: "⏳ অনুগ্রহ করে ৫ সেকেন্ড অপেক্ষা করুন। বারবার সোয়াপ (Swap) করার চেষ্টা করবেন না।" });
+                return res.status(429).json({ message: "⏳ Please wait 5 seconds before trying to swap again." });
             }
             await client.setEx(lockKey, 5, 'LOCKED');
         }

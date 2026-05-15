@@ -155,15 +155,34 @@ export function NotificationProvider({ children }) {
             });
         };
 
+        const handleLoanRecovery = (data) => {
+            playSound('info');
+            toast((t) => (
+                <div>
+                    <div className="text-[12px] font-bold text-amber-400 mb-1">🏦 Smart Loan Auto-Recovery</div>
+                    <div className="text-[11px] text-white">
+                        {data.message}
+                    </div>
+                    {data.remaining > 0 && (
+                        <div className="text-[10px] text-slate-400 mt-1">
+                            Remaining Loan: {data.remaining.toFixed(2)} NXS
+                        </div>
+                    )}
+                </div>
+            ), { style: { ...premiumStyle, background: 'rgba(30, 20, 10, 0.95)', border: '1px solid rgba(251, 191, 36, 0.4)' }, duration: 6000 });
+        };
+
         socket.on('notification', handleNotification);
         socket.on('wallet:update', handleWalletNotification);
         socket.on('config:update', handleConfigUpdate);
+        socket.on('loan_recovery_update', handleLoanRecovery);
 
         return () => {
             socket.off('connect');
             socket.off('notification', handleNotification);
             socket.off('wallet:update', handleWalletNotification);
             socket.off('config:update', handleConfigUpdate);
+            socket.off('loan_recovery_update', handleLoanRecovery);
         };
     }, [socket]); // [FIX] Removed refreshUser from dependency array to prevent infinite loop
     

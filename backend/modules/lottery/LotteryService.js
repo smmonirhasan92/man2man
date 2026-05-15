@@ -197,16 +197,18 @@ class LotteryService {
 
         return await TransactionHelper.runTransaction(async (session) => {
             // 2. Deduct Funds (Atomic)
-            const user = await User.findById(userId).session(session);
-            if (!user) throw new Error("User not found");
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: userId, 'wallet.main': { $gte: cost } },
+                { $inc: { 'wallet.main': -cost } },
+                { session, new: true }
+            );
 
-            // Check Balance (Support legacy field wrapper if needed, but prefer direct access)
-            const balance = user.wallet.main || 0;
-            if (balance < cost) throw new Error(`Insufficient Balance. Need ${cost}, Have ${balance}`);
-
-            const updatedUser = await User.findByIdAndUpdate(userId, {
-                $inc: { 'wallet.main': -cost }
-            }, { session, new: true });
+            if (!updatedUser) {
+                // If failed, user might exist but have insufficient funds
+                const checkUser = await User.findById(userId).session(session);
+                if (!checkUser) throw new Error("User not found");
+                throw new Error(`Insufficient Balance. Need ${cost}, Have ${checkUser.wallet.main || 0}`);
+            }
 
             // 3. Log Transaction
             await Transaction.create([{

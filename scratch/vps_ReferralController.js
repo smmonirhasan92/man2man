@@ -1,0 +1,244 @@
+const User = require('../user/UserModel');
+const Transaction = require('../wallet/TransactionModel');
+
+/**
+ * Get basic stats and logs for the dashboard
+ */
+exports.getDashboardData = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const user = await User.findById(userId);
+        
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Calculate hand progress (Old system - keeping for compatibility)
+        const HAND_SIZE = 5;
+        const referralCount = user.referralCount || 0;
+        const progressInHand = referralCount % HAND_SIZE;
+        const remainingForHand = HAND_SIZE - progressInHand;
+
+        // [UX PHASE] 20-Referral Empire Progress (Big Packages / Tour Sales)
+        const empireGoal = 20;
+        const empireProgress = Math.min(user.tourSales || 0, empireGoal);
+        const empirePercentage = (empireProgress / empireGoal) * 100;
+
+        // Fetch Locked Commissions for Profile
+        const lockedCommissions = await Transaction.find({
+            userId: user._id,
+            type: 'referral_commission',
+            status: 'locked'
+        }).sort({ createdAt: -1 });
+
+        res.json({
+            stats: {
+                totalEarnings: (user.referralIncome || 0) + (user.wallet.pending_referral || 0),
+                totalReferrals: user.referralCount || 0,
+                activeReferrals: user.referralCount || 0,
+                referralHands: user.referralHands || 0,
+                handProgress: progressInHand,
+                remainingForHand: remainingForHand,
+                balance: user.wallet.income,
+                pendingReferral: user.wallet.pending_referral || 0,
+                empireProgress,
+                empireGoal,
+                empirePercentage,
+                // [NEW] Empire Stats
+                empireHands: user.empireHands || []
+            },
+            lockedCommissions,
+            logs: [],
+            referralCode: user.referralCode || user.username?.toUpperCase() || 'MEMBER'
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+/**
+ * Claim matured commissions (after 5 days)
+ */
+exports.claimCommission = async (req, res) => {
+    const { runTransaction } = require('../common/TransactionHelper');
+    const WalletService = require('../wallet/WalletService');
+    
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const { transactionId } = req.body;
+
+        const result = await runTransaction(async (session) => {
+            const trx = await Transaction.findOne({
+                _id: transactionId,
+                userId: userId,
+                status: 'locked'
+            }).session(session);
+
+            if (!trx) throw new Error("Commission not found or already claimed");
+
+            // --- [LOCKS REMOVED] ---
+            // As per user request, all bindings/requirements for claiming referral bonus are removed.
+            // The transaction is simply processed immediately.
+
+            const user = await User.findById(userId).session(session);
+            
+            // Move funds
+            const amount = trx.amount;
+            user.wallet.pending_referral = Math.max(0, (user.wallet.pending_referral || 0) - amount);
+            user.wallet.income = (user.wallet.income || 0) + amount;
+            user.referralIncome = (user.referralIncome || 0) + amount;
+
+            trx.status = 'completed';
+            
+            await user.save({ session });
+            await trx.save({ session });
+
+            return { success: true, amount };
+        });
+
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+/**
+ * Get members at a specific level in the network
+ */
+exports.getNetworkMembers = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        const { level = 1 } = req.query;
+        const targetLevel = parseInt(level);
+        const user = await User.findById(userId);
+
+        if (!user || !user.referralCode || user.referralCode.trim() === '') return res.json([]);
+
+        // recursive fetch based on level
+        const getReferralsAtLevel = async (codes, currentDepth) => {
+            if (currentDepth === targetLevel) {
+                return await User.find({ referredBy: { $in: codes } })
+                    .select('username fullName status createdAt referralCount wallet.income referralIncome');
+            }
+            
+            const usersAtThisLevel = await User.find({ referredBy: { $in: codes } }).select('referralCode');
+            const nextCodes = usersAtThisLevel.map(u => u.referralCode).filter(c => c);
+            
+            if (nextCodes.length === 0) return [];
+            return await getReferralsAtLevel(nextCodes, currentDepth + 1);
+        };
+
+        const members = await getReferralsAtLevel([user.referralCode], 1);
+        
+        // [FIX] Fetch actual commission earned FROM each member
+        const memberIds = members.map(m => m._id);
+        const commissions = await Transaction.aggregate([
+            {
+                $match: {
+                    userId: user._id,
+                    type: 'referral_commission',
+                    'metadata.sourceUser': { $in: memberIds }
+                }
+            },
+            {
+                $group: {
+                    _id: '$metadata.sourceUser',
+                    totalCommission: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        // Build a fast lookup map: sourceUser => totalCommission
+        const commissionMap = {};
+        commissions.forEach(c => {
+            commissionMap[c._id.toString()] = c.totalCommission;
+        });
+
+        // Normalize for UI — now with REAL commission per member
+        const normalized = members.map(m => ({
+            _id: m._id,
+            username: m.username,
+            fullName: m.fullName,
+            status: m.status,
+            joinedAt: m.createdAt,
+            referralCount: m.referralCount || 0,
+            commission: commissionMap[m._id.toString()] || 0
+        }));
+
+        res.json(normalized);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+/**
+ * [LIVE RACE] Get referral leaderboard sorted by TOTAL EARNINGS (Income + Pending)
+ */
+exports.getLeaderboard = async (req, res) => {
+    try {
+        const topUsers = await User.aggregate([
+            { $match: { role: 'user', status: 'active' } },
+            {
+                $addFields: {
+                    totalEarnings: { 
+                        $add: [
+                            { $ifNull: ["$referralIncome", 0] }, 
+                            { $ifNull: ["$wallet.pending_referral", 0] }
+                        ] 
+                    }
+                }
+            },
+            { $match: { totalEarnings: { $gt: 0 } } }, // Only show those who earned something
+            { $sort: { totalEarnings: -1, referralCount: -1 } },
+            { $limit: 20 },
+            {
+                $project: {
+                    username: 1,
+                    referralCount: 1,
+                    referralIncome: "$totalEarnings", // Map total potential to the UI field
+                    totalSales: "$referralCount" // For UI label consistency
+                }
+            }
+        ]);
+        res.json(topUsers);
+    } catch (err) {
+        console.error("Leaderboard Error:", err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+/**
+ * [NEW] Get Detailed Referral Commission History
+ * Allows users to track exactly who gave them how much commission.
+ */
+exports.getReferralHistory = async (req, res) => {
+    try {
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        
+        // Fetch only referral commissions for this user
+        const history = await Transaction.find({
+            userId: userId,
+            type: 'referral_commission'
+        })
+        .sort({ createdAt: -1 })
+        .limit(100) // Keep it performant
+        .lean();
+
+        // Format the response for the frontend
+        const formattedHistory = history.map(tx => ({
+            id: tx._id,
+            amount: tx.amount,
+            status: tx.status, // e.g., 'locked', 'completed'
+            description: tx.description, // Contains the username (e.g., "L1 Commission from USER123")
+            date: tx.createdAt,
+            level: tx.metadata?.level || 'N/A',
+            sourceUser: tx.metadata?.sourceUser || null
+        }));
+
+        res.json({ success: true, history: formattedHistory });
+    } catch (err) {
+        console.error("[ReferralHistory Error]", err);
+        res.status(500).json({ success: false, message: "Failed to fetch referral history" });
+    }
+};

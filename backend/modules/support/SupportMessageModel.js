@@ -6,7 +6,8 @@ const SupportMessageSchema = new mongoose.Schema({
     messages: [{
         senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         senderRole: { type: String, enum: ['user', 'admin'], default: 'user' },
-        text: { type: String, required: true },
+        text: { type: String },
+        image: { type: String }, // [NEW] Path to screenshot
         createdAt: { type: Date, default: Date.now }
     }],
     status: { type: String, enum: ['open', 'answered', 'closed'], default: 'open' },

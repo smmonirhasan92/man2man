@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../../../services/api';
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, Reply, CheckCircle, Search, RefreshCw, Send, CheckCircle2, Ticket, LifeBuoy } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Reply, CheckCircle, Search, RefreshCw, Send, CheckCircle2, Ticket, LifeBuoy, ImageIcon, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSupportPage() {
@@ -11,6 +11,7 @@ export default function AdminSupportPage() {
     const [activeTicket, setActiveTicket] = useState(null);
     const [replyMessage, setReplyMessage] = useState('');
     const [sending, setSending] = useState(false);
+    const [replyImage, setReplyImage] = useState(null);
     const [filter, setFilter] = useState('all'); // all, open, answered, closed
 
     const chatEndRef = useRef(null);
@@ -51,20 +52,28 @@ export default function AdminSupportPage() {
     };
 
     const handleReply = async (e) => {
-        e.preventDefault();
-        if (!activeTicket || !replyMessage.trim()) return;
+        if (e) e.preventDefault();
+        if (!activeTicket || (!replyMessage.trim() && !replyImage) || sending) return;
 
         setSending(true);
         try {
-            const res = await api.post('/support/reply', {
-                messageId: activeTicket._id,
-                reply: replyMessage
+            const formData = new FormData();
+            formData.append('messageId', activeTicket._id);
+            formData.append('reply', replyMessage);
+            if (replyImage) {
+                formData.append('image', replyImage);
+            }
+
+            const res = await api.post('/support/reply', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             // Optimistically update
             setActiveTicket(res.data.support);
             setReplyMessage('');
+            setReplyImage(null);
             fetchTickets(false);
+            toast.success('Reply sent');
         } catch (err) {
             toast.error('Failed to send reply');
         } finally {
@@ -199,6 +208,15 @@ export default function AdminSupportPage() {
                                                 </div>
                                             )}
                                             <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${isAdmin ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-200' : 'bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm'}`}>
+                                                {msg.image && (
+                                                    <div className="mb-2 rounded-lg overflow-hidden border border-white/10 cursor-pointer" onClick={() => window.open(msg.image.startsWith('http') ? msg.image : `${api.defaults.baseURL.replace('/api', '')}${msg.image}`, '_blank')}>
+                                                        <img 
+                                                            src={msg.image.startsWith('http') ? msg.image : `${api.defaults.baseURL.replace('/api', '')}${msg.image}`} 
+                                                            alt="Attachment" 
+                                                            className="w-full h-auto max-h-60 object-contain"
+                                                        />
+                                                    </div>
+                                                )}
                                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                                                 <div className={`text-[9px] mt-1.5 font-medium flex items-center justify-end gap-1 ${isAdmin ? 'text-indigo-200' : 'text-slate-400'}`}>
                                                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -232,6 +250,21 @@ export default function AdminSupportPage() {
                             {/* Chat Input */}
                             <div className="p-4 border-t border-slate-100 bg-white shrink-0">
                                 <form onSubmit={handleReply} className="flex gap-2 relative">
+                                    {replyImage && (
+                                        <div className="absolute bottom-full left-0 mb-2 p-2 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-indigo-100 rounded flex items-center justify-center">
+                                                <ImageIcon className="w-4 h-4 text-indigo-600" />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-indigo-700 uppercase truncate max-w-[100px]">{replyImage.name}</span>
+                                            <button type="button" onClick={() => setReplyImage(null)} className="text-red-500 hover:bg-red-50 p-1 rounded-full">
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <label className="p-4 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition group flex-shrink-0">
+                                        <ImageIcon className={`w-5 h-5 ${replyImage ? 'text-indigo-600' : 'text-slate-400'} group-hover:scale-110 transition-transform`} />
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => setReplyImage(e.target.files[0])} />
+                                    </label>
                                     <textarea
                                         value={replyMessage}
                                         onChange={(e) => setReplyMessage(e.target.value)}
@@ -246,7 +279,7 @@ export default function AdminSupportPage() {
                                     ></textarea>
                                     <button
                                         type="submit"
-                                        disabled={!replyMessage.trim() || sending}
+                                        disabled={(!replyMessage.trim() && !replyImage) || sending}
                                         className="absolute right-2 top-2 bottom-2 aspect-square bg-indigo-600 text-white rounded-xl flex items-center justify-center transition hover:bg-indigo-700 active:scale-95 disabled:bg-slate-300"
                                     >
                                         {sending ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-4 h-4 ml-0.5" />}

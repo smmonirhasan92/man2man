@@ -1,0 +1,26 @@
+const { Client } = require('ssh2');
+
+const conn = new Client();
+const localFile = 'd:\\man2man_v2-VPS -- Meror\\frontend\\app\\admin\\reports\\page.js';
+const remoteFile = '/var/www/man2man/frontend/app/admin/reports/page.js';
+
+conn.on('ready', () => {
+    console.log('--- SSH Connection Established ---');
+    conn.sftp((err, sftp) => {
+        if (err) throw err;
+        console.log('SFTP session started');
+        sftp.fastPut(localFile, remoteFile, (err) => {
+            if (err) throw err;
+            console.log('frontend reports/page.js uploaded');
+            conn.end();
+        });
+    });
+}).on('error', (err) => {
+    console.error('Connection Error: ' + err);
+}).connect({
+    host: '76.13.244.202',
+    port: 22,
+    username: 'root',
+    password: 'Sir@@@admin123',
+    readyTimeout: 100000
+});

@@ -22,7 +22,13 @@ export default function NodeCarousel({ plans, activeId, onSelect, connectingId }
                     const isActive = activeId === plan.id;
                     const isConnecting = connectingId === plan.id;
                     const isDone = plan.tasksCompletedToday >= plan.dailyLimit;
-                    const progress = (plan.tasksCompletedToday / plan.dailyLimit) * 100;
+                    const progress = Math.min(100, Math.max(0, ((plan.tasksCompletedToday || 0) / (plan.dailyLimit || 1)) * 100));
+
+                    const expiryDate = new Date(plan.expiryDate);
+                    const createdAt = new Date(plan.createdAt || Date.now() - (35 * 24 * 60 * 60 * 1000));
+                    const daysRemaining = Math.max(0, Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24)));
+                    const totalDays = Math.max(1, Math.ceil((expiryDate - createdAt) / (1000 * 60 * 60 * 24)));
+                    const expiryProgress = Math.min(100, Math.max(0, (daysRemaining / totalDays) * 100));
 
                     return (
                         <motion.div
@@ -76,22 +82,43 @@ export default function NodeCarousel({ plans, activeId, onSelect, connectingId }
                                 </p>
                             </div>
 
-                            {/* Circular Progress (Sleek) */}
-                            <div className="relative w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-3">
-                                <motion.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    className={`h-full ${isDone ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}
-                                />
+                            {/* Combined Progress Indicators */}
+                            <div className="flex gap-3 mb-2">
+                                {/* Daily Tasks */}
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Daily Tasks</span>
+                                        <span className={`text-[10px] font-black font-mono ${isDone ? 'text-amber-400' : 'text-white'}`}>
+                                            {plan.tasksCompletedToday || 0}/{plan.dailyLimit || 7}
+                                        </span>
+                                    </div>
+                                    <div className="relative w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${progress}%` }}
+                                            className={`h-full ${isDone ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}
+                                        />
+                                    </div>
+                                </div>
+                                {/* Expiry Progress */}
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Valid For</span>
+                                        <span className={`text-[10px] font-black font-mono ${daysRemaining <= 3 ? 'text-rose-400' : 'text-indigo-400'}`}>
+                                            {daysRemaining} Days
+                                        </span>
+                                    </div>
+                                    <div className="relative w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${expiryProgress}%` }}
+                                            className={`h-full ${daysRemaining <= 3 ? 'bg-gradient-to-r from-rose-500 to-red-600' : 'bg-gradient-to-r from-indigo-500 to-purple-500'}`}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex justify-between items-end">
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Daily Tasks</span>
-                                    <span className={`text-base font-black font-mono ${isDone ? 'text-amber-400' : 'text-white'}`}>
-                                        {plan.tasksCompletedToday || 0}/{plan.dailyLimit || 7}
-                                    </span>
-                                </div>
+                            <div className="absolute bottom-4 right-4">
                                 <Zap size={14} className={isDone ? 'text-amber-500 opacity-50' : isActive ? 'text-blue-500' : 'text-slate-700'} />
                             </div>
 

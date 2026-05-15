@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Wallet, ScrollText, Ticket, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Shield, Activity, Gem, Server } from 'lucide-react';
+import { LayoutDashboard, Users, Wallet, ScrollText, Ticket, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Shield, Activity, Gem, Server, Image, BarChart3, LifeBuoy, MessageSquare } from 'lucide-react';
 
 export default function AdminSidebar() {
     const pathname = usePathname();
@@ -15,8 +15,11 @@ export default function AdminSidebar() {
         { name: 'P2P Tribunal', href: '/admin/p2p-control', icon: Shield },
         { name: 'Transactions', href: '/admin/transactions', icon: Wallet },
         { name: 'Financial Control', href: '/admin/financial-control', icon: Activity },
+        { name: 'Cash Flow Report', href: '/admin/reports', icon: BarChart3 },
         { name: 'Users', href: '/admin/users', icon: Users },
         { name: 'Lottery', href: '/admin/lottery', icon: Ticket },
+        { name: 'Banners', href: '/admin/banners', icon: Image },
+        { name: 'Support', href: '/admin/support', icon: LifeBuoy },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
     ];
 

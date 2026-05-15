@@ -297,7 +297,7 @@ export default function LuckTestClient({ onBalanceUpdate }) {
     // CSS-powered Target Resolution logic
     const targetIdx = apiResult.result.sliceIndex;
     const winAmount = apiResult.result.amountNXS;
-    const isNearMiss = apiResult.result.label === 'আহ্! অল্পের জন্য মিস!' || apiResult.result.label === 'So Close!';
+    const isNearMiss = apiResult.result.label === 'Almost missed!' || apiResult.result.label === 'So Close!';
 
     const loops = 1800; // Final 5 loops
     const currentMod = rotation % 360;

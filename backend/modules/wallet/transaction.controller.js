@@ -12,14 +12,34 @@ exports.getPendingTransactions = async (req, res) => {
     try {
         const { type } = req.query;
         
-        // [FIX] Auto-expire transactions older than 20 mins
+        // [FIX] Auto-expire transactions
         const twentyMinsAgo = new Date(Date.now() - 20 * 60 * 1000);
+        const threeHoursAgo = new Date(Date.now() - 180 * 60 * 1000);
+
+        // 1. Expire non-withdrawal transactions after 20 mins
         await Transaction.updateMany(
-            { status: { $in: ['pending', 'pending_instructions', 'awaiting_payment'] }, createdAt: { $lt: twentyMinsAgo } },
+            { 
+                type: { $ne: 'cash_out' },
+                status: { $in: ['pending', 'pending_instructions', 'awaiting_payment'] }, 
+                createdAt: { $lt: twentyMinsAgo } 
+            },
             { status: 'expired' }
         );
 
-        const query = { status: { $in: ['pending', 'pending_instructions', 'awaiting_payment', 'final_review'] } };
+        // 2. Expire withdrawal transactions after 3 hours
+        await Transaction.updateMany(
+            { 
+                type: 'cash_out',
+                status: { $in: ['pending', 'pending_instructions', 'awaiting_payment'] }, 
+                createdAt: { $lt: threeHoursAgo } 
+            },
+            { status: 'expired' }
+        );
+
+        const query = { 
+            status: { $in: ['pending', 'pending_instructions', 'awaiting_payment', 'final_review'] },
+            type: { $ne: 'fee' }
+        };
         if (type) query.type = type;
 
         const transactions = await Transaction.find(query)
@@ -36,9 +56,12 @@ exports.getPendingTransactions = async (req, res) => {
 // Get ALL Transactions (Admin History)
 exports.getAllTransactions = async (req, res) => {
     try {
-        const { userId } = req.query;
+        const { userId, types } = req.query;
         const query = {};
         if (userId) query.userId = userId;
+        if (types) {
+            query.type = { $in: types.split(',') };
+        }
 
         const transactions = await Transaction.find(query)
             .populate('userId', 'fullName phone username')
@@ -113,18 +136,31 @@ exports.completeTransaction = async (req, res) => {
         const agentId = req.user.user.role === 'agent' ? req.user.user.id : null;
 
         const result = await TransactionHelper.runTransaction(async (session) => {
-            const transaction = await Transaction.findById(transactionId).session(session);
-            if (!transaction) throw new Error('Transaction not found');
+            const transaction = await Transaction.findOneAndUpdate(
+                {
+                    _id: transactionId,
+                    status: { $in: ['pending', 'awaiting_payment', 'final_review', 'pending_instructions'] }
+                },
+                {
+                    $set: {
+                        status: status,
+                        adminComment: comment || 'Processed by System',
+                        ...(bonusAmount && { bonusAmount: parseFloat(bonusAmount) }),
+                        ...(receivedByAgentId !== undefined && { receivedByAgentId: receivedByAgentId || null })
+                    }
+                },
+                { session, new: true }
+            );
+
+            if (!transaction) {
+                throw new Error('Transaction not found or already processed');
+            }
 
             // Agent Ownership Check
             if (agentId) {
                 const isAssigned = String(transaction.assignedAgentId) === String(agentId);
                 const isReceivedBy = String(transaction.receivedByAgentId) === String(agentId);
                 if (!isAssigned && !isReceivedBy) throw new Error('Transaction not assigned to you');
-            }
-
-            if (!['pending', 'awaiting_payment', 'final_review', 'pending_instructions'].includes(transaction.status)) {
-                throw new Error('Transaction already processed or in invalid state');
             }
 
             // --- 3-LAYER SECURITY CHECK FOR SUPER ADMIN BALANCE CREATION ---
@@ -134,16 +170,9 @@ exports.completeTransaction = async (req, res) => {
                 const validKey3 = process.env.SUPER_ADMIN_SEC_KEY_3 || '3333';
 
                 if (secKey1 !== validKey1 || secKey2 !== validKey2 || secKey3 !== validKey3) {
-                    throw new Error('🚨 নিরাপত্তা এলার্ট: ৩-স্তরের ভেরিফিকেশন কোড ভুল! সঠিক সিকিউরিটি কি (Key) প্রদান করুন।');
+                    throw new Error('🚨 Security Alert: 3-layer verification code incorrect! Please provide the correct Security Key.');
                 }
             }
-
-            transaction.status = status;
-            transaction.adminComment = comment || 'Processed by System';
-            if (bonusAmount) transaction.bonusAmount = parseFloat(bonusAmount);
-            if (receivedByAgentId !== undefined) transaction.receivedByAgentId = receivedByAgentId || null;
-
-            await transaction.save({ session });
 
             if (status === 'completed') {
                 const user = await User.findById(transaction.userId).session(session);
@@ -152,11 +181,57 @@ exports.completeTransaction = async (req, res) => {
                 // 1. Deposits (Add Money)
                 if (['add_money', 'recharge', 'agent_recharge'].includes(transaction.type)) {
                     let amountToAdd = parseFloat(transaction.amount);
-                    if (bonusAmount) amountToAdd += parseFloat(bonusAmount);
+                    let feeAmount = 0;
+                    
+                    // --- 3.5% ADMIN DEPOSIT FEE ---
+                    if (['add_money', 'recharge'].includes(transaction.type)) {
+                        feeAmount = amountToAdd * 0.035;
+                        amountToAdd = amountToAdd - feeAmount;
+                    }
 
-                    if (!user.wallet) user.wallet = { main: 0, game: 0, income: 0, purchase: 0 };
-                    user.wallet.main = (user.wallet.main || 0) + amountToAdd;
-                    await user.save({ session });
+                    if (bonusAmount) {
+                        const parsedBonus = parseFloat(bonusAmount);
+                        if (parsedBonus > amountToAdd * 2) {
+                            throw new Error(`Security Alert: Bonus amount (${parsedBonus}) is unusually high compared to deposit! (Max allowed: 200%)`);
+                        }
+                        amountToAdd += parsedBonus;
+                    }
+
+                    const dbUser = await User.findOneAndUpdate(
+                        { _id: transaction.userId },
+                        { $inc: { 'wallet.main': amountToAdd } },
+                        { new: true, session }
+                    );
+
+                    // Ensure defaults if missing
+                    if (!dbUser.wallet) {
+                        dbUser.wallet = { main: amountToAdd, game: 0, income: 0, purchase: 0 };
+                        await dbUser.save({ session });
+                    }
+
+                    // Update local user reference for subsequent checks
+                    user.wallet.main = dbUser.wallet.main;
+
+                    // Log Fee Transaction
+                    if (feeAmount > 0) {
+                        await Transaction.create([{
+                            userId: transaction.userId,
+                            type: 'fee',
+                            amount: -feeAmount,
+                            status: 'completed',
+                            description: `Admin Deposit Platform Fee (3.5%)`,
+                            recipientDetails: 'System',
+                            metadata: { relatedTrxId: transaction._id }
+                        }], { session, ordered: true });
+                        
+                        // Add the collected fee to Admin Reserve
+                        const SystemSetting = require('../settings/SystemSettingModel');
+                        await SystemSetting.findOneAndUpdate(
+                            { key: 'admin_reserve_fund' },
+                            { $inc: { value: feeAmount } },
+                            { upsert: true, session }
+                        );
+                    }
 
                     // [BINANCE-STYLE] Clear Agent Escrow
                     const sourceAgentId = transaction.receivedByAgentId;
@@ -208,21 +283,23 @@ exports.completeTransaction = async (req, res) => {
                 if (['send_money', 'cash_out', 'withdraw', 'mobile_recharge'].includes(transaction.type)) {
                     const procAgentId = transaction.receivedByAgentId || transaction.assignedAgentId || agentId;
                     if (procAgentId) {
-                        const agent = await User.findById(procAgentId).session(session);
-                        if (agent) {
-                            agent.wallet.main = (agent.wallet.main || 0) + Math.abs(parseFloat(transaction.amount));
-                            await agent.save({ session });
-                        }
+                        await User.findOneAndUpdate(
+                            { _id: procAgentId },
+                            { $inc: { 'wallet.main': Math.abs(parseFloat(transaction.amount)) } },
+                            { session }
+                        );
                     }
                 }
             }
 
             // --- HANDLING REJECTION (Refunds) ---
             if (status === 'rejected') {
-                const user = await User.findById(transaction.userId).session(session);
-                if (user && ['send_money', 'withdraw', 'cash_out', 'mobile_recharge', 'agent_withdraw'].includes(transaction.type)) {
-                    user.wallet.main = (user.wallet.main || 0) + Math.abs(parseFloat(transaction.amount));
-                    await user.save({ session });
+                if (['send_money', 'withdraw', 'cash_out', 'mobile_recharge', 'agent_withdraw'].includes(transaction.type)) {
+                    await User.findOneAndUpdate(
+                        { _id: transaction.userId },
+                        { $inc: { 'wallet.main': Math.abs(parseFloat(transaction.amount)) } },
+                        { session }
+                    );
                 }
 
                 // [BINANCE-STYLE] Refund Agent Lock
@@ -248,8 +325,15 @@ exports.completeTransaction = async (req, res) => {
             if (systemIo && result.userId) {
                 const eventType = status === 'completed' ? 'notification' : 'notification';
                 const msg = status === 'completed' ? `Transaction Approved: ${result.amount}` : `Transaction Rejected: ${result.type}`;
+                
                 systemIo.to(`user_${result.userId}`).emit(eventType, { type: status === 'completed' ? 'success' : 'error', message: msg });
                 SocketService.broadcast(`user_${result.userId}`, 'transaction_update', { transactionId: result._id, status });
+                
+                // [SPEED FIX] Push exact wallet balance immediately to avoid extra frontend HTTP requests
+                const updatedUser = await User.findById(result.userId).select('wallet');
+                if (updatedUser && updatedUser.wallet) {
+                    systemIo.to(`user_${result.userId}`).emit('wallet_sync', { wallet: updatedUser.wallet });
+                }
             }
             if (status === 'completed') SocketService.broadcast('admin_dashboard', 'transaction_update', { transactionId: result._id, status });
         } catch (syncErr) { console.error('Post-Sync Error:', syncErr); }

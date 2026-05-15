@@ -106,10 +106,10 @@ exports.uploadProfilePhoto = async (req, res) => {
     }
 };
 
-// Get All Users (Admin) - with Search & Pagination & New Filters
+    // Get All Users (Admin) - with Search & Pagination & New Filters
 exports.getAllUsers = async (req, res) => {
     try {
-        const { search, page = 1, limit = 20, isVerified, hasAdminDeposit } = req.query;
+        const { search, page = 1, limit = 20, isVerified, hasAdminDeposit, filterCategory } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
 
@@ -141,12 +141,63 @@ exports.getAllUsers = async (req, res) => {
             query._id = { ...query._id, $in: manualDeposits };
         }
 
+        // [NEW] Category Filters
+        if (filterCategory === 'active') {
+            query.status = 'active';
+        } else if (filterCategory === 'inactive') {
+            query.status = { $ne: 'active' };
+        } else if (filterCategory === 'top5') {
+            query.referralCount = { $gte: 5 };
+        } else if (filterCategory === 'top10') {
+            query.referralCount = { $gte: 10 };
+        } else if (filterCategory === 'top20') {
+            query.referralCount = { $gte: 20 };
+        }
+
+        let sortOpts = { createdAt: -1 };
+        if (filterCategory && filterCategory.startsWith('top')) {
+            sortOpts = { referralCount: -1 };
+        }
+
         const users = await User.find(query, '-password')
-            .sort({ createdAt: -1 })
+            .sort(sortOpts)
             .skip((pageNum - 1) * limitNum)
             .limit(limitNum);
 
         const total = await User.countDocuments(query);
+
+        // [NEW] Generate global summary report only on page 1 for efficiency
+        let summary = null;
+        if (pageNum === 1 && !search) {
+            const totalUsers = await User.countDocuments();
+            const activeUsers = await User.countDocuments({ status: 'active' });
+            const inactiveUsers = totalUsers - activeUsers;
+            const ref5Count = await User.countDocuments({ referralCount: { $gte: 5 } });
+            const ref10Count = await User.countDocuments({ referralCount: { $gte: 10 } });
+            const ref20Count = await User.countDocuments({ referralCount: { $gte: 20 } });
+            
+            const now = new Date();
+            const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            const activeToday = await User.countDocuments({ lastLogin: { $gte: last24h } });
+            const activeThisWeek = await User.countDocuments({ lastLogin: { $gte: last7d } });
+            const lastActiveUser = await User.findOne({ lastLogin: { $exists: true } })
+                .sort({ lastLogin: -1 })
+                .select('lastLogin');
+
+            summary = {
+                totalUsers,
+                activeUsers,
+                inactiveUsers,
+                ref5Count,
+                ref10Count,
+                ref20Count,
+                activeToday,
+                activeThisWeek,
+                lastUserActiveAt: lastActiveUser ? lastActiveUser.lastLogin : null
+            };
+        }
 
         res.json({
             users: users.map(u => ({
@@ -161,6 +212,7 @@ exports.getAllUsers = async (req, res) => {
                     p2p: u.wallet?.p2p || 0
                 }
             })),
+            summary,
             pagination: {
                 total,
                 page: pageNum,

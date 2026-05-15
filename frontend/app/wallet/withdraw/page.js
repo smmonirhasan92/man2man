@@ -64,7 +64,8 @@ export default function WithdrawalPage() {
                             <span className="text-3xl text-black">✓</span>
                         </div>
                         <h2 className="text-xl font-light text-white mb-2 tracking-wide">Request Sent</h2>
-                        <p className="text-zinc-500 text-xs tracking-wider uppercase">Funds are on the way</p>
+                        <p className="text-emerald-400 text-sm font-bold tracking-wide">Your funds will be transferred within 10 minutes to 3 hours.</p>
+                        <p className="text-zinc-500 text-[10px] mt-1 uppercase">আমরা আপনার রিকোয়েস্টটি পেয়েছি। ১০ মিনিট থেকে ৩ ঘণ্টার মধ্যে টাকা পৌঁছে যাবে।</p>
                     </div>
                 ) : (
                     <>

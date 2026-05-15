@@ -101,15 +101,14 @@ export default function WalletSwap({ user, onSuccess }) {
                     </button>
                 </div>
 
-                {/* Status/Fee Warning */}
                 <div className="mt-3 text-center space-y-1">
                     {amount && Number(amount) < 5 ? (
                         <p className="text-[10px] text-red-400 font-bold animate-pulse">
-                            ❌ Min. Transfer: $5.00 USD
+                            ❌ Minimum Transfer: $5.00 (500 NXS)
                         </p>
                     ) : (
                         <p className="text-[10px] text-amber-500/80 font-medium tracking-wide">
-                            ⚠️ A 3% Exchange Fee applies to Fund Transfers.
+                            ⚠️ A 2% fee applies when transferring from Income to Main.
                         </p>
                     )}
                 </div>
