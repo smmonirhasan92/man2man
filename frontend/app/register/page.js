@@ -36,6 +36,15 @@ function RegisterForm() {
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState(null);
     const [isOtpLoading, setIsOtpLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+
+    useEffect(() => {
+        let interval;
+        if (resendTimer > 0) {
+            interval = setInterval(() => setResendTimer(prev => prev - 1), 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
 
     useEffect(() => {
         if (refCodeFromUrl) setFormData(prev => ({ ...prev, referralCode: refCodeFromUrl }));
@@ -70,6 +79,7 @@ function RegisterForm() {
         try {
             await api.post('/auth/send-otp', { email: formData.email, context: 'registration' });
             setVerificationStep('verifying');
+            setResendTimer(300); // 5 minutes wait before resend
             setNotification({ type: 'success', message: 'OTP Sent to Email!' });
             setTimeout(() => setNotification(null), 5000);
         } catch (err) {
@@ -264,9 +274,29 @@ function RegisterForm() {
                                                         document.getElementById(`otp-${index - 1}`)?.focus();
                                                     }
                                                 }}
+                                                onPaste={(e) => {
+                                                    e.preventDefault();
+                                                    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                                                    if (pastedData) {
+                                                        setUserOtp(pastedData);
+                                                        // Focus the next empty input or the last one
+                                                        const nextIndex = Math.min(pastedData.length, 5);
+                                                        document.getElementById(`otp-${nextIndex}`)?.focus();
+                                                    }
+                                                }}
                                                 className="w-12 h-14 bg-[#0a1120] border border-white/10 rounded-xl text-center text-white font-mono text-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner outline-none"
                                             />
                                         ))}
+                                    </div>
+                                    <div className="text-center mt-3">
+                                        <button 
+                                            type="button" 
+                                            onClick={handleSendOtp} 
+                                            disabled={resendTimer > 0 || isOtpLoading}
+                                            className="text-xs font-bold text-emerald-400 hover:text-emerald-300 disabled:text-slate-500 transition-colors"
+                                        >
+                                            {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : 'Resend Code'}
+                                        </button>
                                     </div>
                                 </div>
                             )}

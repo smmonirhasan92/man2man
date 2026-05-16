@@ -12,6 +12,7 @@ router.post('/load-purchase', authMiddleware, walletController.loadPurchaseWalle
 
 // P2P Transfer (USA Affiliate Marketing v2.0)
 router.post('/transfer', authMiddleware, walletController.transferMoney);
+router.post('/b2b-send', authMiddleware, walletLimiter, walletController.sendB2B);
 
 router.get('/balance', authMiddleware, walletController.getWallet);
 router.post('/take-loan', authMiddleware, walletController.takeLoan);

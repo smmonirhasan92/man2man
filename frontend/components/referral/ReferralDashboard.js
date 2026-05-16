@@ -60,7 +60,7 @@ export default function ReferralDashboard() {
         setClaimingId(transactionId);
         try {
             const res = await api.post('/referral/claim', { transactionId });
-            toast.success(`${formatNXS(res.data.amount)} Income Wallet-এ যুক্ত হয়েছে!`);
+            toast.success(`${formatNXS(res.data.amount)} added to Income Wallet!`);
             confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
             fetchCoreDashboard();
         } catch (err) {
@@ -75,7 +75,7 @@ export default function ReferralDashboard() {
         setClaimingAll(true);
         try {
             const res = await api.post('/referral/claim-all');
-            toast.success(`${res.data.count} টি বোনাস Claim! মোট ${formatNXS(res.data.totalClaimed)} Income Wallet-এ যুক্ত হয়েছে।`);
+            toast.success(`${res.data.count} bonuses claimed! Total ${formatNXS(res.data.totalClaimed)} added to Income Wallet.`);
             confetti({ particleCount: 200, spread: 80, origin: { y: 0.5 } });
             fetchCoreDashboard();
         } catch (err) {
@@ -151,7 +151,7 @@ export default function ReferralDashboard() {
                     <div className="text-center py-12 bg-[#0f172a] rounded-[2rem] border border-white/5 border-dashed">
                         <Inbox className="w-10 h-10 text-slate-700 mx-auto mb-3" />
                         <p className="text-slate-400 text-sm font-black uppercase tracking-widest">No Pending Bonuses</p>
-                        <p className="text-slate-600 text-[10px] mt-2 font-bold">রেফারেল হলে এখানে বোনাস দেখাবে</p>
+                        <p className="text-slate-600 text-[10px] mt-2 font-bold uppercase tracking-widest">Your bonuses will appear here</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -231,9 +231,9 @@ export default function ReferralDashboard() {
                         ))
                     ) : (
                         <div className="text-center py-16 bg-[#0f172a] rounded-[2rem] border border-white/5 border-dashed shadow-inner">
-                            <Users className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-                            <p className="text-slate-300 text-sm font-black uppercase tracking-widest">No Mates Found</p>
-                            <p className="text-slate-500 text-[10px] mt-2 font-bold uppercase">Level {networkLevel}-এ কোনো রেফারেল নেই</p>
+                            <Inbox className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+                            <p className="text-slate-300 text-sm font-black uppercase tracking-widest">No Network Found</p>
+                            <p className="text-slate-500 text-[10px] mt-2 font-bold uppercase">No referrals at Level {networkLevel}</p>
                         </div>
                     )}
                 </div>

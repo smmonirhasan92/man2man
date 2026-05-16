@@ -11,6 +11,7 @@ router.get('/usa-key', authMiddleware, authController.getDynamicKey);
 router.post('/change-password', authMiddleware, authController.changePassword);
 router.post('/set-pin', authMiddleware, authController.setTransactionPin);
 router.post('/change-pin', authMiddleware, authController.changeTransactionPin);
+router.post('/set-gender', authMiddleware, authController.setGender);
 
 // --- OTP & Email Verification Routes ---
 router.post('/send-otp', authLimiter, authController.sendOtp);

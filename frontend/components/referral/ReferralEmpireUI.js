@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Zap, Shield, Target, Users, TrendingUp, Trophy, Flame } from 'lucide-react';
+import { Crown, Zap, Shield, Target, Users, TrendingUp, Trophy, Flame, ChevronRight } from 'lucide-react';
 
 const ReferralEmpireUI = ({ stats }) => {
     // Graceful fallbacks
@@ -13,145 +13,122 @@ const ReferralEmpireUI = ({ stats }) => {
     const directEmpirePercent = Math.min((directEmpire.totalCount / 20) * 100, 100);
     const teamEmpirePercent = Math.min((teamEmpire.currentTeamMembers.length / 25) * 100, 100);
 
-    const ProgressRing = ({ percentage, colorClass, size = 64, strokeWidth = 6, children }) => {
-        const radius = (size - strokeWidth) / 2;
-        const circumference = radius * 2 * Math.PI;
-        const offset = circumference - (percentage / 100) * circumference;
-
-        return (
-            <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-                <svg className="w-full h-full -rotate-90 transform">
-                    <circle
-                        cx={size / 2} cy={size / 2} r={radius}
-                        className="stroke-slate-800/50 fill-none"
-                        strokeWidth={strokeWidth}
-                    />
-                    <motion.circle
-                        cx={size / 2} cy={size / 2} r={radius}
-                        className={`fill-none ${colorClass}`}
-                        strokeWidth={strokeWidth}
-                        strokeDasharray={circumference}
-                        initial={{ strokeDashoffset: circumference }}
-                        animate={{ strokeDashoffset: offset }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        strokeLinecap="round"
-                    />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    {children}
+    const ProgressBar = ({ percentage, colorClass, label, current, total, subLabel, icon: Icon, reward }) => (
+        <div className="bg-white/[0.03] border border-white/10 p-6 rounded-[2rem] space-y-4 relative overflow-hidden group hover:bg-white/5 transition-all duration-500">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
+            
+            <div className="flex justify-between items-start relative z-10">
+                <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-2xl ${colorClass.replace('bg-', 'bg-').replace('500', '500/20')} border border-white/5`}>
+                        <Icon size={24} className={colorClass.replace('bg-', 'text-')} />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-black text-base uppercase tracking-tight">{label}</h3>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{subLabel}</p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-white tracking-tighter">{current}</span>
+                        <span className="text-sm font-bold text-slate-600">/ {total}</span>
+                    </div>
+                    {reward && (
+                        <div className="mt-1 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                            <Zap size={10} className="text-emerald-400" />
+                            <span className="text-[9px] font-black text-emerald-400 uppercase">{reward}</span>
+                        </div>
+                    )}
                 </div>
             </div>
-        );
-    };
+
+            {/* The Actual Progress Bar */}
+            <div className="space-y-2 relative z-10">
+                <div className="h-3 w-full bg-black/40 rounded-full border border-white/5 p-[2px] overflow-hidden">
+                    <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 1.5, ease: "circOut" }}
+                        className={`h-full rounded-full ${colorClass} relative`}
+                    >
+                        {/* Glow effect on the bar */}
+                        <div className={`absolute inset-0 blur-sm opacity-50 ${colorClass}`}></div>
+                        {/* Shimmer effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite] -skew-x-12"></div>
+                    </motion.div>
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                    <span>Progress</span>
+                    <span className={percentage >= 100 ? 'text-emerald-400' : ''}>{percentage.toFixed(0)}%</span>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between px-2">
                 <div>
-                    <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600 flex items-center gap-2 uppercase tracking-widest">
-                        <Crown className="w-6 h-6 text-yellow-500" />
+                    <h2 className="text-xl font-black text-white flex items-center gap-2 uppercase tracking-widest">
+                        <Crown className="w-6 h-6 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                         Empire Status
                     </h2>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
-                        3-Tier Growth Tracker
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">
+                        Live Tracking & Achievement Node
                     </p>
                 </div>
                 {teamEmpire.completedTeams > 0 && (
-                    <div className="flex flex-col items-end">
-                        <div className="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-xl text-xs font-black uppercase flex items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                            <Trophy className="w-3 h-3" />
-                            {teamEmpire.completedTeams}x Teams Completed
-                        </div>
+                    <div className="bg-indigo-500/20 text-indigo-400 px-4 py-2 rounded-2xl border border-indigo-500/30 flex items-center gap-2 shadow-xl animate-bounce">
+                        <Trophy size={16} />
+                        <span className="text-[10px] font-black uppercase">{teamEmpire.completedTeams}x Teams Mastered</span>
                     </div>
                 )}
             </div>
 
-            {/* TRACKER 1: MONTHLY SPRINT */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative p-5 rounded-[2rem] bg-gradient-to-br from-rose-950/40 to-slate-900 border border-rose-500/20 overflow-hidden shadow-xl group"
-            >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-[50px] group-hover:bg-rose-500/20 transition-all" />
-                
-                <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <ProgressRing percentage={sprintPercent} colorClass="stroke-rose-500">
-                            <Flame className={`w-6 h-6 ${sprintPercent >= 100 ? 'text-rose-400 animate-pulse' : 'text-slate-600'}`} />
-                        </ProgressRing>
-                        <div>
-                            <h3 className="text-white font-black text-base uppercase flex items-center gap-2">
-                                Monthly Sprint
-                                {monthlySprint.bonusClaimed && <span className="bg-rose-500/20 text-rose-400 text-[9px] px-2 py-0.5 rounded uppercase">Claimed</span>}
-                            </h3>
-                            <p className="text-slate-400 text-[10px] font-bold mt-1">5 Directs = 5% Volume Bonus</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-2xl font-black text-white">{monthlySprint.directsCount}<span className="text-sm text-slate-500">/5</span></p>
-                    </div>
-                </div>
-            </motion.div>
+            <div className="grid grid-cols-1 gap-4">
+                {/* 1. MONTHLY SPRINT */}
+                <ProgressBar 
+                    label="Monthly Sprint"
+                    subLabel="This Month Performance"
+                    current={monthlySprint.directsCount}
+                    total={5}
+                    percentage={sprintPercent}
+                    colorClass="bg-gradient-to-r from-rose-600 to-rose-400"
+                    icon={Flame}
+                    reward="5% Volume Bonus"
+                />
 
-            {/* TRACKER 2: LIFETIME DIRECT EMPIRE */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="relative p-5 rounded-[2rem] bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-500/20 overflow-hidden shadow-xl group"
-            >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-[50px] group-hover:bg-indigo-500/20 transition-all" />
-                
-                <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <ProgressRing percentage={directEmpirePercent} colorClass="stroke-indigo-400">
-                            <TrendingUp className={`w-6 h-6 ${directEmpirePercent >= 100 ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
-                        </ProgressRing>
-                        <div>
-                            <h3 className="text-white font-black text-base uppercase flex items-center gap-2">
-                                Direct Empire
-                                {directEmpire.isMatured && <span className="bg-indigo-500/20 text-indigo-400 text-[9px] px-2 py-0.5 rounded uppercase">Matured</span>}
-                            </h3>
-                            <p className="text-slate-400 text-[10px] font-bold mt-1">20 Gold-Tier Directs = Mega Bonus</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-2xl font-black text-white">{directEmpire.totalCount}<span className="text-sm text-slate-500">/20</span></p>
-                    </div>
-                </div>
-            </motion.div>
+                {/* 2. DIRECT EMPIRE */}
+                <ProgressBar 
+                    label="Direct Empire"
+                    subLabel="Lifetime Direct Network"
+                    current={directEmpire.totalCount}
+                    total={20}
+                    percentage={directEmpirePercent}
+                    colorClass="bg-gradient-to-r from-indigo-600 to-indigo-400"
+                    icon={Target}
+                    reward="Mega Achievement Bonus"
+                />
 
-            {/* TRACKER 3: TEAM EMPIRE */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="relative p-5 rounded-[2rem] bg-gradient-to-br from-amber-950/40 to-slate-900 border border-amber-500/30 overflow-hidden shadow-xl group"
-            >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-[50px] group-hover:bg-amber-500/20 transition-all" />
-                
-                <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <ProgressRing percentage={teamEmpirePercent} colorClass="stroke-amber-400" strokeWidth={8} size={72}>
-                            <Users className={`w-7 h-7 ${teamEmpirePercent >= 100 ? 'text-amber-400 animate-bounce' : 'text-slate-600'}`} />
-                        </ProgressRing>
-                        <div>
-                            <h3 className="text-amber-400 font-black text-lg uppercase flex items-center gap-2 drop-shadow-md">
-                                Team Empire
-                            </h3>
-                            <p className="text-slate-400 text-xs font-bold mt-1">25 Team Members (L1 & L2)</p>
-                            <div className="mt-2 bg-black/40 rounded-lg px-2 py-1 inline-flex items-center gap-1 border border-white/5">
-                                <Zap className="w-3 h-3 text-emerald-400" />
-                                <span className="text-[10px] text-slate-300 font-bold">Reward: 3000 NXS</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-3xl font-black text-amber-400 drop-shadow-md">{teamEmpire.currentTeamMembers.length}<span className="text-sm text-amber-700">/25</span></p>
-                    </div>
-                </div>
-            </motion.div>
+                {/* 3. TEAM EMPIRE */}
+                <ProgressBar 
+                    label="Team Empire"
+                    subLabel="Combined L1 & L2 Mates"
+                    current={teamEmpire.currentTeamMembers.length}
+                    total={25}
+                    percentage={teamEmpirePercent}
+                    colorClass="bg-gradient-to-r from-amber-500 to-yellow-400"
+                    icon={Users}
+                    reward="3000 NXS Special Reward"
+                />
+            </div>
 
+            {/* Legend / Info */}
+            <div className="mx-2 p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex items-start gap-3">
+                <Shield className="w-5 h-5 text-indigo-500/50 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-slate-500 font-bold leading-relaxed uppercase tracking-wider">
+                    Achievement system is automated. Once you reach 100%, bonuses will be instantly unlocked and accessible via the claim section above. No manual locks applied.
+                </p>
+            </div>
         </div>
     );
 };

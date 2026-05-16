@@ -51,7 +51,7 @@ class WalletService {
                         status: 'completed',
                         description: `Automatic Loan Repayment (Main balance over 100 NXS)`,
                         metadata: { remainingLoan: Math.max(0, remainingLoan), source: 'auto_recovery' }
-                    }], { session });
+                    }], { session, ordered: true });
 
                     // [SOCKET] Notify of recovery
                     try {
@@ -359,7 +359,139 @@ class WalletService {
         });
     }
 
+    // [NEW] B2B Direct Send using Secret Account ID & PIN
+    static async b2bSend(senderId, amount, nxsAccountId, pin) {
+        const { runTransaction } = require('../common/TransactionHelper');
+        const bcrypt = require('bcryptjs');
+
+        return await runTransaction(async (session) => {
+            const parsedAmount = parseFloat(amount);
+            if (parsedAmount < 900) throw new Error('Minimum send amount is 900 NXS ($9).');
+            if (parsedAmount % 100 !== 0) throw new Error('Send amount must be a multiple of 100 NXS.');
+
+            // 1. Find Sender & Validate Password
+            const sender = await User.findById(senderId).select('+password wallet').session(session);
+            if (!sender) throw new Error('Sender not found.');
+            if (!sender.password) throw new Error('Password not set on your account.');
+            
+            const isPinValid = await bcrypt.compare(pin, sender.password);
+            if (!isPinValid) throw new Error('Invalid Login Password.');
+
+            // 2. Find Recipient by Secret ID
+            const recipient = await User.findOne({ nxsAccountId: nxsAccountId.toUpperCase().trim() }).session(session);
+            if (!recipient) throw new Error('Recipient ID not found. Please check and try again.');
+            if (sender._id.equals(recipient._id)) throw new Error('Cannot send to yourself.');
+
+            // 3. Fee & Balance Calculation
+            const fee = parsedAmount * 0.05; // 5%
+            const totalDeduction = parsedAmount + fee;
+            const RESERVE_LIMIT = 50;
+
+            if (sender.wallet.main < (totalDeduction + RESERVE_LIMIT)) {
+                throw new Error(`Insufficient Main Balance. Need ${totalDeduction} NXS + ${RESERVE_LIMIT} NXS reserve.`);
+            }
+
+            // 4. Atomic Updates
+            const updatedSender = await User.findOneAndUpdate(
+                { _id: senderId, 'wallet.main': { $gte: totalDeduction } },
+                { $inc: { 'wallet.main': -totalDeduction } },
+                { new: true, session }
+            );
+
+            if (!updatedSender) throw new Error('Balance update failed. Please try again.');
+
+            const updatedRecipient = await User.findOneAndUpdate(
+                { _id: recipient._id },
+                { $inc: { 'wallet.main': parsedAmount } },
+                { new: true, session }
+            );
+
+            // 5. Admin Fee Route
+            await SystemSetting.findOneAndUpdate(
+                { key: 'admin_reserve_fund' },
+                { $inc: { value: fee } },
+                { upsert: true, session }
+            );
+
+            // 6. Logs & Ledger
+            const trxId = `B2B_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+            // Sender Transaction Record
+            await Transaction.create([{
+                userId: senderId,
+                type: 'b2b_send',
+                amount: -parsedAmount,
+                fee: fee,
+                status: 'completed',
+                description: `B2B Send to ${recipient.username} (${recipient.nxsAccountId})`,
+                recipientDetails: recipient.nxsAccountId
+            }], { session, ordered: true });
+
+            if (fee > 0) {
+                await Transaction.create([{
+                    userId: senderId,
+                    type: 'fee',
+                    amount: -fee,
+                    status: 'completed',
+                    description: `P2P Transfer Fee (5%)`,
+                    recipientDetails: 'System'
+                }], { session, ordered: true });
+            }
+
+            // Recipient Transaction Record
+            await Transaction.create([{
+                userId: recipient._id,
+                type: 'b2b_receive',
+                amount: parsedAmount,
+                status: 'completed',
+                description: `B2B Received from ${sender.username}`,
+                recipientDetails: sender.username
+            }], { session, ordered: true });
+
+            // Unified Ledger
+            await TransactionLedger.create([{
+                userId: senderId,
+                type: 'debit',
+                amount: -parsedAmount,
+                fee: fee,
+                balanceBefore: sender.wallet.main,
+                balanceAfter: updatedSender.wallet.main,
+                description: `B2B Out to ${recipient.nxsAccountId}`,
+                transactionId: `${trxId}_OUT`
+            }, {
+                userId: recipient._id,
+                type: 'credit',
+                amount: parsedAmount,
+                fee: 0,
+                balanceBefore: recipient.wallet.main,
+                balanceAfter: updatedRecipient.wallet.main,
+                description: `B2B In from ${sender.username}`,
+                transactionId: `${trxId}_IN`
+            }], { session, ordered: true });
+
+            // [SOCKET] Notify both
+            try {
+                const SocketService = require('../common/SocketService');
+                SocketService.emitToUser(senderId, 'wallet_update', updatedSender.wallet);
+                SocketService.emitToUser(senderId, 'notification', {
+                    title: 'Transfer Successful',
+                    message: `You successfully sent ${parsedAmount} NXS to ${recipient.username}`,
+                    type: 'success'
+                });
+                SocketService.emitToUser(recipient._id, 'wallet_update', updatedRecipient.wallet);
+                SocketService.emitToUser(recipient._id, 'notification', {
+                    title: 'Payment Received!',
+                    message: `You received ${parsedAmount} NXS from ${sender.username}`,
+                    type: 'success'
+                });
+            } catch (e) {}
+
+            return { success: true, amount: parsedAmount, fee, recipient: recipient.username };
+        });
+    }
+
     // Send Money (P2P) - VIP Card Restricted
+
     static async sendMoney(senderId, amount, recipientPhone, ip = 'unknown') {
         return await runTransaction(async (session) => {
             const parsedAmount = parseFloat(amount);

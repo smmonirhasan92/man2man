@@ -15,6 +15,7 @@ router.put('/profile', authMiddleware, (req, res, next) => {
     });
 }, userController.updateProfile);
 router.put('/change-password', authMiddleware, userController.changePassword);
+router.post('/set-pin', authMiddleware, userController.setTransactionPin);
 
 // Plan & Upgrade Routes
 router.get('/plans', authMiddleware, userController.getAccountPlans);

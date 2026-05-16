@@ -1,165 +1,300 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import { useRouter } from 'next/navigation';
-import BottomNav from '../../../components/BottomNav';
-import { ArrowLeft, User, Send, Smartphone } from 'lucide-react';
+import { ArrowLeft, Send, ShieldCheck, Zap, Info, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
-import TapToConfirmButton from '../../../components/TapToConfirmButton';
+import toast from 'react-hot-toast';
+import { useCurrency } from '../../../context/CurrencyContext';
 
-export default function SendMoneyPage() {
-    const [phone, setPhone] = useState('');
-    const [amount, setAmount] = useState('');
-    const [method, setMethod] = useState('bkash');
-    const [message, setMessage] = useState('');
-    const [isError, setIsError] = useState(false);
-    const [accountType, setAccountType] = useState('Personal'); // Personal or Agent
-    const [loading, setLoading] = useState(false);
+export default function B2BSendPage() {
+    const { formatNXS } = useCurrency();
     const router = useRouter();
 
-    const handleConfirm = () => {
-        // Trigger the actual submission
+    const [recipientId, setRecipientId] = useState('');
+    const [amount, setAmount] = useState('');
+    const [pin, setPin] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [myId, setMyId] = useState('');
+    const [copied, setCopied] = useState(false);
+    const [balance, setBalance] = useState(0);
+
+    // Hold-to-Send State
+    const [holdProgress, setHoldProgress] = useState(0);
+    const [isHolding, setIsHolding] = useState(false);
+    const holdDuration = 1500; // 1.5 seconds
+
+    // Load User Data (My ID and Balance)
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const [userRes, walletRes] = await Promise.all([
+                    api.get('/auth/me'),
+                    api.get('/wallet/balance')
+                ]);
+                const userData = userRes.data;
+                setMyId(userData.nxsAccountId || 'NXS-PENDING');
+                setBalance(walletRes.data.wallet_balance || 0);
+            } catch (err) {
+                console.error("Failed to load user info", err);
+            }
+        };
+        fetchUserData();
+    }, []);
+
+    const copyToClipboard = () => {
+        if (!myId || myId === 'NXS-PENDING') return;
+
+        const fallbackCopy = (text) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                setCopied(true);
+                toast.success("ID Copied!");
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(myId)
+                .then(() => {
+                    setCopied(true);
+                    toast.success("ID Copied!");
+                    setTimeout(() => setCopied(false), 2000);
+                })
+                .catch(() => fallbackCopy(myId));
+        } else {
+            fallbackCopy(myId);
+        }
+    };
+
+    const handleSend = async (e) => {
+        if (e) e.preventDefault();
+        
+        const numAmount = parseFloat(amount);
+        if (!recipientId || !amount || !pin) return toast.error("Please fill all fields");
+        if (numAmount < 900) return toast.error("Minimum send is 900 NXS");
+        if (numAmount % 100 !== 0) return toast.error("Amount must be a multiple of 100");
+
         setLoading(true);
-        setMessage(''); // Clear previous messages
-        setIsError(false);
-
-        // Call the API
-        api.post('/transaction/send', {
-            recipientPhone: phone,
-            amount,
-            method,
-            accountType
-        })
-            .then(() => {
-                setIsError(false);
-                setMessage('Request Sent! 🚀');
-                setTimeout(() => router.push('/dashboard'), 2000);
-            })
-            .catch(err => {
-                setIsError(true);
-                setMessage(err.response?.data?.message || 'Transaction failed');
-                setLoading(false);
+        try {
+            const res = await api.post('/wallet/b2b-send', {
+                amount: numAmount,
+                nxsAccountId: recipientId,
+                pin: pin
             });
+
+            toast.success(res.data.message);
+            // Confetti effect
+            const confetti = (await import('canvas-confetti')).default;
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            
+            setAmount('');
+            setPin('');
+            setRecipientId('');
+            
+            setTimeout(() => router.push('/wallet/history'), 3000);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Transfer failed");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const resetForm = () => {
-        setMessage('');
-        setIsError(false);
-    };
+    // Hold-to-Send Effect
+    useEffect(() => {
+        let interval;
+        if (isHolding && !loading) {
+            const step = 20; // 50 fps smooth animation
+            interval = setInterval(() => {
+                setHoldProgress(prev => {
+                    const next = prev + (step / holdDuration) * 100;
+                    if (next >= 100) {
+                        clearInterval(interval);
+                        setIsHolding(false);
+                        handleSend(); // Trigger send automatically
+                        return 100;
+                    }
+                    return next;
+                });
+            }, step);
+        } else {
+            setHoldProgress(0);
+        }
+        return () => clearInterval(interval);
+    }, [isHolding, loading, amount, recipientId, pin]);
+
+    const fee = amount ? (parseFloat(amount) * 0.05).toFixed(2) : 0;
+    const total = amount ? (parseFloat(amount) + parseFloat(fee)).toFixed(2) : 0;
 
     return (
-        <div className="flex flex-col h-screen bg-slate-50 font-sans">
-            {/* Header - Simple PWA Style */}
-            <div className="bg-white p-4 pt-6 shadow-sm z-10 sticky top-0 flex items-center gap-4">
-                <Link href="/dashboard" className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
-                    <ArrowLeft className="w-6 h-6 text-slate-700" />
-                </Link>
-                <h1 className="text-lg font-bold text-slate-800">Send Money</h1>
+        <div className="h-[100dvh] flex flex-col bg-[#060b18] text-white font-sans selection:bg-pink-500/30 overflow-hidden">
+            {/* Ambient Background Lights */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-pink-600/10 rounded-full blur-[100px]"></div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-                {/* Available Balance Preview (Small) */}
-                {/* User requested 'not show', but usually apps show a small hint. 
-                    I'll hide it for now based on 'not show' instructions or keep it extremely subtle. 
-                    Let's follow the 'not show' strictly for the form focus.
-                */}
+            {/* Header (Fixed) */}
+            <div className="relative z-10 px-5 pt-6 pb-2 flex items-center justify-between shrink-0">
+                <Link href="/dashboard" className="p-2 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all">
+                    <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <h1 className="text-lg font-black uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/50">
+                    Direct Send
+                </h1>
+                <div className="w-9"></div> {/* Spacer */}
+            </div>
 
-                {message ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-300">
-                        <div className={`w-24 h-24 ${isError ? 'bg-red-100/50 ring-red-50' : 'bg-green-100/50 ring-green-50'} rounded-full flex items-center justify-center mb-6 ring-8`}>
-                            <span className="text-4xl animate-bounce">{isError ? '⚠️' : '🎉'}</span>
-                        </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">{message}</h2>
-                        <p className="text-slate-500">{isError ? 'Please check details and try again.' : 'Your transfer is being processed.'}</p>
-
-                        {isError && (
-                            <button
-                                onClick={resetForm}
-                                className="mt-8 bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 transition"
-                            >
-                                Try Again
-                            </button>
-                        )}
+            {/* Content Area (Scrollable internally if screen is too small, but compact enough to fit) */}
+            <div className="relative z-10 px-5 pb-24 flex-1 overflow-y-auto space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                
+                {/* My ID Card (Compact) */}
+                <div className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 p-4 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden group shrink-0 mt-2">
+                    <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+                        <Zap className="w-8 h-8 text-indigo-400" />
                     </div>
-                ) : (
-                    <div className="max-w-lg mx-auto space-y-8 py-4">
+                    <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest mb-1">Your 8-Digit Pay ID</p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-black tracking-tighter">{myId}</h2>
+                        <button onClick={copyToClipboard} className="p-1.5 bg-white/10 rounded-lg hover:bg-white/20 transition-all">
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Main Balance</span>
+                        <span className="text-xs font-black text-emerald-400">{formatNXS(balance)}</span>
+                    </div>
+                </div>
 
-                        {/* Recipient Input */}
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm focus-within:ring-2 focus-within:ring-pink-500/20 transition-all">
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Recipient</label>
-                            <input
-                                type="tel"
-                                className="w-full text-xl font-bold text-slate-800 outline-none placeholder:text-slate-300"
-                                placeholder="017XXXXXXXX"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
+                {/* Send Form */}
+                <div className="space-y-4">
+                    
+                    {/* Recipient ID */}
+                    <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">Recipient Pay ID</label>
+                        <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                                <Send size={16} />
+                            </div>
+                            <input 
+                                type="text"
+                                value={recipientId}
+                                onChange={(e) => setRecipientId(e.target.value.replace(/[^0-9]/g, '').trim())}
+                                placeholder="e.g. 84492105"
+                                maxLength={8}
+                                className="w-full bg-white/5 border border-white/10 p-3.5 pl-11 rounded-2xl outline-none focus:border-indigo-500/50 focus:bg-white/[0.08] transition-all text-sm font-black tracking-widest"
                             />
                         </div>
-
-                        {/* Amount Input - Huge */}
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-center focus-within:ring-4 focus-within:ring-pink-500/10 transition-all">
-                            <label className="block text-xs font-bold text-pink-500 uppercase tracking-widest mb-4">Amount to Send</label>
-                            <div className="flex items-center justify-center">
-                                <span className="text-4xl font-black text-slate-300 mr-2">$</span>
-                                <input
-                                    type="number"
-                                    className="w-48 text-5xl font-black text-slate-800 outline-none placeholder:text-slate-200 text-center bg-transparent"
-                                    placeholder="0"
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Options Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Method</label>
-                                <select
-                                    value={method}
-                                    onChange={(e) => setMethod(e.target.value)}
-                                    className="w-full font-bold text-slate-700 outline-none bg-transparent"
-                                >
-                                    <option value="bkash">Bkash</option>
-                                    <option value="nagad">Nagad</option>
-                                    <option value="rocket">Rocket</option>
-                                </select>
-                            </div>
-                            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Type</label>
-                                <select
-                                    value={accountType}
-                                    onChange={(e) => setAccountType(e.target.value)}
-                                    className="w-full font-bold text-slate-700 outline-none bg-transparent"
-                                >
-                                    <option value="Personal">Personal</option>
-                                    <option value="Agent">Agent</option>
-                                </select>
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-            </div>
-
-            {/* Tap to Confirm Section */}
-            {!message && (
-                <div className="bg-white p-6 pb-8 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
-                    {/* Summary Line */}
-                    <div className="flex justify-between items-center mb-8 px-4 text-sm text-slate-500">
-                        <span>Total Charge</span>
-                        <span className="font-bold text-slate-800">$0.00</span>
                     </div>
 
-                    <TapToConfirmButton
-                        onConfirm={handleConfirm}
-                        isLoading={loading}
-                        color="pink"
-                        initialLabel="Tap and Hold to Send Money"
-                        confirmingLabel="Sending..."
-                    />
+                    {/* Amount */}
+                    <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">Amount (NXS)</label>
+                        <div className="w-full bg-white/5 border border-white/10 p-3.5 rounded-2xl flex items-center transition-all focus-within:border-pink-500/50">
+                            <input type="text" style={{ display: 'none' }} name="prevent_autofill" />
+                            <input 
+                                type="text"
+                                inputMode="decimal"
+                                id="trx_v_clean"
+                                name="trx_v_clean"
+                                value={amount}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9.]/g, '');
+                                    setAmount(val);
+                                }}
+                                onFocus={(e) => e.target.removeAttribute('readonly')}
+                                onBlur={(e) => e.target.setAttribute('readonly', 'true')}
+                                readOnly
+                                autoComplete="off"
+                                data-lpignore="true"
+                                placeholder="Enter amount"
+                                className="w-full bg-transparent border-none outline-none text-xl font-black text-white placeholder-white/20 cursor-text"
+                            />
+                        </div>
+                        <p className="text-[8px] text-slate-500 font-bold ml-3">Must be multiple of 100</p>
+                    </div>
+
+                    {/* Password Section */}
+                    <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-3">Login Password</label>
+                        <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-colors">
+                                <ShieldCheck size={16} />
+                            </div>
+                            <input 
+                                type="password"
+                                value={pin}
+                                onChange={(e) => setPin(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full bg-white/5 border border-white/10 p-3.5 pl-11 rounded-2xl outline-none focus:border-emerald-500/50 focus:bg-white/[0.08] transition-all text-sm font-black tracking-[0.3em]"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Summary Card (Compact) */}
+                    <div className="bg-white/[0.02] border border-white/5 p-3.5 rounded-2xl space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                            <span>Platform Fee (5%)</span>
+                            <span className="text-rose-400">{fee} NXS</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1.5 border-t border-white/5">
+                            <span className="text-xs font-black uppercase tracking-widest">Total Deduction</span>
+                            <span className="text-sm font-black text-white">{total} NXS</span>
+                        </div>
+                    </div>
+
+                    {/* Hold to Confirm Button (Compact) */}
+                    <div 
+                        className="relative w-full h-[54px] bg-white/5 border border-white/10 rounded-2xl overflow-hidden cursor-pointer select-none touch-none transition-transform shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] mt-2"
+                        style={{ 
+                            transform: isHolding ? 'scale(0.96)' : 'scale(1)',
+                            WebkitUserSelect: 'none',
+                            WebkitTouchCallout: 'none'
+                        }}
+                        onPointerDown={(e) => { 
+                            e.preventDefault(); 
+                            if(!loading && amount && recipientId && pin) setIsHolding(true); 
+                        }}
+                        onPointerUp={() => setIsHolding(false)}
+                        onPointerLeave={() => setIsHolding(false)}
+                        onPointerCancel={() => setIsHolding(false)}
+                        onContextMenu={(e) => e.preventDefault()}
+                    >
+                        {/* Dynamic Progress Fill */}
+                        <div 
+                            className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-indigo-600 to-purple-600 pointer-events-none transition-all duration-75 ease-linear"
+                            style={{ width: `${holdProgress}%` }}
+                        ></div>
+                        
+                        {/* Button Text */}
+                        <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none z-10">
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <span className={`text-sm font-black uppercase tracking-widest transition-colors ${holdProgress > 40 ? 'text-white drop-shadow-md' : 'text-slate-300'}`}>
+                                    Hold to Confirm <Send size={16} className={`inline ml-1 transition-transform ${isHolding ? 'translate-x-1' : ''}`} />
+                                </span>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            )}
+
+                {/* Important Notice (Compact) */}
+                <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex gap-2.5 mt-2">
+                    <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                    <p className="text-[9px] text-amber-200/80 font-medium leading-relaxed uppercase tracking-wider">
+                        B2B transfers cannot be reversed. Verify ID before confirming. 50 NXS reserve must remain.
+                    </p>
+                </div>
+
+            </div>
         </div>
     );
 }

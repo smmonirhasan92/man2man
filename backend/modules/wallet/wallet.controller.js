@@ -84,6 +84,29 @@ exports.transferMoney = async (req, res) => {
 // Alias for Send Money (Frontend uses /send -> sendMoney)
 exports.sendMoney = exports.transferMoney;
 
+// [NEW] B2B Direct Send (Secret ID + PIN)
+exports.sendB2B = async (req, res) => {
+    try {
+        const { amount, nxsAccountId, pin } = req.body;
+        const senderId = req.user.user.id;
+
+        if (!nxsAccountId || !amount || !pin) {
+            return res.status(400).json({ message: 'Amount, Recipient ID, and PIN are required.' });
+        }
+
+        const result = await WalletService.b2bSend(senderId, amount, nxsAccountId, pin);
+
+        res.json({
+            success: true,
+            message: `Successfully sent ${amount} NXS to ${result.recipient}`,
+            data: result
+        });
+    } catch (err) {
+        console.error('[B2B Send Error]:', err.message);
+        res.status(400).json({ success: false, message: err.message || 'B2B Transfer Failed' });
+    }
+};
+
 // Request Withdrawal
 exports.requestWithdrawal = async (req, res) => {
     try {

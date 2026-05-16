@@ -8,7 +8,7 @@ import ImageSlider from '../../components/ImageSlider';
 import { DashboardSkeleton } from '../../components/ui/SkeletonLoader';
 import GlobalErrorBoundary from '../../components/GlobalErrorBoundary';
 import {
-    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown, Trophy, Gem, Share2
+    Plus, ArrowDownLeft, Server, Briefcase, Ticket, Users, LifeBuoy, Gamepad2, Shield, Lock, DollarSign, Wallet, Globe, ArrowRight, Gift, Zap, Crown, Trophy, Gem, Share2, Send
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { AnimatePresence } from 'framer-motion';
@@ -24,6 +24,7 @@ import VPSConnectModal from '../../components/VPSConnectModal';
 import api from '../../services/api';
 import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 import GlobalTourProgress from '../../components/dashboard/GlobalTourProgress';
+import GenderSelectionModal from '../../components/dashboard/GenderSelectionModal';
 
 export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
@@ -171,6 +172,14 @@ function DashboardContent() {
                 />
             )}
 
+            {/* [NEW] Progressive Profiling Gender Selection Interceptor */}
+            {!user?.requireEmailVerification && !user?.gender && user?._id && (
+                <GenderSelectionModal 
+                    user={user} 
+                    onComplete={(gender) => setUser(prev => ({ ...prev, gender }))} 
+                />
+            )}
+
 
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1080')] bg-cover bg-center opacity-30"></div>
@@ -301,10 +310,10 @@ function DashboardContent() {
                 <div className="w-full px-6 mb-8 mt-4">
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 px-1">Discover Options</h3>
                     <div className="grid grid-cols-3 gap-3">
-                        {/* Row 1: Lottery, Invest, VIP Card */}
+                        {/* Row 1: Direct Send, Invest, VIP Card */}
                         <div className="relative group">
-                            <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
-                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
+                            <FolderCard href="/wallet/send" icon={Send} label="Direct Send" color="text-indigo-400" gradient="from-indigo-600/20 to-indigo-900/40" border="border-indigo-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">NEW</div>
                         </div>
                         <FolderCard href="/dashboard/invest" icon={DollarSign} label="Invest" color="text-emerald-400" gradient="from-emerald-600/20 to-emerald-900/40" border="border-emerald-500/30" />
                         <div className="relative group">
@@ -312,12 +321,13 @@ function DashboardContent() {
                             <div className="absolute -top-2 -right-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">VIP</div>
                         </div>
 
-                        {/* Row 2: Luck Test, Scratch Card, Gift Box */}
+                        {/* Row 2: Lottery, Luck Test, Gift Box */}
                         <div className="relative group">
-                            <FolderCard href="/dashboard/luck-test" icon={Gamepad2} label="Luck Test" color="text-orange-400" gradient="from-orange-600/20 to-orange-900/40" border="border-orange-500/30" />
+                            <FolderCard href="/lottery" icon={Ticket} label="Lottery" color="text-purple-400" gradient="from-purple-600/20 to-purple-900/40" border="border-purple-500/30" />
+                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full shadow-lg border border-white/20 animate-pulse">JACKPOT</div>
                         </div>
                         <div className="relative group">
-                            <FolderCard href="/dashboard/scratch-card" icon={Ticket} label="Scratch Card" color="text-amber-400" gradient="from-amber-600/20 to-amber-900/40" border="border-amber-500/30" />
+                            <FolderCard href="/dashboard/luck-test" icon={Gamepad2} label="Luck Test" color="text-orange-400" gradient="from-orange-600/20 to-orange-900/40" border="border-orange-500/30" />
                         </div>
                         <div className="relative group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('toggle-mystery-box'))}>
                             <FolderCard href="#" icon={Gift} label="Gift Box" color="text-pink-400" gradient="from-pink-600/20 to-pink-900/40" border="border-pink-500/30" />

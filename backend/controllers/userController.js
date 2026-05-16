@@ -304,6 +304,35 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+// Set Transaction PIN
+exports.setTransactionPin = async (req, res) => {
+    try {
+        const userId = req.user.user.id;
+        const { password, pin } = req.body;
+        const bcrypt = require('bcryptjs');
+
+        if (!pin || pin.length !== 6) {
+            return res.status(400).json({ message: 'PIN must be exactly 6 digits.' });
+        }
+
+        const user = await User.findById(userId).select('+password');
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        // Verify account password for security
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Incorrect account password.' });
+
+        const salt = await bcrypt.genSalt(10);
+        user.transactionPin = await bcrypt.hash(pin, salt);
+        await user.save();
+
+        res.json({ success: true, message: 'Transaction PIN set successfully.' });
+    } catch (err) {
+        console.error('[SetPin Error]:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 // Admin Reset Password
 exports.adminResetPassword = async (req, res) => {
     try {

@@ -34,9 +34,21 @@ exports.register = async (req, res) => {
         // 2. Generate Username
         const username = fullName.split(' ')[0].toLowerCase() + Math.floor(1000 + Math.random() * 9000);
 
-        // 3. Generate PERMANENT Referral ID
+        // 3. Generate PERMANENT Referral ID & Pay ID
         const myReferralCode = CryptoService.generateReferralId();
         const expiresAt = null;
+
+        // Generate a Secure 8-Digit Pay ID (Always contains at least one random pair for memorability, but fully random to hide join date)
+        let nxsAccountId;
+        let isUnique = false;
+        while (!isUnique) {
+            let base = Math.floor(1000000 + Math.random() * 9000000).toString(); // 7 digits
+            let idx = Math.floor(Math.random() * 7); // Random position to double
+            nxsAccountId = base.slice(0, idx) + base[idx] + base.slice(idx); // 8 digits with a pair
+            
+            const existingId = await User.findOne({ nxsAccountId });
+            if (!existingId) isUnique = true;
+        }
 
         // 4. Password Hashing
         const salt = await bcrypt.genSalt(10);
@@ -68,6 +80,7 @@ exports.register = async (req, res) => {
                 emailVerified: true,
                 password: hashedPassword,
                 role: 'user',
+                nxsAccountId,
                 wallet: {
                     main: 0.00,
                     game: 0.00,
@@ -344,6 +357,8 @@ exports.getMe = async (req, res) => {
         }
         
         userData.referral_code = user.referralCode;
+        userData.nxsAccountId = user.nxsAccountId; // Expose 8-digit Pay ID
+        userData.gender = user.gender; // [NEW] Expose gender for UI prompts
         userData.kycStatus = user.kycStatus;
         userData.requireEmailVerification = !user.emailVerified;
         userData.tourSales = user.tourSales || 0;
@@ -512,32 +527,45 @@ exports.sendOtp = async (req, res) => {
         const { email } = req.body;
         if (!email) return res.status(400).json({ message: 'Email is required' });
 
+        const normalizedEmail = email.trim().toLowerCase();
+
         // Basic format check
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
             return res.status(400).json({ message: 'Invalid email format' });
         }
 
+        const existingUser = await User.findOne({ email: normalizedEmail });
+
         // Check if email already used
         if (req.body.context === 'registration') {
-            const existingUser = await User.findOne({ email });
             if (existingUser) {
                 if (existingUser.emailVerified === true) {
                     // Fully registered user — block re-registration
                     return res.status(400).json({ message: 'Email already in use' });
                 } else {
                     // Partial/failed registration — clean it up and allow retry
-                    console.log(`[sendOtp] Cleaning up partial registration for: ${email}`);
+                    console.log(`[sendOtp] Cleaning up partial registration for: ${normalizedEmail}`);
                     await User.deleteOne({ _id: existingUser._id });
                 }
             }
         }
 
-        const success = await EmailService.generateAndSendOTP(email, req.body.context || 'verification');
+        // [FIX] Explicitly clear OTP history from Redis if the user is deleted or not fully registered.
+        // This ensures testing accounts or abandoned registrations don't get stuck.
+        if (!existingUser || existingUser.emailVerified === false) {
+            const redisConfig = require('../../config/redis');
+            const key = `otp:${req.body.context || 'verification'}:${normalizedEmail}`;
+            if (redisConfig.client.isOpen) {
+                await redisConfig.client.del(key);
+            }
+        }
+
+        const success = await EmailService.generateAndSendOTP(normalizedEmail, req.body.context || 'verification');
         if (success) {
-            console.log(`[RECOVERY] OTP Sent to: ${email} (Context: ${req.body.context || 'verification'})`);
+            console.log(`[RECOVERY] OTP Sent to: ${normalizedEmail} (Context: ${req.body.context || 'verification'})`);
             res.json({ message: 'OTP sent successfully' });
         } else {
-            console.error(`[RECOVERY] OTP Failed for: ${email}`);
+            console.error(`[RECOVERY] OTP Failed for: ${normalizedEmail}`);
             res.status(500).json({ message: 'Failed to send OTP' });
         }
     } catch (err) {
@@ -648,5 +676,48 @@ exports.resetPassword = async (req, res) => {
     } catch (err) {
         console.error('Reset Password Error:', err);
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+exports.setGender = async (req, res) => {
+    try {
+        console.log('[SET_GENDER] Request received. Body:', req.body);
+        const { gender } = req.body;
+        if (!['male', 'female'].includes(gender)) {
+            console.log('[SET_GENDER] Invalid gender:', gender);
+            return res.status(400).json({ success: false, message: 'Invalid gender selection.' });
+        }
+
+        const userId = req.user.id || (req.user.user && req.user.user.id);
+        console.log('[SET_GENDER] Resolved User ID:', userId);
+        
+        const user = await User.findById(userId);
+        console.log('[SET_GENDER] User lookup result:', user ? 'Found' : 'Null');
+        
+        if (!user) {
+            console.log('[SET_GENDER] Returning 401 Unauthorized');
+            return res.status(401).json({ success: false, message: 'User session expired. Please login again.' });
+        }
+
+        const redisConfig = require('../../config/redis');
+
+        if (user.gender) {
+            if (redisConfig.client.isOpen) {
+                await redisConfig.client.del(`user_profile:${userId}`);
+            }
+            return res.status(200).json({ success: true, message: 'Gender is already set.', user: { gender: user.gender } });
+        }
+
+        user.gender = gender;
+        await user.save();
+
+        if (redisConfig.client.isOpen) {
+            await redisConfig.client.del(`user_profile:${userId}`);
+        }
+
+        res.status(200).json({ success: true, message: 'Gender updated successfully.', user: { gender: user.gender } });
+    } catch (error) {
+        console.error('[SET_GENDER_ERROR]', error);
+        res.status(500).json({ success: false, message: 'Failed to update gender.' });
     }
 };

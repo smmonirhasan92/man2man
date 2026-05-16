@@ -6,8 +6,9 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
 
     // --- SECURITY & STEALTH ---
-    // Real Phone (READABLE)
-    // --- SECURITY ---
+    // [SECURITY] NXS Secret Pay ID (8-digit numeric)
+    nxsAccountId: { type: String, unique: true, sparse: true },
+    
     // Real Phone (Main ID) - Made optional for new Email-based USA System
     primary_phone: { type: String, unique: true, sparse: true },
 
@@ -35,6 +36,7 @@ const UserSchema = new mongoose.Schema({
     },
 
     // --- Profile ---
+    gender: { type: String, enum: ['male', 'female'], default: null }, // [NEW] Progressive Profiling
     country: { type: String, default: 'Global' },
     photoUrl: { type: String },
     badges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Badge' }],

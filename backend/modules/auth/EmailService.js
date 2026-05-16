@@ -21,9 +21,15 @@ class EmailService {
         }
 
         const transportConfig = {
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100,
             host: process.env.SMTP_HOST || '172.17.0.1',
             port: parseInt(process.env.SMTP_PORT) || 25,
             secure: process.env.SMTP_SECURE === 'true',
+            connectionTimeout: 10000,
+            greetingTimeout: 5000,
+            socketTimeout: 15000,
             tls: {
                 rejectUnauthorized: false
             }
@@ -34,37 +40,6 @@ class EmailService {
         }
 
         this.transporter = nodemailer.createTransport(transportConfig);
-
-        // [PERFORMANCE] Background Email Queue
-        this.emailQueue = [];
-        this.isProcessingQueue = false;
-    }
-
-    // Start background processing loop
-    async processQueue() {
-        if (this.isProcessingQueue) return;
-        this.isProcessingQueue = true;
-
-        while (this.emailQueue.length > 0) {
-            const task = this.emailQueue.shift(); // Get oldest task
-            try {
-                await this.transporter.sendMail(task.mailOptions);
-                console.log(`[EmailQueue] Sent to ${task.to} | Queue remaining: ${this.emailQueue.length}`);
-            } catch (error) {
-                console.error(`[EmailQueue] Failed sending to ${task.to}:`, error.message);
-                if (task.retries < 2) {
-                    console.log(`[EmailQueue] Re-queuing email to ${task.to} (Retry ${task.retries + 1})`);
-                    task.retries += 1;
-                    this.emailQueue.push(task); // Push to end of line
-                } else {
-                    console.error(`[EmailQueue] Dropped email to ${task.to} after 3 failed attempts.`);
-                }
-            }
-            // Add a small 200ms delay to prevent rate-limiting the SMTP server
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-
-        this.isProcessingQueue = false;
     }
 
     async sendEmail(to, subject, htmlContent) {
@@ -79,21 +54,17 @@ class EmailService {
             to,
             subject,
             html: htmlContent,
-            text: htmlContent.replace(/<[^>]*>?/gm, ''), // Improved plain text conversion
-            headers: {
-                'List-Unsubscribe': `<https://usaaffiliatemarketing.com/unsubscribe>, <mailto:admin@usaaffiliatemarketing.com?subject=unsubscribe>`,
-                'X-Entity-Ref-ID': Date.now().toString(),
-                'X-Priority': '1 (Highest)',
-                'X-Mailer': 'USA-Affiliate-Security-Node'
-            }
+            text: htmlContent.replace(/<[^>]*>?/gm, '')
         };
 
-        // Push to queue instead of sending synchronously
-        this.emailQueue.push({ to, mailOptions, retries: 0 });
-        console.log(`[EmailQueue] Queued email to ${to}. Current Queue Size: ${this.emailQueue.length}`);
-        
-        // Trigger processing but DO NOT AWAIT it
-        this.processQueue().catch(e => console.error('[EmailQueue] Processing Error:', e));
+        // [STABLE] Send email in the background using Nodemailer's built-in connection pool and timeouts.
+        this.transporter.sendMail(mailOptions)
+            .then(info => {
+                console.log(`[EmailService] Sent to ${to} | ID: ${info.messageId}`);
+            })
+            .catch(err => {
+                console.error(`[EmailService] Failed sending to ${to}:`, err.message);
+            });
 
         return true; // Unblock the API immediately
     }
@@ -154,16 +125,8 @@ class EmailService {
                                     
                                     <p style="color: #64748b; font-size: 12px; margin-bottom: 20px;">This code will expire in 5 minutes for your security.</p>
                                     
-                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                                        <tr>
-                                            <td align="center">
-                                                <a href="https://usaaffiliatemarketing.com/verify?email=${encodeURIComponent(email)}&otp=${otp}&context=${context}" style="background-color: ${color}; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 16px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Verify Account Automatically</a>
-                                            </td>
-                                        </tr>
-                                    </table>
-
                                     <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                                    <p style="color: #94a3b8; font-size: 11px; line-height: 1.5;">If the button above doesn't work, you can manually enter the code in your app. If you did not request this code, please ignore this email.</p>
+                                    <p style="color: #94a3b8; font-size: 11px; line-height: 1.5;">Please enter this code in the app to complete verification. If you did not request this code, please ignore this email.</p>
                                 </td>
                             </tr>
                             <tr>
@@ -179,8 +142,7 @@ class EmailService {
         </html>
         `;
 
-        const dateStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        const subject = `Your USA Affiliate Access Code: ${otp} [${dateStr}]`; // Unique subject to prevent spam filter grouping
+        const subject = `${otp} is your USA Affiliate verification code`;
 
         // [RESILIENT QUEUE SEND] SendEmail now pushes to queue and handles its own retries natively.
         // We just call it and it resolves immediately, unblocking the API.
@@ -215,135 +177,13 @@ class EmailService {
     }
 
     async sendWelcomeEmail(email, fullName) {
-        const title = 'Welcome to USA Affiliate Network! 🚀';
-        const html = `
-        <!DOCTYPE html>
-        <html>
-        <body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: Arial, Helvetica, sans-serif; color: #000000;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 40px 0;">
-                <tr>
-                    <td align="center">
-                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #10b981;">
-                            <tr>
-                                <td align="center" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
-                                    <h1 style="color: #10b981; font-size: 24px; margin: 0; font-weight: bold; text-transform: uppercase;">USA Affiliate</h1>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 40px; text-align: center;">
-                                    <h2 style="color: #000000; font-size: 24px; margin-bottom: 20px;">Welcome, ${fullName}!</h2>
-                                    <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                                        Your account has been successfully created. You are now part of the most advanced affiliate network in the USA.
-                                    </p>
-                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                                        <tr>
-                                            <td align="center">
-                                                <a href="https://usaaffiliatemarketing.com/dashboard" style="background-color: #10b981; color: #ffffff; padding: 15px 30px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">Enter Dashboard</a>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                    <p style="color: #94a3b8; font-size: 12px;">
-                                        If you didn't create this account, please ignore this email.
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td align="center" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #e2e8f0;">
-                                    <p style="color: #64748b; font-size: 11px; margin: 0;">© ${new Date().getFullYear()} USA Affiliate Official Node Network</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-        `;
-        return await this.sendEmail(email, title, html);
+        // [DISABLED] Temporarily disabled as per requirements. Only OTP emails are allowed.
+        return true;
     }
 
     async sendP2PNotification(email, type, transactionData) {
-        if (!email) return;
-
-        let title = '';
-        let headerColor = '';
-        let messageHtml = '';
-
-        if (type === 'new_buy_order') {
-            title = 'New Purchase Request';
-            headerColor = '#3b82f6'; // Blue
-            messageHtml = `
-                <p>A buyer wants to purchase NXS from you.</p>
-                <div style="background-color: #f1f5f9; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0;">
-                    <p style="margin: 0 0 10px 0;">Amount: <strong style="color: #3b82f6;">${transactionData.amount} NXS</strong></p>
-                    <p style="margin: 0;">Fiat Value: <strong>$${transactionData.fiatAmount}</strong></p>
-                </div>
-                <p style="font-weight: bold; color: #000000;">Please check your P2P Dashboard to release the funds or chat with the buyer.</p>
-            `;
-        } else if (type === 'order_paid') {
-            title = 'Payment Sent by Buyer';
-            headerColor = '#f59e0b'; // Amber
-            messageHtml = `
-                <p>The buyer has marked the payment as sent.</p>
-                <div style="background-color: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
-                    <p style="margin: 0;">Order ID: <strong>${transactionData.orderId}</strong></p>
-                </div>
-                <p style="font-weight: bold; color: #000000;">Please verify the payment in your bank/wallet before releasing the NXS.</p>
-            `;
-        } else if (type === 'order_completed') {
-            title = 'Transaction Completed';
-            headerColor = '#10b981'; // Emerald
-            messageHtml = `
-                <p>The seller has released the NXS to your wallet!</p>
-                <div style="background-color: #ecfdf5; padding: 15px; border-left: 4px solid #10b981; margin: 20px 0;">
-                    <p style="margin: 0 0 10px 0;">Received: <strong style="color: #10b981;">${transactionData.amount} NXS</strong></p>
-                    <p style="margin: 0;">Status: <strong style="color: #10b981;">SUCCESS</strong></p>
-                </div>
-            `;
-        }
-
-        const html = `
-        <!DOCTYPE html>
-        <html>
-        <body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: Arial, Helvetica, sans-serif; color: #000000;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 40px 0;">
-                <tr>
-                    <td align="center">
-                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid ${headerColor};">
-                            <tr>
-                                <td align="center" style="padding: 30px; border-bottom: 1px solid #e2e8f0;">
-                                    <h1 style="color: ${headerColor}; font-size: 20px; margin: 0; font-weight: bold; text-transform: uppercase;">P2P Trading Desk</h1>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 40px 30px;">
-                                    <h2 style="color: #000000; margin: 0 0 20px 0; font-size: 20px;">${title}</h2>
-                                    <div style="color: #475569; font-size: 15px; line-height: 1.6;">
-                                        ${messageHtml}
-                                    </div>
-                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
-                                        <tr>
-                                            <td align="center">
-                                                <a href="https://usaaffiliatemarketing.com/dashboard/p2p" style="background-color: ${headerColor}; color: #ffffff; padding: 12px 25px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">View Transaction</a>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td align="center" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #e2e8f0;">
-                                    <p style="color: #64748b; font-size: 11px; margin: 0;">USA Affiliate Network - Global P2P Exchange<br>Do not reply to this email.</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-        `;
-
-        await this.sendEmail(email, `P2P Alert: ${title}`, html);
+        // [DISABLED] Transaction emails disabled as per requirements. Only OTP is allowed.
+        return true;
     }
 }
 
